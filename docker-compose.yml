@@ -19,5 +19,5 @@ services:
 volumes:
   vcmap-ui-node-modules:
 networks:
-  derfault:
+  default:
     name: vcmapui_default
