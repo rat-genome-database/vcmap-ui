@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  vcmap-ui:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+    image: vcmap-ui
+    volumes:
+      - type: bind
+        source: ./app/
+        target: /app
+      - type: volume
+        source: vcmap-ui-node-modules
+        target: /app/node_modules
+    ports:
+      - "127.0.0.1:8080:8080"
+    container_name: vcmap-ui-container
+volumes:
+  vcmap-ui-node-modules:
+networks:
+  derfault:
+    name: vcmapui_default
