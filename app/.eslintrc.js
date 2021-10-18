@@ -1,27 +1,28 @@
 module.exports = {
     "env": {
-        "browser": true,
-        "es6": true
+      "browser": true,
+      "es6": true
     },
     "extends": [
-        "eslint:recommended",
-        "plugin:vue/essential",
-        "plugin:@typescript-eslint/eslint-recommended"
+      "eslint:recommended",
+      "plugin:vue/essential",
+      "plugin:@typescript-eslint/eslint-recommended"
     ],
     "globals": {
-        "Atomics": "readonly",
-        "SharedArrayBuffer": "readonly"
+      "Atomics": "readonly",
+      "SharedArrayBuffer": "readonly"
     },
     "parserOptions": {
-        "ecmaVersion": 2018,
-        "parser": "@typescript-eslint/parser",
-        "sourceType": "module"
+      "ecmaVersion": 2018,
+      "parser": "@typescript-eslint/parser",
+      "sourceType": "module"
     },
     "plugins": [
-        "vue",
-        "@typescript-eslint"
+      "vue",
+      "@typescript-eslint"
     ],
     "rules": {
-      "vue/no-multiple-template-root": 0
+      "vue/no-multiple-template-root": 0,
+      "semi": [1, "always"]
     }
 };
