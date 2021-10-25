@@ -13,6 +13,7 @@
             class="configuration-input" 
             @update:modelValue="updateSpeciesStore"
             v-model="selectedSpecies" 
+            :loading="isLoadingSpecies"
             :options="speciesOptions"
             :track-by="species => species.typeKey"
             :text-by="species => species.name"
@@ -43,10 +44,28 @@ export default defineComponent({
     // Reactive Properties
     let speciesOptions = ref<Species[]>([]);
     let selectedSpecies = ref({});
+    let isLoadingSpecies = ref(false);
 
     // Lifecycle Hooks
     onMounted(async () => {
-      speciesOptions.value = await SpeciesApi.getSpecies();
+      isLoadingSpecies.value = true;
+      try
+      {
+        speciesOptions.value = await SpeciesApi.getSpecies();
+      }
+      catch (err)
+      {
+        console.error(err);
+      }
+      finally
+      {
+        isLoadingSpecies.value = false;
+      }
+      
+      if (store.getters.getSpecies)
+      {
+        selectedSpecies.value = store.getters.getSpecies;
+      }
     });
 
     // Methods
@@ -61,6 +80,7 @@ export default defineComponent({
     return {
       speciesOptions,
       selectedSpecies,
+      isLoadingSpecies,
       goToMainScreen,
       updateSpeciesStore
     };
