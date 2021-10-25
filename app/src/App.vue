@@ -1,30 +1,45 @@
 <template>
-  <div id="nav">
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link>
+  <div class="row header">
+    <div class="flex md12">
+      <img alt="VCMap Logo" class="logo" src="./assets/images/vcmap_logo_v2.jpg">
+    </div>
   </div>
+  <va-divider />
   <router-view/>
 </template>
 
-<style>
+<style lang="scss">
+/** Project wide SCSS */
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
   color: #2c3e50;
 }
 
-#nav {
-  padding: 30px;
+.logo
+{
+  max-height: 100px;
 }
 
-#nav a {
-  font-weight: bold;
-  color: #2c3e50;
+.header.row
+{
+  padding: 0.5rem;
 }
 
-#nav a.router-link-exact-active {
-  color: #42b983;
+.row>.flex
+{
+  &.right-aligned
+  {
+    text-align: right;
+  }
+  &.left-aligned
+  {
+    text-align: left;
+  }
+  &.center-aligned
+  {
+    text-align: center;
+  }
 }
 </style>
