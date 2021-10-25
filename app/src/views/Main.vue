@@ -1,9 +1,4 @@
 <template>
-  <div class="row header">
-    <div class="flex md12">
-      <img alt="VCMap Logo" class="logo" src="../assets/images/vcmap_logo_v2.jpg">
-    </div>
-  </div>
   <div>
     <va-card square outlined color="background" class="comparative-summary">
       <div class="row">
@@ -11,7 +6,7 @@
           <h5 class="display-5">Configuration</h5>
         </div>
         <div class="flex md2 right-aligned">
-          <va-button :rounded="false">Load New Configuration</va-button>
+          <va-button @click="goToConfigurationScreen">Load New Configuration</va-button>
         </div>
       </div>
       <va-divider />
@@ -39,6 +34,7 @@
         </div>
       </div>
     </va-card>
+    <!-- Stubbed template w/ SVGs. We should split these out into our own components once we start using real data -->
     <svg viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
       <!-- Outside panel -->
       <rect class="panel" x="0" width="1000" height="1000" />
@@ -70,10 +66,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue'
+import { defineComponent, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 export default defineComponent({
   setup() {
+    const router = useRouter();
+
+    // Mock Data
     const comparativeSpecies = ref([
       { id: 1, name: 'Rattus Norvegicus', syntenyString: 'Synteny in chr1, chr4, chr11' },
       { id: 2, name: 'Equus Caballus', syntenyString: 'Synteny in chr2, chr7' }
@@ -88,32 +88,22 @@ export default defineComponent({
       { id: 1, name: 'Clinical', color: 'blue' }
     ]);
 
+    const goToConfigurationScreen = () => {
+      router.push('/');
+    };
+
     return {
       comparativeSpecies,
       backboneSpecies,
-      dataTracks
+      dataTracks,
+      goToConfigurationScreen
     };
   },
-})
+});
 </script>
 
 
 <style scoped>
-.header.row
-{
-  padding: 0.5rem;
-}
-
-.row>.flex.right-aligned
-{
-  text-align: right;
-}
-
-.logo
-{
-  max-height: 100px;
-}
-
 rect.panel
 {
   fill: white;
