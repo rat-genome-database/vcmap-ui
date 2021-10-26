@@ -2,7 +2,7 @@ import { ActionContext, createStore } from 'vuex';
 import VuexPersistence from 'vuex-persist';
 import Species from '@/models/Species';
 
-interface VCMapState
+export interface VCMapState
 {
   species: Species | null
 }
