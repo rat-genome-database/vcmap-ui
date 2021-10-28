@@ -23,31 +23,17 @@
   </va-card>
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue';
+<script lang="ts" setup>
 import { useRouter } from 'vue-router';
 import BackboneOverview from '@/components/BackboneOverview.vue';
 import DataTracksOverview from '@/components/DataTracksOverview.vue';
 import ComparativeSpeciesOverview from '@/components/ComparativeSpeciesOverview.vue';
 
-export default defineComponent({
-  components: {
-    BackboneOverview,
-    DataTracksOverview,
-    ComparativeSpeciesOverview
-  },
-  setup() {
-    const router = useRouter();
+const router = useRouter();
 
-    const goToConfigurationScreen = () => {
-      router.push('/');
-    };
-
-    return {
-      goToConfigurationScreen
-    };
-  },
-});
+const goToConfigurationScreen = () => {
+  router.push('/');
+};
 </script>
 
 <style lang="scss" scoped>

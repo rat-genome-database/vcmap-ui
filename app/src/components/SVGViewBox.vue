@@ -29,16 +29,13 @@
   </svg>
 </template>
 
-<script lang="ts">
-import { defineComponent, onMounted } from 'vue';
+<script lang="ts" setup>
+import { onMounted } from 'vue';
 
-export default defineComponent({
-  setup() {
-    onMounted(() => {
-      console.log('SVGViewBox mounted');
-    });
-  },
+onMounted(() => {
+  console.log('SVGViewBox mounted');
 });
+
 </script>
 
 <style lang="scss" scoped>

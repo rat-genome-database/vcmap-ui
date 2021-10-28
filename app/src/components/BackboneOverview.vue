@@ -3,24 +3,16 @@
   <p v-if="backboneSpecies" data-test="backbone-overview-species">Species: {{backboneSpecies.name}}</p>
 </template>
 
-<script lang="ts">
+<script lang="ts" setup>
 import Species from '@/models/Species';
-import { defineComponent, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useStore } from 'vuex';
 
-export default defineComponent({
-  setup() {
-    const store = useStore();
+const store = useStore();
 
-    let backboneSpecies = ref<Species | null>(null);
+let backboneSpecies = ref<Species | null>(null);
 
-    onMounted(() => {
-      backboneSpecies.value = store.getters.getSpecies;
-    });
-
-    return {
-      backboneSpecies
-    };
-  },
-})
+onMounted(() => {
+  backboneSpecies.value = store.getters.getSpecies;
+});
 </script>
