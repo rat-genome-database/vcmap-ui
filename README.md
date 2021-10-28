@@ -15,3 +15,8 @@ To tear down your dev environment, run the command
 The `-v` is important for removing the volume that is mounted for your `node_modules`. 
 If this doesn't get removed, any new modules you install may be hidden by your existing volume the next
 time you start up your containers.
+
+
+# Recommended extensions for development
+
+If you are developing with VSCode, I recommend installing the `Vue Language Features (Volar)` extension. It is built specifically for Vue3.

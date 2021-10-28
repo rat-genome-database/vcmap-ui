@@ -8,21 +8,14 @@
   </ul>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref } from 'vue';
+<script lang="ts" setup>
+import { ref } from 'vue';
 
-export default defineComponent({
-  setup() {
-    const comparativeSpecies = ref([
-      { id: 1, name: 'Rattus Norvegicus', syntenyString: 'Synteny in chr1, chr4, chr11' },
-      { id: 2, name: 'Equus Caballus', syntenyString: 'Synteny in chr2, chr7' }
-    ]);
+const comparativeSpecies = ref([
+  { id: 1, name: 'Rattus Norvegicus', syntenyString: 'Synteny in chr1, chr4, chr11' },
+  { id: 2, name: 'Equus Caballus', syntenyString: 'Synteny in chr2, chr7' }
+]);
 
-    return {
-      comparativeSpecies
-    };
-  },
-})
 </script>
 
 <style lang="scss" scoped>

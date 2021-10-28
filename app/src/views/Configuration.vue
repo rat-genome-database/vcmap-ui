@@ -15,8 +15,8 @@
             v-model="selectedSpecies" 
             :loading="isLoadingSpecies"
             :options="speciesOptions"
-            :track-by="species => species.typeKey"
-            :text-by="species => species.name"
+            :track-by="(species: Species) => species.typeKey"
+            :text-by="(species: Species) => species.name"
             outline />
         </div>
       </div>
@@ -29,63 +29,52 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, onMounted } from 'vue';
+<script lang="ts" setup>
+import { ref, onMounted } from 'vue';
 import SpeciesApi from '@/api/SpeciesApi';
 import Species from '@/models/Species';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 
-export default defineComponent({
-  setup() {
-    const router = useRouter();
-    const store = useStore();
-    
-    // Reactive Properties
-    let speciesOptions = ref<Species[]>([]);
-    let selectedSpecies = ref({});
-    let isLoadingSpecies = ref(false);
+const router = useRouter();
+const store = useStore();
 
-    // Lifecycle Hooks
-    onMounted(async () => {
-      isLoadingSpecies.value = true;
-      try
-      {
-        speciesOptions.value = await SpeciesApi.getSpecies();
-      }
-      catch (err)
-      {
-        console.error(err);
-      }
-      finally
-      {
-        isLoadingSpecies.value = false;
-      }
-      
-      if (store.getters.getSpecies)
-      {
-        selectedSpecies.value = store.getters.getSpecies;
-      }
-    });
+// Reactive Properties
+let speciesOptions = ref<Species[]>([]);
+let selectedSpecies = ref({});
+let isLoadingSpecies = ref(false);
 
-    // Methods
-    const goToMainScreen = () => {
-      router.push('/main');
-    };
-
-    const updateSpeciesStore = (species: Species) => {
-      store.dispatch('setSpecies', species);
-    };
-
-    return {
-      speciesOptions,
-      selectedSpecies,
-      isLoadingSpecies,
-      goToMainScreen,
-      updateSpeciesStore
-    };
-  },
+// Lifecycle Hooks
+onMounted(async () => {
+  isLoadingSpecies.value = true;
+  try
+  {
+    speciesOptions.value = await SpeciesApi.getSpecies();
+  }
+  catch (err)
+  {
+    console.error(err);
+  }
+  finally
+  {
+    isLoadingSpecies.value = false;
+  }
+  
+  if (store.getters.getSpecies)
+  {
+    selectedSpecies.value = store.getters.getSpecies;
+  }
 });
+
+// Methods
+const goToMainScreen = () => {
+  router.push('/main');
+};
+
+const updateSpeciesStore = (species: Species) => {
+  store.dispatch('setSpecies', species);
+};
+
 </script>
 
 <style lang="scss" scoped>
