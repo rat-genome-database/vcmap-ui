@@ -1,0 +1,8 @@
+/**
+ * Example app config. Copy and paste this file into this same directory (<root>/app/config/) 
+ * and rename it to `app.config.ts`
+ */
+
+export default {
+  API_BASE_URL: ''
+};

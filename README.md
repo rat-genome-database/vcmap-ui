@@ -1,6 +1,15 @@
 # vcmap-ui
 Web based VCmap
 
+# App configuration
+
+An example configuration file can be found at `<project_root>/app/config/app.config.ts.example`. All of the required config properties
+can be found inside of that file. To set up your configuration: 
+1. Copy and paste the example config file (`app.config.ts.example`) into the config directory within the `app` folder and rename it to `app.config.ts`
+2. Set the values of the properties within the object exported from that file
+
+Note: The app will reload any time you change a config property within the dev environment  
+
 # Running dev setup
 To setup a development environment using the Docker setup, start with
 1. `$> docker-compose build`
