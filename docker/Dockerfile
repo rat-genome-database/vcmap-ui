@@ -1,4 +1,4 @@
-FROM node:14.17.6
+FROM node:14.17.6-alpine
 
 # Switch to our app directory
 WORKDIR /app
