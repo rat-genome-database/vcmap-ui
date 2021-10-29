@@ -1,8 +1,6 @@
 <template>
-  <div>
-    <h6 class="display-6">Backbone</h6>
-    <p v-if="backboneSpecies" data-test="backbone-overview-species">Species: {{backboneSpecies.name}}</p>
-  </div>
+  <h6 class="display-6">Backbone</h6>
+  <p v-if="backboneSpecies" data-test="backbone-overview-species">Species: {{backboneSpecies.name}}</p>
 </template>
 
 <script lang="ts" setup>
@@ -15,7 +13,6 @@ const store = useStore();
 let backboneSpecies = ref<Species | null>(null);
 
 onMounted(() => {
-  console.log('mounted running', store.getters.getSpecies);
   backboneSpecies.value = store.getters.getSpecies;
 });
 </script>

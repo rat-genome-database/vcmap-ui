@@ -5,7 +5,7 @@
         <h5 class="display-5">Configuration</h5>
       </div>
       <div class="flex md2 right-aligned">
-        <va-button @click="goToConfigurationScreen">Load New Configuration</va-button>
+        <va-button @click="goToConfigurationScreen" data-test="load-config-btn">Load New Configuration</va-button>
       </div>
     </div>
     <va-divider />
