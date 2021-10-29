@@ -1,10 +1,4 @@
-export interface ISpecies
-{
-  typeKey: number,
-  name: string
-}
-
-export class SpeciesDTO implements ISpecies
+export class SpeciesDTO
 {
   typeKey: number = 0;
   name: string = '';
