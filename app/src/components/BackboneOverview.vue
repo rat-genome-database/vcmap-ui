@@ -5,7 +5,7 @@
 
 <script lang="ts" setup>
 import Species from '@/models/Species';
-import { onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue';
 import { useStore } from 'vuex';
 
 const store = useStore();
