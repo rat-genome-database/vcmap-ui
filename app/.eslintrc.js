@@ -10,7 +10,9 @@ module.exports = {
     ],
     "globals": {
       "Atomics": "readonly",
-      "SharedArrayBuffer": "readonly"
+      "SharedArrayBuffer": "readonly",
+      "defineProps": "readonly",
+      "defineEmits": "readonly"
     },
     "parserOptions": {
       "ecmaVersion": 2018,
@@ -22,7 +24,9 @@ module.exports = {
       "@typescript-eslint"
     ],
     "rules": {
-      "vue/no-multiple-template-root": 0,
-      "semi": [1, "always"]
+      "vue/no-multiple-template-root": "off",
+      "semi": ["warn", "always"],
+      "vue/no-v-for-template-key": "off",
+      "vue/script-setup-uses-vars": "error",
     }
 };
