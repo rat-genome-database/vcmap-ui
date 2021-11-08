@@ -7,7 +7,9 @@ import { nextTick } from '@vue/runtime-core';
 
 const mockStore = createStore({
   state: {
-    species: new Species({ typeKey: 1, name: 'Test Species'})
+    species: new Species({ typeKey: 1, name: 'Test Species'}),
+    startPos: null,
+    stopPos: null
   },
   getters: {
     getSpecies(state: VCMapState) {

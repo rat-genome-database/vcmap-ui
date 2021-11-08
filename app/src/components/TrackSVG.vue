@@ -1,8 +1,26 @@
 <template>
   <template v-for="(section, index) in track.sections" :key="index">
-    <text v-if="showStartStop" class="label small" :x="posX + width" :y="getSectionYPosition(posY, index) + LABEL_Y_OFFSET">- {{section.startBP}}</text>
-    <rect class="section" :fill="section.color" :x="posX" :y="getSectionYPosition(posY, index)" :width="width" :height="section.height" />
-    <text v-if="showStartStop" class="label small" :x="posX + width" :y="getSectionYPosition(posY, index) + section.height + LABEL_Y_OFFSET">- {{section.stopBP}}</text>
+    <text v-if="showStartStop" 
+      data-test="start-bp-label"
+      class="label small" 
+      :x="posX + width" 
+      :y="getSectionYPosition(posY, index) + LABEL_Y_OFFSET">
+      - {{section.startBP}}
+    </text>
+    <rect 
+      data-test="track-section-svg"
+      class="section" 
+      :fill="section.color" 
+      :x="posX" :y="getSectionYPosition(posY, index)" 
+      :width="width" 
+      :height="section.height" />
+    <text v-if="showStartStop" 
+      data-test="stop-bp-label"
+      class="label small" 
+      :x="posX + width" 
+      :y="getSectionYPosition(posY, index) + section.height + LABEL_Y_OFFSET">
+      - {{section.stopBP}}
+    </text>
   </template>
 </template>
 
