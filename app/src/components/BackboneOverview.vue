@@ -1,6 +1,8 @@
 <template>
   <h6 class="display-6">Backbone</h6>
-  <p v-if="backboneSpecies" class="species-label" data-test="backbone-overview-species">Species: {{backboneSpecies.name}}</p>
+  <p v-if="backboneSpecies" class="backbone-label" data-test="backbone-overview-species">Species: {{backboneSpecies.name}}</p>
+  <p class="backbone-label">Chromosome: 1</p>
+  <p class="backbone-label">Base Pair Region: 50.65Kbp - 150.23Mbp</p>
 </template>
 
 <script lang="ts" setup>
@@ -17,8 +19,8 @@ onMounted(() => {
 });
 </script>
 
-<style lang="scss">
-.species-label
+<style lang="scss" scoped>
+.backbone-label
 {
   margin-top: 1rem;
 }

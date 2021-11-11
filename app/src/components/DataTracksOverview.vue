@@ -3,7 +3,7 @@
   <div class="data-tracks">
     <div v-for="track in dataTracks" class="row" :key="track.id">
       <div class="flex md3">{{track.name}}</div>
-      <div class="flex md1 track-color"></div>
+      <div class="flex md1 track-color" :style="{ backgroundColor: track.color }"></div>
     </div>
   </div>
 </template>
@@ -12,11 +12,11 @@
 import { ref } from 'vue';
 
 const dataTracks = ref([
-  { id: 1, name: 'Clinical', color: 'blue' }
+  { id: 1, name: 'Clinical', color: 'lightseagreen' }
 ]);
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .data-tracks
 {
   margin-top: 1rem;
@@ -26,7 +26,6 @@ const dataTracks = ref([
 {
   height: 1rem;
   width: 100%;
-  background-color: darkgoldenrod;
   border-radius: 1rem;
 }
 </style>
