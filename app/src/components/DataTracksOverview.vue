@@ -1,9 +1,12 @@
 <template>
-  <h6 class="display-6">Data Tracks</h6>
-  <div class="data-tracks">
-    <div v-for="track in dataTracks" class="row" :key="track.id">
-      <div class="flex md3">{{track.name}}</div>
-      <div class="flex md1 track-color" :style="{ backgroundColor: track.color }"></div>
+  <div class="grid col-3">
+    <div class="col-12">
+      <h4>Data Tracks Loaded <span v-if="dataTracks">({{dataTracks.length}})</span></h4>
+      <div class="data-tracks">
+        <div v-for="track in dataTracks" class="grid" :key="track.id">
+          <div class="col-3 track-color" :style="{ backgroundColor: track.color }">{{track.name}}</div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -24,8 +27,8 @@ const dataTracks = ref([
 
 .track-color
 {
-  height: 1rem;
-  width: 100%;
+  color: white;
+  font-weight: bold;
   border-radius: 1rem;
 }
 </style>

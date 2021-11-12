@@ -1,28 +1,22 @@
 <template>
-  <div class="row header">
-    <div class="flex md12 center-aligned">
-      <h4 class="display-4">Configuration</h4>
+  <div class="grid">
+    <div class="col-12 text-center">
+      <h2>Configuration</h2>
     </div>
-  </div>
-  <div class="row">
-    <div class="flex md6 offset--md3">
-      <div class="row">
-        <div class="flex md12">
-          <va-select 
-            label="Backbone Species"
-            class="configuration-input" 
-            @update:modelValue="updateSpeciesStore"
+    <div class="col-12">
+      <div class="grid">
+        <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
+          <h4>Backbone Species</h4>
+          <Dropdown 
             v-model="selectedSpecies" 
+            :options="speciesOptions" 
             :loading="isLoadingSpecies"
-            :options="speciesOptions"
-            :track-by="(species: Species) => species.typeKey"
-            :text-by="(species: Species) => species.name"
-            outline />
+            @change="updateSpeciesStore"
+            optionLabel="name" 
+            placeholder="Backbone species" />
         </div>
-      </div>
-      <div class="row">
-        <div class="flex md6 offset--md3 center-aligned">
-          <va-button @click="goToMainScreen">Load VCMap</va-button>
+        <div class="col-12 text-center">
+          <Button @click="goToMainScreen" label="Load VCMap" icon="pi pi-play" class="p-button-lg" />
         </div>
       </div>
     </div>
@@ -71,15 +65,15 @@ const goToMainScreen = () => {
   router.push('/main');
 };
 
-const updateSpeciesStore = (species: Species) => {
-  store.dispatch('setSpecies', species);
+const updateSpeciesStore = (event: any) => {
+  store.dispatch('setSpecies', event.value);
 };
 
 </script>
 
 <style lang="scss" scoped>
-.configuration-input
+.p-dropdown
 {
-  padding: 0.5em;
+  width: 100%;
 }
 </style>

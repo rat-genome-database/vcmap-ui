@@ -1,26 +1,25 @@
 <template>
-  <va-card square outlined color="background" class="comparative-summary">
-    <div class="row">
-      <div class="flex md10">
-        <h5 class="display-5">Configuration</h5>
-      </div>
-      <div class="flex md2 right-aligned">
-        <va-button @click="goToConfigurationScreen" data-test="load-config-btn">Load New Configuration</va-button>
-      </div>
+  <div class="grid">
+    <div class="col-12">
+      <Panel header="Overview" :toggleable="true">
+        <template #icons>
+          <Button 
+            @click="goToConfigurationScreen" 
+            v-tooltip.left="'Load New Configuration'" 
+            icon="pi pi-cog" 
+            class="p-button-rounded overview-btn" 
+            data-test="load-config-btn" />
+        </template>
+        <div class="grid p-d-flex">
+          <ComparativeSpeciesOverview />
+          <Divider layout="vertical" />
+          <BackboneOverview />
+          <Divider layout="vertical" />
+          <DataTracksOverview />
+        </div>
+      </Panel>
     </div>
-    <va-divider />
-    <div class="row">
-      <div class="flex md4">
-        <ComparativeSpeciesOverview />
-      </div>
-      <div class="flex md4">
-        <BackboneOverview />
-      </div>
-      <div class="flex md4">
-        <DataTracksOverview />
-      </div>
-    </div>
-  </va-card>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -37,8 +36,8 @@ const goToConfigurationScreen = () => {
 </script>
 
 <style lang="scss" scoped>
-.va-card.comparative-summary
+.overview-btn
 {
-  padding: 0.75rem;
+  margin-right: 1rem;
 }
 </style>

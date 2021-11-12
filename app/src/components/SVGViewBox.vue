@@ -49,8 +49,8 @@ onMounted(() => {
   backboneSpecies.value = store.getters.getSpecies;
 
   // Create backbone track
-  const startPos = store.getters.getStartPosition;
-  const stopPos = store.getters.getStopPosition;
+  const startPos = store.getters.getStartPosition ?? 0;
+  const stopPos = store.getters.getStopPosition ?? 150000000;
   const speciesName = backboneSpecies.value?.name;
   if (startPos != null && stopPos != null && speciesName != null)
   {
