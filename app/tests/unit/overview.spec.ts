@@ -31,6 +31,7 @@ describe('Overview', () => {
 
     const wrapper = mount(Overview, {
       global: {
+        plugins: ExternalComponentsHandler.getPlugins(),
         components: ExternalComponentsHandler.getComponents(),
         directives: ExternalComponentsHandler.getDirectives(),
         provide: {

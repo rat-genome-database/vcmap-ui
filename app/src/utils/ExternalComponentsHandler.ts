@@ -9,7 +9,14 @@ import Panel from 'primevue/panel';
 import Tooltip from 'primevue/tooltip';
 
 /**
- * Add any components you want to be globally registered to this object:
+ * Add any plugins/configs that you want to be globally registered:
+ */
+const PLUGINS = [
+  PrimeVue
+];
+
+/**
+ * Add any components you want to be globally registered:
  */
 const COMPONENTS: {[key: string]: Component} = {
   'Button': Button,
@@ -19,7 +26,7 @@ const COMPONENTS: {[key: string]: Component} = {
 };
 
 /**
- * Add any directives you want to be globally registered to this object:
+ * Add any directives you want to be globally registered:
  */
 const DIRECTIVES: {[key: string]: Directive} = {
   'Tooltip': Tooltip
@@ -32,7 +39,9 @@ export namespace ExternalComponentsHandler
 {
   export function registerAll(app: App<Element>)
   {
-    app.use(PrimeVue);
+    PLUGINS.forEach(plugin => {
+      app.use(plugin);
+    });
 
     for (const name in COMPONENTS)
     {
@@ -43,6 +52,11 @@ export namespace ExternalComponentsHandler
     {
       app.directive(name, DIRECTIVES[name]);
     }
+  }
+
+  export function getPlugins()
+  {
+    return PLUGINS;
   }
 
   export function getComponents()
