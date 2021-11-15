@@ -1,10 +1,10 @@
 <template>
-  <div class="row header">
-    <div class="flex md12">
+  <div class="grid">
+    <div class="col-12">
       <img alt="VCMap Logo" class="logo" src="./assets/images/vcmap_logo_v2.jpg">
     </div>
   </div>
-  <va-divider />
+  <Divider />
   <router-view/>
 </template>
 
@@ -20,26 +20,5 @@
 .logo
 {
   max-height: 100px;
-}
-
-.header.row
-{
-  padding: 0.5rem;
-}
-
-.row>.flex
-{
-  &.right-aligned
-  {
-    text-align: right;
-  }
-  &.left-aligned
-  {
-    text-align: left;
-  }
-  &.center-aligned
-  {
-    text-align: center;
-  }
 }
 </style>

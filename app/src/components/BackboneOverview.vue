@@ -1,8 +1,12 @@
 <template>
-  <h6 class="display-6">Backbone</h6>
-  <p v-if="backboneSpecies" class="backbone-label" data-test="backbone-overview-species">Species: {{backboneSpecies.name}}</p>
-  <p class="backbone-label">Chromosome: 1</p>
-  <p class="backbone-label">Base Pair Region: 50.65Kbp - 150.23Mbp</p>
+  <div class="grid col-4">
+    <div class="col-12">
+      <h4>Backbone</h4>
+      <p v-if="backboneSpecies" class="backbone-label" data-test="backbone-overview-species">Species: {{backboneSpecies.name}}</p>
+      <p class="backbone-label">Chromosome: 1</p>
+      <p class="backbone-label">Base Pair Region: 50.65Kbp - 150.23Mbp</p>
+    </div>
+  </div>
 </template>
 
 <script lang="ts" setup>

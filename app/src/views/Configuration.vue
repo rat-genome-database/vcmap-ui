@@ -1,123 +1,114 @@
 <template>
-  <div class="row header">
-    <div class="flex md12 center-aligned">
-      <h4 class="display-5">Backbone Configuration</h4>
+  <div class="grid">
+    <div class="col-12 text-center">
+      <h2>Backbone Configuration</h2>
     </div>
-  </div>
-    <div class="row">
-      <div class="flex md6 offset--md3">
-        <div class="row">
-          <div class="flex md12">
-            <va-select 
-              label="Backbone Species"
-              class="configuration-input" 
-              @update:modelValue="updateStoreSpecies"
-              v-model="selectedSpecies" 
-              :loading="isLoadingSpecies"
-              :options="speciesOptions"
-              :track-by="(species: Species) => species.typeKey"
-              :text-by="(species: Species) => species.name"
-              outline />
-          </div>
+    <div class="col-12">
+      <div class="grid">
+        <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
+          <h4>Backbone Species</h4>
+          <Dropdown 
+            v-model="selectedSpecies" 
+            :options="speciesOptions" 
+            :loading="isLoadingSpecies"
+            @change="updateStoreSpecies"
+            optionLabel="name" 
+            placeholder="Backbone species" />
         </div>
-        <div class="row">
-          <div class="flex md12">
-            <va-select 
-              label="Assembly Map"
-              class="configuration-input" 
-              @update:modelValue="updateStoreMap"
-              v-model="selectedMap"
-              :disabled="!mapOptions.length"
-              :no-options-text="'Select a species to view assembly maps'" 
-              :loading="isLoadingMap"
-              :options="mapOptions"
-              :track-by="(map: Map) => map.key"
-              :text-by="(map: Map) => map.name + ': ' + map.description + ' (' + map?.notes + ')'"
-              outline />
-          </div>
+      </div>
+      <div class="grid">
+        <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
+          <va-select 
+            label="Assembly Map"
+            class="configuration-input" 
+            @update:modelValue="updateStoreMap"
+            v-model="selectedMap"
+            :disabled="!mapOptions.length"
+            :no-options-text="'Select a species to view assembly maps'" 
+            :loading="isLoadingMap"
+            :options="mapOptions"
+            :track-by="(map: Map) => map.key"
+            :text-by="(map: Map) => map.name + ': ' + map.description + ' (' + map?.notes + ')'"
+            outline />
         </div>
-        <div class="row">
-          <div class="flex md12">
-            <va-select 
-              label="Chromosome"
-              class="configuration-input"
-              @update:modelValue="updateStoreChromosomeNum" 
-              v-model="selectedChromosomeNum"
-              :disabled = "!chromosomeNumOptions.length"
-              :options="chromosomeNumOptions"
-              :track-by="(chromosomeNum: Number) => chromosomeNum"
-              :text-by="(chromosomeNum: Number) => chromosomeNum"
-              />
-          </div>
-        </div>
-        <div class="row">
-          <div class="flex md6">
-            <va-input
-              label="Start Position"
-              type="Number"
-              class="configuration-input"
-              @update:modelValue="updateStoreStartPosition" 
-              v-model="startPosition"
-              :disabled="!chromosomeInfo"
-              max="maxPosition - 1"
-              min="0"
-              outline
-           />
-          </div>
-          <div class="flex md6">
-            <va-input
-              label="Stop Position"
-              type="Number"
-              class="configuration-input" 
-              @update:modelValue="updateStoreStopPosition"
-              v-model="stopPosition"
-              :disabled="!chromosomeInfo"
-              max="maxPosition"
-              min="1"
-              outline
+      </div>
+      <div class="grid">
+        <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
+          <va-select 
+            label="Chromosome"
+            class="configuration-input"
+            @update:modelValue="updateStoreChromosomeNum" 
+            v-model="selectedChromosomeNum"
+            :disabled = "!chromosomeNumOptions.length"
+            :options="chromosomeNumOptions"
+            :track-by="(chromosomeNum: Number) => chromosomeNum"
+            :text-by="(chromosomeNum: Number) => chromosomeNum"
             />
-          </div>
         </div>
-        <div class="row header">
-          <div class="flex md12 center-aligned">
-            <h4 class="display-5">Comparative Backbones</h4>
-          </div>  
-        </div>  
-        <div class="row">
-          <div class="flex md12">
-            <va-select 
-              label="Comparative Species 1"
-              class="configuration-input" 
-              @update:modelValue="updateStoreComparativeSpeciesOne"
-              v-model="comparativeSpeciesOne" 
-              :loading="isLoadingSpecies"
-              :options="speciesOptions"
-              :track-by="(species: Species) => species.typeKey"
-              :text-by="(species: Species) => species.name"
-              outline />
-          </div>
+      </div>
+      <div class="grid">
+        <div class="lg:col-3 lg:col-offset-3 md:col-4 md:col-offset-1 sm:col-5 sm:col-offset-1">
+          <va-input
+            label="Start Position"
+            type="Number"
+            class="configuration-input"
+            @update:modelValue="updateStoreStartPosition" 
+            v-model="startPosition"
+            :disabled="!chromosomeInfo"
+            max="maxPosition - 1"
+            min="0"
+            outline
+          />
         </div>
-        <div class="row">
-          <div class="flex md12">
-            <va-select 
-              label="Comparative Species 2"
-              class="configuration-input" 
-              @update:modelValue="updateStoreComparativeSpeciesTwo"
-              v-model="comparativeSpeciesTwo" 
-              :loading="isLoadingSpecies"
-              :options="speciesOptions"
-              :track-by="(species: Species) => species.typeKey"
-              :text-by="(species: Species) => species.name"
-              outline />
-          </div>
+        <div class="lg:col-3 lg:col-offset-3 md:col-4 md:col-offset-1 sm:col-5 sm:col-offset-1">
+          <va-input
+            label="Stop Position"
+            type="Number"
+            class="configuration-input" 
+            @update:modelValue="updateStoreStopPosition"
+            v-model="stopPosition"
+            :disabled="!chromosomeInfo"
+            max="maxPosition"
+            min="1"
+            outline
+          />
         </div>
-        <div class="row">
-          <div class="flex md6 offset--md3 center-aligned start-button">
-            <va-button @click="goToMainScreen">Load VCMap</va-button>
-          </div>
+      </div>
+      <div class="grid">
+        <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
+          <va-select 
+            label="Comparative Species 1"
+            class="configuration-input" 
+            @update:modelValue="updateStoreComparativeSpeciesOne"
+            v-model="comparativeSpeciesOne" 
+            :loading="isLoadingSpecies"
+            :options="speciesOptions"
+            :track-by="(species: Species) => species.typeKey"
+            :text-by="(species: Species) => species.name"
+            outline />
+        </div>
+      </div>
+      <div class="grid">
+        <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
+          <va-select 
+            label="Comparative Species 2"
+            class="configuration-input" 
+            @update:modelValue="updateStoreComparativeSpeciesTwo"
+            v-model="comparativeSpeciesTwo" 
+            :loading="isLoadingSpecies"
+            :options="speciesOptions"
+            :track-by="(species: Species) => species.typeKey"
+            :text-by="(species: Species) => species.name"
+            outline />
+        </div>
+      </div>
+      <div class="grid">
+        <div class="col-12 text-center">
+          <Button @click="goToMainScreen" label="Load VCMap" icon="pi pi-play" class="p-button-lg" />
         </div>
       </div>
     </div>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -143,14 +134,14 @@ let selectedMap = ref({});
 let isLoadingMap = ref(false);
 
 let chromosomeNumOptions = ref<Number[]>([]);
-let selectedChromosomeNum = ref<Number>();
-let chromosomeInfo = ref<Chromosome>();
+let selectedChromosomeNum = ref<Number | null>();
+let chromosomeInfo = ref<Chromosome | null>();
 
 let isLoadingChromosome = ref(false);
 
-let startPosition = ref<Number>();
-let stopPosition = ref<Number>();
-let maxPosition = ref<Number>(0);
+let startPosition = ref<Number | null>();
+let stopPosition = ref<Number | null>();
+let maxPosition = ref<Number | null>(0);
 
 let comparativeSpeciesOne = ref<Species>();
 let comparativeSpeciesTwo = ref<Species>();
@@ -275,7 +266,7 @@ watch(() => store.getters.getSpecies, (newVal, oldVal) => {
       mapOptions.value = [];
       selectedMap.value = {};
       chromosomeNumOptions.value = [];
-      selectedChromosomeNum.value = {};
+      selectedChromosomeNum.value = null;
       chromosomeInfo.value = null;
       startPosition.value = null;
       stopPosition.value = null;
@@ -309,8 +300,8 @@ watch(() => store.getters.getMap, (newVal, oldVal) => {
       store.dispatch('setStopPosition', null);
 
       chromosomeNumOptions.value = [];
-      selectedChromosomeNum.value = {};
-      chromosomeInfo.value = {};
+      selectedChromosomeNum.value = null;
+      chromosomeInfo.value = null;
       startPosition.value = null;
       stopPosition.value = null;
       maxPosition.value = null;
@@ -340,7 +331,7 @@ watch(() => store.getters.getChromosomeNum, (newVal, oldVal) => {
       store.dispatch('setStartPosition', null);
       store.dispatch('setStopPosition', null);
 
-      chromosomeInfo.value = {};
+      chromosomeInfo.value = null;
       startPosition.value = null;
       stopPosition.value = null;
       maxPosition.value = null;
@@ -349,7 +340,7 @@ watch(() => store.getters.getChromosomeNum, (newVal, oldVal) => {
         chromosomeInfo.value = chrInfo;
         updateStoreChromosome(chromosomeInfo.value);
       });
-      maxPosition.value =  10
+      maxPosition.value =  10;
     }
     catch (err)
     {
@@ -408,9 +399,9 @@ const updateStoreComparativeSpeciesTwo = (species: Species) => {
 </script>
 
 <style lang="scss" scoped>
-.configuration-input
+.p-dropdown
 {
-  padding: 0.5em;
+  width: 100%;
 }
 
 .start-button

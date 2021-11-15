@@ -1,11 +1,15 @@
 <template>
-  <h6 class="display-6">Comparative Species</h6>
-  <ul class="va-unordered">
-    <li v-for="species in comparativeSpecies" :key="species.id">
-      <p>{{species.name}}</p>
-      <p class="species-description">{{species.syntenyString}}</p>
-    </li>
-  </ul>
+  <div class="grid col-4">
+    <div class="col-12">
+      <h4>Comparative Species</h4>
+      <ul class="list-disc">
+        <li v-for="species in comparativeSpecies" :key="species.id">
+          <div>{{species.name}}</div>
+          <div>{{species.syntenyString}}</div>
+        </li>
+      </ul>
+    </div>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -19,9 +23,8 @@ const comparativeSpecies = ref([
 </script>
 
 <style lang="scss" scoped>
-.species-description
+.species-label
 {
-  margin-left: 0.25rem;
   margin-top: 0.25rem;
   margin-bottom: 0.25rem;
 }
