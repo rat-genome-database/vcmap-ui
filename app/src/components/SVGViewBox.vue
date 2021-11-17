@@ -13,17 +13,17 @@
     <!-- backbone species track -->
     <text class="label medium bold" :x="BACKBONE_X_POS" :y="PANEL_TITLE_Y_POS">Backbone</text>
     <text v-if="backboneSpecies" class="label small" :x="BACKBONE_X_POS" y="30">{{backboneSpecies.name}}</text>
-    <TrackSVG v-if="track" :show-start-stop="true" :pos-x="BACKBONE_X_POS" :pos-y="TRACK_START_Y_POS" :width="TRACK_WIDTH" :track="track as Track" />
+    <TrackSVG v-if="track" show-start-stop :pos-x="BACKBONE_X_POS" :pos-y="TRACK_START_Y_POS" :width="TRACK_WIDTH" :track="track as Track" />
 
     <!-- Comparative species synteny tracks -->
     <template v-for="(track, index) in comparativeTracks" :key="track">
       <text class="label small" :x="getTrackXOffset(index + 1) + BACKBONE_X_POS" y="30">{{track.name}}</text>
-      <TrackSVG v-if="track" :pos-x="getTrackXOffset(index + 1) + BACKBONE_X_POS" :pos-y="TRACK_START_Y_POS" :width="TRACK_WIDTH" :track="track as Track" />
+      <TrackSVG v-if="track" is-highlightable :pos-x="getTrackXOffset(index + 1) + BACKBONE_X_POS" :pos-y="TRACK_START_Y_POS" :width="TRACK_WIDTH" :track="track as Track" />
     </template>
     <!------------------------------------------------------------------->
 
     <!-- Comparative panel SVGs ----------------------------------------->
-    <text class="label medium bold" x="325" :y="PANEL_TITLE_Y_POS">Comparative</text>
+    <text class="label medium bold" x="320" :y="PANEL_TITLE_Y_POS">Comparative</text>
     <!------------------------------------------------------------------->
   </svg>
 </template>

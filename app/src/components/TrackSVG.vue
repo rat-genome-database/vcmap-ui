@@ -10,7 +10,9 @@
     <rect 
       data-test="track-section-svg"
       class="section"
-      :fill="section.color" 
+      @mouseenter="highlight(section)"
+      @mouseleave="unhighlight(section)"
+      :fill="section.isHighlighted && isHighlightable ? HIGHLIGHT_COLOR : section.color" 
       :x="posX" :y="getSectionYPosition(posY, index)" 
       :width="width" 
       :height="section.height" />
@@ -26,12 +28,15 @@
 
 <script lang="ts" setup>
 import Track from '@/models/Track';
+import TrackSection from '@/models/TrackSection';
 import { toRefs } from '@vue/reactivity';
 
 const LABEL_Y_OFFSET = 3;
+const HIGHLIGHT_COLOR = 'blue';
 
 interface Props 
 {
+  isHighlightable?: boolean;
   showStartStop?: boolean;
   posX: number;
   posY: number;
@@ -61,6 +66,14 @@ const getSectionYPosition = (startingYPos: number, sectionIndex: number) => {
   // Add offset if one is defined
   currentYPos += props.track.sections[sectionIndex].offsetHeight;
   return currentYPos;
+};
+
+const highlight = (section: TrackSection) => {
+  section.isHighlighted = true;
+};
+
+const unhighlight = (section: TrackSection) => {
+  section.isHighlighted = false;
 };
 </script>
 

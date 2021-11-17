@@ -8,6 +8,7 @@ export default class TrackSection
   private _stopBP: number = 0; // ending base pair position
   private _offsetBPCount: number = 0; // number of base pairs before this section should begin, used when drawing the sections against the backbone track
   private _cutoffBP: number = 0; // The absolute cutoff position of this section
+  isHighlighted: boolean = false;
   chromosome: string = '';
 
   constructor(startBP: number, stopBP: number, chromosome: string, cutoffBP: number, offsetBPCount?: number)
