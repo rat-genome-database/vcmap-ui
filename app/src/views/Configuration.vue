@@ -53,7 +53,7 @@
             v-model="startPosition"
             :disabled="!chromosomeInfo"
             suffix="bp"
-            :max="maxPosition - 1"
+            :max="(maxPosition != null) ? maxPosition - 1 : 1"
             :min="0"
           />
         </div>
@@ -125,7 +125,7 @@ const store = useStore();
 
 // Reactive Properties
 let speciesOptions = ref<Species[]>([]);
-let selectedSpecies = ref({});
+let selectedSpecies = ref<Species | null>(null);
 let isLoadingSpecies = ref(false);
 
 let mapOptions = ref<Map[]>([]);
@@ -140,7 +140,7 @@ let isLoadingChromosome = ref(false);
 
 let startPosition = ref<Number | null>();
 let stopPosition = ref<Number | null>();
-let maxPosition = ref<Number | null>();
+let maxPosition = ref<number | null>();
 
 let comparativeSpeciesOne = ref<Species>();
 let comparativeSpeciesTwo = ref<Species>();
@@ -358,36 +358,36 @@ const goToMainScreen = () => {
   router.push('/main');
 };
 
-const updateStoreSpecies = (selection) => {
-  store.dispatch('setSpecies', selection.value);
+const updateStoreSpecies = (event: any) => {
+  store.dispatch('setSpecies', event.value);
 };
 
-const updateStoreMap = (selection) => {
-  store.dispatch('setMap', selection.value);
+const updateStoreMap = (event: any) => {
+  store.dispatch('setMap', event.value);
 };
 
-const updateStoreChromosomeNum = (selection) => {
-  store.dispatch('setChromosomeNum', selection.value);
+const updateStoreChromosomeNum = (event: any) => {
+  store.dispatch('setChromosomeNum', event.value);
 };
 
 const updateStoreChromosome = (chromosome: Chromosome) => {
   store.dispatch('setChromosome', chromosome);
 };
 
-const updateStoreStartPosition = (selection) => {
-  store.dispatch('setStartPosition', selection.value);
+const updateStoreStartPosition = (event: any) => {
+  store.dispatch('setStartPosition', event.value);
 };
 
-const updateStoreStopPosition = (selection) => {
-  store.dispatch('setStopPosition', selection.value);
+const updateStoreStopPosition = (event: any) => {
+  store.dispatch('setStopPosition', event.value);
 };
 
-const updateStoreComparativeSpeciesOne = (selection) => {
-  store.dispatch('setComparativeSpeciesOne', selection.value);
+const updateStoreComparativeSpeciesOne = (event: any) => {
+  store.dispatch('setComparativeSpeciesOne', event.value);
 };
 
-const updateStoreComparativeSpeciesTwo = (selection) => {
-  store.dispatch('setComparativeSpeciesTwo', selection.value);
+const updateStoreComparativeSpeciesTwo = (event: any) => {
+  store.dispatch('setComparativeSpeciesTwo', event.value);
 };
 
 /* function resetStore() {

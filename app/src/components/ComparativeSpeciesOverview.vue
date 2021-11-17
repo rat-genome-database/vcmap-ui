@@ -16,8 +16,7 @@
 import { ref } from 'vue';
 
 const comparativeSpecies = ref([
-  { id: 1, name: 'Rat', syntenyString: 'Synteny in chr1, chr4, chr11' },
-  { id: 2, name: 'Horse', syntenyString: 'Synteny in chr2, chr7' }
+  { id: 1, name: 'Bonobo', syntenyString: 'Level 1 synteny found across 11 different chromosomes' }
 ]);
 
 </script>

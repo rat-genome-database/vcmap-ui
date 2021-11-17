@@ -9,7 +9,7 @@
     </text>
     <rect 
       data-test="track-section-svg"
-      class="section" 
+      class="section"
       :fill="section.color" 
       :x="posX" :y="getSectionYPosition(posY, index)" 
       :width="width" 
@@ -67,32 +67,11 @@ const getSectionYPosition = (startingYPos: number, sectionIndex: number) => {
 <style lang="scss" scoped>
 .label.small
 {
-  font: normal 10px sans-serif;
+  font: normal 8px sans-serif;
 }
 
 .section
 {
-  stroke-width: 1;
-  stroke: lightgray;
-
-  &.chr-1
-  {
-    fill: lightgreen;
-  }
-
-  &.chr-2
-  {
-    fill: burlywood;
-  }
-
-  &.chr-3
-  {
-    fill: lightblue;
-  }
-
-  &.chr-4
-  {
-    fill: lightsalmon;
-  }
+  stroke-width: 0;
 }
 </style>

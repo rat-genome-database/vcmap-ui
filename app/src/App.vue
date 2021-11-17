@@ -19,6 +19,6 @@
 
 .logo
 {
-  max-height: 100px;
+  max-height: 75px;
 }
 </style>

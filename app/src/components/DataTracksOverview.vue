@@ -6,6 +6,9 @@
         <div v-for="track in dataTracks" class="grid" :key="track.id">
           <div class="col-3 track-color" :style="{ backgroundColor: track.color }">{{track.name}}</div>
         </div>
+        <div v-if="dataTracks.length === 0">
+          <p>No Data Tracks Loaded</p>
+        </div>
       </div>
     </div>
   </div>
@@ -14,9 +17,14 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 
-const dataTracks = ref([
-  { id: 1, name: 'Clinical', color: 'lightseagreen' }
-]);
+interface DataTrack
+{
+  id?: number;
+  name: string;
+  color: string;
+}
+
+const dataTracks = ref<DataTrack[]>([]);
 </script>
 
 <style lang="scss" scoped>
