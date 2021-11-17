@@ -13,7 +13,7 @@
     <!-- backbone species track -->
     <text class="label medium bold" :x="BACKBONE_X_POS" :y="PANEL_TITLE_Y_POS">Backbone</text>
     <text v-if="backboneSpecies" class="label small" :x="BACKBONE_X_POS" y="30">{{backboneSpecies.name}}</text>
-    <TrackSVG v-if="track" show-start-stop :pos-x="BACKBONE_X_POS" :pos-y="TRACK_START_Y_POS" :width="TRACK_WIDTH" :track="track as Track" />
+    <TrackSVG v-if="track" is-selectable show-start-stop :pos-x="BACKBONE_X_POS" :pos-y="TRACK_START_Y_POS" :width="TRACK_WIDTH" :track="track as Track" />
 
     <!-- Comparative species synteny tracks -->
     <template v-for="(track, index) in comparativeTracks" :key="track">

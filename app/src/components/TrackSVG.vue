@@ -10,6 +10,7 @@
     <rect 
       data-test="track-section-svg"
       class="section"
+      :class="{'selectable': isSelectable}"
       @mouseenter="highlight(section)"
       @mouseleave="unhighlight(section)"
       :fill="section.isHighlighted && isHighlightable ? HIGHLIGHT_COLOR : section.color" 
@@ -36,6 +37,7 @@ const HIGHLIGHT_COLOR = 'blue';
 
 interface Props 
 {
+  isSelectable?: boolean;
   isHighlightable?: boolean;
   showStartStop?: boolean;
   posX: number;
@@ -86,5 +88,9 @@ const unhighlight = (section: TrackSection) => {
 .section
 {
   stroke-width: 0;
+  &.selectable:hover
+  {
+    cursor: crosshair;
+  }
 }
 </style>
