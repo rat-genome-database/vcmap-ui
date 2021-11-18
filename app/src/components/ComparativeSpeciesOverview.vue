@@ -1,11 +1,10 @@
 <template>
   <div class="grid col-4">
     <div class="col-12">
-      <h4>Comparative Species</h4>
+      <h4>Comparative Species ({{comparativeSpecies?.length}})</h4>
       <ul class="list-disc">
-        <li v-for="species in comparativeSpecies" :key="species.id">
+        <li v-for="species in comparativeSpecies" :key="species.name">
           <div>{{species.name}}</div>
-          <div>{{species.syntenyString}}</div>
         </li>
       </ul>
     </div>
@@ -13,13 +12,16 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
+import Species from '@/models/Species';
+import { onMounted, ref } from 'vue';
+import { useStore } from 'vuex';
 
-const comparativeSpecies = ref([
-  { id: 1, name: 'Bonobo', syntenyString: 'Level 1 synteny found across 5 chromosomes' },
-  { id: 2, name: 'Rat', syntenyString: 'Level 1 synteny found across 7 chromosomes' }
-]);
+const store = useStore();
+let comparativeSpecies = ref<Species[] | null>(null);
 
+onMounted(() => {
+  comparativeSpecies.value = [store.getters.getComparativeSpeciesOne, store.getters.getComparativeSpeciesTwo];
+});
 </script>
 
 <style lang="scss" scoped>

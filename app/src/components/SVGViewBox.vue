@@ -37,8 +37,10 @@ import { onMounted, ref } from 'vue';
 import { useStore } from 'vuex';
 import TrackSVG from './TrackSVG.vue';
 import Chromosome from '@/models/Chromosome';
+import Map from '@/models/Map';
 import { ResolutionController } from '@/utils/ResolutionController';
 import SyntenyBlock from '@/models/SyntenyBlock';
+import SpeciesApi from '@/api/SpeciesApi';
 
 // These can be referenced in the template but aren't reactive
 const BACKBONE_PANEL_WIDTH = 300;
@@ -62,11 +64,11 @@ let comparativeTracks = ref<Track[] | null>(null);
  * Once mounted, let's set our reactive data props and create the backbone and synteny tracks
  */
 onMounted(async () => {
-  backboneSpecies.value = store.getters.getSpecies ?? new Species({typeKey: 1, name: 'Human'});
-  backboneChromosome.value = store.getters.getChromosome ?? new Chromosome({ chromosome: '1', mapKey: 38, seqLength: 0, gapLength: 0, gapCount: 0, contigCount: 0});
+  backboneSpecies.value = store.getters.getSpecies;
+  backboneChromosome.value = store.getters.getChromosome;
 
   // Determine starting resolution TODO
-  ResolutionController.setBasePairToPixelRatio(1000);
+  ResolutionController.setBasePairToPixelRatio(3000);
 
   createBackboneTrack();
   await createSyntenyTracks();
@@ -83,8 +85,8 @@ const getTrackXOffset = (trackNumber: number) => {
  * Creates the backbone track model and sets the viewbox height based on the size of the backbone track
  */
 const createBackboneTrack = () => {
-  const startPos = store.getters.getStartPosition ?? 0;
-  const stopPos = store.getters.getStopPosition ?? 250000;
+  const startPos = store.getters.getStartPosition;
+  const stopPos = store.getters.getStopPosition;
   const speciesName = backboneSpecies.value?.name;
   const backboneChromosomeString = backboneChromosome.value?.chromosome;
   if (startPos != null && stopPos != null && speciesName != null && backboneChromosomeString != null)
@@ -101,23 +103,42 @@ const createBackboneTrack = () => {
 };
 
 const createSyntenyTracks = async () => {
-  const backboneChr = store.getters.getChromosome ?? new Chromosome({ chromosome: '1', mapKey: 38, seqLength: 0, gapLength: 0, gapCount: 0, contigCount: 0});
-  const backboneStart = store.getters.getStartPosition ?? 0;
-  const backboneStop = store.getters.getStopPosition ?? 250000;
-
-  // Hard-coded comparative species maps
-  const comparativeSpeciesMaps = [
-    { key: 513, name: 'Mhudiblu_PPA_v0', description: 'Bonobo Mhudiblu_PPA_v0_Assembly', notes: 'Bonobo Mhudiblu_PPA_v0 Assembly NCBI', speciesName: 'Bonobo'},
-    { key: 372, name: 'mRatBN7.2', description: 'mRatBN7.2 Assembly', notes: 'mRatBN7.2 Assembly', speciesName: 'Rat'}
-  ];
-  if ( backboneStart == null || backboneStop == null || backboneChr == null || comparativeSpeciesMaps.length === 0)
-  {
-    console.error('Cannot get synteny blocks with missing backbone chromosome, backbone start, backbone stop, or comparative species maps');
-    return;
-  }
+  const backboneChr = store.getters.getChromosome as Chromosome;
+  const backboneStart = store.getters.getStartPosition as number;
+  const backboneStop = store.getters.getStopPosition as number;
+  const comparativeSpecies: Species[] = [store.getters.getComparativeSpeciesOne, store.getters.getComparativeSpeciesTwo];
 
   try
   {
+    // Primary maps for comparative species
+    const mapCalls = comparativeSpecies.map(s => SpeciesApi.getMaps(s.typeKey));
+    const mapResults = await Promise.allSettled(mapCalls);
+    const comparativeSpeciesMaps: Map[] = [];
+    mapResults.forEach(result => {
+      if (result.status === 'fulfilled')
+      {
+        const maps = result.value;
+        for (let i = 0; i < maps.length; i++)
+        {
+          if (maps[i].primaryRefAssembly)
+          {
+            comparativeSpeciesMaps.push(maps[i]);
+            break;
+          }
+        }
+      }
+      else
+      {
+        console.error(result.status, result.reason);
+      }
+    });
+
+    if ( backboneStart == null || backboneStop == null || backboneChr == null || comparativeSpeciesMaps.length === 0)
+    {
+      console.error('Cannot get synteny blocks with missing backbone chromosome, backbone start, backbone stop, or comparative species maps');
+      return;
+    }
+
     // Loop for each comparative species selected
     const syntenyCalls: Promise<SyntenyBlock[]>[] = [];
     comparativeSpeciesMaps.forEach(map => {
@@ -130,14 +151,14 @@ const createSyntenyTracks = async () => {
       ));
     });
 
-    const results = await Promise.allSettled(syntenyCalls);
+    const syntenyResults = await Promise.allSettled(syntenyCalls);
     let speciesSyntenyMap: {[key: string]: SyntenyBlock[]} = {};
-    results.forEach((result, index) => {
+    syntenyResults.forEach((result, index) => {
       if (result.status === 'fulfilled')
       {
-        speciesSyntenyMap[comparativeSpeciesMaps[index].speciesName] = result.value;
+        speciesSyntenyMap[comparativeSpecies[index].name] = result.value;
       }
-      else if (result.status === 'rejected')
+      else
       {
         console.error(result.status, result.reason);
       }

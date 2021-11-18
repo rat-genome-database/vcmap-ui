@@ -33,7 +33,7 @@ import TrackSection from '@/models/TrackSection';
 import { toRefs } from '@vue/reactivity';
 
 const LABEL_Y_OFFSET = 3;
-const HIGHLIGHT_COLOR = 'blue';
+const HIGHLIGHT_COLOR = 'aquamarine';
 
 interface Props 
 {

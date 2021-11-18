@@ -38,11 +38,13 @@ export default class TrackSection
   public get height()
   {
     const displayStopBP = (this._stopBP > this._cutoffBP) ? this._cutoffBP : this._stopBP;
-    return Math.ceil((displayStopBP - this._startBP) / ResolutionController.getBasePairToPixelRatio());
+    // Return height rounded to 2 decimal places
+    return Math.round(((displayStopBP - this._startBP) / ResolutionController.getBasePairToPixelRatio()) * 100) / 100;
   }
 
   public get offsetHeight()
   {
-    return Math.ceil(this._offsetBPCount / ResolutionController.getBasePairToPixelRatio());
+    // Return height rounded to 2 decimal places
+    return Math.round((this._offsetBPCount / ResolutionController.getBasePairToPixelRatio()) * 100) / 100;
   }
 }

@@ -25,6 +25,8 @@ const CHROMOSOME_COLOR_MAP: {[key: string]: string} = {
   'Y': 'violet'
 };
 
+const UNMAPPED_CHROMOSOME_COLOR = 'brown';
+
 export class ChromosomeDTO
 {
   mapKey: number = 0;
@@ -33,6 +35,7 @@ export class ChromosomeDTO
   gapLength: number = 0;
   gapCount: number = 0;
   contigCount: number = 0;
+  ordinalNumber: number = 0;
 }
 
 export default class Chromosome extends ChromosomeDTO
@@ -45,6 +48,6 @@ export default class Chromosome extends ChromosomeDTO
 
   static getColor(chromosome: string)
   {
-    return CHROMOSOME_COLOR_MAP[chromosome];
+    return CHROMOSOME_COLOR_MAP[chromosome] ?? UNMAPPED_CHROMOSOME_COLOR;
   }
 }

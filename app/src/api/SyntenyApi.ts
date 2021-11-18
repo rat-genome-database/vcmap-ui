@@ -7,7 +7,7 @@ export default class SyntenyApi
 {
   static async getSyntenyBlocks(backboneChromosome: Chromosome, start: number, stop: number, comparativeSpeciesMap: Map, chainLevel?: number): Promise<SyntenyBlock[]>
   {
-    let apiRoute = `/synteny/blocks/${backboneChromosome?.mapKey}/${backboneChromosome?.chromosome}/${start}/${stop}/${comparativeSpeciesMap?.key}`;
+    let apiRoute = `/vcmap/blocks/${backboneChromosome?.mapKey}/${backboneChromosome?.chromosome}/${start}/${stop}/${comparativeSpeciesMap?.key}`;
     if (chainLevel != null)
     {
       apiRoute += `/${chainLevel}`;
