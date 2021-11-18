@@ -37,6 +37,6 @@ describe('BackboneOverview', () => {
     await nextTick();
 
     const speciesText = wrapper.get('[data-test="backbone-overview-species"]');
-    expect(speciesText.text()).toBe('Species: Test Species');
+    expect(speciesText.text()).toBe('Test Species');
   });
 });

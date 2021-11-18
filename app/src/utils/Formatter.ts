@@ -20,4 +20,14 @@ export namespace Formatter
       return bp + 'bp';
     }
   }
+
+  export function addCommasToBasePair(bp: number | null)
+  {
+    if (bp == null)
+    {
+      return null;
+    }
+
+    return bp.toLocaleString();
+  }
 }
