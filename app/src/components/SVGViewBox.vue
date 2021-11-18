@@ -1,30 +1,28 @@
 <template>
-  <svg :viewBox="'0 0 1000 ' + viewBoxHeight" xmlns="http://www.w3.org/2000/svg">
+  <svg :viewBox="'0 0 1000 ' + ViewSize.viewboxHeight" xmlns="http://www.w3.org/2000/svg">
     <!-- Outside panel -->
-    <rect class="panel" x="0" width="1000" :height="viewBoxHeight" />
+    <rect class="panel" x="0" width="1000" :height="ViewSize.viewboxHeight" />
     <!-- Inner panels -->
-    <rect class="panel" x="0" :width="BACKBONE_PANEL_WIDTH" :height="viewBoxHeight" />
-    <rect class="panel" :x="BACKBONE_PANEL_WIDTH" :width="COMPARATIVE_PANEL_WIDTH" :height="viewBoxHeight" />
+    <rect class="panel" x="0" :width="ViewSize.backbonePanelWidth" :height="ViewSize.viewboxHeight" />
+    <rect class="panel" :x="ViewSize.backbonePanelWidth" :width="ViewSize.comparativePanelWidth" :height="ViewSize.viewboxHeight" />
     <!-- Title panels -->
-    <rect class="panel" x="0" :width="BACKBONE_PANEL_WIDTH" height="40" />
-    <rect class="panel" :x="BACKBONE_PANEL_WIDTH" :width="COMPARATIVE_PANEL_WIDTH" height="40" />
+    <rect class="panel" x="0" :width="ViewSize.backbonePanelWidth" :height="ViewSize.panelTitleHeight" />
+    <rect class="panel" :x="ViewSize.backbonePanelWidth" :width="ViewSize.comparativePanelWidth" :height="ViewSize.panelTitleHeight" />
 
     <!-- Backbone panel SVGs ------------------------------------------->
     <!-- backbone species track -->
-    <text class="label medium bold" :x="BACKBONE_X_POS" :y="PANEL_TITLE_Y_POS">Backbone</text>
-    <text v-if="backboneSpecies" class="label small" :x="BACKBONE_X_POS" y="30">{{backboneSpecies.name}}</text>
-    <TrackSVG v-if="track" is-selectable show-start-stop :pos-x="BACKBONE_X_POS" :pos-y="TRACK_START_Y_POS" :width="TRACK_WIDTH" :track="track as Track" />
+    <text class="label medium bold" :x="ViewSize.backboneXPosition" :y="ViewSize.panelTitleYPosition">Backbone</text>
+    <text v-if="backboneSpecies" class="label small" :x="ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{backboneSpecies.name}}</text>
+    <TrackSVG v-if="track" is-selectable show-start-stop :pos-x="ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="track as Track" />
 
     <!-- Comparative species synteny tracks -->
     <template v-for="(track, index) in comparativeTracks" :key="track">
-      <text class="label small" :x="getTrackXOffset(index + 1) + BACKBONE_X_POS" y="30">{{track.name}}</text>
-      <TrackSVG v-if="track" is-highlightable :pos-x="getTrackXOffset(index + 1) + BACKBONE_X_POS" :pos-y="TRACK_START_Y_POS" :width="TRACK_WIDTH" :track="track as Track" />
+      <text class="label small" :x="getTrackXOffset(index + 1) + ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{track.name}}</text>
+      <TrackSVG v-if="track" is-highlightable :pos-x="getTrackXOffset(index + 1) + ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="track as Track" />
     </template>
-    <!------------------------------------------------------------------->
 
     <!-- Comparative panel SVGs ----------------------------------------->
-    <text class="label medium bold" x="320" :y="PANEL_TITLE_Y_POS">Comparative</text>
-    <!------------------------------------------------------------------->
+    <text class="label medium bold" x="320" :y="ViewSize.panelTitleYPosition">Comparative</text>
   </svg>
 </template>
 
@@ -41,20 +39,11 @@ import Map from '@/models/Map';
 import { ResolutionController } from '@/utils/ResolutionController';
 import SyntenyBlock from '@/models/SyntenyBlock';
 import SpeciesApi from '@/api/SpeciesApi';
-
-// These can be referenced in the template but aren't reactive
-const BACKBONE_PANEL_WIDTH = 300;
-const COMPARATIVE_PANEL_WIDTH = 700;
-const PANEL_TITLE_Y_POS = 15;
-const BACKBONE_X_POS = 230;
-const MINIMUM_VIEWBOX_HEIGHT = 700;
-const TRACK_WIDTH = 25;
-const TRACK_START_Y_POS = 60;
+import ViewSize from '@/utils/ViewSize';
 
 const store = useStore();
 
 // Reactive data props
-let viewBoxHeight = ref<number>(1000);
 let backboneSpecies = ref<Species | null>(null);
 let backboneChromosome = ref<Chromosome | null>(null);
 let track = ref<Track | null>(null);
@@ -63,15 +52,14 @@ let comparativeTracks = ref<Track[] | null>(null);
 /**
  * Once mounted, let's set our reactive data props and create the backbone and synteny tracks
  */
-onMounted(async () => {
+onMounted(() => {
   backboneSpecies.value = store.getters.getSpecies;
   backboneChromosome.value = store.getters.getChromosome;
 
-  // Determine starting resolution TODO
-  ResolutionController.setBasePairToPixelRatio(3000);
+  setResolution(store.getters.getStartPosition, store.getters.getStopPosition);
 
   createBackboneTrack();
-  await createSyntenyTracks();
+  createSyntenyTracks();
 });
 
 /**
@@ -79,6 +67,12 @@ onMounted(async () => {
  */
 const getTrackXOffset = (trackNumber: number) => {
   return (trackNumber * -70);
+};
+
+const setResolution = (start: number, stop: number) => {
+  const backboneLength = stop - start;
+  const startingResolution = backboneLength / (ViewSize.viewboxHeight - 100);
+  ResolutionController.setBasePairToHeightRatio(startingResolution);
 };
 
 /**
@@ -93,8 +87,6 @@ const createBackboneTrack = () => {
   {
     const trackSection = new TrackSection(startPos, stopPos, backboneChromosomeString, stopPos);
     track.value = new Track(speciesName, [trackSection]);
-    // Add a little breathing room after the height of the backbone track
-    viewBoxHeight.value = (track.value.height + 200) > MINIMUM_VIEWBOX_HEIGHT ? (track.value.height + 200) : MINIMUM_VIEWBOX_HEIGHT;
   }
   else
   {

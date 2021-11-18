@@ -19,7 +19,7 @@ export default class SyntenyApi
       blocks.push(new SyntenyBlock(block));
     });
 
-    console.log(blocks.length, blocks, [... new Set(blocks.map(b => b.chromosome))]);
+    console.debug(`Synteny blocks found for mapKey '${comparativeSpeciesMap.key}': ${blocks.length}`);
     return blocks;
   }
 }

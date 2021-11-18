@@ -1,14 +1,18 @@
+let basePairToHeightRatio = 250000;
+
+/**
+ * Essentially controls the "base pair resolution" or the number of base pairs that can be displayed per unit of height
+ */
 export namespace ResolutionController
 {
-  let basePairToPixelRatio = 250000;
-
-  export function setBasePairToPixelRatio(ratio: number)
+  export function setBasePairToHeightRatio(ratio: number)
   {
-    basePairToPixelRatio = ratio;
+    console.debug(`Setting resolution to ${ratio} bp/unit`);
+    basePairToHeightRatio = ratio;
   }
 
-  export function getBasePairToPixelRatio()
+  export function getBasePairToHeightRatio()
   {
-    return basePairToPixelRatio;
+    return basePairToHeightRatio;
   }
 }

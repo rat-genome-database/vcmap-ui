@@ -22,7 +22,7 @@ export default class TrackSection
 
   public get color()
   {
-    return Chromosome.getColor(this.chromosome) ?? 'white';
+    return Chromosome.getColor(this.chromosome);
   }
 
   public get startBP()
@@ -39,12 +39,12 @@ export default class TrackSection
   {
     const displayStopBP = (this._stopBP > this._cutoffBP) ? this._cutoffBP : this._stopBP;
     // Return height rounded to 2 decimal places
-    return Math.round(((displayStopBP - this._startBP) / ResolutionController.getBasePairToPixelRatio()) * 100) / 100;
+    return Math.round(((displayStopBP - this._startBP) / ResolutionController.getBasePairToHeightRatio()) * 100) / 100;
   }
 
   public get offsetHeight()
   {
     // Return height rounded to 2 decimal places
-    return Math.round((this._offsetBPCount / ResolutionController.getBasePairToPixelRatio()) * 100) / 100;
+    return Math.round((this._offsetBPCount / ResolutionController.getBasePairToHeightRatio()) * 100) / 100;
   }
 }
