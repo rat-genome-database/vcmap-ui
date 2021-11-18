@@ -13,93 +13,92 @@
             :loading="isLoadingSpecies"
             @change="updateStoreSpecies"
             optionLabel="name" 
-            placeholder="Backbone species" />
+            placeholder="Backbone Species" />
         </div>
       </div>
       <div class="grid">
         <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
-          <va-select 
-            label="Assembly Map"
+          <h4>Assembly Map</h4>
+          <Dropdown 
             class="configuration-input" 
-            @update:modelValue="updateStoreMap"
+            @change="updateStoreMap"
             v-model="selectedMap"
             :disabled="!mapOptions.length"
-            :no-options-text="'Select a species to view assembly maps'" 
             :loading="isLoadingMap"
             :options="mapOptions"
-            :track-by="(map: Map) => map.key"
-            :text-by="(map: Map) => map.name + ': ' + map.description + ' (' + map?.notes + ')'"
-            outline />
-        </div>
-      </div>
-      <div class="grid">
-        <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
-          <va-select 
-            label="Chromosome"
-            class="configuration-input"
-            @update:modelValue="updateStoreChromosomeNum" 
-            v-model="selectedChromosomeNum"
-            :disabled = "!chromosomeNumOptions.length"
-            :options="chromosomeNumOptions"
-            :track-by="(chromosomeNum: Number) => chromosomeNum"
-            :text-by="(chromosomeNum: Number) => chromosomeNum"
+            optionLabel="name"
             />
         </div>
       </div>
       <div class="grid">
-        <div class="lg:col-3 lg:col-offset-3 md:col-4 md:col-offset-1 sm:col-5 sm:col-offset-1">
-          <va-input
-            label="Start Position"
-            type="Number"
+        <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
+          <h4>Chromosome</h4>
+          <Dropdown 
             class="configuration-input"
-            @update:modelValue="updateStoreStartPosition" 
-            v-model="startPosition"
-            :disabled="!chromosomeInfo"
-            max="maxPosition - 1"
-            min="0"
-            outline
-          />
-        </div>
-        <div class="lg:col-3 lg:col-offset-3 md:col-4 md:col-offset-1 sm:col-5 sm:col-offset-1">
-          <va-input
-            label="Stop Position"
-            type="Number"
-            class="configuration-input" 
-            @update:modelValue="updateStoreStopPosition"
-            v-model="stopPosition"
-            :disabled="!chromosomeInfo"
-            max="maxPosition"
-            min="1"
-            outline
-          />
+            @change="updateStoreChromosomeNum" 
+            v-model="selectedChromosomeNum"
+            :disabled = "!chromosomeNumOptions.length"
+            :options="chromosomeNumOptions"
+            />
         </div>
       </div>
       <div class="grid">
+        <div class="lg:col-2 lg:col-offset-3 md:col-4 md:col-offset-1 sm:col-5 sm:col-offset-1">
+          <h4>Start Position</h4>
+          <InputNumber
+            label="Start Position"
+            class="configuration-input"
+            showButtons
+            @input="updateStoreStartPosition" 
+            v-model="startPosition"
+            :disabled="!chromosomeInfo"
+            suffix="bp"
+            :max="maxPosition - 1"
+            :min="0"
+          />
+        </div>
+        <div class="lg:col-2 md:col-4 md:col-offset-1 sm:col-5 sm:col-offset-1">
+          <h4>Stop Position</h4>
+          <InputNumber
+            label="Stop Position"
+            class="configuration-input" 
+            showButtons
+            @input="updateStoreStopPosition"
+            v-model="stopPosition"
+            :disabled="!chromosomeInfo"
+            suffix="bp"
+            :max="maxPosition"
+            :min="1"
+          />
+        </div>
+      </div>
+      <div class="col-12 text-center">
+        <h2>Comparative Species</h2>
+      </div>
+      <div class="grid">
         <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
-          <va-select 
+          <Dropdown 
             label="Comparative Species 1"
             class="configuration-input" 
-            @update:modelValue="updateStoreComparativeSpeciesOne"
+            @change="updateStoreComparativeSpeciesOne"
             v-model="comparativeSpeciesOne" 
             :loading="isLoadingSpecies"
             :options="speciesOptions"
-            :track-by="(species: Species) => species.typeKey"
-            :text-by="(species: Species) => species.name"
-            outline />
+            optionLabel="name" 
+             />
         </div>
       </div>
       <div class="grid">
         <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
-          <va-select 
+          <Dropdown 
             label="Comparative Species 2"
             class="configuration-input" 
-            @update:modelValue="updateStoreComparativeSpeciesTwo"
+            @change="updateStoreComparativeSpeciesTwo"
             v-model="comparativeSpeciesTwo" 
             :loading="isLoadingSpecies"
             :options="speciesOptions"
-            :track-by="(species: Species) => species.typeKey"
-            :text-by="(species: Species) => species.name"
-            outline />
+            optionLabel="name" 
+             />
         </div>
       </div>
       <div class="grid">
@@ -141,7 +140,7 @@ let isLoadingChromosome = ref(false);
 
 let startPosition = ref<Number | null>();
 let stopPosition = ref<Number | null>();
-let maxPosition = ref<Number | null>(0);
+let maxPosition = ref<Number | null>();
 
 let comparativeSpeciesOne = ref<Species>();
 let comparativeSpeciesTwo = ref<Species>();
@@ -166,6 +165,7 @@ onMounted(async () => {
   if (store.getters.getSpecies)
   {
     selectedSpecies.value = store.getters.getSpecies;
+    
     isLoadingMap.value = true;
 
     try
@@ -272,7 +272,7 @@ watch(() => store.getters.getSpecies, (newVal, oldVal) => {
       stopPosition.value = null;
       maxPosition.value = null;
 
-      SpeciesApi.getMaps(newVal.typeKey).then(maps => {
+      SpeciesApi.getMaps(store.getters.getSpecies.typeKey).then(maps => {
         mapOptions.value = maps;
         isLoadingMap.value = false;
       });
@@ -339,8 +339,8 @@ watch(() => store.getters.getChromosomeNum, (newVal, oldVal) => {
       SpeciesApi.getChromosomeInfo(newVal, store.getters.getMap.key).then(chrInfo => {
         chromosomeInfo.value = chrInfo;
         updateStoreChromosome(chromosomeInfo.value);
+        maxPosition.value = store.getters.getChromosome.seqLength;
       });
-      maxPosition.value =  10;
     }
     catch (err)
     {
@@ -358,36 +358,36 @@ const goToMainScreen = () => {
   router.push('/main');
 };
 
-const updateStoreSpecies = (species: Species) => {
-  store.dispatch('setSpecies', species);
+const updateStoreSpecies = (selection) => {
+  store.dispatch('setSpecies', selection.value);
 };
 
-const updateStoreMap = (map: Map) => {
-  store.dispatch('setMap', map);
+const updateStoreMap = (selection) => {
+  store.dispatch('setMap', selection.value);
 };
 
-const updateStoreChromosomeNum = (chromosome: Number) => {
-  store.dispatch('setChromosomeNum', chromosome);
+const updateStoreChromosomeNum = (selection) => {
+  store.dispatch('setChromosomeNum', selection.value);
 };
 
 const updateStoreChromosome = (chromosome: Chromosome) => {
   store.dispatch('setChromosome', chromosome);
 };
 
-const updateStoreStartPosition = (start: Number) => {
-  store.dispatch('setStartPosition', start);
+const updateStoreStartPosition = (selection) => {
+  store.dispatch('setStartPosition', selection.value);
 };
 
-const updateStoreStopPosition = (stop: Number) => {
-  store.dispatch('setStopPosition', stop);
+const updateStoreStopPosition = (selection) => {
+  store.dispatch('setStopPosition', selection.value);
 };
 
-const updateStoreComparativeSpeciesOne = (species: Species) => {
-  store.dispatch('setComparativeSpeciesOne', species);
+const updateStoreComparativeSpeciesOne = (selection) => {
+  store.dispatch('setComparativeSpeciesOne', selection.value);
 };
 
-const updateStoreComparativeSpeciesTwo = (species: Species) => {
-  store.dispatch('setComparativeSpeciesTwo', species);
+const updateStoreComparativeSpeciesTwo = (selection) => {
+  store.dispatch('setComparativeSpeciesTwo', selection.value);
 };
 
 /* function resetStore() {

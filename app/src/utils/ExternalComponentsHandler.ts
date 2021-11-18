@@ -4,6 +4,7 @@ import { App, Component, Directive } from "@vue/runtime-core";
 import PrimeVue from 'primevue/config';
 import Button from 'primevue/button';
 import Dropdown from 'primevue/dropdown';
+import InputNumber from 'primevue/inputnumber';
 import Divider from 'primevue/divider';
 import Panel from 'primevue/panel';
 import Tooltip from 'primevue/tooltip';
@@ -21,6 +22,7 @@ const PLUGINS = [
 const COMPONENTS: {[key: string]: Component} = {
   'Button': Button,
   'Dropdown': Dropdown,
+  'InputNumber': InputNumber,
   'Divider': Divider,
   'Panel': Panel,
 };
