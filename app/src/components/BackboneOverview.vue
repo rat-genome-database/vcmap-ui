@@ -34,7 +34,7 @@ onMounted(() => {
   backboneSpecies.value = store.getters.getSpecies;
   backboneChromosome.value = store.getters.getChromosome ?? new Chromosome({ chromosome: '1', mapKey: 38, seqLength: 0, gapLength: 0, gapCount: 0, contigCount: 0});
   backboneStartLabel.value = Formatter.convertBasePairToLabel(store.getters.getStartPosition ?? 0);
-  backboneStopLabel.value = Formatter.convertBasePairToLabel(store.getters.getStopPosition ?? 1000000);
+  backboneStopLabel.value = Formatter.convertBasePairToLabel(store.getters.getStopPosition ?? 250000);
 });
 </script>
 

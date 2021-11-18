@@ -38,6 +38,7 @@ import { useStore } from 'vuex';
 import TrackSVG from './TrackSVG.vue';
 import Chromosome from '@/models/Chromosome';
 import { ResolutionController } from '@/utils/ResolutionController';
+import SyntenyBlock from '@/models/SyntenyBlock';
 
 // These can be referenced in the template but aren't reactive
 const BACKBONE_PANEL_WIDTH = 300;
@@ -65,7 +66,7 @@ onMounted(async () => {
   backboneChromosome.value = store.getters.getChromosome ?? new Chromosome({ chromosome: '1', mapKey: 38, seqLength: 0, gapLength: 0, gapCount: 0, contigCount: 0});
 
   // Determine starting resolution TODO
-  ResolutionController.setBasePairToPixelRatio(3500);
+  ResolutionController.setBasePairToPixelRatio(1000);
 
   createBackboneTrack();
   await createSyntenyTracks();
@@ -83,7 +84,7 @@ const getTrackXOffset = (trackNumber: number) => {
  */
 const createBackboneTrack = () => {
   const startPos = store.getters.getStartPosition ?? 0;
-  const stopPos = store.getters.getStopPosition ?? 1000000;
+  const stopPos = store.getters.getStopPosition ?? 250000;
   const speciesName = backboneSpecies.value?.name;
   const backboneChromosomeString = backboneChromosome.value?.chromosome;
   if (startPos != null && stopPos != null && speciesName != null && backboneChromosomeString != null)
@@ -102,38 +103,61 @@ const createBackboneTrack = () => {
 const createSyntenyTracks = async () => {
   const backboneChr = store.getters.getChromosome ?? new Chromosome({ chromosome: '1', mapKey: 38, seqLength: 0, gapLength: 0, gapCount: 0, contigCount: 0});
   const backboneStart = store.getters.getStartPosition ?? 0;
-  const backboneStop = store.getters.getStopPosition ?? 1000000;
+  const backboneStop = store.getters.getStopPosition ?? 250000;
 
-  if ( backboneStart == null || backboneStop == null || backboneChr == null)
+  // Hard-coded comparative species maps
+  const comparativeSpeciesMaps = [
+    { key: 513, name: 'Mhudiblu_PPA_v0', description: 'Bonobo Mhudiblu_PPA_v0_Assembly', notes: 'Bonobo Mhudiblu_PPA_v0 Assembly NCBI', speciesName: 'Bonobo'},
+    { key: 372, name: 'mRatBN7.2', description: 'mRatBN7.2 Assembly', notes: 'mRatBN7.2 Assembly', speciesName: 'Rat'}
+  ];
+  if ( backboneStart == null || backboneStop == null || backboneChr == null || comparativeSpeciesMaps.length === 0)
   {
-    console.error('Cannot get synteny blocks with missing backbone chromosome, backbone start, or backbone stop');
+    console.error('Cannot get synteny blocks with missing backbone chromosome, backbone start, backbone stop, or comparative species maps');
     return;
   }
 
   try
   {
-    // Loop for each comparative species selected TODO:
-
-    const blocks = await SyntenyApi.getSyntenyBlocks(
-      backboneChr,
-      backboneStart,
-      backboneStop,
-      // Hard-coded comparative species map + chain level
-      { key: 513, name: 'Mhudiblu_PPA_v0', description: 'Bonobo Mhudiblu_PPA_v0_Assembly', notes: 'Bonobo Mhudiblu_PPA_v0 Assembly NCBI'},
-      1
-    );
-
-    const trackSections: TrackSection[] = [];
-    let previousBlockBackboneStop = 0;
-    blocks.forEach(block => {
-      const trackSection = new TrackSection(block.backboneStart, block.backboneStop, block.chromosome, backboneStop, block.backboneStart - previousBlockBackboneStop);
-      trackSections.push(trackSection);
-      previousBlockBackboneStop = block.backboneStop;
+    // Loop for each comparative species selected
+    const syntenyCalls: Promise<SyntenyBlock[]>[] = [];
+    comparativeSpeciesMaps.forEach(map => {
+      syntenyCalls.push(SyntenyApi.getSyntenyBlocks(
+        backboneChr,
+        backboneStart,
+        backboneStop,
+        map,
+        1
+      ));
     });
 
-    const track = new Track('Bonobo', trackSections);
+    const results = await Promise.allSettled(syntenyCalls);
+    let speciesSyntenyMap: {[key: string]: SyntenyBlock[]} = {};
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled')
+      {
+        speciesSyntenyMap[comparativeSpeciesMaps[index].speciesName] = result.value;
+      }
+      else if (result.status === 'rejected')
+      {
+        console.error(result.status, result.reason);
+      }
+    });
 
-    comparativeTracks.value = [track];
+    const tracks: Track[] = [];
+    for (let speciesName in speciesSyntenyMap)
+    {
+      const blocks = speciesSyntenyMap[speciesName];
+      const trackSections: TrackSection[] = [];
+      let previousBlockBackboneStop = 0;
+      blocks.forEach(block => {
+        const trackSection = new TrackSection(block.backboneStart, block.backboneStop, block.chromosome, backboneStop, block.backboneStart - previousBlockBackboneStop);
+        trackSections.push(trackSection);
+        previousBlockBackboneStop = block.backboneStop;
+      });
+      tracks.push(new Track(speciesName, trackSections));
+    }
+
+    comparativeTracks.value = tracks;
   }
   catch (err)
   {
