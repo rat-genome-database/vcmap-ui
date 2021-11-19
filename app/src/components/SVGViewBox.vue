@@ -1,4 +1,5 @@
 <template>
+  <ProgressBar class="vcmap-loader" :mode="(isLoading) ? 'indeterminate' : 'determinate'" value="0" :showValue="false"/>
   <svg :viewBox="'0 0 1000 ' + ViewSize.viewboxHeight" xmlns="http://www.w3.org/2000/svg">
     <!-- Outside panel -->
     <rect class="panel" x="0" width="1000" :height="ViewSize.viewboxHeight" />
@@ -48,6 +49,7 @@ let backboneSpecies = ref<Species | null>(null);
 let backboneChromosome = ref<Chromosome | null>(null);
 let track = ref<Track | null>(null);
 let comparativeTracks = ref<Track[] | null>(null);
+let isLoading = ref<boolean>(false);
 
 /**
  * Once mounted, let's set our reactive data props and create the backbone and synteny tracks
@@ -96,6 +98,7 @@ const createSyntenyTracks = async () => {
 
   try
   {
+    isLoading.value = true;
     // Primary maps for comparative species
     const mapCalls = comparativeSpecies.map(s => SpeciesApi.getMaps(s.typeKey));
     const mapResults = await Promise.allSettled(mapCalls);
@@ -171,9 +174,12 @@ const createSyntenyTracks = async () => {
   {
     console.error(err);
   }
+  finally
+  {
+    isLoading.value = false;
+  }
 };
 </script>
-
 <style lang="scss" scoped>
 rect.panel
 {
@@ -195,5 +201,10 @@ rect.panel
 .label.bold
 {
   font-style: bold;
+}
+
+.vcmap-loader.p-progressbar
+{
+  height: 0.25em;
 }
 </style>
