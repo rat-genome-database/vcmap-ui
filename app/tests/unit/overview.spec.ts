@@ -13,12 +13,18 @@ const mockStore = createStore({
     chromosome: null,
     startPos: null,
     stopPos: null,
-    comparativeSpeciesOne: null,
-    comparativeSpeciesTwo: null
+    comparativeSpeciesOne: new Species({ typeKey: 2, name: 'Test Species 2'}),
+    comparativeSpeciesTwo: new Species({ typeKey: 3, name: 'Test Species 3'})
   },
   getters: {
     getSpecies(state: VCMapState) {
       return state.species;
+    },
+    getComparativeSpeciesOne(state: VCMapState) {
+      return state.comparativeSpeciesOne;
+    },
+    getComparativeSpeciesTwo(state: VCMapState) {
+      return state.comparativeSpeciesTwo;
     }
   }
 });

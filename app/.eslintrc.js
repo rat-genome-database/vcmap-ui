@@ -28,6 +28,7 @@ module.exports = {
       "semi": ["warn", "always"],
       "vue/no-v-for-template-key": "off",
       "vue/script-setup-uses-vars": "error",
-      "no-inner-declarations": "off"
+      "no-inner-declarations": "off",
+      "no-unused-vars": "warn"
     }
 };

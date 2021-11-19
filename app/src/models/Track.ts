@@ -15,7 +15,7 @@ export default class Track
   {
     let totalHeight = 0;
     this.sections.forEach(section => {
-      totalHeight += section.height;
+      totalHeight += section.height + section.offsetHeight;
     });
     return totalHeight;
   }

@@ -4,6 +4,7 @@ export class MapDTO
   name: string = '';
   description: string = '';
   notes: string = '';
+  primaryRefAssembly: boolean = false;
 }
 
 export default class Map extends MapDTO

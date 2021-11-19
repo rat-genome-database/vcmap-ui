@@ -8,6 +8,7 @@ import InputNumber from 'primevue/inputnumber';
 import Divider from 'primevue/divider';
 import Panel from 'primevue/panel';
 import Tooltip from 'primevue/tooltip';
+import ProgressBar from 'primevue/progressbar';
 
 /**
  * Add any plugins/configs that you want to be globally registered:
@@ -25,6 +26,7 @@ const COMPONENTS: {[key: string]: Component} = {
   'InputNumber': InputNumber,
   'Divider': Divider,
   'Panel': Panel,
+  'ProgressBar': ProgressBar,
 };
 
 /**

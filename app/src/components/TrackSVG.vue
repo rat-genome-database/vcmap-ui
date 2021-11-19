@@ -9,8 +9,11 @@
     </text>
     <rect 
       data-test="track-section-svg"
-      class="section" 
-      :fill="section.color" 
+      class="section"
+      :class="{'selectable': isSelectable}"
+      @mouseenter="highlight(section)"
+      @mouseleave="unhighlight(section)"
+      :fill="section.isHighlighted && isHighlightable ? HIGHLIGHT_COLOR : section.color" 
       :x="posX" :y="getSectionYPosition(posY, index)" 
       :width="width" 
       :height="section.height" />
@@ -26,12 +29,16 @@
 
 <script lang="ts" setup>
 import Track from '@/models/Track';
+import TrackSection from '@/models/TrackSection';
 import { toRefs } from '@vue/reactivity';
 
 const LABEL_Y_OFFSET = 3;
+const HIGHLIGHT_COLOR = 'aquamarine';
 
 interface Props 
 {
+  isSelectable?: boolean;
+  isHighlightable?: boolean;
   showStartStop?: boolean;
   posX: number;
   posY: number;
@@ -62,37 +69,28 @@ const getSectionYPosition = (startingYPos: number, sectionIndex: number) => {
   currentYPos += props.track.sections[sectionIndex].offsetHeight;
   return currentYPos;
 };
+
+const highlight = (section: TrackSection) => {
+  section.isHighlighted = true;
+};
+
+const unhighlight = (section: TrackSection) => {
+  section.isHighlighted = false;
+};
 </script>
 
 <style lang="scss" scoped>
 .label.small
 {
-  font: normal 10px sans-serif;
+  font: normal 8px sans-serif;
 }
 
 .section
 {
-  stroke-width: 1;
-  stroke: lightgray;
-
-  &.chr-1
+  stroke-width: 0;
+  &.selectable:hover
   {
-    fill: lightgreen;
-  }
-
-  &.chr-2
-  {
-    fill: burlywood;
-  }
-
-  &.chr-3
-  {
-    fill: lightblue;
-  }
-
-  &.chr-4
-  {
-    fill: lightsalmon;
+    cursor: crosshair;
   }
 }
 </style>
