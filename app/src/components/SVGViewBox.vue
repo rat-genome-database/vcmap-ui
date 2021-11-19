@@ -159,18 +159,15 @@ const createSyntenyTracks = async () => {
     const tracks: Track[] = [];
     for (let speciesName in speciesSyntenyMap)
     {
-      console.debug(`--- ${speciesName} ---`);
       const blocks = speciesSyntenyMap[speciesName];
       const trackSections: TrackSection[] = [];
-      let previousBlockBackboneStop = 0;
+      let previousBlockBackboneStop = backboneStart;
       blocks.forEach(block => {
         const trackSection = new TrackSection(block.backboneStart, block.backboneStop, block.chromosome, backboneStop, block.backboneStart - previousBlockBackboneStop);
-        console.debug(trackSection);
         trackSections.push(trackSection);
         previousBlockBackboneStop = block.backboneStop;
       });
       const track = new Track(speciesName, trackSections);
-      console.debug(track);
       tracks.push(track);
     }
 

@@ -1,4 +1,4 @@
-let basePairToHeightRatio = 250000;
+let basePairToHeightRatio = 1000;
 
 /**
  * Essentially controls the "base pair resolution" or the number of base pairs that can be displayed per unit of height
