@@ -1,15 +1,15 @@
 <template>
-  <div class="grid col-4">
+  <div class="grid col-6">
     <div class="col-12">
       <h4>Backbone</h4>
       <div class="grid">
-        <div class="col-6">
+        <div class="col-4">
           <p class="backbone-field">Species:</p>
           <p class="backbone-field">Region:</p>
           <p class="backbone-field">Length:</p>
           <p class="backbone-field">Zoom Level:</p>
         </div>
-        <div class="col-6">
+        <div class="col-8">
           <p class="backbone-field backbone-value" data-test="backbone-overview-species">{{backboneSpecies?.name}}</p>
           <p class="backbone-field backbone-value">chr{{backboneChromosome?.chromosome}}:{{backboneStart}}-{{backboneStop}}</p>
           <p class="backbone-field backbone-value">{{backboneLengthLabel}}bp</p>

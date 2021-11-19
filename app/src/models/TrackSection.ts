@@ -1,5 +1,5 @@
 import { Formatter } from '@/utils/Formatter';
-import { ResolutionController } from '@/utils/ResolutionController';
+import { Resolution } from '@/utils/Resolution';
 import Chromosome from './Chromosome';
 
 export default class TrackSection
@@ -38,11 +38,11 @@ export default class TrackSection
   public get height()
   {
     const displayStopBP = (this._stopBP > this._cutoffBP) ? this._cutoffBP : this._stopBP;
-    return (displayStopBP - this._startBP) / ResolutionController.getBasePairToHeightRatio();
+    return (displayStopBP - this._startBP) / Resolution.getBasePairToHeightRatio();
   }
 
   public get offsetHeight()
   {
-    return (this._offsetBPCount / ResolutionController.getBasePairToHeightRatio());
+    return (this._offsetBPCount / Resolution.getBasePairToHeightRatio());
   }
 }

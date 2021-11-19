@@ -2,6 +2,7 @@ import httpInstance from '@/api/httpInstance';
 import SyntenyBlock, { SyntenyBlockDTO } from '@/models/SyntenyBlock';
 import Map from '@/models/Map';
 import Chromosome from '@/models/Chromosome';
+import { Resolution } from '@/utils/Resolution';
 
 export default class SyntenyApi
 {
@@ -12,6 +13,11 @@ export default class SyntenyApi
     {
       apiRoute += `/${chainLevel}`;
     }
+    const threshold = Resolution.getSyntenyThreshold();
+    if (threshold !=  null)
+    {
+      apiRoute += `?threshold=${threshold}`;
+    }
     
     const res = await httpInstance.get(apiRoute);
     const blocks: SyntenyBlock[] = [];
@@ -19,7 +25,7 @@ export default class SyntenyApi
       blocks.push(new SyntenyBlock(block));
     });
 
-    console.debug(`Synteny blocks found for mapKey '${comparativeSpeciesMap.key}': ${blocks.length}`);
+    console.debug(`Synteny blocks found for mapKey '${comparativeSpeciesMap.key}', threshold: '${threshold}': ${blocks.length}`);
     return blocks;
   }
 }

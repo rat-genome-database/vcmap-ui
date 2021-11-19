@@ -36,7 +36,7 @@ import { useStore } from 'vuex';
 import TrackSVG from './TrackSVG.vue';
 import Chromosome from '@/models/Chromosome';
 import Map from '@/models/Map';
-import { ResolutionController } from '@/utils/ResolutionController';
+import { Resolution } from '@/utils/Resolution';
 import SyntenyBlock from '@/models/SyntenyBlock';
 import SpeciesApi from '@/api/SpeciesApi';
 import ViewSize from '@/utils/ViewSize';
@@ -56,7 +56,7 @@ onMounted(() => {
   backboneSpecies.value = store.getters.getSpecies;
   backboneChromosome.value = store.getters.getChromosome;
 
-  setResolution(store.getters.getStartPosition, store.getters.getStopPosition);
+  Resolution.setResolution(store.getters.getStartPosition, store.getters.getStopPosition);
 
   createBackboneTrack();
   createSyntenyTracks();
@@ -67,12 +67,6 @@ onMounted(() => {
  */
 const getTrackXOffset = (trackNumber: number) => {
   return (trackNumber * -70);
-};
-
-const setResolution = (start: number, stop: number) => {
-  const backboneLength = stop - start;
-  const startingResolution = backboneLength / (ViewSize.viewboxHeight - 100);
-  ResolutionController.setBasePairToHeightRatio(startingResolution);
 };
 
 /**
