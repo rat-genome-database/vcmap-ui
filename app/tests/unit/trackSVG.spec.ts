@@ -3,6 +3,8 @@ import TrackSVG from '@/components/TrackSVG.vue';
 import TrackSection from '@/models/TrackSection';
 import Track from '@/models/Track';
 import Chromosome from '@/models/Chromosome';
+import { Resolution } from '@/utils/Resolution';
+import ViewSize from '@/utils/ViewSize';
 
 describe('TrackSVG', () => {
   it('correctly renders single section track with base pair labels', async () => {
@@ -39,7 +41,7 @@ describe('TrackSVG', () => {
     expect(backboneAttributes.x).toEqual('100');
     expect(backboneAttributes.y).toEqual('150');
     expect(backboneAttributes.width).toEqual('30');
-    expect(backboneAttributes.height).toEqual('40'); // Determined by BASE_PAIR_TO_PIXEL_RATIO in TrackSection model
+    expect(backboneAttributes.height).toEqual((10000000 / Resolution.getBasePairToHeightRatio()).toString());
   });
 
   it('correctly renders track with multiple sections', async () => {
@@ -80,20 +82,22 @@ describe('TrackSVG', () => {
     expect(attrs1.x).toEqual('100');
     expect(attrs1.y).toEqual('150'); // Determined by starting position + height of previous section + offset of current section
     expect(attrs1.width).toEqual('30');
-    expect(attrs1.height).toEqual('40'); // Determined by BASE_PAIR_TO_PIXEL_RATIO in TrackSection model
+    expect(attrs1.height).toEqual((10000000 / Resolution.getBasePairToHeightRatio()).toString()); // Determined by BASE_PAIR_TO_PIXEL_RATIO in TrackSection model
 
     const attrs2 = section2.attributes();
     expect(attrs2.fill).toEqual(Chromosome.getColor('2'));
     expect(attrs2.x).toEqual('100');
-    expect(attrs2.y).toEqual('210'); // Determined by starting position + height of previous section + offset of current section
+    const expectedAttrs2Y = (parseInt(attrs1.y) + parseInt(attrs1.height) + (5000000 / Resolution.getBasePairToHeightRatio())).toString();
+    expect(attrs2.y).toEqual(expectedAttrs2Y); // Determined by starting position + height of previous section + offset of current section
     expect(attrs2.width).toEqual('30');
-    expect(attrs2.height).toEqual('60'); // Determined by BASE_PAIR_TO_PIXEL_RATIO in TrackSection model
+    expect(attrs2.height).toEqual((15000000 / Resolution.getBasePairToHeightRatio()).toString()); // Determined by BASE_PAIR_TO_PIXEL_RATIO in TrackSection model
 
     const attrs3 = section3.attributes();
     expect(attrs3.fill).toEqual(Chromosome.getColor('3'));
     expect(attrs3.x).toEqual('100');
-    expect(attrs3.y).toEqual('330'); // Determined by starting position + height of previous section + offset of current section
+    const expectedAttrs3Y = (parseInt(attrs2.y) + parseInt(attrs2.height) + (15000000 / Resolution.getBasePairToHeightRatio())).toString();
+    expect(attrs3.y).toEqual(expectedAttrs3Y); // Determined by starting position + height of previous section + offset of current section
     expect(attrs3.width).toEqual('30');
-    expect(attrs3.height).toEqual('600'); // Determined by BASE_PAIR_TO_PIXEL_RATIO in TrackSection model
+    expect(attrs3.height).toEqual((150000000 / Resolution.getBasePairToHeightRatio()).toString()); // Determined by BASE_PAIR_TO_PIXEL_RATIO in TrackSection model
   });
 });
