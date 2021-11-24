@@ -1,5 +1,5 @@
 <template>
-  <ProgressBar class="vcmap-loader" :mode="(isLoading) ? 'indeterminate' : 'determinate'" value="0" :showValue="false"/>
+  <ProgressBar class="vcmap-loader" :mode="(isLoading) ? 'indeterminate' : 'determinate'" :value="0" :showValue="false"/>
   <svg :viewBox="'0 0 1000 ' + ViewSize.viewboxHeight" xmlns="http://www.w3.org/2000/svg">
     <!-- Outside panel -->
     <rect class="panel" x="0" width="1000" :height="ViewSize.viewboxHeight" />
