@@ -389,13 +389,6 @@ const updateStoreComparativeSpeciesOne = (event: any) => {
 const updateStoreComparativeSpeciesTwo = (event: any) => {
   store.dispatch('setComparativeSpeciesTwo', event.value);
 };
-
-/* function resetStore() {
-  store.dispatch('setSpecies', null);
-  store.dispatch('setMap', null);
-  store.dispatch('setChromosomeNum', null);
-  store.dispatch('setChromosome', null);
-} */
 </script>
 
 <style lang="scss" scoped>

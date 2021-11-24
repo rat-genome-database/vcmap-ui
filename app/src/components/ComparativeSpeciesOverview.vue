@@ -29,7 +29,17 @@ const store = useStore();
 let comparativeSpecies = ref<Species[] | null>(null);
 
 onMounted(() => {
-  comparativeSpecies.value = [store.getters.getComparativeSpeciesOne, store.getters.getComparativeSpeciesTwo];
+  comparativeSpecies.value = [];
+  
+  if (store.getters.getComparativeSpeciesOne)
+  {
+    comparativeSpecies.value.push(store.getters.getComparativeSpeciesOne as Species);
+  }
+
+  if (store.getters.getComparativeSpeciesTwo)
+  {
+    comparativeSpecies.value.push(store.getters.getComparativeSpeciesTwo as Species);
+  }
 });
 </script>
 
