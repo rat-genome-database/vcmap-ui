@@ -94,7 +94,17 @@ const createSyntenyTracks = async () => {
   const backboneChr = store.getters.getChromosome as Chromosome;
   const backboneStart = store.getters.getStartPosition as number;
   const backboneStop = store.getters.getStopPosition as number;
-  const comparativeSpecies: Species[] = [store.getters.getComparativeSpeciesOne, store.getters.getComparativeSpeciesTwo];
+  const comparativeSpecies: Species[] = [];
+  
+  if (store.getters.getComparativeSpeciesOne)
+  {
+    comparativeSpecies.push(store.getters.getComparativeSpeciesOne as Species);
+  }
+
+  if (store.getters.getComparativeSpeciesTwo)
+  {
+    comparativeSpecies.push(store.getters.getComparativeSpeciesTwo as Species);
+  }
 
   try
   {
