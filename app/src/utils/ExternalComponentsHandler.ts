@@ -9,6 +9,9 @@ import Divider from 'primevue/divider';
 import Panel from 'primevue/panel';
 import Tooltip from 'primevue/tooltip';
 import ProgressBar from 'primevue/progressbar';
+import TabView from 'primevue/tabview';
+import TabPanel from 'primevue/tabpanel';
+import AutoComplete from 'primevue/autocomplete';
 
 /**
  * Add any plugins/configs that you want to be globally registered:
@@ -27,6 +30,9 @@ const COMPONENTS: {[key: string]: Component} = {
   'Divider': Divider,
   'Panel': Panel,
   'ProgressBar': ProgressBar,
+  'TabView': TabView,
+  'TabPanel': TabPanel,
+  'AutoComplete': AutoComplete,
 };
 
 /**
