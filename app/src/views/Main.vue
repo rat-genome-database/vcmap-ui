@@ -1,9 +1,9 @@
 <template>
   <Overview />
-  <SVGViewBox />
+  <SVGViewbox />
 </template>
 
 <script lang="ts" setup>
-import SVGViewBox from '@/components/SVGViewBox.vue';
+import SVGViewbox from '@/components/SVGViewbox.vue';
 import Overview from '@/components/Overview.vue';
 </script>
