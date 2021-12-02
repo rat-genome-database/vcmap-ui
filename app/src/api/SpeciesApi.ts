@@ -64,9 +64,10 @@ export default class SpeciesApi
     return chromosome;
   }
 
-  static async getGenes(mapKey: Number):  Promise<any>
+
+  static async getGenes(mapKey: Number, symbolPrefix: String):  Promise<any>
   {
-    const res = await httpInstance.get(`/genes/map/${mapKey}`);
+    const res = await httpInstance.get(`/vcmap/genes/map/${mapKey}?symbolPrefix=${symbolPrefix}`);
 
     const geneList: Gene[] = [];
 

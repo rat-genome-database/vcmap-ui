@@ -1,7 +1,7 @@
 <template>
   <div>
-    <TabView :activeIndex="activeIndex">
-      <TabPanel header="Load by Position">
+    <TabView v-model:activeIndex="active">
+      <TabPanel header="Load by Position" >
         <div class="grid">
           <div class="col-12 text-center">
             <h2>Backbone Configuration</h2>
@@ -43,9 +43,9 @@
                   v-model="startPosition"
                   :disabled="!selectedChromosome"
                   suffix="bp"
-                  :step="50"
+                  :step="500"
                   :max="(maxPosition != null) ? maxPosition - 1 : 1"
-                  :min="0"
+                  :min="1"
                 />
               </div>
               <div class="lg:col-3 md:col-5 md:col-offset-1 sm:col-6 sm:col-offset-1">
@@ -58,7 +58,7 @@
                   v-model="stopPosition"
                   :disabled="!selectedChromosome"
                   suffix="bp"
-                  :step="50"
+                  :step="500"
                   :max="maxPosition"
                   :min="1"
                 />
@@ -119,10 +119,14 @@
             <div class="grid">
               <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1 p-fluid">
                 <h4>Gene Symbol</h4>
+                <div v-if="isLoadingGene == true">
+                  <ProgressSpinner style="width:50px;height:50px"/>
+                </div>
                 <AutoComplete
                   class="configuration-input"
                   v-model="selectedGene"
                   :suggestions="geneSuggestions"
+                  :disabled="!selectedSpecies"
                   @complete="searchGene($event)"
                   @item-select="updateStoreGene"
                   field="symbol"
@@ -135,30 +139,30 @@
                 <h4 v-if="selectedGene">Upstream Length {{ '(Gene Start: ' + selectedGene.start + ')' }}</h4>
                 <h4 v-else>Upstream Length</h4>
                 <InputNumber
-                  label="Start Position"
                   class="configuration-input"
                   showButtons
                   @input="updateStoreStartUpstream" 
                   v-model="startPosition"
                   :disabled="!selectedChromosome"
+                  required
                   suffix="bp"
-                  :step="50"
+                  :step="500"
                   :max="(maxPosition != null) ? maxPosition - 1 : 1"
-                  :min="0"
+                  :min="1"
                 />
               </div>
-              <div class="lg:col-3 md:col-4 md:col-offset-1 sm:col-5 sm:col-offset-1">
+              <div class="lg:col-3 md:col-3 md:col-offset-1 sm:col-5 sm:col-offset-1">
                 <h4 v-if="selectedGene">Downstream Length {{ '(Gene Stop: ' + selectedGene.stop + ')' }}</h4>
                 <h4 v-else>Downstream Length</h4>
                 <InputNumber
-                  label="Stop Position"
                   class="configuration-input" 
                   showButtons
                   @input="updateStoreStopDownstream"
                   v-model="stopPosition"
                   :disabled="!selectedChromosome"
+                  required
                   suffix="bp"
-                  :step="50"
+                  :step="500"
                   :max="maxPosition"
                   :min="1"
                 />
@@ -209,7 +213,7 @@
 import { ref, onMounted, watch } from 'vue';
 import SpeciesApi from '@/api/SpeciesApi';
 import Species from '@/models/Species';
-import Map from '@/models/Map';
+//import Map from '@/models/Map';
 import Gene from '@/models/Gene';
 import Chromosome from '@/models/Chromosome';
 import { useRouter } from 'vue-router';
@@ -224,11 +228,10 @@ let speciesOptions = ref<Species[]>([]);
 let selectedSpecies = ref<Species | null>(null);
 let isLoadingSpecies = ref(false);
 
-let mapOptions = ref<Map[]>([]);
+/* let mapOptions = ref<Map[]>([]);
 let selectedMap = ref({});
-let isLoadingMap = ref(false);
+let isLoadingMap = ref(false); */
 
-let geneOptions = ref<Gene[]>([]);
 let geneSuggestions = ref<Gene[]>([]);
 let selectedGene = ref<Gene | null>(null);
 let isLoadingGene = ref(false);
@@ -244,7 +247,7 @@ let maxPosition = ref<number | null>();
 let comparativeSpeciesOne = ref<Species>();
 let comparativeSpeciesTwo = ref<Species>();
 
-let activeIndex = ref(0);
+let active = ref(0);
 
 // Lifecycle Hooks
 onMounted(async () => {
@@ -253,12 +256,6 @@ onMounted(async () => {
   try
   {
     speciesOptions.value = await SpeciesApi.getSpecies();
-    console.log(activeIndex)
-    if (activeIndex == 1)
-    {
-      geneOptions.value = await SpeciesApi.getGenes(store.getters.getSpecies.defaultMapKey);
-    }
-    
   }
   catch (err)
   {
@@ -323,7 +320,6 @@ onMounted(async () => {
   }
 });
 
-
 watch(() => store.getters.getSpecies, (newVal, oldVal) => {
   if (newVal !== oldVal && newVal !== null)
   {
@@ -341,18 +337,18 @@ watch(() => store.getters.getSpecies, (newVal, oldVal) => {
       stopPosition.value = null;
       maxPosition.value = null;
 
-      selectedSpecies.value = store.getters.getSpecies;
-      SpeciesApi.getChromosomes(store.getters.getSpecies.defaultMapKey).then(chromosomes => {
-        chromosomeOptions.value = chromosomes;
-      });
+      if (active.value == 0)
+      {
+        selectedSpecies.value = store.getters.getSpecies;
+        SpeciesApi.getChromosomes(store.getters.getSpecies.defaultMapKey).then(chromosomes => {
+          chromosomeOptions.value = chromosomes;
+          isLoadingChromosome.value = false;
+        });
+      }
     }
     catch (err)
     {
       console.error(err);
-    }
-    finally
-    {
-      isLoadingChromosome.value = false;
     }
   }
 });
@@ -424,13 +420,12 @@ const updateStoreSpecies = (event: any) => {
   store.dispatch('setSpecies', event.value);
 };
 
-const updateStoreMap = (event: any) => {
+/* const updateStoreMap = (event: any) => {
   store.dispatch('setMap', event.value);
-};
+}; */
 
 const updateStoreChromosome = (event: any) => {
   store.dispatch('setChromosome', event.value);
-  console.log('CHR', event.value);
 };
 
 const updateStoreStartPosition = (event: any) => {
@@ -465,12 +460,12 @@ const updateStoreComparativeSpeciesTwo = (event: any) => {
   store.dispatch('setComparativeSpeciesTwo', event.value);
 };
 
-function searchGene(event)
+async function searchGene(event: any)
 {
-  let matches = geneOptions.value.filter(gene => {
-    return gene.symbol.toLowerCase().indexOf(event.query.toLowerCase()) > -1;
-  });
+  isLoadingGene.value = true;
+  let matches = await SpeciesApi.getGenes(store.getters.getSpecies.defaultMapKey, event.query)
   geneSuggestions.value = matches;
+  isLoadingGene.value = false;
 }
 
 /* function resetStore() {

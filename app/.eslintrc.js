@@ -25,6 +25,7 @@ module.exports = {
     ],
     "rules": {
       "vue/no-multiple-template-root": "off",
+      "vue/no-v-model-argument": "off",
       "semi": ["warn", "always"],
       "vue/no-v-for-template-key": "off",
       "vue/script-setup-uses-vars": "error",
