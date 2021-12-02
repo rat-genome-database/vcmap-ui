@@ -7,5 +7,6 @@ export default {
   viewboxHeight: 1000,
   trackWidth: 25,
   trackYPosition: 60,
-  trackLabelYPosition: 30
+  trackLabelYPosition: 30,
+  selectedBackboneXPosition: 320,
 };

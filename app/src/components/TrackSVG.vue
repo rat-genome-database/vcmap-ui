@@ -43,7 +43,7 @@ import Track from '@/models/Track';
 import TrackSection from '@/models/TrackSection';
 import { Resolution } from '@/utils/Resolution';
 import { toRefs } from '@vue/reactivity';
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useStore } from 'vuex';
 
 const LABEL_Y_OFFSET = 3;
@@ -74,6 +74,10 @@ toRefs(props);
 let selectedRegion = ref<BackboneSelection>(
   new BackboneSelection(0, 0, 0, 0)
 );
+
+onMounted(() => {
+  selectedRegion.value = store.getters.getSelectedBackboneRegion ?? new BackboneSelection(0, 0, 0, 0);
+});
 
 /**
  * Gets the starting Y position of each track section based on the height of the previous section

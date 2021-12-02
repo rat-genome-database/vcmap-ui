@@ -14,16 +14,25 @@
     <!-- backbone species track -->
     <text class="label medium bold" :x="ViewSize.backboneXPosition" :y="ViewSize.panelTitleYPosition">Backbone</text>
     <text v-if="backboneSpecies" class="label small" :x="ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{backboneSpecies.name}}</text>
-    <TrackSVG v-if="track" is-selectable show-start-stop :pos-x="ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="track as Track" />
+    <TrackSVG v-if="backboneTrack" is-selectable show-start-stop :pos-x="ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="backboneTrack as Track" />
 
     <!-- Comparative species synteny tracks -->
     <template v-for="(track, index) in comparativeTracks" :key="track">
-      <text class="label small" :x="getTrackXOffset(index + 1) + ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{track.name}}</text>
-      <TrackSVG v-if="track" is-highlightable :pos-x="getTrackXOffset(index + 1) + ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="track as Track" />
+      <text class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{track.name}}</text>
+      <TrackSVG v-if="track" is-highlightable :pos-x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="track as Track" />
     </template>
 
     <!-- Comparative panel SVGs ----------------------------------------->
-    <text class="label medium bold" x="320" :y="ViewSize.panelTitleYPosition">Comparative</text>
+    <text class="label medium bold" :x="ViewSize.selectedBackboneXPosition" :y="ViewSize.panelTitleYPosition">Comparative</text>
+    <text v-if="backboneSpecies" class="label small" :x="ViewSize.selectedBackboneXPosition" :y="ViewSize.trackLabelYPosition">{{backboneSpecies.name}}</text>
+    <TrackSVG v-if="backboneSelectionTrack" show-start-stop :pos-x="ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="backboneSelectionTrack as Track" />
+
+    <!-- Comparative species (selected region) synteny tracks -->
+    <template v-for="(track, index) in comparativeSelectionTracks" :key="track">
+      <text class="label small" :x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :y="ViewSize.trackLabelYPosition">{{track.name}}</text>
+      <TrackSVG v-if="track" is-highlightable :pos-x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="track as Track" />
+    </template>
+
   </svg>
 </template>
 
@@ -41,15 +50,18 @@ import { Resolution } from '@/utils/Resolution';
 import SyntenyBlock from '@/models/SyntenyBlock';
 import SpeciesApi from '@/api/SpeciesApi';
 import ViewSize from '@/utils/ViewSize';
+import BackboneSelection from '@/models/BackboneSelection';
 
 const store = useStore();
 
 // Reactive data props
 let backboneSpecies = ref<Species | null>(null);
 let backboneChromosome = ref<Chromosome | null>(null);
-let track = ref<Track | null>(null);
+let backboneTrack = ref<Track | null>(null);
 let comparativeTracks = ref<Track[] | null>(null);
 let isLoading = ref<boolean>(false);
+let backboneSelectionTrack = ref<Track | null>(null);
+let comparativeSelectionTracks = ref<Track[] | null>(null);
 
 /**
  * Once mounted, let's set our reactive data props and create the backbone and synteny tracks
@@ -58,36 +70,69 @@ onMounted(() => {
   backboneSpecies.value = store.getters.getSpecies;
   backboneChromosome.value = store.getters.getChromosome;
 
-  Resolution.setResolution(store.getters.getStartPosition, store.getters.getStopPosition);
+  updateBackbonePanel();
 
-  createBackboneTrack();
-  createSyntenyTracks();
+  if (store.getters.getSelectedBackboneRegion)
+  {
+    updateComparativePanel();
+  }
 });
 
-watch(() => store.getters.getSelectedBackboneRegion, (newVal, oldVal) => {
-  // When the selected backbone region changes, update the comparative panel
-  console.log('region changed', newVal);
+watch(() => store.getters.getSelectedBackboneRegion, () => {
+  updateComparativePanel();
 });
+
+const updateBackbonePanel = async () => {
+  let backboneStart = store.getters.getStartPosition;
+  let backboneStop = store.getters.getStopPosition;
+  if (backboneStart != null && backboneStop != null)
+  {
+    Resolution.setResolution(backboneStart, backboneStop);
+    backboneTrack.value = createBackboneTrack(backboneStart, backboneStop) ?? null;
+    comparativeTracks.value = await createSyntenyTracks(backboneStart, backboneStop) ?? null;
+  }
+  else
+  {
+    backboneTrack.value = null;
+    comparativeTracks.value = null;
+  }
+};
+
+const updateComparativePanel = async () => {
+  let selectedRegion = store.getters.getSelectedBackboneRegion as BackboneSelection;
+  if (selectedRegion.basePairStart && selectedRegion.basePairStop)
+  {
+    backboneSelectionTrack.value = createBackboneTrack(selectedRegion.basePairStart, selectedRegion.basePairStop) ?? null;
+    comparativeSelectionTracks.value = await createSyntenyTracks(selectedRegion.basePairStart, selectedRegion.basePairStop) ?? null;
+  }
+  else
+  {
+    backboneSelectionTrack.value = null;
+    comparativeSelectionTracks.value = null;
+  }
+};
 
 /**
  * Gets the offset of the X position relative to the backbone species track
  */
-const getTrackXOffset = (trackNumber: number) => {
+const getBackbonePanelTrackXOffset = (trackNumber: number) => {
   return (trackNumber * -70);
+};
+
+const getComparativePanelTrackXOffset = (trackNumber: number) => {
+  return (trackNumber * 90);
 };
 
 /**
  * Creates the backbone track model and sets the viewbox height based on the size of the backbone track
  */
-const createBackboneTrack = () => {
-  const startPos = store.getters.getStartPosition;
-  const stopPos = store.getters.getStopPosition;
+const createBackboneTrack = (startPos: number, stopPos: number) => {
   const speciesName = backboneSpecies.value?.name;
   const backboneChromosomeString = backboneChromosome.value?.chromosome;
-  if (startPos != null && stopPos != null && speciesName != null && backboneChromosomeString != null)
+  if (speciesName != null && backboneChromosomeString != null)
   {
     const trackSection = new TrackSection(startPos, stopPos, backboneChromosomeString, stopPos);
-    track.value = new Track(speciesName, [trackSection]);
+    return new Track(speciesName, [trackSection]);
   }
   else
   {
@@ -95,10 +140,8 @@ const createBackboneTrack = () => {
   }
 };
 
-const createSyntenyTracks = async () => {
+const createSyntenyTracks = async (backboneStart: number, backboneStop: number) => {
   const backboneChr = store.getters.getChromosome as Chromosome;
-  const backboneStart = store.getters.getStartPosition as number;
-  const backboneStop = store.getters.getStopPosition as number;
   const comparativeSpecies: Species[] = [];
   
   if (store.getters.getComparativeSpeciesOne)
@@ -111,6 +154,7 @@ const createSyntenyTracks = async () => {
     comparativeSpecies.push(store.getters.getComparativeSpeciesTwo as Species);
   }
 
+  let tempComparativeTracks: Track[] = [];
   try
   {
     isLoading.value = true;
@@ -183,7 +227,7 @@ const createSyntenyTracks = async () => {
       tracks.push(track);
     }
 
-    comparativeTracks.value = tracks;
+    tempComparativeTracks = tracks;
   }
   catch (err)
   {
@@ -193,8 +237,11 @@ const createSyntenyTracks = async () => {
   {
     isLoading.value = false;
   }
+
+  return tempComparativeTracks;
 };
 </script>
+
 <style lang="scss" scoped>
 rect.panel
 {
