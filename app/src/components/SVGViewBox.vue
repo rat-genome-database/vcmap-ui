@@ -32,7 +32,7 @@ import Species from '@/models/Species';
 import TrackSection from '@/models/TrackSection';
 import Track from '@/models/Track';
 import SyntenyApi from '@/api/SyntenyApi';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import TrackSVG from './TrackSVG.vue';
 import Chromosome from '@/models/Chromosome';
@@ -62,6 +62,11 @@ onMounted(() => {
 
   createBackboneTrack();
   createSyntenyTracks();
+});
+
+watch(() => store.getters.getSelectedBackboneRegion, (newVal, oldVal) => {
+  // When the selected backbone region changes, update the comparative panel
+  console.log('region changed', newVal);
 });
 
 /**
@@ -132,7 +137,7 @@ const createSyntenyTracks = async () => {
       }
     });
 
-    if ( backboneStart == null || backboneStop == null || backboneChr == null || comparativeSpeciesMaps.length === 0)
+    if (backboneStart == null || backboneStop == null || backboneChr == null || comparativeSpeciesMaps.length === 0)
     {
       console.error('Cannot get synteny blocks with missing backbone chromosome, backbone start, backbone stop, or comparative species maps');
       return;

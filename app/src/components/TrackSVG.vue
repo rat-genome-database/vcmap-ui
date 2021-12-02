@@ -5,7 +5,7 @@
       class="label small" 
       :x="posX + width" 
       :y="getSectionYPosition(posY, index) + LABEL_Y_OFFSET">
-      - {{section.startBP}}
+      - {{section.startBPLabel}}
     </text>
     <rect 
       data-test="track-section-svg"
@@ -13,27 +13,48 @@
       :class="{'selectable': isSelectable}"
       @mouseenter="highlight(section)"
       @mouseleave="unhighlight(section)"
+      @mousedown="initSelectStart($event, section, index)"
+      @mousemove="updateSelectionHeight"
+      @mouseup="completeSelect"
       :fill="section.isHighlighted && isHighlightable ? HIGHLIGHT_COLOR : section.color" 
       :x="posX" :y="getSectionYPosition(posY, index)" 
       :width="width" 
       :height="section.height" />
+    <rect v-if="isSelectable && selectedRegion.svgHeight > 0"
+      data-test="selected-region"
+      :fill="HIGHLIGHT_COLOR"
+      :x="posX" :y="selectedRegion.svgYPoint"
+      :width="width"
+      :height="selectedRegion.svgHeight"
+      @mousemove="updateSelectionHeight" />
     <text v-if="showStartStop" 
       data-test="stop-bp-label"
       class="label small" 
       :x="posX + width" 
       :y="getSectionYPosition(posY, index) + section.height + LABEL_Y_OFFSET">
-      - {{section.stopBP}}
+      - {{section.stopBPLabel}}
     </text>
   </template>
 </template>
 
 <script lang="ts" setup>
+import BackboneSelection from '@/models/BackboneSelection';
 import Track from '@/models/Track';
 import TrackSection from '@/models/TrackSection';
+import { Resolution } from '@/utils/Resolution';
 import { toRefs } from '@vue/reactivity';
+import { ref } from 'vue';
+import { useStore } from 'vuex';
 
 const LABEL_Y_OFFSET = 3;
 const HIGHLIGHT_COLOR = 'aquamarine';
+const store = useStore();
+const svg = document.querySelector('svg');
+
+// Flag to indicate whether or not the user is currently selecting a region on this track
+let inSelectMode = false;
+let selectedTrackSection: TrackSection;
+let selectedTrackIndex: number;
 
 interface Props 
 {
@@ -50,6 +71,9 @@ const props = defineProps<Props>();
 
 //Converts each property in this object to its own reactive prop
 toRefs(props);
+let selectedRegion = ref<BackboneSelection>(
+  new BackboneSelection(0, 0, 0, 0)
+);
 
 /**
  * Gets the starting Y position of each track section based on the height of the previous section
@@ -70,6 +94,50 @@ const getSectionYPosition = (startingYPos: number, sectionIndex: number) => {
   return currentYPos;
 };
 
+const initSelectStart = (event: any, section: TrackSection, sectionIndex: number) => {
+  if (!props.isSelectable) return;
+
+  if (inSelectMode)
+  {
+    return completeSelect();
+  }
+
+  // Begin selection mode
+  inSelectMode = true;
+  selectedTrackSection = section;
+  selectedTrackIndex = sectionIndex;
+  selectedRegion.value = new BackboneSelection(0, 0, 0, 0);
+
+  let svgPoint = getMousePosSVG(event) as DOMPoint;
+  selectedRegion.value.svgYPoint = svgPoint.y;
+  selectedRegion.value.svgHeight = 0;
+};
+
+const updateSelectionHeight = (event: any) => {
+  if (!props.isSelectable || !inSelectMode) return;
+
+  let svgPoint = getMousePosSVG(event) as DOMPoint;
+  selectedRegion.value.svgHeight = svgPoint.y - selectedRegion.value.svgYPoint;
+};
+
+const completeSelect = () => {
+  if (!props.isSelectable || !inSelectMode) return;
+
+  inSelectMode = false;
+
+  if (selectedRegion.value.svgHeight > 0 && selectedTrackSection)
+  {
+    // Calculate the selected range in base pairs
+    const totalBasePairsSelected = Math.ceil(selectedRegion.value.svgHeight * Resolution.getBasePairToHeightRatio());
+    const basePairsUpToStart = Math.floor((selectedRegion.value.svgYPoint - getSectionYPosition(props.posY, selectedTrackIndex)) * Resolution.getBasePairToHeightRatio());
+    const basePairStart = selectedTrackSection.startBP + basePairsUpToStart;
+    selectedRegion.value.basePairStart = basePairStart;
+    selectedRegion.value.basePairStop = basePairStart + totalBasePairsSelected;
+  }
+
+  store.dispatch('setSelectedBackboneRegion', selectedRegion.value);
+};
+
 const highlight = (section: TrackSection) => {
   section.isHighlighted = true;
 };
@@ -77,6 +145,20 @@ const highlight = (section: TrackSection) => {
 const unhighlight = (section: TrackSection) => {
   section.isHighlighted = false;
 };
+
+/**
+ * Helper method to get the coordinates of the event in the SVG viewbox
+ */
+const getMousePosSVG = (e: any) => {
+  if (!svg) return 0;
+
+  let p = svg.createSVGPoint();
+  p.x = e.clientX;
+  p.y = e.clientY;
+  let ctm = svg.getScreenCTM()?.inverse();
+  p = p.matrixTransform(ctm);
+  return p;
+}
 </script>
 
 <style lang="scss" scoped>

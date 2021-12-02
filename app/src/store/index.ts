@@ -3,6 +3,7 @@ import VuexPersistence from 'vuex-persist';
 import Species from '@/models/Species';
 import Map from '@/models/Map';
 import Chromosome from '@/models/Chromosome';
+import BackboneSelection from '@/models/BackboneSelection';
 
 
 export interface VCMapState
@@ -16,6 +17,8 @@ export interface VCMapState
 
   comparativeSpeciesOne: Species | null;
   comparativeSpeciesTwo: Species | null;
+
+  selectedBackboneRegion: BackboneSelection | null;
 }
 
 const vuexLocal = new VuexPersistence<VCMapState>({
@@ -32,7 +35,9 @@ export default createStore({
     stopPos: null,
 
     comparativeSpeciesOne: null,
-    comparativeSpeciesTwo: null
+    comparativeSpeciesTwo: null,
+
+    selectedBackboneRegion: null
   }),
 
   mutations: {
@@ -60,6 +65,9 @@ export default createStore({
     comparativeSpeciesTwo (state: VCMapState, species: Species) {
       state.comparativeSpeciesTwo = species;
     },
+    selectedBackboneRegion ( state: VCMapState, selection: BackboneSelection) {
+      state.selectedBackboneRegion = selection;
+    }
   },
 
   actions: {
@@ -87,6 +95,9 @@ export default createStore({
     setComparativeSpeciesTwo (context: ActionContext<VCMapState, VCMapState>, species: Species) {
       context.commit('comparativeSpeciesTwo', species);
     },
+    setSelectedBackboneRegion (context: ActionContext<VCMapState, VCMapState>, selection: BackboneSelection) {
+      context.commit('selectedBackboneRegion', selection);
+    },
   },
 
   getters: {
@@ -113,6 +124,9 @@ export default createStore({
     },
     getComparativeSpeciesTwo (state: VCMapState) {
       return state.comparativeSpeciesTwo;
+    },
+    getSelectedBackboneRegion (state: VCMapState) {
+      return state.selectedBackboneRegion;
     }
   },
 
