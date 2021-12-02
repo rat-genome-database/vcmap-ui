@@ -3,16 +3,17 @@ import VuexPersistence from 'vuex-persist';
 import Species from '@/models/Species';
 import Map from '@/models/Map';
 import Chromosome from '@/models/Chromosome';
+import Gene from '@/models/Gene';
 
 
 export interface VCMapState
 {
   species: Species | null;
   map: Map | null;
-  chromosomeNum: number | null;
   chromosome: Chromosome | null;
   startPos: number | null;
   stopPos: number | null;
+  gene: Gene | null;
 
   comparativeSpeciesOne: Species | null;
   comparativeSpeciesTwo: Species | null;
@@ -26,10 +27,10 @@ export default createStore({
   state: (): VCMapState => ({
     species: null,
     map: null,
-    chromosomeNum: null,
     chromosome: null,
     startPos: null,
     stopPos: null,
+    gene: null,
 
     comparativeSpeciesOne: null,
     comparativeSpeciesTwo: null
@@ -42,9 +43,6 @@ export default createStore({
     map(state: VCMapState, map: Map) {
       state.map = map;
     },
-    chromosomeNum (state: VCMapState, chromosomeNum: number) {
-      state.chromosomeNum = chromosomeNum;
-    },
     chromosome (state: VCMapState, chromosome: Chromosome) {
       state.chromosome = chromosome;
     },
@@ -53,6 +51,9 @@ export default createStore({
     },
     stopPosition (state: VCMapState, stopPos: number) {
       state.stopPos = stopPos;
+    },
+    gene (state: VCMapState, gene: Gene) {
+      state.gene = gene;
     },
     comparativeSpeciesOne (state: VCMapState, species: Species) {
       state.comparativeSpeciesOne = species;
@@ -69,9 +70,6 @@ export default createStore({
     setMap (context: ActionContext<VCMapState, VCMapState>, map: Map) {
       context.commit('map', map);
     },
-    setChromosomeNum (context: ActionContext<VCMapState, VCMapState>, chromosomeNum: number) {
-      context.commit('chromosomeNum', chromosomeNum);
-    },
     setChromosome (context: ActionContext<VCMapState, VCMapState>, chromosome: Chromosome) {
       context.commit('chromosome', chromosome);
     },
@@ -80,6 +78,9 @@ export default createStore({
     },
     setStopPosition(context: ActionContext<VCMapState, VCMapState>, stopPos: number) {
       context.commit('stopPosition', stopPos);
+    },
+    setGene(context: ActionContext<VCMapState, VCMapState>, gene: Gene) {
+      context.commit('gene', gene);
     },
     setComparativeSpeciesOne (context: ActionContext<VCMapState, VCMapState>, species: Species) {
       context.commit('comparativeSpeciesOne', species);
@@ -96,9 +97,6 @@ export default createStore({
     getMap (state: VCMapState) {
       return state.map;
     },
-    getChromosomeNum (state: VCMapState) {
-      return state.chromosomeNum;
-    },
     getChromosome (state: VCMapState) {
       return state.chromosome;
     },
@@ -107,6 +105,9 @@ export default createStore({
     },
     getStopPosition (state: VCMapState) {
       return state.stopPos;
+    },
+    getGene (state: VCMapState) {
+      return state.gene;
     },
     getComparativeSpeciesOne (state: VCMapState) {
       return state.comparativeSpeciesOne;
