@@ -1,4 +1,14 @@
 <template>
+  <defs>
+    <linearGradient id="selectedStripes" gradientUnits="userSpaceOnUse"
+      x2="5" spreadMethod="repeat" gradientTransform="rotate(-45)">
+      <stop offset="0" stop-color="gray"/>
+      <stop offset="0.40" stop-color="gray"/>
+      <stop offset="0.40" stop-color="lightgray"/>
+      <stop offset="1.0" stop-color="lightgray"/>
+    </linearGradient>
+  </defs>
+
   <template v-for="(section, index) in track.sections" :key="index">
     <text v-if="showStartStop" 
       data-test="start-bp-label"
@@ -22,11 +32,16 @@
       :height="section.height" />
     <rect v-if="isSelectable && selectedRegion.svgHeight > 0"
       data-test="selected-region"
-      :fill="HIGHLIGHT_COLOR"
+      fill="url(#selectedStripes)"
+      stroke-width="1"
+      stroke="black"
       :x="posX" :y="selectedRegion.svgYPoint"
+      rx="2" ry="2"
       :width="width"
       :height="selectedRegion.svgHeight"
-      @mousemove="updateSelectionHeight" />
+      @mousedown="initSelectStart($event, section, index)"
+      @mousemove="updateSelectionHeight"
+      @mouseup="completeSelect" />
     <text v-if="showStartStop" 
       data-test="stop-bp-label"
       class="label small" 
@@ -55,6 +70,7 @@ const svg = document.querySelector('svg');
 let inSelectMode = false;
 let selectedTrackSection: TrackSection;
 let selectedTrackIndex: number;
+let startingPoint: DOMPoint;
 
 interface Props 
 {
@@ -112,16 +128,28 @@ const initSelectStart = (event: any, section: TrackSection, sectionIndex: number
   selectedTrackIndex = sectionIndex;
   selectedRegion.value = new BackboneSelection(0, 0, 0, 0);
 
-  let svgPoint = getMousePosSVG(event) as DOMPoint;
-  selectedRegion.value.svgYPoint = svgPoint.y;
+  let currentSVGPoint = getMousePosSVG(event) as DOMPoint;
+  startingPoint = currentSVGPoint;
+  selectedRegion.value.svgYPoint = currentSVGPoint.y;
   selectedRegion.value.svgHeight = 0;
 };
 
 const updateSelectionHeight = (event: any) => {
   if (!props.isSelectable || !inSelectMode) return;
 
-  let svgPoint = getMousePosSVG(event) as DOMPoint;
-  selectedRegion.value.svgHeight = svgPoint.y - selectedRegion.value.svgYPoint;
+  let currentSVGPoint = getMousePosSVG(event) as DOMPoint;
+
+  if (currentSVGPoint.y < startingPoint.y)
+  {
+    // We are moving above the starting point, calculate height with the starting point as the largest y value
+    selectedRegion.value.svgYPoint = currentSVGPoint.y;
+    selectedRegion.value.svgHeight =  startingPoint.y - selectedRegion.value.svgYPoint;
+  }
+  else
+  {
+    // We are moving below the starting point, calculate height with the current point as the largest y value
+    selectedRegion.value.svgHeight = currentSVGPoint.y - selectedRegion.value.svgYPoint;
+  }
 };
 
 const completeSelect = () => {
