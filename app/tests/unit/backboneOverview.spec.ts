@@ -14,7 +14,8 @@ const mockStore = createStore({
     startPos: null,
     stopPos: null,
     comparativeSpeciesOne: null,
-    comparativeSpeciesTwo: null
+    comparativeSpeciesTwo: null,
+    selectedBackboneRegion: null
   },
   getters: {
     getSpecies(state: VCMapState) {
