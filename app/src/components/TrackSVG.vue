@@ -132,9 +132,9 @@ const completeSelect = () => {
   if (selectedRegion.value.svgHeight > 0 && selectedTrackSection)
   {
     // Calculate the selected range in base pairs
-    const totalBasePairsSelected = Math.ceil(selectedRegion.value.svgHeight * Resolution.getBasePairToHeightRatio());
-    const basePairsUpToStart = Math.floor((selectedRegion.value.svgYPoint - getSectionYPosition(props.posY, selectedTrackIndex)) * Resolution.getBasePairToHeightRatio());
-    const basePairStart = selectedTrackSection.startBP + basePairsUpToStart;
+    const totalBasePairsSelected = Math.ceil(selectedRegion.value.svgHeight * Resolution.BackbonePanel.getBasePairToHeightRatio());
+    const basePairsUpToStart = Math.floor((selectedRegion.value.svgYPoint - getSectionYPosition(props.posY, selectedTrackIndex)) * Resolution.BackbonePanel.getBasePairToHeightRatio());
+    const basePairStart = selectedTrackSection.backboneStart + basePairsUpToStart;
     selectedRegion.value.basePairStart = basePairStart;
     selectedRegion.value.basePairStop = basePairStart + totalBasePairsSelected;
   }
