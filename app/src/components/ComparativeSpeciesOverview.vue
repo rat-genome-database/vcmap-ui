@@ -12,7 +12,7 @@
           <p class="comparative-field">Synteny Threshold:</p>
         </div>
         <div class="col-6">
-          <p class="comparative-field comparative-value">{{Resolution.getSyntenyThreshold()}}bp</p>
+          <p class="comparative-field comparative-value">{{Resolution.BackbonePanel.getSyntenyThreshold()}}bp</p>
         </div>
       </div>
     </div>

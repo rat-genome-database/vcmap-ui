@@ -14,7 +14,8 @@ const mockStore = createStore({
     startPos: null,
     stopPos: null,
     comparativeSpeciesOne: new Species({ typeKey: 2, name: 'Test Species 2'}),
-    comparativeSpeciesTwo: new Species({ typeKey: 3, name: 'Test Species 3'})
+    comparativeSpeciesTwo: new Species({ typeKey: 3, name: 'Test Species 3'}),
+    selectedBackboneRegion: null
   },
   getters: {
     getSpecies(state: VCMapState) {

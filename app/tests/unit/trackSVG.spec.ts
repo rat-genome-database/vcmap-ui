@@ -4,12 +4,52 @@ import TrackSection from '@/models/TrackSection';
 import Track from '@/models/Track';
 import Chromosome from '@/models/Chromosome';
 import { Resolution } from '@/utils/Resolution';
-import ViewSize from '@/utils/ViewSize';
+import { ActionTree, createStore, Store } from 'vuex';
+import { VCMapState } from '@/store';
 
 describe('TrackSVG', () => {
-  it('correctly renders single section track with base pair labels', async () => {
 
-    const backboneTrackSection = new TrackSection(0, 10000000, '1', 120000000);
+  let store: Store<VCMapState>;
+  let actions: ActionTree<VCMapState, VCMapState>;
+  let state = {
+    species: null,
+    map: null,
+    chromosomeNum: null,
+    chromosome: null,
+    startPos: null,
+    stopPos: null,
+    comparativeSpeciesOne: null,
+    comparativeSpeciesTwo: null,
+    selectedBackboneRegion: null
+  };
+  let getters = {
+    getSelectedBackboneRegion(state: VCMapState) {
+      return state.selectedBackboneRegion;
+    }
+  };
+
+  beforeEach(() => {
+    actions = {
+      setSelectedBackboneRegion: jest.fn()
+    };
+
+    store = createStore({
+      state,
+      getters,
+      actions
+    })
+  });
+
+  it('renders a single section track with base pair labels', async () => {
+    const backboneTrackSection = new TrackSection({
+      start: 0,
+      stop: 10000000,
+      backboneStart: 0,
+      backboneStop: 10000000,
+      chromosome: '1',
+      cutoff: 120000000,
+      basePairToHeightRatio: Resolution.BackbonePanel.getBasePairToHeightRatio()
+    });
     const backboneTrack = new Track('Human', [backboneTrackSection]);
     const wrapper = shallowMount(TrackSVG, {
       props: {
@@ -18,6 +58,11 @@ describe('TrackSVG', () => {
         posY: 150,
         width: 30,
         track: backboneTrack
+      },
+      global: {
+        provide: {
+          store: store
+        }
       }
     });
     const startLabel = wrapper.find('[data-test="start-bp-label"]');
@@ -41,14 +86,40 @@ describe('TrackSVG', () => {
     expect(backboneAttributes.x).toEqual('100');
     expect(backboneAttributes.y).toEqual('150');
     expect(backboneAttributes.width).toEqual('30');
-    expect(backboneAttributes.height).toEqual((10000000 / Resolution.getBasePairToHeightRatio()).toString());
+    expect(backboneAttributes.height).toEqual((10000000 / Resolution.BackbonePanel.getBasePairToHeightRatio()).toString());
   });
 
-  it('correctly renders track with multiple sections', async () => {
-
-    const trackSection1 = new TrackSection(0, 10000000, '1', 300000000, 0);
-    const trackSection2 = new TrackSection(20000000, 35000000, '2', 300000000, 5000000);
-    const trackSection3 = new TrackSection(50000000, 200000000, '3', 300000000, 15000000);
+  it('renders a track with multiple sections', async () => {
+    const trackSection1 = new TrackSection({
+      start: 20000000,
+      stop: 30000000,
+      backboneStart: 0,
+      backboneStop: 10000000,
+      chromosome: '1',
+      cutoff: 300000000,
+      offsetCount: 0,
+      basePairToHeightRatio: Resolution.BackbonePanel.getBasePairToHeightRatio()
+    });
+    const trackSection2 = new TrackSection({
+      start: 45000000,
+      stop: 60000000,
+      backboneStart: 20000000,
+      backboneStop: 35000000,
+      chromosome: '2',
+      cutoff: 300000000,
+      offsetCount: 10000000,
+      basePairToHeightRatio: Resolution.BackbonePanel.getBasePairToHeightRatio()
+    });
+    const trackSection3 = new TrackSection({
+      start: 125000000,
+      stop: 275000000,
+      backboneStart: 50000000,
+      backboneStop: 200000000,
+      chromosome: '3',
+      cutoff: 300000000,
+      offsetCount: 15000000,
+      basePairToHeightRatio: Resolution.BackbonePanel.getBasePairToHeightRatio()
+    });
     const track = new Track('Rat', [trackSection1, trackSection2, trackSection3]);
 
     const wrapper = shallowMount(TrackSVG, {
@@ -57,6 +128,11 @@ describe('TrackSVG', () => {
         posY: 150,
         width: 30,
         track: track
+      },
+      global: {
+        provide: {
+          store: store
+        }
       }
     });
     const startLabel = wrapper.find('[data-test="start-bp-label"]');
@@ -82,22 +158,58 @@ describe('TrackSVG', () => {
     expect(attrs1.x).toEqual('100');
     expect(attrs1.y).toEqual('150'); // Determined by starting position + height of previous section + offset of current section
     expect(attrs1.width).toEqual('30');
-    expect(attrs1.height).toEqual((10000000 / Resolution.getBasePairToHeightRatio()).toString()); // Determined by BASE_PAIR_TO_PIXEL_RATIO in TrackSection model
+    expect(attrs1.height).toEqual((10000000 / Resolution.BackbonePanel.getBasePairToHeightRatio()).toString()); // Determined by BASE_PAIR_TO_PIXEL_RATIO in TrackSection model
 
     const attrs2 = section2.attributes();
     expect(attrs2.fill).toEqual(Chromosome.getColor('2'));
     expect(attrs2.x).toEqual('100');
-    const expectedAttrs2Y = (parseInt(attrs1.y) + parseInt(attrs1.height) + (5000000 / Resolution.getBasePairToHeightRatio())).toString();
+    const expectedAttrs2Y = (parseInt(attrs1.y) + parseInt(attrs1.height) + (10000000 / Resolution.BackbonePanel.getBasePairToHeightRatio())).toString();
     expect(attrs2.y).toEqual(expectedAttrs2Y); // Determined by starting position + height of previous section + offset of current section
     expect(attrs2.width).toEqual('30');
-    expect(attrs2.height).toEqual((15000000 / Resolution.getBasePairToHeightRatio()).toString()); // Determined by BASE_PAIR_TO_PIXEL_RATIO in TrackSection model
+    expect(attrs2.height).toEqual((15000000 / Resolution.BackbonePanel.getBasePairToHeightRatio()).toString()); // Determined by BASE_PAIR_TO_PIXEL_RATIO in TrackSection model
 
     const attrs3 = section3.attributes();
     expect(attrs3.fill).toEqual(Chromosome.getColor('3'));
     expect(attrs3.x).toEqual('100');
-    const expectedAttrs3Y = (parseInt(attrs2.y) + parseInt(attrs2.height) + (15000000 / Resolution.getBasePairToHeightRatio())).toString();
+    const expectedAttrs3Y = (parseInt(attrs2.y) + parseInt(attrs2.height) + (15000000 / Resolution.BackbonePanel.getBasePairToHeightRatio())).toString();
     expect(attrs3.y).toEqual(expectedAttrs3Y); // Determined by starting position + height of previous section + offset of current section
     expect(attrs3.width).toEqual('30');
-    expect(attrs3.height).toEqual((150000000 / Resolution.getBasePairToHeightRatio()).toString()); // Determined by BASE_PAIR_TO_PIXEL_RATIO in TrackSection model
+    expect(attrs3.height).toEqual((150000000 / Resolution.BackbonePanel.getBasePairToHeightRatio()).toString()); // Determined by BASE_PAIR_TO_PIXEL_RATIO in TrackSection model
+  });
+
+  it('emits selected region', async () => {
+    const backboneTrackSection = new TrackSection({
+      start: 0,
+      stop: 10000000,
+      backboneStart: 0,
+      backboneStop: 10000000,
+      chromosome: '1',
+      cutoff: 120000000,
+      basePairToHeightRatio: Resolution.BackbonePanel.getBasePairToHeightRatio()
+    });
+    const backboneTrack = new Track('Human', [backboneTrackSection]);
+    const wrapper = shallowMount(TrackSVG, {
+      props: {
+        showStartStop: true,
+        posX: 100,
+        posY: 150,
+        width: 30,
+        track: backboneTrack,
+        isSelectable: true
+      },
+      global: {
+        provide: {
+          store: store
+        }
+      }
+    });
+
+    // Select a region
+    const section = wrapper.get('[data-test="track-section-svg"]');
+    await section.trigger('mousedown');
+    await section.trigger('mousemove');
+    await section.trigger('mousedown');
+
+    expect(actions.setSelectedBackboneRegion).toBeCalledTimes(1);
   });
 });

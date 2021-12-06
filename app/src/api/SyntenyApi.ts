@@ -2,21 +2,30 @@ import httpInstance from '@/api/httpInstance';
 import SyntenyBlock, { SyntenyBlockDTO } from '@/models/SyntenyBlock';
 import Map from '@/models/Map';
 import Chromosome from '@/models/Chromosome';
-import { Resolution } from '@/utils/Resolution';
+
+interface SyntenyBlocksParams
+{
+  backboneChromosome: Chromosome, 
+  start: number, 
+  stop: number, 
+  comparativeSpeciesMap: Map, 
+  chainLevel?: number, 
+  threshold?: number
+}
 
 export default class SyntenyApi
 {
-  static async getSyntenyBlocks(backboneChromosome: Chromosome, start: number, stop: number, comparativeSpeciesMap: Map, chainLevel?: number): Promise<SyntenyBlock[]>
+  static async getSyntenyBlocks(params: SyntenyBlocksParams): Promise<SyntenyBlock[]>
   {
-    let apiRoute = `/vcmap/blocks/${backboneChromosome?.mapKey}/${backboneChromosome?.chromosome}/${start}/${stop}/${comparativeSpeciesMap?.key}`;
-    if (chainLevel != null)
+    let apiRoute = `/vcmap/blocks/${params.backboneChromosome?.mapKey}/${params.backboneChromosome?.chromosome}/${params.start}/${params.stop}/${params.comparativeSpeciesMap?.key}`;
+    if (params.chainLevel != null)
     {
-      apiRoute += `/${chainLevel}`;
+      apiRoute += `/${params.chainLevel}`;
     }
-    const threshold = Resolution.getSyntenyThreshold();
-    if (threshold !=  null)
+
+    if (params.threshold !=  null)
     {
-      apiRoute += `?threshold=${threshold}`;
+      apiRoute += `?threshold=${params.threshold}`;
     }
     
     const res = await httpInstance.get(apiRoute);
@@ -25,7 +34,7 @@ export default class SyntenyApi
       blocks.push(new SyntenyBlock(block));
     });
 
-    console.debug(`Synteny blocks found for mapKey '${comparativeSpeciesMap.key}', threshold: '${threshold}': ${blocks.length}`);
+    console.debug(`Synteny blocks found for mapKey '${params.comparativeSpeciesMap.key}', threshold: '${params.threshold}': ${blocks.length}`);
     return blocks;
   }
 }
