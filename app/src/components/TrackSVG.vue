@@ -25,23 +25,21 @@
       @mouseleave="unhighlight(section)"
       @mousedown="initSelectStart($event, section, index)"
       @mousemove="updateSelectionHeight"
-      @mouseup="completeSelect"
       :fill="section.isHighlighted && isHighlightable ? HIGHLIGHT_COLOR : section.color" 
       :x="posX" :y="getSectionYPosition(posY, index)" 
       :width="width" 
       :height="section.height" />
     <rect v-if="isSelectable && selectedRegion.svgHeight > 0"
       data-test="selected-region"
+      class="selected-region"
       fill="url(#selectedStripes)"
-      stroke-width="1"
       stroke="black"
       :x="posX" :y="selectedRegion.svgYPoint"
       rx="2" ry="2"
       :width="width"
       :height="selectedRegion.svgHeight"
       @mousedown="initSelectStart($event, section, index)"
-      @mousemove="updateSelectionHeight"
-      @mouseup="completeSelect" />
+      @mousemove="updateSelectionHeight" />
     <text v-if="showStartStop" 
       data-test="stop-bp-label"
       class="label small" 
@@ -190,7 +188,7 @@ const getMousePosSVG = (e: any) => {
   let ctm = svg.getScreenCTM()?.inverse();
   p = p.matrixTransform(ctm);
   return p;
-}
+};
 </script>
 
 <style lang="scss" scoped>
@@ -202,9 +200,15 @@ const getMousePosSVG = (e: any) => {
 .section
 {
   stroke-width: 0;
-  &.selectable:hover
+  &.selectable
   {
     cursor: crosshair;
   }
+}
+
+.selected-region
+{
+  stroke-width: 1;
+  cursor: crosshair;
 }
 </style>
