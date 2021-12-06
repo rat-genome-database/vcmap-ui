@@ -208,7 +208,7 @@ describe('TrackSVG', () => {
     const section = wrapper.get('[data-test="track-section-svg"]');
     await section.trigger('mousedown');
     await section.trigger('mousemove');
-    await section.trigger('mouseup');
+    await section.trigger('mousedown');
 
     expect(actions.setSelectedBackboneRegion).toBeCalledTimes(1);
   });
