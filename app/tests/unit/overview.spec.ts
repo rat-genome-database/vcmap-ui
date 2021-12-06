@@ -7,14 +7,14 @@ import { ExternalComponentsHandler } from '@/utils/ExternalComponentsHandler';
 
 const mockStore = createStore({
   state: {
-    species: new Species({ typeKey: 1, name: 'Test Species'}),
+    species: new Species({ typeKey: 1, name: 'Test Species', defaultMapKey: 1 }),
     map: null,
-    chromosomeNum: null,
     chromosome: null,
     startPos: null,
     stopPos: null,
-    comparativeSpeciesOne: new Species({ typeKey: 2, name: 'Test Species 2'}),
-    comparativeSpeciesTwo: new Species({ typeKey: 3, name: 'Test Species 3'}),
+    gene: null,
+    comparativeSpeciesOne: new Species({ typeKey: 2, name: 'Test Species 2', defaultMapKey: 2 }),
+    comparativeSpeciesTwo: new Species({ typeKey: 3, name: 'Test Species 3', defaultMapKey: 3 }),
     selectedBackboneRegion: null
   },
   getters: {
