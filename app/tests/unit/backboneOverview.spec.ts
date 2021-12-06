@@ -7,12 +7,12 @@ import { nextTick } from '@vue/runtime-core';
 
 const mockStore = createStore({
   state: {
-    species: new Species({ typeKey: 1, name: 'Test Species'}),
+    species: new Species({ typeKey: 1, name: 'Test Species', defaultMapKey: 1 }),
     map: null,
-    chromosomeNum: null,
     chromosome: null,
     startPos: null,
     stopPos: null,
+    gene: null,
     comparativeSpeciesOne: null,
     comparativeSpeciesTwo: null,
     selectedBackboneRegion: null

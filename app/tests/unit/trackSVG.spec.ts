@@ -18,6 +18,7 @@ describe('TrackSVG', () => {
     chromosome: null,
     startPos: null,
     stopPos: null,
+    gene: null,
     comparativeSpeciesOne: null,
     comparativeSpeciesTwo: null,
     selectedBackboneRegion: null
