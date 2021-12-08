@@ -1,10 +1,4 @@
 <template>
-  <div class="grid">
-    <div class="col-12">
-      <img alt="VCMap Logo" class="logo" src="./assets/images/vcmap_logo_v2.jpg">
-    </div>
-  </div>
-  <Divider />
   <router-view/>
 </template>
 
@@ -19,6 +13,6 @@
 
 .logo
 {
-  max-height: 75px;
+  height: 4rem;
 }
 </style>

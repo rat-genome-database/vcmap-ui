@@ -4,14 +4,15 @@ import Species from '@/models/Species';
 import { VCMapState } from '@/store';
 import { createStore } from 'vuex';
 import { nextTick } from '@vue/runtime-core';
+import Chromosome from '@/models/Chromosome';
 
 const mockStore = createStore({
   state: {
     species: new Species({ typeKey: 1, name: 'Test Species', defaultMapKey: 1 }),
     map: null,
-    chromosome: null,
-    startPos: null,
-    stopPos: null,
+    chromosome: new Chromosome({ chromosome: '1', mapKey: 38, seqLength: 1000000, gapCount: 5, gapLength: 10000, contigCount: 100, ordinalNumber: 1 }),
+    startPos: 1,
+    stopPos: 10000,
     gene: null,
     comparativeSpeciesOne: null,
     comparativeSpeciesTwo: null,
@@ -20,6 +21,15 @@ const mockStore = createStore({
   getters: {
     getSpecies(state: VCMapState) {
       return state.species;
+    },
+    getChromosome(state: VCMapState) {
+      return state.chromosome;
+    },
+    getStartPosition(state: VCMapState) {
+      return state.startPos;
+    },
+    getStopPosition(state: VCMapState) {
+      return state.stopPos;
     }
   }
 });
@@ -37,7 +47,7 @@ describe('BackboneOverview', () => {
     // Wait for mounted() lifecycle hook to run
     await nextTick();
 
-    const speciesText = wrapper.get('[data-test="backbone-overview-species"]');
-    expect(speciesText.text()).toBe('Test Species');
+    const speciesText = wrapper.get('[data-test="backbone-overview-display"]');
+    expect(speciesText.text()).toBe('Test Species chr1:1-10,000');
   });
 });
