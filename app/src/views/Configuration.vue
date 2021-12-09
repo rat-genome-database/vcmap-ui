@@ -1,4 +1,8 @@
 <template>
+  <div class="configuration-header">
+    <img alt="VCMap Logo" class="logo" src="../assets/images/vcmap_logo_v2.jpg">
+    <h3 class="header">VCMap</h3>
+  </div>
   <div>
     <TabView v-model:activeIndex="active">
       <TabPanel header="Load by Position" >
@@ -485,5 +489,15 @@ async function searchGene(event: any)
 .start-button
 {
   margin-top: 1em;
+}
+
+.configuration-header
+{
+  display: inline-flex;
+  align-items: center;
+  .header
+  {
+    margin-left: 2rem;
+  }
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div class="grid col-2">
+  <div class="grid unpadded col-3">
     <div class="col-12">
       <h4>Data Tracks Loaded <span v-if="dataTracks">({{dataTracks.length}})</span></h4>
       <div class="data-tracks">
@@ -38,5 +38,15 @@ const dataTracks = ref<DataTrack[]>([]);
   color: white;
   font-weight: bold;
   border-radius: 1rem;
+}
+
+.grid.unpadded
+{
+  padding: 0;
+  div[class^="col-"]
+  {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
 }
 </style>

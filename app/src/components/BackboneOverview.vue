@@ -1,20 +1,14 @@
 <template>
-  <div class="grid col-6">
+  <div class="grid unpadded col-4">
     <div class="col-12">
       <h4>Backbone</h4>
-      <div class="grid">
-        <div class="col-4">
-          <p class="backbone-field">Species:</p>
-          <p class="backbone-field">Region:</p>
-          <p class="backbone-field">Length:</p>
-          <p class="backbone-field">Zoom Level:</p>
-        </div>
-        <div class="col-8">
-          <p class="backbone-field backbone-value" data-test="backbone-overview-species">{{backboneSpecies?.name}}</p>
-          <p class="backbone-field backbone-value">chr{{backboneChromosome?.chromosome}}:{{backboneStart}}-{{backboneStop}}</p>
-          <p class="backbone-field backbone-value">{{backboneLengthLabel}}bp</p>
-          <p class="backbone-field backbone-value">1x</p>
-        </div>
+      <div class="grid unpadded">
+        <div class="col-5">Displaying:</div>
+        <div class="col-7 bold" data-test="backbone-overview-display">{{backboneSpecies?.name}} chr{{backboneChromosome?.chromosome}}:{{backboneStart}}-{{backboneStop}}</div>
+        <div class="col-5">Length:</div>
+        <div class="col-7 bold">{{backboneLengthLabel}}bp</div>
+        <div class="col-5">Zoom Level:</div>
+        <div class="col-7 bold">1x</div>
       </div>
     </div>
   </div>
@@ -45,11 +39,19 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-.backbone-field
+.grid
 {
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
-  &.backbone-value
+  &.unpadded
+  {
+    padding: 0;
+    div[class^="col-"]
+    {
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+  }
+
+  div.bold
   {
     font-weight: bold;
   }

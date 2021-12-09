@@ -1,19 +1,14 @@
 <template>
-  <div class="grid col-3">
+  <div class="grid unpadded col-4">
     <div class="col-12">
       <h4>Comparative Species ({{comparativeSpecies?.length}})</h4>
-      <ul class="list-disc">
-        <li v-for="species in comparativeSpecies" :key="species.name">
-          <div>{{species.name}}</div>
-        </li>
-      </ul>
-      <div class="grid">
-        <div class="col-6">
-          <p class="comparative-field">Synteny Threshold:</p>
-        </div>
-        <div class="col-6">
-          <p class="comparative-field comparative-value">{{Resolution.BackbonePanel.getSyntenyThreshold()}}bp</p>
-        </div>
+      <div class="grid unpadded">
+        <div class="col-5">Displaying:</div>
+        <div class="col-7 bold">{{comparativeSpecies?.map(s => s.name).join(', ')}}</div>
+        <div class="col-5">Synteny Threshold:</div>
+        <div class="col-7 bold">{{Resolution.ComparativePanel.getSyntenyThreshold()}}bp</div>
+        <div class="col-5">Zoom Level:</div>
+        <div class="col-7 bold">1x</div>
       </div>
     </div>
   </div>
@@ -44,16 +39,19 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-.species-label
+.grid
 {
-  margin-top: 0.25rem;
-  margin-bottom: 0.25rem;
-}
-.comparative-field
-{
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
-  &.comparative-value
+  &.unpadded
+  {
+    padding: 0;
+    div[class^="col-"]
+    {
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+  }
+
+  div.bold
   {
     font-weight: bold;
   }
