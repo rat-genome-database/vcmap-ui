@@ -82,6 +82,14 @@ watch(() => store.getters.getSelectedBackboneRegion, () => {
   updateComparativePanel();
 });
 
+watch(() => store.getters.getBackboneZoom, () => {
+  console.log('backbone zoom changed');
+});
+
+watch(() => store.getters.getComparativeZoom, () => {
+  console.log('comparative zoom changed');
+});
+
 const updateBackbonePanel = async () => {
   let backboneStart = store.getters.getStartPosition;
   let backboneStop = store.getters.getStopPosition;

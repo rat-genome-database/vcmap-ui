@@ -20,6 +20,8 @@ export interface VCMapState
   comparativeSpeciesTwo: Species | null;
 
   selectedBackboneRegion: BackboneSelection | null;
+  backboneZoom: number | null;
+  comparativeZoom: number | null;
 }
 
 const vuexLocal = new VuexPersistence<VCMapState>({
@@ -38,7 +40,9 @@ export default createStore({
     comparativeSpeciesOne: null,
     comparativeSpeciesTwo: null,
 
-    selectedBackboneRegion: null
+    selectedBackboneRegion: null,
+    backboneZoom: null,
+    comparativeZoom: null,
   }),
 
   mutations: {
@@ -68,7 +72,13 @@ export default createStore({
     },
     selectedBackboneRegion ( state: VCMapState, selection: BackboneSelection) {
       state.selectedBackboneRegion = selection;
-    }
+    },
+    backboneZoom (state: VCMapState, zoom: number) {
+      state.backboneZoom = zoom;
+    },
+    comparativeZoom (state: VCMapState, zoom: number) {
+      state.comparativeZoom = zoom;
+    },
   },
 
   actions: {
@@ -99,6 +109,12 @@ export default createStore({
     setSelectedBackboneRegion (context: ActionContext<VCMapState, VCMapState>, selection: BackboneSelection) {
       context.commit('selectedBackboneRegion', selection);
     },
+    setBackboneZoom (context: ActionContext<VCMapState, VCMapState>, zoom: number) {
+      context.commit('backboneZoom', zoom);
+    },
+    setComparativeZoom (context: ActionContext<VCMapState, VCMapState>, zoom: number) {
+      context.commit('comparativeZoom', zoom);
+    },
   },
 
   getters: {
@@ -128,7 +144,13 @@ export default createStore({
     },
     getSelectedBackboneRegion (state: VCMapState) {
       return state.selectedBackboneRegion;
-    }
+    },
+    getBackboneZoom(state: VCMapState) {
+      return state.backboneZoom;
+    },
+    getComparativeZoom(state: VCMapState) {
+      return state.comparativeZoom;
+    },
   },
 
   plugins: [

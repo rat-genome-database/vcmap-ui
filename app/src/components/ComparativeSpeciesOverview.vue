@@ -8,7 +8,7 @@
         <div class="col-5">Synteny Threshold:</div>
         <div class="col-7 bold">{{Resolution.ComparativePanel.getSyntenyThreshold()}}bp</div>
         <div class="col-5">Zoom Level:</div>
-        <div class="col-7 bold">1x</div>
+        <div class="col-7 bold"><Zoom type="comparative" /></div>
       </div>
     </div>
   </div>
@@ -19,6 +19,7 @@ import Species from '@/models/Species';
 import { onMounted, ref } from 'vue';
 import { useStore } from 'vuex';
 import { Resolution } from '@/utils/Resolution';
+import Zoom from '@/components/Zoom.vue';
 
 const store = useStore();
 let comparativeSpecies = ref<Species[] | null>(null);

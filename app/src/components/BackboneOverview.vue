@@ -8,7 +8,7 @@
         <div class="col-5">Length:</div>
         <div class="col-7 bold">{{backboneLengthLabel}}bp</div>
         <div class="col-5">Zoom Level:</div>
-        <div class="col-7 bold">1x</div>
+        <div class="col-7 bold"><Zoom type="backbone"/></div>
       </div>
     </div>
   </div>
@@ -20,6 +20,7 @@ import Species from '@/models/Species';
 import { Formatter } from '@/utils/Formatter';
 import { onMounted, ref } from 'vue';
 import { useStore } from 'vuex';
+import Zoom from '@/components/Zoom.vue';
 
 const store = useStore();
 
