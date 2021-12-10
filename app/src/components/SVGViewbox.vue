@@ -73,16 +73,11 @@ onMounted(() => {
   backboneChromosome.value = store.getters.getChromosome;
 
   updateBackbonePanel();
-
-  let selectedRegion = store.getters.getSelectedBackboneRegion as BackboneSelection | null;
-  if (selectedRegion)
-  {
-    updateComparativePanel(selectedRegion?.basePairStart, selectedRegion?.basePairStop);
-  }
 });
 
 watch(() => store.getters.getSelectedBackboneRegion, (newVal) => {
   let selectedRegion = newVal as BackboneSelection | null;
+  store.dispatch('setComparativeZoom', 1);
   updateComparativePanel(selectedRegion?.basePairStart, selectedRegion?.basePairStop);
 });
 

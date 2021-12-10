@@ -102,13 +102,11 @@ watch(() => props.track, () => {
     selection.svgHeight = (selectionStop - selectionStart) / store.getters.getBackboneBasePairToHeightRatio;
     selection.svgYPoint = ((selectionStart - store.getters.getDisplayStartPosition) / store.getters.getBackboneBasePairToHeightRatio) + startingYPos;
     selectedRegion.value = selection;
-    console.log(selection);
     store.dispatch('setSelectedBackboneRegion', selectedRegion.value);
   }
 });
 
 watch(() => store.getters.getSelectedBackboneRegion, (newVal, oldVal) => {
-  console.log('watch triggered', newVal, oldVal)
   // Watch for possible clear out of the selected backbone region (triggered by backbone configuration changes)
   if (props.isSelectable && oldVal != null && newVal == null)
   {
