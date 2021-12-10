@@ -16,7 +16,15 @@ const mockStore = createStore({
     gene: null,
     comparativeSpeciesOne: null,
     comparativeSpeciesTwo: null,
-    selectedBackboneRegion: null
+    selectedBackboneRegion: null,
+    backboneZoom: 1,
+    comparativeZoom: 1,
+    displayStartPos: 1,
+    displayStopPos: 10000,
+    backboneBasePairToHeightRatio: 1000,
+    backboneSyntenyThreshold: 0,
+    comparativeBasePairToHeightRatio: 1000,
+    comparativeSyntenyThreshold: 0,
   },
   getters: {
     getSpecies(state: VCMapState) {
@@ -30,7 +38,13 @@ const mockStore = createStore({
     },
     getStopPosition(state: VCMapState) {
       return state.stopPos;
-    }
+    },
+    getDisplayStartPosition(state: VCMapState) {
+      return state.displayStartPos;
+    },
+    getDisplayStopPosition(state: VCMapState) {
+      return state.displayStopPos;
+    },
   }
 });
 
