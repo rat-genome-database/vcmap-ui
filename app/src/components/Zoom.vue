@@ -1,7 +1,17 @@
 <template>
-  <Button v-tooltip.left="'Zoom Out'" icon="pi pi-minus" class="p-button-info p-button-sm zoom-btn" @click="decreaseZoom"/>
+  <Button 
+    data-test="decrease-zoom-btn"
+    v-tooltip.left="'Zoom Out'" 
+    icon="pi pi-minus" 
+    class="p-button-info p-button-sm zoom-btn" 
+    @click="decreaseZoom"/>
     <span class="zoom-level">{{zoomLevel}}x</span>
-  <Button v-tooltip.right="'Zoom In'" icon="pi pi-plus" class="p-button-info p-button-sm zoom-btn" @click="increaseZoom"/>
+  <Button 
+    data-test="increase-zoom-btn"
+    v-tooltip.right="'Zoom In'" 
+    icon="pi pi-plus" 
+    class="p-button-info p-button-sm zoom-btn" 
+    @click="increaseZoom"/>
 </template>
 
 <script lang="ts" setup>

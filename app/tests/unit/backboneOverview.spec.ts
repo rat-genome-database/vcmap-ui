@@ -59,7 +59,7 @@ describe('BackboneOverview', () => {
     });
 
     // Wait for mounted() lifecycle hook to run
-    await nextTick();
+    //await nextTick();
 
     const speciesText = wrapper.get('[data-test="backbone-overview-display"]');
     expect(speciesText.text()).toBe('Test Species chr1:1-10,000');
