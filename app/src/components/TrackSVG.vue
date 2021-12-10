@@ -54,9 +54,8 @@
 import BackboneSelection from '@/models/BackboneSelection';
 import Track from '@/models/Track';
 import TrackSection from '@/models/TrackSection';
-import { Resolution } from '@/utils/Resolution';
 import { toRefs } from '@vue/reactivity';
-import { onMounted, ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useStore } from 'vuex';
 
 const LABEL_Y_OFFSET = 3;
@@ -89,8 +88,32 @@ let selectedRegion = ref<BackboneSelection>(
   new BackboneSelection(0, 0, 0, 0)
 );
 
-onMounted(() => {
-  selectedRegion.value = store.getters.getSelectedBackboneRegion ?? new BackboneSelection(0, 0, 0, 0);
+watch(() => props.track, () => {
+  if (props.isSelectable && store.getters.getSelectedBackboneRegion)
+  {
+    console.debug(`Detected existing selection. Recreating selection SVG on backbone.`);
+    // There was an existing selection on this track so let's recreate it
+    let selection = store.getters.getSelectedBackboneRegion as BackboneSelection;
+    let startingYPos = props.posY;
+
+    let selectionStart = (selection.basePairStart < store.getters.getDisplayStartPosition) ? store.getters.getDisplayStartPosition : selection.basePairStart;
+    let selectionStop = (selection.basePairStop > store.getters.getDisplayStopPosition) ? store.getters.getDisplayStopPosition : selection.basePairStop;
+    
+    selection.svgHeight = (selectionStop - selectionStart) / store.getters.getBackboneBasePairToHeightRatio;
+    selection.svgYPoint = ((selectionStart - store.getters.getDisplayStartPosition) / store.getters.getBackboneBasePairToHeightRatio) + startingYPos;
+    selectedRegion.value = selection;
+    console.log(selection);
+    store.dispatch('setSelectedBackboneRegion', selectedRegion.value);
+  }
+});
+
+watch(() => store.getters.getSelectedBackgoneRegion, (newVal, oldVal) => {
+  // Watch for possible clear out of the selected backbone region (triggered by backbone configuration changes)
+  if (props.isSelectable && oldVal != null && newVal == null)
+  {
+    console.debug('Clearing out backbone selection');
+    selectedRegion.value = new BackboneSelection(0, 0, 0, 0);
+  }
 });
 
 /**
@@ -158,8 +181,8 @@ const completeSelect = () => {
   if (selectedRegion.value.svgHeight > 0 && selectedTrackSection)
   {
     // Calculate the selected range in base pairs
-    const totalBasePairsSelected = Math.ceil(selectedRegion.value.svgHeight * Resolution.BackbonePanel.getBasePairToHeightRatio());
-    const basePairsUpToStart = Math.floor((selectedRegion.value.svgYPoint - getSectionYPosition(props.posY, selectedTrackIndex)) * Resolution.BackbonePanel.getBasePairToHeightRatio());
+    const totalBasePairsSelected = Math.ceil(selectedRegion.value.svgHeight * store.getters.getBackboneBasePairToHeightRatio);
+    const basePairsUpToStart = Math.floor((selectedRegion.value.svgYPoint - getSectionYPosition(props.posY, selectedTrackIndex)) * store.getters.getBackboneBasePairToHeightRatio);
     const basePairStart = selectedTrackSection.backboneStart + basePairsUpToStart;
     selectedRegion.value.basePairStart = basePairStart;
     selectedRegion.value.basePairStop = basePairStart + totalBasePairsSelected;

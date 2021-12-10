@@ -3,7 +3,6 @@ import TrackSVG from '@/components/TrackSVG.vue';
 import TrackSection from '@/models/TrackSection';
 import Track from '@/models/Track';
 import Chromosome from '@/models/Chromosome';
-import { Resolution } from '@/utils/Resolution';
 import { ActionTree, createStore, Store } from 'vuex';
 import { VCMapState } from '@/store';
 

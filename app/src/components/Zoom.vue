@@ -6,7 +6,7 @@
 
 <script lang="ts" setup>
 import { useStore } from 'vuex';
-import { computed, onMounted } from 'vue';
+import { computed } from 'vue';
 
 const store = useStore();
 
@@ -19,13 +19,6 @@ const props = defineProps<Props>();
 
 const setter = `set${props.type.charAt(0).toUpperCase() + props.type.slice(1)}Zoom`;
 const getter = `get${props.type.charAt(0).toUpperCase() + props.type.slice(1)}Zoom`;
-
-onMounted(() => {
-  if (zoomLevel.value == null)
-  {
-    store.dispatch(setter, 1);
-  }
-});
 
 const zoomLevel = computed(() => {
   return store.getters[getter];
@@ -64,10 +57,10 @@ const increaseZoom = () => {
 .p-button.p-button-sm.zoom-btn
 {
   padding: 0.1rem;
+  width: 1.5rem;
 }
 .zoom-level
 {
-  margin-left: 1rem;
-  margin-right: 1rem;
+  margin: 0 0.5rem;
 }
 </style>

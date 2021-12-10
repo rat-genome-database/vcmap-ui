@@ -6,7 +6,7 @@
         <div class="col-5">Displaying:</div>
         <div class="col-7 bold">{{comparativeSpecies?.map(s => s.name).join(', ')}}</div>
         <div class="col-5">Synteny Threshold:</div>
-        <div class="col-7 bold">{{Resolution.ComparativePanel.getSyntenyThreshold()}}bp</div>
+        <div class="col-7 bold">{{syntenyThreshold}}bp</div>
         <div class="col-5">Zoom Level:</div>
         <div class="col-7 bold"><Zoom type="comparative" /></div>
       </div>
@@ -16,26 +16,29 @@
 
 <script lang="ts" setup>
 import Species from '@/models/Species';
-import { onMounted, ref } from 'vue';
+import { computed } from 'vue';
 import { useStore } from 'vuex';
-import { Resolution } from '@/utils/Resolution';
 import Zoom from '@/components/Zoom.vue';
 
 const store = useStore();
-let comparativeSpecies = ref<Species[] | null>(null);
 
-onMounted(() => {
-  comparativeSpecies.value = [];
-  
+const comparativeSpecies = computed(() => {
+  let species = [];
   if (store.getters.getComparativeSpeciesOne)
   {
-    comparativeSpecies.value.push(store.getters.getComparativeSpeciesOne as Species);
+    species.push(store.getters.getComparativeSpeciesOne as Species);
   }
 
   if (store.getters.getComparativeSpeciesTwo)
   {
-    comparativeSpecies.value.push(store.getters.getComparativeSpeciesTwo as Species);
+    species.push(store.getters.getComparativeSpeciesTwo as Species);
   }
+
+  return species;
+});
+
+const syntenyThreshold = computed(() => {
+  return store.getters.getComparativeSyntenyThreshold;
 });
 </script>
 
