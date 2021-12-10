@@ -8,7 +8,7 @@
         <div class="col-5">Synteny Threshold:</div>
         <div class="col-7 bold">{{syntenyThreshold}}bp</div>
         <div class="col-5">Zoom Level:</div>
-        <div class="col-7 bold"><Zoom type="comparative" /></div>
+        <div class="col-7 bold"><Zoom type="comparative" :min="1" /></div>
       </div>
     </div>
   </div>
