@@ -66,21 +66,24 @@ let comparativeSelectionTracks = ref<Track[] | null>(null);
  * Once mounted, let's set our reactive data props and create the backbone and synteny tracks
  */
 onMounted(() => {
+  // Clear any prior selections
+  store.dispatch('setSelectedBackboneRegion', null);
+
   backboneSpecies.value = store.getters.getSpecies;
   backboneChromosome.value = store.getters.getChromosome;
 
   updateBackbonePanel();
 
-  let selectedRegion = store.getters.getSelectedBackboneRegion as BackboneSelection;
+  let selectedRegion = store.getters.getSelectedBackboneRegion as BackboneSelection | null;
   if (selectedRegion)
   {
-    updateComparativePanel(selectedRegion.basePairStart, selectedRegion.basePairStop);
+    updateComparativePanel(selectedRegion?.basePairStart, selectedRegion?.basePairStop);
   }
 });
 
 watch(() => store.getters.getSelectedBackboneRegion, (newVal) => {
-  let selectedRegion = newVal as BackboneSelection;
-  updateComparativePanel(selectedRegion.basePairStart, selectedRegion.basePairStop);
+  let selectedRegion = newVal as BackboneSelection | null;
+  updateComparativePanel(selectedRegion?.basePairStart, selectedRegion?.basePairStop);
 });
 
 watch(() => store.getters.getBackboneZoom, (newVal, oldVal) => {
@@ -152,7 +155,7 @@ const updateBackbonePanel = async () => {
   }
 };
 
-const updateComparativePanel = async (selectedBackboneStart: number | null, selectedBackboneStop: number | null) => {
+const updateComparativePanel = async (selectedBackboneStart: number | undefined, selectedBackboneStop: number | undefined) => {
   if (selectedBackboneStart != null && selectedBackboneStop != null)
   {
     store.dispatch('setComparativeResolution', selectedBackboneStop - selectedBackboneStart);

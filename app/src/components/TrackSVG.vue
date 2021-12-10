@@ -107,7 +107,8 @@ watch(() => props.track, () => {
   }
 });
 
-watch(() => store.getters.getSelectedBackgoneRegion, (newVal, oldVal) => {
+watch(() => store.getters.getSelectedBackboneRegion, (newVal, oldVal) => {
+  console.log('watch triggered', newVal, oldVal)
   // Watch for possible clear out of the selected backbone region (triggered by backbone configuration changes)
   if (props.isSelectable && oldVal != null && newVal == null)
   {

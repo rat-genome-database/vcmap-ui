@@ -1,5 +1,5 @@
 <template>
-  <div class="grid unpadded col-4">
+  <div class="grid unpadded col-5">
     <div class="col-12">
       <h4>Backbone</h4>
       <div class="grid unpadded">
@@ -8,7 +8,15 @@
         <div class="col-5">Length:</div>
         <div class="col-7 bold">{{displayBackboneLength}}bp</div>
         <div class="col-5">Selection:</div>
-        <div class="col-7 bold">{{selectionRange}}</div>
+        <div class="col-7 bold">
+          <span>{{selectionRange}}</span>
+          <Button 
+            data-test="clear-selection-btn"
+            v-tooltip.right="'Clear Selection'" 
+            icon="pi pi-trash" 
+            class="p-button-info p-button-sm clear-btn" 
+            @click="clearSelection"/>
+        </div>
         <div class="col-5">Zoom Level:</div>
         <div class="col-7 bold"><Zoom type="backbone"/></div>
       </div>
@@ -54,6 +62,10 @@ const selectionRange = computed(() => {
 
   return `${Formatter.addCommasToBasePair(selectedRegion.basePairStart)}bp - ${Formatter.addCommasToBasePair(selectedRegion.basePairStop)}bp`;
 });
+
+const clearSelection = () => {
+  store.dispatch('setSelectedBackboneRegion', null);
+};
 </script>
 
 <style lang="scss" scoped>
@@ -73,5 +85,12 @@ const selectionRange = computed(() => {
   {
     font-weight: bold;
   }
+}
+
+.p-button.p-button-sm.clear-btn
+{
+  margin-left: 0.5rem;
+  padding: 0.1rem;
+  width: 1.5rem;
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div class="grid unpadded col-3">
+  <div class="grid unpadded col-2">
     <div class="col-12">
       <h4>Data Tracks Loaded <span v-if="dataTracks">({{dataTracks.length}})</span></h4>
       <div class="data-tracks">
