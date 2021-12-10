@@ -46,7 +46,6 @@ import { useStore } from 'vuex';
 import TrackSVG from './TrackSVG.vue';
 import Chromosome from '@/models/Chromosome';
 import Map from '@/models/Map';
-import { Resolution } from '@/utils/Resolution';
 import SyntenyBlock from '@/models/SyntenyBlock';
 import SpeciesApi from '@/api/SpeciesApi';
 import ViewSize from '@/utils/ViewSize';
@@ -67,29 +66,82 @@ let comparativeSelectionTracks = ref<Track[] | null>(null);
  * Once mounted, let's set our reactive data props and create the backbone and synteny tracks
  */
 onMounted(() => {
+  // Clear any prior selections
+  store.dispatch('setSelectedBackboneRegion', null);
+
   backboneSpecies.value = store.getters.getSpecies;
   backboneChromosome.value = store.getters.getChromosome;
 
   updateBackbonePanel();
+});
 
-  if (store.getters.getSelectedBackboneRegion)
+watch(() => store.getters.getSelectedBackboneRegion, (newVal) => {
+  let selectedRegion = newVal as BackboneSelection | null;
+  store.dispatch('setComparativeZoom', 1);
+  updateComparativePanel(selectedRegion?.basePairStart, selectedRegion?.basePairStop);
+});
+
+watch(() => store.getters.getBackboneZoom, (newVal, oldVal) => {
+  let backboneStart = store.getters.getStartPosition;
+  let backboneStop = store.getters.getStopPosition;
+
+  if (oldVal === newVal || backboneStart == null || backboneStop == null)
   {
-    updateComparativePanel();
+    return;
+  }
+
+  const zoomedPositions = getZoomedStartAndStopPositions(backboneStart, backboneStop, newVal);
+  store.dispatch('setDisplayStartPosition', zoomedPositions.start);
+  store.dispatch('setDisplayStopPosition', zoomedPositions.stop);
+  updateBackbonePanel();
+});
+
+watch(() => store.getters.getComparativeZoom, (newVal, oldVal) => {
+  let originalSelectedBackboneRegion = store.getters.getSelectedBackboneRegion as BackboneSelection;
+  if (oldVal !== newVal && originalSelectedBackboneRegion != null)
+  {
+    let selectedStart = originalSelectedBackboneRegion.basePairStart;
+    let selectedStop = originalSelectedBackboneRegion.basePairStop;
+    const zoomedPositions = getZoomedStartAndStopPositions(selectedStart, selectedStop, newVal);
+    updateComparativePanel(zoomedPositions.start, zoomedPositions.stop);
   }
 });
 
-watch(() => store.getters.getSelectedBackboneRegion, () => {
-  updateComparativePanel();
-});
+const getZoomedStartAndStopPositions = (originalStart: number, originalStop: number, zoomLevel: number) => {
+  let zoomedStart = originalStart;
+  let zoomedStop = originalStop;
+  let originalRegionLength = originalStop - originalStart;
+  let zoomedRegionLength = originalRegionLength * (1 / zoomLevel);
+
+  if (zoomLevel > 1)
+  {
+    zoomedStart = originalStart + ((originalRegionLength - zoomedRegionLength) / 2);
+    zoomedStop = originalStop - ((originalRegionLength - zoomedRegionLength) / 2);
+  }
+  else if (zoomLevel < 1)
+  {
+    zoomedStart = originalStart - ((zoomedRegionLength - originalRegionLength) / 2);
+    zoomedStop = originalStop + ((zoomedRegionLength - originalRegionLength) / 2);
+  }
+
+  let chromosome = store.getters.getChromosome as Chromosome | null;
+  zoomedStart = (zoomedStart < 0) ? 0 : Math.floor(zoomedStart);
+  zoomedStop = (chromosome?.seqLength && zoomedStop > chromosome.seqLength) ? chromosome.seqLength : Math.ceil(zoomedStop);
+
+  return {
+    start: zoomedStart,
+    stop: zoomedStop
+  };
+};
 
 const updateBackbonePanel = async () => {
-  let backboneStart = store.getters.getStartPosition;
-  let backboneStop = store.getters.getStopPosition;
-  if (backboneStart != null && backboneStop != null)
+  let backboneStart = store.getters.getDisplayStartPosition;
+  let backboneStop = store.getters.getDisplayStopPosition;
+  if (backboneStop - backboneStart > 0)
   {
-    Resolution.BackbonePanel.setResolution(backboneStart, backboneStop);
-    backboneTrack.value = createBackboneTrack(backboneStart, backboneStop, Resolution.BackbonePanel.getBasePairToHeightRatio()) ?? null;
-    comparativeTracks.value = await createSyntenyTracks(backboneStart, backboneStop, Resolution.BackbonePanel.getBasePairToHeightRatio()) ?? null;
+    store.dispatch('setBackboneResolution', backboneStop - backboneStart);
+    backboneTrack.value = createBackboneTrack(backboneStart, backboneStop, store.getters.getBackboneBasePairToHeightRatio) ?? null;
+    comparativeTracks.value = await createSyntenyTracks(backboneStart, backboneStop, store.getters.getBackboneBasePairToHeightRatio) ?? null;
   }
   else
   {
@@ -98,13 +150,12 @@ const updateBackbonePanel = async () => {
   }
 };
 
-const updateComparativePanel = async () => {
-  let selectedRegion = store.getters.getSelectedBackboneRegion as BackboneSelection;
-  if (selectedRegion.basePairStart && selectedRegion.basePairStop)
+const updateComparativePanel = async (selectedBackboneStart: number | undefined, selectedBackboneStop: number | undefined) => {
+  if (selectedBackboneStart != null && selectedBackboneStop != null)
   {
-    Resolution.ComparativePanel.setResolution(selectedRegion.basePairStart, selectedRegion.basePairStop);
-    backboneSelectionTrack.value = createBackboneTrack(selectedRegion.basePairStart, selectedRegion.basePairStop, Resolution.ComparativePanel.getBasePairToHeightRatio()) ?? null;
-    comparativeSelectionTracks.value = await createSyntenyTracks(selectedRegion.basePairStart, selectedRegion.basePairStop, Resolution.ComparativePanel.getBasePairToHeightRatio()) ?? null;
+    store.dispatch('setComparativeResolution', selectedBackboneStop - selectedBackboneStart);
+    backboneSelectionTrack.value = createBackboneTrack(selectedBackboneStart, selectedBackboneStop, store.getters.getComparativeBasePairToHeightRatio) ?? null;
+    comparativeSelectionTracks.value = await createSyntenyTracks(selectedBackboneStart, selectedBackboneStop, store.getters.getComparativeBasePairToHeightRatio) ?? null;
   }
   else
   {
@@ -205,7 +256,7 @@ const createSyntenyTracks = async (backboneStart: number, backboneStop: number, 
         stop: backboneStop,
         comparativeSpeciesMap: map,
         chainLevel: 1,
-        threshold: Resolution.BackbonePanel.getSyntenyThreshold()
+        threshold: store.getters.getBackboneSyntenyThreshold
       }));
     });
 
@@ -225,6 +276,7 @@ const createSyntenyTracks = async (backboneStart: number, backboneStop: number, 
     const tracks: Track[] = [];
     for (let speciesName in speciesSyntenyMap)
     {
+      console.debug(`-- Building synteny track for species: ${speciesName} --`);
       const blocks = speciesSyntenyMap[speciesName];
       const trackSections: TrackSection[] = [];
       let previousBlockBackboneStop = backboneStart;
@@ -239,7 +291,7 @@ const createSyntenyTracks = async (backboneStart: number, backboneStop: number, 
           offsetCount: block.backboneStart - previousBlockBackboneStop,
           basePairToHeightRatio: basePairToHeightRatio
         });
-        console.log(speciesName, trackSection, block, previousBlockBackboneStop);
+        console.debug(speciesName, trackSection, block, previousBlockBackboneStop);
         trackSections.push(trackSection);
         previousBlockBackboneStop = block.backboneStop;
       });

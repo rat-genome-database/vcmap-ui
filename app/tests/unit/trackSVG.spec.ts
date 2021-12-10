@@ -3,9 +3,10 @@ import TrackSVG from '@/components/TrackSVG.vue';
 import TrackSection from '@/models/TrackSection';
 import Track from '@/models/Track';
 import Chromosome from '@/models/Chromosome';
-import { Resolution } from '@/utils/Resolution';
 import { ActionTree, createStore, Store } from 'vuex';
 import { VCMapState } from '@/store';
+
+const BACKBONE_BASEPAIR_TO_HEIGHT_RATIO = 1000;
 
 describe('TrackSVG', () => {
 
@@ -21,7 +22,15 @@ describe('TrackSVG', () => {
     gene: null,
     comparativeSpeciesOne: null,
     comparativeSpeciesTwo: null,
-    selectedBackboneRegion: null
+    selectedBackboneRegion: null,
+    backboneZoom: 1,
+    comparativeZoom: 1,
+    displayStartPos: 0,
+    displayStopPos: 0,
+    backboneBasePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO,
+    backboneSyntenyThreshold: 0,
+    comparativeBasePairToHeightRatio: 1000,
+    comparativeSyntenyThreshold: 0,
   };
   let getters = {
     getSelectedBackboneRegion(state: VCMapState) {
@@ -49,7 +58,7 @@ describe('TrackSVG', () => {
       backboneStop: 10000000,
       chromosome: '1',
       cutoff: 120000000,
-      basePairToHeightRatio: Resolution.BackbonePanel.getBasePairToHeightRatio()
+      basePairToHeightRatio: 1000
     });
     const backboneTrack = new Track('Human', [backboneTrackSection]);
     const wrapper = shallowMount(TrackSVG, {
@@ -87,7 +96,7 @@ describe('TrackSVG', () => {
     expect(backboneAttributes.x).toEqual('100');
     expect(backboneAttributes.y).toEqual('150');
     expect(backboneAttributes.width).toEqual('30');
-    expect(backboneAttributes.height).toEqual((10000000 / Resolution.BackbonePanel.getBasePairToHeightRatio()).toString());
+    expect(backboneAttributes.height).toEqual((10000000 / BACKBONE_BASEPAIR_TO_HEIGHT_RATIO).toString());
   });
 
   it('renders a track with multiple sections', async () => {
@@ -99,7 +108,7 @@ describe('TrackSVG', () => {
       chromosome: '1',
       cutoff: 300000000,
       offsetCount: 0,
-      basePairToHeightRatio: Resolution.BackbonePanel.getBasePairToHeightRatio()
+      basePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO
     });
     const trackSection2 = new TrackSection({
       start: 45000000,
@@ -109,7 +118,7 @@ describe('TrackSVG', () => {
       chromosome: '2',
       cutoff: 300000000,
       offsetCount: 10000000,
-      basePairToHeightRatio: Resolution.BackbonePanel.getBasePairToHeightRatio()
+      basePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO
     });
     const trackSection3 = new TrackSection({
       start: 125000000,
@@ -119,7 +128,7 @@ describe('TrackSVG', () => {
       chromosome: '3',
       cutoff: 300000000,
       offsetCount: 15000000,
-      basePairToHeightRatio: Resolution.BackbonePanel.getBasePairToHeightRatio()
+      basePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO
     });
     const track = new Track('Rat', [trackSection1, trackSection2, trackSection3]);
 
@@ -159,23 +168,23 @@ describe('TrackSVG', () => {
     expect(attrs1.x).toEqual('100');
     expect(attrs1.y).toEqual('150'); // Determined by starting position + height of previous section + offset of current section
     expect(attrs1.width).toEqual('30');
-    expect(attrs1.height).toEqual((10000000 / Resolution.BackbonePanel.getBasePairToHeightRatio()).toString()); // Determined by BASE_PAIR_TO_PIXEL_RATIO in TrackSection model
+    expect(attrs1.height).toEqual((10000000 / BACKBONE_BASEPAIR_TO_HEIGHT_RATIO).toString()); // Determined by BASE_PAIR_TO_PIXEL_RATIO in TrackSection model
 
     const attrs2 = section2.attributes();
     expect(attrs2.fill).toEqual(Chromosome.getColor('2'));
     expect(attrs2.x).toEqual('100');
-    const expectedAttrs2Y = (parseInt(attrs1.y) + parseInt(attrs1.height) + (10000000 / Resolution.BackbonePanel.getBasePairToHeightRatio())).toString();
+    const expectedAttrs2Y = (parseInt(attrs1.y) + parseInt(attrs1.height) + (10000000 / BACKBONE_BASEPAIR_TO_HEIGHT_RATIO)).toString();
     expect(attrs2.y).toEqual(expectedAttrs2Y); // Determined by starting position + height of previous section + offset of current section
     expect(attrs2.width).toEqual('30');
-    expect(attrs2.height).toEqual((15000000 / Resolution.BackbonePanel.getBasePairToHeightRatio()).toString()); // Determined by BASE_PAIR_TO_PIXEL_RATIO in TrackSection model
+    expect(attrs2.height).toEqual((15000000 / BACKBONE_BASEPAIR_TO_HEIGHT_RATIO).toString()); // Determined by BASE_PAIR_TO_PIXEL_RATIO in TrackSection model
 
     const attrs3 = section3.attributes();
     expect(attrs3.fill).toEqual(Chromosome.getColor('3'));
     expect(attrs3.x).toEqual('100');
-    const expectedAttrs3Y = (parseInt(attrs2.y) + parseInt(attrs2.height) + (15000000 / Resolution.BackbonePanel.getBasePairToHeightRatio())).toString();
+    const expectedAttrs3Y = (parseInt(attrs2.y) + parseInt(attrs2.height) + (15000000 / BACKBONE_BASEPAIR_TO_HEIGHT_RATIO)).toString();
     expect(attrs3.y).toEqual(expectedAttrs3Y); // Determined by starting position + height of previous section + offset of current section
     expect(attrs3.width).toEqual('30');
-    expect(attrs3.height).toEqual((150000000 / Resolution.BackbonePanel.getBasePairToHeightRatio()).toString()); // Determined by BASE_PAIR_TO_PIXEL_RATIO in TrackSection model
+    expect(attrs3.height).toEqual((150000000 / BACKBONE_BASEPAIR_TO_HEIGHT_RATIO).toString()); // Determined by BASE_PAIR_TO_PIXEL_RATIO in TrackSection model
   });
 
   it('emits selected region', async () => {
@@ -186,7 +195,7 @@ describe('TrackSVG', () => {
       backboneStop: 10000000,
       chromosome: '1',
       cutoff: 120000000,
-      basePairToHeightRatio: Resolution.BackbonePanel.getBasePairToHeightRatio()
+      basePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO
     });
     const backboneTrack = new Track('Human', [backboneTrackSection]);
     const wrapper = shallowMount(TrackSVG, {
