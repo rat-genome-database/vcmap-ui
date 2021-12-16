@@ -15,4 +15,10 @@
 {
   height: 4rem;
 }
+
+.version-label
+{
+  font-size: 0.75rem;
+  margin-left: 0.5rem;
+}
 </style>
