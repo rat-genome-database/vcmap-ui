@@ -5,6 +5,7 @@ import Map from '@/models/Map';
 import Chromosome from '@/models/Chromosome';
 import Gene from '@/models/Gene';
 import BackboneSelection from '@/models/BackboneSelection';
+import DataTrack from '@/models/DataTrack';
 import ViewSize from '@/utils/ViewSize';
 
 
@@ -31,6 +32,8 @@ export interface VCMapState
   backboneSyntenyThreshold: number;
   comparativeBasePairToHeightRatio: number;
   comparativeSyntenyThreshold: number;
+
+  backboneDataTracks: DataTrack[];
 }
 
 const vuexLocal = new VuexPersistence<VCMapState>({
@@ -59,6 +62,8 @@ export default createStore({
     backboneSyntenyThreshold: 0,
     comparativeBasePairToHeightRatio: 1000,
     comparativeSyntenyThreshold: 0,
+
+    backboneDataTracks: [],
   }),
 
   mutations: {
@@ -117,6 +122,27 @@ export default createStore({
       console.debug(`Setting comparative panel synteny threshold to ${threshold}bp`);
       state.comparativeSyntenyThreshold = threshold;
     },
+
+    backboneDataTracks(state: VCMapState, tracks: DataTrack[]) {
+      state.backboneDataTracks = tracks;
+    },
+
+    addBackboneDataTrack(state: VCMapState, track: DataTrack ) {
+      if (state.backboneDataTracks.indexOf(track) == -1) 
+      {
+        state.backboneDataTracks.push(track);
+      }
+    },
+
+    changeDataTrack(state: VCMapState, track: DataTrack ) {
+      for (let index = 0; index < state.backboneDataTracks.length; index++)
+      {
+        if (state.backboneDataTracks[index].name === track.name)
+        {
+          state.backboneDataTracks[index] = track;
+        }
+      }
+    }
   },
 
   actions: {
@@ -173,6 +199,10 @@ export default createStore({
       // Note: Dividing by 10,000 is arbitary when calculating synteny threshold
       context.commit('comparativeSyntenyThreshold', (backboneLength > 1000000) ? Math.floor((backboneLength) / 10000) : 0);
     },
+
+    resetBackboneDataTracks(context: ActionContext<VCMapState, VCMapState>) {
+      context.commit('backboneDataTracks', []);
+    }
   },
 
   getters: {
@@ -226,6 +256,10 @@ export default createStore({
     },
     getComparativeSyntenyThreshold(state: VCMapState) {
       return state.comparativeSyntenyThreshold;
+    },
+
+    getBackboneDataTracks(state: VCMapState) {
+      return state.backboneDataTracks as DataTrack[];
     },
   },
 

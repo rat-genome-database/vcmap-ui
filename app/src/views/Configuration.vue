@@ -467,7 +467,7 @@ const updateStoreComparativeSpeciesTwo = (event: any) => {
 async function searchGene(event: any)
 {
   isLoadingGene.value = true;
-  let matches = await SpeciesApi.getGenes(store.getters.getSpecies.defaultMapKey, event.query);
+  let matches = await SpeciesApi.getGenesBySymbol(store.getters.getSpecies.defaultMapKey, event.query);
   geneSuggestions.value = matches;
   isLoadingGene.value = false;
 }

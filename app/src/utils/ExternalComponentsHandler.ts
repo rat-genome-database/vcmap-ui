@@ -13,6 +13,8 @@ import ProgressSpinner from 'primevue/progressspinner';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import AutoComplete from 'primevue/autocomplete';
+import Checkbox from 'primevue/checkbox';
+import ColorPicker from 'primevue/colorpicker';
 
 /**
  * Add any plugins/configs that you want to be globally registered:
@@ -35,6 +37,8 @@ const COMPONENTS: {[key: string]: Component} = {
   'TabView': TabView,
   'TabPanel': TabPanel,
   'AutoComplete': AutoComplete,
+  'Checkbox': Checkbox,
+  'ColorPicker': ColorPicker,
 };
 
 /**
