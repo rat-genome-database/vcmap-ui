@@ -3,9 +3,9 @@
     <div class="col-12">
       <Panel :toggleable="true" class="vcmap-panel">
         <template #header>
-          <div class="overview-header">
+          <div class="vcmap-header">
             <img alt="VCMap Logo" class="logo" src="../assets/images/vcmap_logo_v2.jpg">
-            <h3 class="header">VCMap</h3>
+            <h3 class="header">VCMap</h3><span class="version-label">v{{VERSION}}</span>
           </div>
         </template>
         <template #icons>
@@ -33,6 +33,7 @@ import { useRouter } from 'vue-router';
 import BackboneOverview from '@/components/BackboneOverview.vue';
 import DataTracksOverview from '@/components/DataTracksOverview.vue';
 import ComparativeSpeciesOverview from '@/components/ComparativeSpeciesOverview.vue';
+import { VERSION } from '@/version';
 
 const router = useRouter();
 
@@ -42,7 +43,7 @@ const goToConfigurationScreen = () => {
 </script>
 
 <style lang="scss" scoped>
-.overview-header
+.vcmap-header
 {
   display: inline-flex;
   align-items: center;

@@ -1,7 +1,7 @@
 <template>
   <div class="configuration-header">
     <img alt="VCMap Logo" class="logo" src="../assets/images/vcmap_logo_v2.jpg">
-    <h3 class="header">VCMap</h3>
+    <h3 class="header">VCMap</h3><span class="version-label">v{{VERSION}}</span>
   </div>
   <div>
     <TabView v-model:activeIndex="active">
@@ -217,11 +217,11 @@
 import { ref, onMounted, watch } from 'vue';
 import SpeciesApi from '@/api/SpeciesApi';
 import Species from '@/models/Species';
-//import Map from '@/models/Map';
 import Gene from '@/models/Gene';
 import Chromosome from '@/models/Chromosome';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
+import { VERSION } from '@/version';
 
 const router = useRouter();
 const store = useStore();

@@ -1,12 +1,13 @@
 {
   "name": "vcmap-web",
-  "version": "0.1.0",
+  "version": "0.1.0-work",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
+    "serve": "npm run prebuild && vue-cli-service serve",
+    "build": "npm run prebuild && vue-cli-service build",
     "test:unit": "vue-cli-service test:unit",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "prebuild": "node -p \"'export const VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts"
   },
   "dependencies": {
     "axios": "^0.24.0",

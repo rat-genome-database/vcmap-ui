@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import Overview from '@/components/Overview.vue';
+import HeaderPanel from '@/components/HeaderPanel.vue';
 import { VCMapState } from '@/store';
 import Species from '@/models/Species';
 import { createStore } from 'vuex';
@@ -46,10 +46,10 @@ jest.mock('vue-router', () => ({
   }))
 }));
 
-describe('Overview', () => {
+describe('HeaderPanel', () => {
   it('load new config button redirects to configuration screen', async () => {
 
-    const wrapper = mount(Overview, {
+    const wrapper = mount(HeaderPanel, {
       global: {
         plugins: ExternalComponentsHandler.getPlugins(),
         components: ExternalComponentsHandler.getComponents(),

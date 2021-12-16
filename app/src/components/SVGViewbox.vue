@@ -4,16 +4,16 @@
     <!-- Outside panel -->
     <rect class="panel" x="0" width="1000" :height="ViewSize.viewboxHeight" />
     <!-- Inner panels -->
-    <rect class="panel" x="0" :width="ViewSize.backbonePanelWidth" :height="ViewSize.viewboxHeight" />
-    <rect class="panel" :x="ViewSize.backbonePanelWidth" :width="ViewSize.comparativePanelWidth" :height="ViewSize.viewboxHeight" />
+    <rect class="panel" x="0" :width="ViewSize.overviewPanelWidth" :height="ViewSize.viewboxHeight" />
+    <rect class="panel" :x="ViewSize.overviewPanelWidth" :width="ViewSize.detailsPanelWidth" :height="ViewSize.viewboxHeight" />
     <!-- Title panels -->
-    <rect class="panel" x="0" :width="ViewSize.backbonePanelWidth" :height="ViewSize.panelTitleHeight" />
-    <rect class="panel" :x="ViewSize.backbonePanelWidth" :width="ViewSize.comparativePanelWidth" :height="ViewSize.panelTitleHeight" />
+    <rect class="panel" x="0" :width="ViewSize.overviewPanelWidth" :height="ViewSize.panelTitleHeight" />
+    <rect class="panel" :x="ViewSize.overviewPanelWidth" :width="ViewSize.detailsPanelWidth" :height="ViewSize.panelTitleHeight" />
 
     <!-- Backbone panel SVGs ------------------------------------------->
     <!-- backbone species track -->
-    <text class="label medium bold" :x="ViewSize.backboneXPosition" :y="ViewSize.panelTitleYPosition">Backbone</text>
-    <text v-if="backboneSpecies" class="label small" :x="ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{backboneSpecies.name}}</text>
+    <text class="label medium bold" :x="ViewSize.overviewTitleXPosition" :y="ViewSize.panelTitleYPosition">Overview</text>
+    <text v-if="backboneSpecies" class="label small" :x="ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{backboneSpecies.name}} (backbone)</text>
     <TrackSVG v-if="backboneTrack" is-selectable show-start-stop :pos-x="ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="backboneTrack as Track" />
 
     <!-- Comparative species synteny tracks -->
@@ -23,8 +23,8 @@
     </template>
 
     <!-- Comparative panel SVGs ----------------------------------------->
-    <text class="label medium bold" :x="ViewSize.selectedBackboneXPosition" :y="ViewSize.panelTitleYPosition">Comparative</text>
-    <text v-if="backboneSpecies" class="label small" :x="ViewSize.selectedBackboneXPosition" :y="ViewSize.trackLabelYPosition">{{backboneSpecies.name}}</text>
+    <text class="label medium bold" :x="ViewSize.selectedBackboneXPosition" :y="ViewSize.panelTitleYPosition">Details</text>
+    <text v-if="backboneSpecies" class="label small" :x="ViewSize.selectedBackboneXPosition" :y="ViewSize.trackLabelYPosition">{{backboneSpecies.name}} (backbone)</text>
     <TrackSVG v-if="backboneSelectionTrack" show-start-stop :pos-x="ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="backboneSelectionTrack as Track" />
 
     <!-- Comparative species (selected region) synteny tracks -->

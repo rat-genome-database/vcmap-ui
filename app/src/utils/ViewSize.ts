@@ -1,6 +1,8 @@
 export default {
-  backbonePanelWidth: 300,
-  comparativePanelWidth: 700,
+  overviewPanelWidth: 300,
+  detailsPanelWidth: 700,
+  overviewTitleXPosition: 10,
+  detailsTitleXPosition: 310,
   panelTitleYPosition: 15,
   panelTitleHeight: 40,
   backboneXPosition: 230,
