@@ -12,26 +12,31 @@
 
     <!-- Backbone panel SVGs ------------------------------------------->
     <!-- backbone species track -->
-    <text class="label medium bold" :x="ViewSize.backboneXPosition" :y="ViewSize.panelTitleYPosition">Overview</text>
-    <text v-if="backboneSpecies" class="label small" :x="ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{backboneSpecies.name}}</text>
-    <TrackSVG v-if="backboneTrack" is-selectable show-start-stop :pos-x="ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="backboneTrack as Track" />
+    <text class="label medium bold" :x="ViewSize.overviewTitleXPosition" :y="ViewSize.panelTitleYPosition">Overview</text>
+    <text v-if="backboneSpecies" class="label small" :x="ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{backboneSpecies.name}} (backbone)</text>
+    <TrackSVG v-if="backboneTrack" is-selectable show-start-stop show-chromosome :pos-x="ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="backboneTrack as Track" />
 
     <!-- backbone data tracks -->
     <template v-for="(dataTrack, index) in drawnBackboneTracks" :key="dataTrack">
       <text v-if="dataTrack.type === 'dataTrack' && !dataTrack.isComparative" class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{dataTrack.trackType}}</text>
-      <TrackSVG v-if="dataTrack.type === 'dataTrack' && !dataTrack.isComparative" :pos-x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="dataTrack.track as Track" />
+      <TrackSVG v-if="dataTrack.type === 'dataTrack' && !dataTrack.isComparative" show-chromosome :pos-x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="dataTrack.track as Track" />
     </template>
 
     <!-- Comparative species synteny tracks -->
     <template v-for="(track, index) in drawnBackboneTracks" :key="track">
       <text v-if="track.type === 'track'" class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{track.name}}</text>
-      <TrackSVG v-if="track.type === 'track'" is-highlightable :pos-x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="track.track as Track" />
+      <TrackSVG v-if="track.type === 'track'" is-highlightable show-chromosome :pos-x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="track.track as Track" />
     </template>
 
     <!-- Comparative panel SVGs ----------------------------------------->
     <text class="label medium bold" :x="ViewSize.selectedBackboneXPosition" :y="ViewSize.panelTitleYPosition">Detailed</text>
-    <text v-if="backboneSpecies" class="label small" :x="ViewSize.selectedBackboneXPosition" :y="ViewSize.trackLabelYPosition">{{backboneSpecies.name}}</text>
-    <TrackSVG v-if="backboneSelectionTrack" show-start-stop :pos-x="ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="backboneSelectionTrack as Track" />
+    <text v-if="backboneSpecies" class="label small" :x="ViewSize.selectedBackboneXPosition" :y="ViewSize.trackLabelYPosition">{{backboneSpecies.name}} (backbone)</text>
+    <TrackSVG v-if="backboneSelectionTrack" show-start-stop show-chromosome :pos-x="ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="backboneSelectionTrack as Track" />
+
+    <template v-for="(track, index) in comparativeTracks" :key="track">
+      <text class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{track.name}}</text>
+      <TrackSVG v-if="track" is-highlightable show-chromosome :pos-x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="track as Track" />
+    </template>
 
     <!-- comparative backbone data tracks -->
     <template v-for="(dataTrack, index) in drawnComparativeTracks" :key="dataTrack">
@@ -42,9 +47,8 @@
     <!-- Comparative species (selected region) synteny tracks -->
     <template v-for="(track, index) in drawnComparativeTracks" :key="track">
       <text v-if="track.type === 'track'" class="label small" :x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :y="ViewSize.trackLabelYPosition">{{track.name}}</text>
-      <TrackSVG v-if="track.type === 'track'" is-highlightable show-start-stop :pos-x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="track.track as Track" />
+      <TrackSVG v-if="track.type === 'track'" is-highlightable show-start-stop show-chromosome :pos-x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="track.track as Track" />
     </template>
-
   </svg>
 </template>
 
@@ -96,7 +100,6 @@ onMounted(() => {
 watch(() => store.getters.getSelectedBackboneRegion, () => {
   store.dispatch('setComparativeZoom', 1);
   removeSelectionDataTracks();
-  //updateDetailsPanel(selectedRegion?.basePairStart, selectedRegion?.basePairStop);
   updateDetailsPanel();
 });
 
@@ -116,14 +119,6 @@ watch(() => store.getters.getBackboneZoom, (newVal, oldVal) => {
 });
 
 watch(() => store.getters.getComparativeZoom, () => {
-  // let originalSelectedBackboneRegion = store.getters.getSelectedBackboneRegion as BackboneSelection;
-  // if (oldVal !== newVal && originalSelectedBackboneRegion != null)
-  // {
-  //   let selectedStart = originalSelectedBackboneRegion.basePairStart;
-  //   let selectedStop = originalSelectedBackboneRegion.basePairStop;
-  //   const zoomedPositions = getZoomedStartAndStopPositions(selectedStart, selectedStop, newVal);
-  //   updateDetailsPanel(zoomedPositions.start, zoomedPositions.stop);
-  // }
   removeSelectionDataTracks();
   updateDetailsPanel();
 });
