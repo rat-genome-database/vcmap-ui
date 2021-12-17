@@ -17,11 +17,11 @@
             data-test="load-config-btn" />
         </template>
         <div class="grid p-d-flex">
-          <BackboneOverview />
+          <OverviewControls />
           <Divider layout="vertical" />
           <DataTracksOverview />
           <Divider layout="vertical" />
-          <ComparativeSpeciesOverview />
+          <DetailsControls />
         </div>
       </Panel>
     </div>
@@ -30,9 +30,9 @@
 
 <script lang="ts" setup>
 import { useRouter } from 'vue-router';
-import BackboneOverview from '@/components/BackboneOverview.vue';
+import OverviewControls from '@/components/OverviewControls.vue';
 import DataTracksOverview from '@/components/DataTracksOverview.vue';
-import ComparativeSpeciesOverview from '@/components/ComparativeSpeciesOverview.vue';
+import DetailsControls from '@/components/DetailsControls.vue';
 import { VERSION } from '@/version';
 
 const router = useRouter();

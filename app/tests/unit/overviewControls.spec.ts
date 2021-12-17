@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import BackboneOverview from '@/components/BackboneOverview.vue';
+import OverviewControls from '@/components/OverviewControls.vue';
 import Species from '@/models/Species';
 import { VCMapState } from '@/store';
 import { ActionTree, createStore, Store } from 'vuex';
@@ -7,7 +7,7 @@ import Chromosome from '@/models/Chromosome';
 import { ExternalComponentsHandler } from '@/utils/ExternalComponentsHandler';
 
 
-describe('BackboneOverview', () => {
+describe('OverviewControls', () => {
   let store: Store<VCMapState>;
   let actions: ActionTree<VCMapState, VCMapState>;
   let state = {
@@ -28,6 +28,8 @@ describe('BackboneOverview', () => {
     backboneSyntenyThreshold: 0,
     comparativeBasePairToHeightRatio: 1000,
     comparativeSyntenyThreshold: 0,
+    showOverviewGaps: false,
+    showDetailsGaps: false,
   };
   let getters = {
     getSpecies(state: VCMapState) {
@@ -63,7 +65,7 @@ describe('BackboneOverview', () => {
   });
 
   it('renders backbone species name from store', async () => {
-    const wrapper = mount(BackboneOverview, {
+    const wrapper = mount(OverviewControls, {
       global: {
         plugins: ExternalComponentsHandler.getPlugins(),
         components: ExternalComponentsHandler.getComponents(),
@@ -79,7 +81,7 @@ describe('BackboneOverview', () => {
   });
 
   it('clears selection when clear button is clicked', async () => {
-    const wrapper = mount(BackboneOverview, {
+    const wrapper = mount(OverviewControls, {
       global: {
         plugins: ExternalComponentsHandler.getPlugins(),
         components: ExternalComponentsHandler.getComponents(),

@@ -93,11 +93,11 @@ onMounted(() => {
   updateOverviewPanel();
 });
 
-watch(() => store.getters.getSelectedBackboneRegion, (newVal) => {
-  let selectedRegion = newVal as BackboneSelection | null;
+watch(() => store.getters.getSelectedBackboneRegion, () => {
   store.dispatch('setComparativeZoom', 1);
   removeSelectionDataTracks();
-  updateDetailsPanel(selectedRegion?.basePairStart, selectedRegion?.basePairStop);
+  //updateDetailsPanel(selectedRegion?.basePairStart, selectedRegion?.basePairStop);
+  updateDetailsPanel();
 });
 
 watch(() => store.getters.getBackboneZoom, (newVal, oldVal) => {
@@ -115,17 +115,25 @@ watch(() => store.getters.getBackboneZoom, (newVal, oldVal) => {
   updateOverviewPanel();
 });
 
-watch(() => store.getters.getComparativeZoom, (newVal, oldVal) => {
-  let originalSelectedBackboneRegion = store.getters.getSelectedBackboneRegion as BackboneSelection;
-  if (oldVal !== newVal && originalSelectedBackboneRegion != null)
-  {
-    removeSelectionDataTracks();
+watch(() => store.getters.getComparativeZoom, () => {
+  // let originalSelectedBackboneRegion = store.getters.getSelectedBackboneRegion as BackboneSelection;
+  // if (oldVal !== newVal && originalSelectedBackboneRegion != null)
+  // {
+  //   let selectedStart = originalSelectedBackboneRegion.basePairStart;
+  //   let selectedStop = originalSelectedBackboneRegion.basePairStop;
+  //   const zoomedPositions = getZoomedStartAndStopPositions(selectedStart, selectedStop, newVal);
+  //   updateDetailsPanel(zoomedPositions.start, zoomedPositions.stop);
+  // }
+  removeSelectionDataTracks();
+  updateDetailsPanel();
+});
 
-    let selectedStart = originalSelectedBackboneRegion.basePairStart;
-    let selectedStop = originalSelectedBackboneRegion.basePairStop;
-    const zoomedPositions = getZoomedStartAndStopPositions(selectedStart, selectedStop, newVal);
-    updateDetailsPanel(zoomedPositions.start, zoomedPositions.stop);
-  }
+watch(() => store.getters.getShowOverviewGaps, () => {
+  updateOverviewPanel();
+});
+
+watch(() => store.getters.getShowDetailsGaps, () => {
+  updateDetailsPanel();
 });
 
 watch(() => store.getters.getBackboneDataTracks, (newVal) => {
@@ -195,7 +203,7 @@ const updateOverviewPanel = async () => {
       setBackboneDataTracks(tempBackboneTracks);
     }
     setDisplayedObjects(false);
-    comparativeTracks.value = await createSyntenyTracks(backboneStart, backboneStop, store.getters.getBackboneBasePairToHeightRatio, false) ?? null;
+    comparativeTracks.value = await createSyntenyTracks(backboneStart, backboneStop, store.getters.getBackboneBasePairToHeightRatio, store.getters.getShowOverviewGaps) ?? null;
   }
   else
   {
@@ -205,7 +213,20 @@ const updateOverviewPanel = async () => {
   }
 };
 
-const updateDetailsPanel = async (selectedBackboneStart: number | undefined, selectedBackboneStop: number | undefined) => {
+const updateDetailsPanel = async () => {
+  let originalSelectedBackboneRegion = store.getters.getSelectedBackboneRegion as BackboneSelection | null;
+  let selectedStart = originalSelectedBackboneRegion?.basePairStart;
+  let selectedStop = originalSelectedBackboneRegion?.basePairStop;
+
+  if (originalSelectedBackboneRegion == null || selectedStart == null || selectedStop == null)
+  {
+    backboneSelectionTrack.value = null;
+    comparativeSelectionTracks.value = null;
+    return;
+  }
+
+  const { start: selectedBackboneStart, stop: selectedBackboneStop } = getZoomedStartAndStopPositions(selectedStart, selectedStop, store.getters.getComparativeZoom);
+
   if (selectedBackboneStart != null && selectedBackboneStop != null)
   {
     store.dispatch('setComparativeResolution', selectedBackboneStop - selectedBackboneStart);
@@ -217,7 +238,7 @@ const updateDetailsPanel = async (selectedBackboneStart: number | undefined, sel
       setBackboneDataTracks(tempBackboneTracks);
     }
     setDisplayedObjects(true);
-    comparativeSelectionTracks.value = await createSyntenyTracks(selectedBackboneStart, selectedBackboneStop, store.getters.getComparativeBasePairToHeightRatio, true) ?? null;
+    comparativeSelectionTracks.value = await createSyntenyTracks(selectedBackboneStart, selectedBackboneStop, store.getters.getComparativeBasePairToHeightRatio, store.getters.getShowDetailsGaps) ?? null;
   }
   else
   {
@@ -313,29 +334,16 @@ const createSyntenyTracks = async (backboneStart: number, backboneStop: number, 
 
     // Loop for each comparative species selected
     const syntenyCalls: Promise<SyntenyRegionData[]>[] = [];
-    //const syntenyGapCalls: Promise<SyntenicRegion[]>[] = [];
     comparativeSpeciesMaps.forEach(map => {
-      // Get blocks
       syntenyCalls.push(SyntenyApi.getSyntenicRegions({
         backboneChromosome: backboneChr,
         start: backboneStart,
         stop: backboneStop,
         comparativeSpeciesMap: map,
         chainLevel: 1,
-        threshold: store.getters.getBackboneSyntenyThreshold
+        threshold: store.getters.getBackboneSyntenyThreshold,
+        includeGaps: includeGaps
       }));
-      // Get gaps
-      // if (includeGaps)
-      // {
-      //   syntenyGapCalls.push(SyntenyApi.getSyntenicRegions({
-      //     backboneChromosome: backboneChr,
-      //     start: backboneStart,
-      //     stop: backboneStop,
-      //     comparativeSpeciesMap: map,
-      //     chainLevel: 1,
-      //     threshold: store.getters.getBackboneSyntenyThreshold
-      //   }));
-      // }
     });
 
     const syntenyBlockResults = await Promise.allSettled(syntenyCalls);
@@ -351,20 +359,6 @@ const createSyntenyTracks = async (backboneStart: number, backboneStop: number, 
         speciesSyntenyMap[comparativeSpecies[index].name] = [];
       }
     });
-
-    // const syntenyGapResults = await Promise.allSettled(syntenyGapCalls);
-    // let speciesSyntenyGapsMap: {[speciesName: string]: SyntenicRegion[]} = {};
-    // syntenyGapResults.forEach((result, index) => {
-    //   if (result.status === 'fulfilled')
-    //   {
-    //     speciesSyntenyGapsMap[comparativeSpecies[index].name] = result.value;
-    //   }
-    //   else
-    //   {
-    //     console.error(result.status, result.reason);
-    //     speciesSyntenyGapsMap[comparativeSpecies[index].name] = [];
-    //   }
-    // });
 
     const tracks: Track[] = [];
     for (let speciesName in speciesSyntenyMap)

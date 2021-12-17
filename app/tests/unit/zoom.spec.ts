@@ -27,6 +27,8 @@ describe('Zoom', () => {
     backboneSyntenyThreshold: 0,
     comparativeBasePairToHeightRatio: 1000,
     comparativeSyntenyThreshold: 0,
+    showOverviewGaps: false,
+    showDetailsGaps: false,
   };
   let getters = {
     getBackboneZoom(state: VCMapState) {

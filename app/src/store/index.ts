@@ -35,6 +35,8 @@ export interface VCMapState
 
   backboneDataTracks: DataTrack[];
 
+  showOverviewGaps: boolean;
+  showDetailsGaps: boolean;
 }
 
 const vuexLocal = new VuexPersistence<VCMapState>({
@@ -65,6 +67,8 @@ export default createStore({
     comparativeSyntenyThreshold: 0,
 
     backboneDataTracks: [],
+    showOverviewGaps: false,
+    showDetailsGaps: false,
   }),
 
   mutations: {
@@ -148,6 +152,12 @@ export default createStore({
         }
       }
     },
+    showOverviewGaps(state: VCMapState, show: boolean) {
+      state.showOverviewGaps = show;
+    },
+    showDetailsGaps(state: VCMapState, show: boolean) {
+      state.showDetailsGaps = show;
+    },
   },
 
   actions: {
@@ -204,10 +214,15 @@ export default createStore({
       // Note: Dividing by 10,000 is arbitary when calculating synteny threshold
       context.commit('comparativeSyntenyThreshold', (backboneLength > 1000000) ? Math.floor((backboneLength) / 10000) : 0);
     },
-
     resetBackboneDataTracks(context: ActionContext<VCMapState, VCMapState>) {
       context.commit('backboneDataTracks', []);
-    }
+    },
+    setShowOverviewGaps(context: ActionContext<VCMapState, VCMapState>, show: boolean) {
+      context.commit('showOverviewGaps', show);
+    },
+    setShowDetailsGaps(context: ActionContext<VCMapState, VCMapState>, show: boolean) {
+      context.commit('showDetailsGaps', show);
+    },
   },
 
   getters: {
@@ -262,9 +277,14 @@ export default createStore({
     getComparativeSyntenyThreshold(state: VCMapState) {
       return state.comparativeSyntenyThreshold;
     },
-
     getBackboneDataTracks(state: VCMapState) {
       return state.backboneDataTracks as DataTrack[];
+    },
+    getShowOverviewGaps(state: VCMapState) {
+      return state.showOverviewGaps;
+    },
+    getShowDetailsGaps(state: VCMapState) {
+      return state.showDetailsGaps;
     },
   },
 
