@@ -1,4 +1,10 @@
-export class SyntenyBlockDTO
+export interface SyntenyRegionData
+{
+  block: SyntenicRegion,
+  gaps: SyntenicRegion[]
+}
+
+export class SyntenicRegionDTO
 {
   backboneMapKey: number = 0;
   backboneChromosome: string = '';
@@ -13,9 +19,9 @@ export class SyntenyBlockDTO
   chainType: string = 'top';
 }
 
-export default class SyntenyBlock extends SyntenyBlockDTO
+export default class SyntenicRegion extends SyntenicRegionDTO
 {
-  constructor(dto: SyntenyBlockDTO)
+  constructor(dto: SyntenicRegionDTO)
   {
     super();
     Object.assign(this, dto);

@@ -1,23 +1,23 @@
 import httpInstance from '@/api/httpInstance';
-import SyntenyBlock, { SyntenyBlockDTO } from '@/models/SyntenyBlock';
+import SyntenicRegion, { SyntenicRegionDTO, SyntenyRegionData } from '@/models/SyntenicRegion';
 import Map from '@/models/Map';
 import Chromosome from '@/models/Chromosome';
 
 interface SyntenyBlocksParams
 {
-  backboneChromosome: Chromosome, 
-  start: number, 
-  stop: number, 
-  comparativeSpeciesMap: Map, 
-  chainLevel?: number, 
-  threshold?: number
+  backboneChromosome: Chromosome; 
+  start: number; 
+  stop: number;
+  comparativeSpeciesMap: Map; 
+  chainLevel?: number; 
+  threshold?: number;
 }
 
 export default class SyntenyApi
 {
-  static async getSyntenyBlocks(params: SyntenyBlocksParams): Promise<SyntenyBlock[]>
+  static async getSyntenicRegions(params: SyntenyBlocksParams)
   {
-    let apiRoute = `/vcmap/blocks/${params.backboneChromosome?.mapKey}/${params.backboneChromosome?.chromosome}/${params.start}/${params.stop}/${params.comparativeSpeciesMap?.key}`;
+    let apiRoute = `/vcmap/synteny/${params.backboneChromosome?.mapKey}/${params.backboneChromosome?.chromosome}/${params.start}/${params.stop}/${params.comparativeSpeciesMap?.key}`;
     if (params.chainLevel != null)
     {
       apiRoute += `/${params.chainLevel}`;
@@ -29,12 +29,18 @@ export default class SyntenyApi
     }
     
     const res = await httpInstance.get(apiRoute);
-    const blocks: SyntenyBlock[] = [];
-    res.data.forEach((block: SyntenyBlockDTO) => {
-      blocks.push(new SyntenyBlock(block));
+
+    const regions: SyntenyRegionData[] = [];
+    res.data.forEach((regionData: any) => {
+      const block = new SyntenicRegion(regionData.block as SyntenicRegionDTO);
+      const gaps = regionData.gaps?.map((g: any) => new SyntenicRegion(g as SyntenicRegionDTO));
+      regions.push({
+        block: block,
+        gaps: gaps ?? []
+      });
     });
 
-    console.debug(`Synteny blocks found for mapKey '${params.comparativeSpeciesMap.key}', threshold: '${params.threshold}': ${blocks.length}`);
-    return blocks;
+    console.debug(`Syntenic regions found for mapKey '${params.comparativeSpeciesMap.key}', threshold: '${params.threshold}': ${regions.length}`);
+    return regions;
   }
 }

@@ -1,4 +1,5 @@
 <template>
+  <!-- SVG definitions -->
   <defs>
     <linearGradient id="selectedStripes" gradientUnits="userSpaceOnUse"
       x2="5" spreadMethod="repeat" gradientTransform="rotate(-45)">
@@ -10,6 +11,7 @@
   </defs>
 
   <template v-for="(section, index) in track.sections" :key="index">
+    <!-- Start BP label -->
     <text v-if="showStartStop" 
       data-test="start-bp-label"
       class="label small" 
@@ -17,7 +19,9 @@
       :y="getSectionYPosition(posY, index) + LABEL_Y_OFFSET">
       - {{section.startBPLabel}}
     </text>
-    <rect 
+
+    <!-- Track SVG -->
+    <rect v-if="section.shape !== 'line'"
       data-test="track-section-svg"
       class="section"
       :class="{'selectable': isSelectable}"
@@ -29,6 +33,13 @@
       :x="posX" :y="getSectionYPosition(posY, index)" 
       :width="width" 
       :height="section.height" />
+    <line v-else
+      data-test="track-section-svg"
+      class="section gap"
+      :x1="posX + (width / 2)" :x2="posX + (width / 2)" 
+      :y1="getSectionYPosition(posY, index)" :y2="getSectionYPosition(posY, index) + section.height" />
+
+    <!-- Selected Region on Track -->
     <rect v-if="isSelectable && selectedRegion.svgHeight > 0"
       data-test="selected-region"
       class="selected-region"
@@ -40,6 +51,8 @@
       :height="selectedRegion.svgHeight"
       @mousedown="initSelectStart($event, section, index)"
       @mousemove="updateSelectionHeight" />
+
+    <!-- Stop Label -->
     <text v-if="showStartStop" 
       data-test="stop-bp-label"
       class="label small" 
@@ -225,6 +238,11 @@ const getMousePosSVG = (e: any) => {
   &.selectable
   {
     cursor: crosshair;
+  }
+  &.gap
+  {
+    stroke-width: 1;
+    stroke: black;
   }
 }
 
