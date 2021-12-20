@@ -65,9 +65,24 @@ export default class SpeciesApi
   }
 
 
-  static async getGenes(mapKey: Number, symbolPrefix: String):  Promise<any>
+  static async getGenesBySymbol(mapKey: Number, symbolPrefix: String):  Promise<any>
   {
     const res = await httpInstance.get(`/vcmap/genes/map/${mapKey}?symbolPrefix=${symbolPrefix}`);
+
+    const geneList: Gene[] = [];
+
+    for (const gene in res.data)
+    {
+      const geneInfo = res.data[gene];
+      geneList.push(new Gene({ symbol: geneInfo.gene.symbol, name: geneInfo.gene.name, type: geneInfo.gene.type, key: geneInfo.gene.key, rgdId: geneInfo.gene.rgdId, chromosome: geneInfo.chromosome, start: geneInfo.start, stop: geneInfo.stop, speciesTypeKey: geneInfo.gene.speciesTypeKey, }));
+    }
+
+    return geneList;
+  }
+
+  static async getGenesByRegion(chromosome: String, start: Number, stop: Number, mapKey: Number):  Promise<any>
+  {
+    const res = await httpInstance.get(`/genes/mapped/${chromosome}/${start}/${stop}/${mapKey}`);
 
     const geneList: Gene[] = [];
 
