@@ -34,6 +34,7 @@ export interface VCMapState
   comparativeSyntenyThreshold: number;
 
   backboneDataTracks: DataTrack[];
+
 }
 
 const vuexLocal = new VuexPersistence<VCMapState>({
@@ -134,7 +135,11 @@ export default createStore({
       }
     },
 
-    changeDataTrack(state: VCMapState, track: DataTrack ) {
+    removeBackboneDataTrack(state: VCMapState, index: number) {
+      state.backboneDataTracks.splice(index, 1);
+    },
+
+    changeBackboneDataTrack(state: VCMapState, track: DataTrack ) {
       for (let index = 0; index < state.backboneDataTracks.length; index++)
       {
         if (state.backboneDataTracks[index].name === track.name)
@@ -142,7 +147,7 @@ export default createStore({
           state.backboneDataTracks[index] = track;
         }
       }
-    }
+    },
   },
 
   actions: {

@@ -12,31 +12,37 @@
 
     <!-- Backbone panel SVGs ------------------------------------------->
     <!-- backbone species track -->
-    <text class="label medium bold" :x="ViewSize.backboneXPosition" :y="ViewSize.panelTitleYPosition">Backbone</text>
+    <text class="label medium bold" :x="ViewSize.backboneXPosition" :y="ViewSize.panelTitleYPosition">Overview</text>
     <text v-if="backboneSpecies" class="label small" :x="ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{backboneSpecies.name}}</text>
     <TrackSVG v-if="backboneTrack" is-selectable show-start-stop :pos-x="ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="backboneTrack as Track" />
 
     <!-- backbone data tracks -->
-    <template v-for="(dataTrack, index) in backboneDataTracks" :key="dataTrack">
-      <text v-if="dataTrack.isDisplayed" class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{dataTrack.name}}</text>
-      <TrackSVG v-if="dataTrack.isDisplayed" show-start-stop :pos-x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="dataTrack.track as Track" />
+    <template v-for="(dataTrack, index) in drawnBackboneTracks" :key="dataTrack">
+      <text v-if="dataTrack.type === 'dataTrack' && !dataTrack.isComparative" class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{dataTrack.trackType}}</text>
+      <TrackSVG v-if="dataTrack.type === 'dataTrack' && !dataTrack.isComparative" :pos-x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="dataTrack.track as Track" />
     </template>
 
     <!-- Comparative species synteny tracks -->
-    <template v-for="(track, index) in comparativeTracks" :key="track">
-      <text class="label small" :x="getBackbonePanelTrackXOffset(index + 2) + ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{track.name}}</text>
-      <TrackSVG v-if="track" is-highlightable :pos-x="getBackbonePanelTrackXOffset(index + 2) + ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="track as Track" />
+    <template v-for="(track, index) in drawnBackboneTracks" :key="track">
+      <text v-if="track.type === 'track'" class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{track.name}}</text>
+      <TrackSVG v-if="track.type === 'track'" is-highlightable :pos-x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="track.track as Track" />
     </template>
 
     <!-- Comparative panel SVGs ----------------------------------------->
-    <text class="label medium bold" :x="ViewSize.selectedBackboneXPosition" :y="ViewSize.panelTitleYPosition">Comparative</text>
+    <text class="label medium bold" :x="ViewSize.selectedBackboneXPosition" :y="ViewSize.panelTitleYPosition">Detailed</text>
     <text v-if="backboneSpecies" class="label small" :x="ViewSize.selectedBackboneXPosition" :y="ViewSize.trackLabelYPosition">{{backboneSpecies.name}}</text>
     <TrackSVG v-if="backboneSelectionTrack" show-start-stop :pos-x="ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="backboneSelectionTrack as Track" />
 
+    <!-- comparative backbone data tracks -->
+    <template v-for="(dataTrack, index) in drawnComparativeTracks" :key="dataTrack">
+      <text v-if="dataTrack.type === 'dataTrack'  && dataTrack.isComparative" class="label small" :x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :y="ViewSize.trackLabelYPosition">{{dataTrack.trackType}}</text>
+      <TrackSVG v-if="dataTrack.type === 'dataTrack'  && dataTrack.isComparative" :pos-x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="dataTrack.track as Track" />
+    </template>
+
     <!-- Comparative species (selected region) synteny tracks -->
-    <template v-for="(track, index) in comparativeSelectionTracks" :key="track">
-      <text class="label small" :x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :y="ViewSize.trackLabelYPosition">{{track.name}}</text>
-      <TrackSVG v-if="track" is-highlightable show-start-stop :pos-x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="track as Track" />
+    <template v-for="(track, index) in drawnComparativeTracks" :key="track">
+      <text v-if="track.type === 'track'" class="label small" :x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :y="ViewSize.trackLabelYPosition">{{track.name}}</text>
+      <TrackSVG v-if="track.type === 'track'" is-highlightable show-start-stop :pos-x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="track.track as Track" />
     </template>
 
   </svg>
@@ -65,12 +71,13 @@ const store = useStore();
 let backboneSpecies = ref<Species | null>(null);
 let backboneChromosome = ref<Chromosome | null>(null);
 let backboneTrack = ref<Track | null>(null);
-let backboneDataTracks = ref<DataTrack[] | null>(null);
+let backboneDataTracks = ref<DataTrack[]>([]);
 let comparativeTracks = ref<Track[] | null>(null);
 let isLoading = ref<boolean>(false);
 let backboneSelectionTrack = ref<Track | null>(null);
 let comparativeSelectionTracks = ref<Track[] | null>(null);
-let drawnTracks = ref<Number>(0);
+let drawnBackboneTracks = ref<Object[]>([]);
+let drawnComparativeTracks = ref<Object[]>([]);
 
 /**
  * Once mounted, let's set our reactive data props and create the backbone and synteny tracks
@@ -89,6 +96,7 @@ onMounted(() => {
 watch(() => store.getters.getSelectedBackboneRegion, (newVal) => {
   let selectedRegion = newVal as BackboneSelection | null;
   store.dispatch('setComparativeZoom', 1);
+  removeSelectionDataTracks();
   updateComparativePanel(selectedRegion?.basePairStart, selectedRegion?.basePairStop);
 });
 
@@ -100,7 +108,7 @@ watch(() => store.getters.getBackboneZoom, (newVal, oldVal) => {
   {
     return;
   }
-
+  removeOverviewDataTracks();
   const zoomedPositions = getZoomedStartAndStopPositions(backboneStart, backboneStop, newVal);
   store.dispatch('setDisplayStartPosition', zoomedPositions.start);
   store.dispatch('setDisplayStopPosition', zoomedPositions.stop);
@@ -111,6 +119,8 @@ watch(() => store.getters.getComparativeZoom, (newVal, oldVal) => {
   let originalSelectedBackboneRegion = store.getters.getSelectedBackboneRegion as BackboneSelection;
   if (oldVal !== newVal && originalSelectedBackboneRegion != null)
   {
+    removeSelectionDataTracks();
+
     let selectedStart = originalSelectedBackboneRegion.basePairStart;
     let selectedStop = originalSelectedBackboneRegion.basePairStop;
     const zoomedPositions = getZoomedStartAndStopPositions(selectedStart, selectedStop, newVal);
@@ -119,8 +129,25 @@ watch(() => store.getters.getComparativeZoom, (newVal, oldVal) => {
 });
 
 watch(() => store.getters.getBackboneDataTracks, (newVal) => {
-  
-    backboneDataTracks.value = newVal;
+  backboneDataTracks.value = newVal;
+},
+{
+  deep: true
+});
+
+watch(backboneDataTracks, (newVal) => {
+  for (let index = 0; index < newVal.length; index++)
+  {
+    let dataTrack = newVal[index];
+    if (dataTrack.isComparativeView)
+    {
+      setDisplayedObjects(true);
+    }
+    else
+    {
+      setDisplayedObjects(false);
+    }
+  }  
 },
 {
   deep: true
@@ -163,16 +190,18 @@ const updateBackbonePanel = async () => {
     backboneTrack.value = createBackboneTrack(backboneStart, backboneStop, store.getters.getBackboneBasePairToHeightRatio) ?? null;
     comparativeTracks.value = await createSyntenyTracks(backboneStart, backboneStop, store.getters.getBackboneBasePairToHeightRatio) ?? null;
 
-    let tempBackboneTracks = await createBackboneDataTracks(backboneStart, backboneStop, store.getters.getBackboneBasePairToHeightRatio) as DataTrack;
+    let tempBackboneTracks = await createBackboneDataTracks(backboneStart, backboneStop, store.getters.getBackboneBasePairToHeightRatio, false) as DataTrack;
     if (tempBackboneTracks != null)
     {
       setBackboneDataTracks(tempBackboneTracks);
     }
+    setDisplayedObjects(false);
   }
   else
   {
     backboneTrack.value = null;
     comparativeTracks.value = null;
+    backboneDataTracks.value = null;
   }
 };
 
@@ -182,6 +211,13 @@ const updateComparativePanel = async (selectedBackboneStart: number | undefined,
     store.dispatch('setComparativeResolution', selectedBackboneStop - selectedBackboneStart);
     backboneSelectionTrack.value = createBackboneTrack(selectedBackboneStart, selectedBackboneStop, store.getters.getComparativeBasePairToHeightRatio) ?? null;
     comparativeSelectionTracks.value = await createSyntenyTracks(selectedBackboneStart, selectedBackboneStop, store.getters.getComparativeBasePairToHeightRatio) ?? null;
+
+    let tempBackboneTracks = await createBackboneDataTracks(selectedBackboneStart, selectedBackboneStop, store.getters.getComparativeBasePairToHeightRatio, true) as DataTrack;
+    if (tempBackboneTracks != null)
+    {
+      setBackboneDataTracks(tempBackboneTracks);
+    }
+    setDisplayedObjects(true);
   }
   else
   {
@@ -194,7 +230,7 @@ const updateComparativePanel = async (selectedBackboneStart: number | undefined,
  * Gets the offset of the X position relative to the backbone species track
  */
 const getBackbonePanelTrackXOffset = (trackNumber: number) => {
-  let totalTracks = drawnTracks.value + trackNumber;
+  let totalTracks = trackNumber;
   return (totalTracks * -70);
 };
 
@@ -325,7 +361,6 @@ const createSyntenyTracks = async (backboneStart: number, backboneStop: number, 
       const track = new Track(speciesName, trackSections);
       tracks.push(track);
     }
-    console.log(tracks);
     tempComparativeTracks = tracks;
   }
   catch (err)
@@ -340,7 +375,7 @@ const createSyntenyTracks = async (backboneStart: number, backboneStop: number, 
   return tempComparativeTracks;
 };
 
-const createBackboneDataTracks =  async (startPos: number, stopPos: number, basePairToHeightRatio: number) => {
+const createBackboneDataTracks =  async (startPos: number, stopPos: number, basePairToHeightRatio: number, isComparative: boolean) => {
   const backboneChr = store.getters.getChromosome;
   const backboneSpecies = store.getters.getSpecies;
 
@@ -355,33 +390,49 @@ const createBackboneDataTracks =  async (startPos: number, stopPos: number, base
   
     for (let gene of tempGeneTracks)
     {
-      let threshold = store.getters.getBackboneSyntenyThreshold;
+      let threshold = store.getters.getBackboneSyntenyThreshold * 3;
       let geneSize = gene.stop - gene.start;
-      if ( geneSize > threshold)
+      if ( geneSize < threshold)
       {
         continue;
       }
       else
       {
-        const trackSection = new TrackSection({
-          start: gene.start,
-          stop: gene.stop,
-          backboneStart: startPos, 
-          backboneStop: stopPos, 
-          chromosome: gene.chromosome, 
-          cutoff: stopPos, 
-          offsetCount: gene.start - previousBlockBackboneStop,
-          basePairToHeightRatio: basePairToHeightRatio
-        });
+        if (gene.start < previousBlockBackboneStop && previousBlockBackboneStop !== startPos)
+        {
+          continue;
+        }
+        else
+        {
+          const trackSection = new TrackSection({
+            start: gene.start,
+            stop: gene.stop,
+            backboneStart: gene.start, 
+            backboneStop: gene.stop, 
+            chromosome: gene.chromosome, 
+            cutoff: stopPos, 
+            offsetCount: gene.start - previousBlockBackboneStop,
+            basePairToHeightRatio: basePairToHeightRatio,
+          });
 
-        sections.push(trackSection);
-        previousBlockBackboneStop = gene.stop;
+          sections.push(trackSection);
+          previousBlockBackboneStop = gene.stop;
+        }
       }
     }
+    let geneDataTrack;
+    let geneTrack = new Track(backboneSpecies.name, sections);
 
-    console.log(sections);
-    const geneTrack = new Track(backboneSpecies.name, sections);
-    const geneDataTrack = new DataTrack('Genes', geneTrack, 'red');
+    if (isComparative)
+    { 
+      geneDataTrack = new DataTrack('Genes', backboneSpecies.name + ' Detailed Genes', geneTrack, 'red');
+      geneDataTrack.setIsComparativeView(true);
+    }
+    else
+    {
+      geneDataTrack = new DataTrack('Genes', backboneSpecies.name + ' Overview Genes', geneTrack, 'red');
+    }
+    
 
     return geneDataTrack;
   }
@@ -391,10 +442,95 @@ const createBackboneDataTracks =  async (startPos: number, stopPos: number, base
   }
 };
 
+const setDisplayedObjects = (isComparative: boolean) => {
+  if (isComparative)
+  {
+    drawnComparativeTracks.value = [];
+    let comparativeSyntenyTracks = comparativeSelectionTracks.value as Track[];
+    
+    if (store.getters.getBackboneDataTracks && store.getters.getBackboneDataTracks.length)
+    {
+      let backboneComparativeDataTracks = store.getters.getBackboneDataTracks.filter(track => track.isComparativeView) as DataTrack[];
+
+
+      for (let index = 0; index < backboneComparativeDataTracks.length; index++)
+      {
+        let currentDataTrack = backboneComparativeDataTracks[index];
+        if (currentDataTrack.isDisplayed)
+        {
+          let drawnObject = {'type': 'dataTrack', 'track': currentDataTrack.track, 'name': currentDataTrack.name, 'trackType': currentDataTrack.type, 'isComparative': true};
+          drawnComparativeTracks.value.push(drawnObject);
+        }
+      }
+    }
+
+    for (let index = 0; index < comparativeSyntenyTracks.length; index++)
+    {
+      let currentTrack = comparativeSyntenyTracks[index];
+        let drawnObject = {'type': 'track', 'track': currentTrack, 'name': currentTrack.name, };
+        drawnComparativeTracks.value.push(drawnObject);
+    }
+  }
+  else
+  {
+    drawnBackboneTracks.value = [];
+    let overviewSyntenyTracks = comparativeTracks.value as Track[];
+
+    if (store.getters.getBackboneDataTracks)
+    {
+      let backboneOverviewDataTracks = store.getters.getBackboneDataTracks as DataTrack[];
+      backboneOverviewDataTracks = backboneOverviewDataTracks.filter(track => !track.isComparativeView);
+      for (let index = 0; index < backboneOverviewDataTracks.length; index++)
+      {
+        let currentDataTrack = backboneOverviewDataTracks[index];
+        if (currentDataTrack.isDisplayed)
+        {
+          let drawnObject = {'type': 'dataTrack', 'track': currentDataTrack.track, 'name': currentDataTrack.name, 'trackType': currentDataTrack.type, 'isComparative': false};
+          drawnBackboneTracks.value.push(drawnObject);
+        }
+      }
+    }
+
+    for (let index = 0; index < overviewSyntenyTracks.length; index++)
+    {
+      let currentTrack = overviewSyntenyTracks[index];
+        let drawnObject = {'type': 'track', 'track': currentTrack, 'name': currentTrack.name, };
+        drawnBackboneTracks.value.push(drawnObject);
+    }
+  }
+};
+
 const setBackboneDataTracks = (dataTrack: DataTrack) => {
   store.commit('addBackboneDataTrack', dataTrack);
 };
 
+function removeSelectionDataTracks()
+{
+  let dataTracks = store.getters.getBackboneDataTracks;
+  for (let index = 0; index < dataTracks.length; index++)
+  {
+    let currentDataTrack = dataTracks[index];
+    if (currentDataTrack.isComparativeView)
+    {
+      store.commit('removeBackboneDataTrack', index);
+      index--;
+    }
+  }
+}
+
+function removeOverviewDataTracks()
+{
+  let dataTracks = store.getters.getBackboneDataTracks;
+  for (let index = 0; index < dataTracks.length; index++)
+  {
+    let currentDataTrack = dataTracks[index];
+    if (!currentDataTrack.isComparativeView)
+    {
+      store.commit('removeBackboneDataTrack', index);
+      index--;
+    }
+  }
+}
 </script>
 
 <style lang="scss" scoped>
