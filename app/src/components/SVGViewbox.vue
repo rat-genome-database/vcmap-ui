@@ -33,11 +33,6 @@
     <text v-if="backboneSpecies" class="label small" :x="ViewSize.selectedBackboneXPosition" :y="ViewSize.trackLabelYPosition">{{backboneSpecies.name}} (backbone)</text>
     <TrackSVG v-if="backboneSelectionTrack" show-start-stop show-chromosome :pos-x="ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="backboneSelectionTrack as Track" />
 
-    <template v-for="(track, index) in comparativeTracks" :key="track">
-      <text class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{track.name}}</text>
-      <TrackSVG v-if="track" is-highlightable show-chromosome :pos-x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="track as Track" />
-    </template>
-
     <!-- comparative backbone data tracks -->
     <template v-for="(dataTrack, index) in drawnDetailsTracks" :key="dataTrack">
       <text v-if="dataTrack.type === 'dataTrack'  && dataTrack.isComparative" class="label small" :x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :y="ViewSize.trackLabelYPosition">{{dataTrack.trackType}}</text>
@@ -79,7 +74,7 @@ let backboneDataTracks = ref<DataTrack[]>([]);
 let comparativeTracks = ref<Track[]>([]);
 let isLoading = ref<boolean>(false);
 let backboneSelectionTrack = ref<Track | null>(null);
-let comparativeSelectionTracks = ref<Track[] | null>(null);
+let comparativeSelectionTracks = ref<Track[]>([]);
 // FIXME: Can we make these types more specific? Typescript shows errors in the template because none of the properties being accessed would exist on a type of 'Object'
 let drawnOverviewTracks = ref<Object[]>([]);
 let drawnDetailsTracks = ref<Object[]>([]);
@@ -125,10 +120,12 @@ watch(() => store.getters.getComparativeZoom, () => {
 });
 
 watch(() => store.getters.getShowOverviewGaps, () => {
+  removeOverviewDataTracks();
   updateOverviewPanel();
 });
 
 watch(() => store.getters.getShowDetailsGaps, () => {
+  removeSelectionDataTracks();
   updateDetailsPanel();
 });
 
@@ -198,8 +195,8 @@ const updateOverviewPanel = async () => {
     {
       setBackboneDataTracks(tempBackboneTracks);
     }
-    setDisplayedObjects(false);
     comparativeTracks.value = await createSyntenyTracks(backboneStart, backboneStop, store.getters.getBackboneBasePairToHeightRatio, store.getters.getShowOverviewGaps) ?? null;
+    setDisplayedObjects(false);
   }
   else
   {
@@ -217,7 +214,7 @@ const updateDetailsPanel = async () => {
   if (originalSelectedBackboneRegion == null || selectedStart == null || selectedStop == null)
   {
     backboneSelectionTrack.value = null;
-    comparativeSelectionTracks.value = null;
+    comparativeSelectionTracks.value = [];
     return;
   }
 
@@ -233,13 +230,13 @@ const updateDetailsPanel = async () => {
     {
       setBackboneDataTracks(tempBackboneTracks);
     }
-    setDisplayedObjects(true);
     comparativeSelectionTracks.value = await createSyntenyTracks(selectedBackboneStart, selectedBackboneStop, store.getters.getComparativeBasePairToHeightRatio, store.getters.getShowDetailsGaps) ?? null;
+    setDisplayedObjects(true);
   }
   else
   {
     backboneSelectionTrack.value = null;
-    comparativeSelectionTracks.value = null;
+    comparativeSelectionTracks.value = [];
   }
 };
 
