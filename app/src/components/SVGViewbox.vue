@@ -17,13 +17,13 @@
     <TrackSVG v-if="backboneTrack" is-selectable show-start-stop show-chromosome :pos-x="ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="backboneTrack as Track" />
 
     <!-- backbone data tracks -->
-    <template v-for="(dataTrack, index) in drawnBackboneTracks" :key="dataTrack">
+    <template v-for="(dataTrack, index) in drawnOverviewTracks" :key="dataTrack">
       <text v-if="dataTrack.type === 'dataTrack' && !dataTrack.isComparative" class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{dataTrack.trackType}}</text>
       <TrackSVG v-if="dataTrack.type === 'dataTrack' && !dataTrack.isComparative" show-chromosome :pos-x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="dataTrack.track as Track" />
     </template>
 
     <!-- Comparative species synteny tracks -->
-    <template v-for="(track, index) in drawnBackboneTracks" :key="track">
+    <template v-for="(track, index) in drawnOverviewTracks" :key="track">
       <text v-if="track.type === 'track'" class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{track.name}}</text>
       <TrackSVG v-if="track.type === 'track'" is-highlightable show-chromosome :pos-x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="track.track as Track" />
     </template>
@@ -39,13 +39,13 @@
     </template>
 
     <!-- comparative backbone data tracks -->
-    <template v-for="(dataTrack, index) in drawnComparativeTracks" :key="dataTrack">
+    <template v-for="(dataTrack, index) in drawnDetailsTracks" :key="dataTrack">
       <text v-if="dataTrack.type === 'dataTrack'  && dataTrack.isComparative" class="label small" :x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :y="ViewSize.trackLabelYPosition">{{dataTrack.trackType}}</text>
       <TrackSVG v-if="dataTrack.type === 'dataTrack'  && dataTrack.isComparative" :pos-x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="dataTrack.track as Track" />
     </template>
 
     <!-- Comparative species (selected region) synteny tracks -->
-    <template v-for="(track, index) in drawnComparativeTracks" :key="track">
+    <template v-for="(track, index) in drawnDetailsTracks" :key="track">
       <text v-if="track.type === 'track'" class="label small" :x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :y="ViewSize.trackLabelYPosition">{{track.name}}</text>
       <TrackSVG v-if="track.type === 'track'" is-highlightable show-start-stop show-chromosome :pos-x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="track.track as Track" />
     </template>
@@ -75,13 +75,14 @@ const store = useStore();
 let backboneSpecies = ref<Species | null>(null);
 let backboneChromosome = ref<Chromosome | null>(null);
 let backboneTrack = ref<Track | null>(null);
-let backboneDataTracks = ref<DataTrack[] | null>([]);
-let comparativeTracks = ref<Track[] | null>(null);
+let backboneDataTracks = ref<DataTrack[]>([]);
+let comparativeTracks = ref<Track[]>([]);
 let isLoading = ref<boolean>(false);
 let backboneSelectionTrack = ref<Track | null>(null);
 let comparativeSelectionTracks = ref<Track[] | null>(null);
-let drawnBackboneTracks = ref<Object[]>([]);
-let drawnComparativeTracks = ref<Object[]>([]);
+// FIXME: Can we make these types more specific? Typescript shows errors in the template because none of the properties being accessed would exist on a type of 'Object'
+let drawnOverviewTracks = ref<Object[]>([]);
+let drawnDetailsTracks = ref<Object[]>([]);
 
 /**
  * Once mounted, let's set our reactive data props and create the backbone and synteny tracks
@@ -203,8 +204,8 @@ const updateOverviewPanel = async () => {
   else
   {
     backboneTrack.value = null;
-    comparativeTracks.value = null;
-    backboneDataTracks.value = null;
+    comparativeTracks.value = [];
+    backboneDataTracks.value = [];
   }
 };
 
@@ -324,7 +325,7 @@ const createSyntenyTracks = async (backboneStart: number, backboneStop: number, 
     if (backboneStart == null || backboneStop == null || backboneChr == null || comparativeSpeciesMaps.length === 0)
     {
       console.error('Cannot get synteny blocks with missing backbone chromosome, backbone start, backbone stop, or comparative species maps');
-      return;
+      return [];
     }
 
     // Loop for each comparative species selected
@@ -368,6 +369,7 @@ const createSyntenyTracks = async (backboneStart: number, backboneStop: number, 
   catch (err)
   {
     console.error(err);
+    return [];
   }
   finally
   {
@@ -448,7 +450,7 @@ const createBackboneDataTracks =  async (startPos: number, stopPos: number, base
 const setDisplayedObjects = (isComparative: boolean) => {
   if (isComparative)
   {
-    drawnComparativeTracks.value = [];
+    drawnDetailsTracks.value = [];
     let comparativeSyntenyTracks = comparativeSelectionTracks.value as Track[];
     
     if (store.getters.getBackboneDataTracks && store.getters.getBackboneDataTracks.length)
@@ -462,7 +464,7 @@ const setDisplayedObjects = (isComparative: boolean) => {
         if (currentDataTrack.isDisplayed)
         {
           let drawnObject = {'type': 'dataTrack', 'track': currentDataTrack.track, 'name': currentDataTrack.name, 'trackType': currentDataTrack.type, 'isComparative': true};
-          drawnComparativeTracks.value.push(drawnObject);
+          drawnDetailsTracks.value.push(drawnObject);
         }
       }
     }
@@ -471,12 +473,12 @@ const setDisplayedObjects = (isComparative: boolean) => {
     {
       let currentTrack = comparativeSyntenyTracks[index];
         let drawnObject = {'type': 'track', 'track': currentTrack, 'name': currentTrack.name, };
-        drawnComparativeTracks.value.push(drawnObject);
+        drawnDetailsTracks.value.push(drawnObject);
     }
   }
   else
   {
-    drawnBackboneTracks.value = [];
+    drawnOverviewTracks.value = [];
     let overviewSyntenyTracks = comparativeTracks.value as Track[];
 
     if (store.getters.getBackboneDataTracks)
@@ -489,7 +491,7 @@ const setDisplayedObjects = (isComparative: boolean) => {
         if (currentDataTrack.isDisplayed)
         {
           let drawnObject = {'type': 'dataTrack', 'track': currentDataTrack.track, 'name': currentDataTrack.name, 'trackType': currentDataTrack.type, 'isComparative': false};
-          drawnBackboneTracks.value.push(drawnObject);
+          drawnOverviewTracks.value.push(drawnObject);
         }
       }
     }
@@ -498,7 +500,7 @@ const setDisplayedObjects = (isComparative: boolean) => {
     {
       let currentTrack = overviewSyntenyTracks[index];
         let drawnObject = {'type': 'track', 'track': currentTrack, 'name': currentTrack.name, };
-        drawnBackboneTracks.value.push(drawnObject);
+        drawnOverviewTracks.value.push(drawnObject);
     }
   }
 };
