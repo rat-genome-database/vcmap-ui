@@ -7,6 +7,8 @@
         <div class="col-7 bold" data-test="backbone-overview-display">{{backboneSpecies?.name}} chr{{backboneChromosome?.chromosome}}:{{displayBackboneStart}}-{{displayBackboneStop}}</div>
         <div class="col-5">Length:</div>
         <div class="col-7 bold">{{displayBackboneLength}}bp</div>
+        <div class="col-5">Synteny Threshold:</div>
+        <div class="col-7 bold">{{syntenyThreshold}}bp</div>
         <div class="col-5">Selection:</div>
         <div class="col-7 bold">
           <span>{{selectionRange}}</span>
@@ -73,6 +75,10 @@ const selectionRange = computed(() => {
   }
 
   return `${Formatter.addCommasToBasePair(selectedRegion.basePairStart)}bp - ${Formatter.addCommasToBasePair(selectedRegion.basePairStop)}bp`;
+});
+
+const syntenyThreshold = computed(() => {
+  return store.getters.getOverviewSyntenyThreshold;
 });
 
 const clearSelection = () => {

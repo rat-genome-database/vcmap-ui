@@ -29,9 +29,9 @@ export interface VCMapState
   displayStopPos: number; // the displayed stop position of the backbone (changes due to zoom level)
 
   backboneBasePairToHeightRatio: number;
-  backboneSyntenyThreshold: number;
+  overviewSyntenyThreshold: number;
   comparativeBasePairToHeightRatio: number;
-  comparativeSyntenyThreshold: number;
+  detailsSyntenyThreshold: number;
 
   backboneDataTracks: DataTrack[];
 
@@ -62,9 +62,9 @@ export default createStore({
     displayStopPos: 0,
 
     backboneBasePairToHeightRatio: 1000,
-    backboneSyntenyThreshold: 0,
+    overviewSyntenyThreshold: 0,
     comparativeBasePairToHeightRatio: 1000,
-    comparativeSyntenyThreshold: 0,
+    detailsSyntenyThreshold: 0,
 
     backboneDataTracks: [],
     showOverviewGaps: false,
@@ -112,20 +112,20 @@ export default createStore({
       state.displayStopPos = stop;
     },
     backboneBasePairToHeightRatio(state: VCMapState, ratio: number) {
-      console.debug(`Setting backbone panel bp resolution to ${ratio} bp/unit`);
+      console.debug(`Setting overview panel bp resolution to ${ratio} bp/unit`);
       state.backboneBasePairToHeightRatio = ratio;
     },
-    backboneSyntenyThreshold(state: VCMapState, threshold: number) {
-      console.debug(`Setting backbone panel synteny threshold to ${threshold}bp`);
-      state.backboneSyntenyThreshold = threshold;
+    overviewSyntenyThreshold(state: VCMapState, threshold: number) {
+      console.debug(`Setting overview panel synteny threshold to ${threshold}bp`);
+      state.overviewSyntenyThreshold = threshold;
     },
     comparativeBasePairToHeightRatio(state: VCMapState, ratio: number) {
-      console.debug(`Setting comparative panel bp resolution to ${ratio} bp/unit`);
+      console.debug(`Setting details panel bp resolution to ${ratio} bp/unit`);
       state.comparativeBasePairToHeightRatio = ratio;
     },
-    comparativeSyntenyThreshold(state: VCMapState, threshold: number) {
-      console.debug(`Setting comparative panel synteny threshold to ${threshold}bp`);
-      state.comparativeSyntenyThreshold = threshold;
+    detailsSyntenyThreshold(state: VCMapState, threshold: number) {
+      console.debug(`Setting details panel synteny threshold to ${threshold}bp`);
+      state.detailsSyntenyThreshold = threshold;
     },
 
     backboneDataTracks(state: VCMapState, tracks: DataTrack[]) {
@@ -207,12 +207,12 @@ export default createStore({
     setBackboneResolution(context: ActionContext<VCMapState, VCMapState>, backboneLength: number) {
       context.commit('backboneBasePairToHeightRatio', backboneLength / (ViewSize.viewboxHeight - 100));
       // Note: Dividing by 10,000 is arbitary when calculating synteny threshold
-      context.commit('backboneSyntenyThreshold', (backboneLength > 1000000) ? Math.floor((backboneLength) / 10000) : 0);
+      context.commit('overviewSyntenyThreshold', (backboneLength > 1000000) ? Math.floor((backboneLength) / 10000) : 0);
     },
     setComparativeResolution(context: ActionContext<VCMapState, VCMapState>, backboneLength: number) {
       context.commit('comparativeBasePairToHeightRatio', backboneLength / (ViewSize.viewboxHeight - 100));
       // Note: Dividing by 10,000 is arbitary when calculating synteny threshold
-      context.commit('comparativeSyntenyThreshold', (backboneLength > 1000000) ? Math.floor((backboneLength) / 10000) : 0);
+      context.commit('detailsSyntenyThreshold', (backboneLength > 1000000) ? Math.floor((backboneLength) / 10000) : 0);
     },
     resetBackboneDataTracks(context: ActionContext<VCMapState, VCMapState>) {
       context.commit('backboneDataTracks', []);
@@ -268,14 +268,14 @@ export default createStore({
     getBackboneBasePairToHeightRatio(state: VCMapState) {
       return state.backboneBasePairToHeightRatio;
     },
-    getBackboneSyntenyThreshold(state: VCMapState) {
-      return state.backboneSyntenyThreshold;
+    getOverviewSyntenyThreshold(state: VCMapState) {
+      return state.overviewSyntenyThreshold;
     },
     getComparativeBasePairToHeightRatio(state: VCMapState) {
       return state.comparativeBasePairToHeightRatio;
     },
-    getComparativeSyntenyThreshold(state: VCMapState) {
-      return state.comparativeSyntenyThreshold;
+    getDetailsSyntenyThreshold(state: VCMapState) {
+      return state.detailsSyntenyThreshold;
     },
     getBackboneDataTracks(state: VCMapState) {
       return state.backboneDataTracks as DataTrack[];

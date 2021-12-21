@@ -334,7 +334,7 @@ const createSyntenyTracks = async (backboneStart: number, backboneStop: number, 
         stop: backboneStop,
         comparativeSpeciesMap: map,
         chainLevel: 1,
-        threshold: store.getters.getBackboneSyntenyThreshold,
+        threshold: store.getters.getOverviewSyntenyThreshold,
         includeGaps: includeGaps
       }));
     });
@@ -391,7 +391,7 @@ const createBackboneDataTracks =  async (startPos: number, stopPos: number, base
   
     for (let gene of tempGeneTracks)
     {
-      let threshold = store.getters.getBackboneSyntenyThreshold * 3;
+      let threshold = store.getters.getOverviewSyntenyThreshold * 3;
       let geneSize = gene.stop - gene.start;
       if ( geneSize < threshold)
       {

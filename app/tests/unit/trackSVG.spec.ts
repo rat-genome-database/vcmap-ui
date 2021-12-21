@@ -28,11 +28,12 @@ describe('TrackSVG', () => {
     displayStartPos: 0,
     displayStopPos: 0,
     backboneBasePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO,
-    backboneSyntenyThreshold: 0,
+    overviewSyntenyThreshold: 0,
     comparativeBasePairToHeightRatio: 1000,
-    comparativeSyntenyThreshold: 0,
+    detailsSyntenyThreshold: 0,
     showOverviewGaps: false,
     showDetailsGaps: false,
+    backboneDataTracks: [],
   };
   let getters = {
     getSelectedBackboneRegion(state: VCMapState) {

@@ -50,7 +50,7 @@ const comparativeSpecies = computed(() => {
 });
 
 const syntenyThreshold = computed(() => {
-  return store.getters.getComparativeSyntenyThreshold;
+  return store.getters.getDetailsSyntenyThreshold;
 });
 
 const changeDetailsGaps = (val: boolean) => {

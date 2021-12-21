@@ -25,11 +25,12 @@ describe('OverviewControls', () => {
     displayStartPos: 1,
     displayStopPos: 10000,
     backboneBasePairToHeightRatio: 1000,
-    backboneSyntenyThreshold: 0,
+    overviewSyntenyThreshold: 0,
     comparativeBasePairToHeightRatio: 1000,
-    comparativeSyntenyThreshold: 0,
+    detailsSyntenyThreshold: 0,
     showOverviewGaps: false,
     showDetailsGaps: false,
+    backboneDataTracks: [],
   };
   let getters = {
     getSpecies(state: VCMapState) {
