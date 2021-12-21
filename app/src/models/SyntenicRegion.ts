@@ -26,4 +26,9 @@ export default class SyntenicRegion extends SyntenicRegionDTO
     super();
     Object.assign(this, dto);
   }
+
+  public get length()
+  {
+    return this.stop - this.start;
+  }
 }

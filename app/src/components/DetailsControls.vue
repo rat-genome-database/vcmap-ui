@@ -22,11 +22,17 @@
 
 <script lang="ts" setup>
 import Species from '@/models/Species';
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useStore } from 'vuex';
 import Zoom from '@/components/Zoom.vue';
 
 const store = useStore();
+
+let showGaps = ref<boolean>(false);
+
+onMounted(() => {
+  showGaps.value = store.getters.getShowDetailsGaps;
+});
 
 const comparativeSpecies = computed(() => {
   let species = [];
@@ -41,10 +47,6 @@ const comparativeSpecies = computed(() => {
   }
 
   return species;
-});
-
-const showGaps = computed(() => {
-  return store.getters.getShowDetailsGaps;
 });
 
 const syntenyThreshold = computed(() => {

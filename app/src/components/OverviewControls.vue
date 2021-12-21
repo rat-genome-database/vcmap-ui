@@ -32,12 +32,18 @@
 
 <script lang="ts" setup>
 import { Formatter } from '@/utils/Formatter';
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useStore } from 'vuex';
 import Zoom from '@/components/Zoom.vue';
 import BackboneSelection from '@/models/BackboneSelection';
 
 const store = useStore();
+
+let showGaps = ref<boolean>(false);
+
+onMounted(() => {
+  showGaps.value = store.getters.getShowOverviewGaps;
+});
 
 const backboneSpecies = computed(() => {
   return store.getters.getSpecies;
@@ -57,10 +63,6 @@ const displayBackboneStop = computed(() => {
 
 const displayBackboneLength = computed(() => {
   return Formatter.addCommasToBasePair(store.getters.getDisplayStopPosition - store.getters.getDisplayStartPosition);
-});
-
-const showGaps = computed(() => {
-  return store.getters.getShowOverviewGaps;
 });
 
 const selectionRange = computed(() => {

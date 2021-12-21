@@ -591,7 +591,6 @@ const splitBlocksAndGapsIntoSections = (regions: SyntenyRegionData[], backboneSt
           shape: 'rect'
         }));
 
-        // Add a section for the gap
         trackSections.push(new TrackSection({
           start: gap.start,
           stop: gap.stop,
@@ -618,7 +617,6 @@ const splitBlocksAndGapsIntoSections = (regions: SyntenyRegionData[], backboneSt
           shape: 'rect'
         }));
 
-        // Create a section for the gap
         trackSections.push(new TrackSection({
           start: gap.start,
           stop: gap.stop,
@@ -633,7 +631,7 @@ const splitBlocksAndGapsIntoSections = (regions: SyntenyRegionData[], backboneSt
     });
 
     let lastGap = gaps[gaps.length - 1];
-    if (lastGap.stop < block.stop)
+    if (lastGap.backboneStop < backboneStop && lastGap.stop < block.stop)
     {
       // Create a section for the last part of the block
       trackSections.push(new TrackSection({
@@ -647,12 +645,26 @@ const splitBlocksAndGapsIntoSections = (regions: SyntenyRegionData[], backboneSt
         shape: 'rect'
       }));
     }
+    else
+    {
+      console.debug('Block section thrown out due to extending past displayed backbone region');
+    }
 
     previousBlockBackboneStop = block.backboneStop;
   });
 
-  console.debug(trackSections);
+  console.debug(`Regions split into ${trackSections.length} sections`, trackSections);
+  warnIfNegativeHeight(trackSections);
   return trackSections;
+};
+
+const warnIfNegativeHeight = (trackSections: TrackSection[]) => {
+  trackSections.forEach((section, index) => {
+    if (section.height < 0)
+    {
+      console.warn('Negative height', index, section);
+    }
+  });
 };
 </script>
 
