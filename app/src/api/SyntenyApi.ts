@@ -1,40 +1,61 @@
 import httpInstance from '@/api/httpInstance';
-import SyntenyBlock, { SyntenyBlockDTO } from '@/models/SyntenyBlock';
+import SyntenicRegion, { SyntenicRegionDTO, SyntenyRegionData } from '@/models/SyntenicRegion';
 import Map from '@/models/Map';
 import Chromosome from '@/models/Chromosome';
 
 interface SyntenyBlocksParams
 {
-  backboneChromosome: Chromosome, 
-  start: number, 
-  stop: number, 
-  comparativeSpeciesMap: Map, 
-  chainLevel?: number, 
-  threshold?: number
+  backboneChromosome: Chromosome; 
+  start: number; 
+  stop: number;
+  comparativeSpeciesMap: Map; 
+  chainLevel?: number; 
+  threshold?: number;
+  includeGaps?: boolean;
 }
 
 export default class SyntenyApi
 {
-  static async getSyntenyBlocks(params: SyntenyBlocksParams): Promise<SyntenyBlock[]>
+  static async getSyntenicRegions(params: SyntenyBlocksParams)
   {
-    let apiRoute = `/vcmap/blocks/${params.backboneChromosome?.mapKey}/${params.backboneChromosome?.chromosome}/${params.start}/${params.stop}/${params.comparativeSpeciesMap?.key}`;
+    let apiRoute = `/vcmap/${params.includeGaps ? 'synteny' : 'blocks'}`;
+    apiRoute += `/${params.backboneChromosome?.mapKey}/${params.backboneChromosome?.chromosome}/${params.start}/${params.stop}/${params.comparativeSpeciesMap?.key}`;
     if (params.chainLevel != null)
     {
       apiRoute += `/${params.chainLevel}`;
     }
 
-    if (params.threshold !=  null)
+    if (params.threshold != null && params.threshold > 0)
     {
       apiRoute += `?threshold=${params.threshold}`;
     }
     
     const res = await httpInstance.get(apiRoute);
-    const blocks: SyntenyBlock[] = [];
-    res.data.forEach((block: SyntenyBlockDTO) => {
-      blocks.push(new SyntenyBlock(block));
-    });
 
-    console.debug(`Synteny blocks found for mapKey '${params.comparativeSpeciesMap.key}', threshold: '${params.threshold}': ${blocks.length}`);
-    return blocks;
+    const regions: SyntenyRegionData[] = [];
+    if (params.includeGaps)
+    {
+      res.data.forEach((regionData: any) => {
+        const block = new SyntenicRegion(regionData.block as SyntenicRegionDTO);
+        const gaps = regionData.gaps?.map((g: any) => new SyntenicRegion(g as SyntenicRegionDTO));
+        regions.push({
+          block: block,
+          gaps: gaps ?? []
+        });
+      });
+    }
+    else
+    {
+      res.data.forEach((blockData: any) => {
+        const block = new SyntenicRegion(blockData as SyntenicRegionDTO);
+        regions.push({
+          block: block,
+          gaps: []
+        });
+      });
+    }
+
+    console.debug(`Syntenic regions found for mapKey '${params.comparativeSpeciesMap.key}', threshold: '${params.threshold}': ${regions.length}`);
+    return regions;
   }
 }

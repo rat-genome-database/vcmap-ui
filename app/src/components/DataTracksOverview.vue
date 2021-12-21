@@ -92,4 +92,10 @@ const updateStoreDataTracks = (track: DataTrack) => {
     padding-bottom: 0;
   }
 }
+.track-color
+{
+  color: white;
+  font-weight: bold;
+  border-radius: 1rem;
+}
 </style>

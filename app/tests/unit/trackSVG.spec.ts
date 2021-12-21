@@ -28,9 +28,12 @@ describe('TrackSVG', () => {
     displayStartPos: 0,
     displayStopPos: 0,
     backboneBasePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO,
-    backboneSyntenyThreshold: 0,
+    overviewSyntenyThreshold: 0,
     comparativeBasePairToHeightRatio: 1000,
-    comparativeSyntenyThreshold: 0,
+    detailsSyntenyThreshold: 0,
+    showOverviewGaps: false,
+    showDetailsGaps: false,
+    backboneDataTracks: [],
   };
   let getters = {
     getSelectedBackboneRegion(state: VCMapState) {
@@ -58,7 +61,8 @@ describe('TrackSVG', () => {
       backboneStop: 10000000,
       chromosome: '1',
       cutoff: 120000000,
-      basePairToHeightRatio: 1000
+      basePairToHeightRatio: 1000,
+      shape: 'rect'
     });
     const backboneTrack = new Track('Human', [backboneTrackSection]);
     const wrapper = shallowMount(TrackSVG, {
@@ -108,7 +112,8 @@ describe('TrackSVG', () => {
       chromosome: '1',
       cutoff: 300000000,
       offsetCount: 0,
-      basePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO
+      basePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO,
+      shape: 'rect'
     });
     const trackSection2 = new TrackSection({
       start: 45000000,
@@ -118,7 +123,8 @@ describe('TrackSVG', () => {
       chromosome: '2',
       cutoff: 300000000,
       offsetCount: 10000000,
-      basePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO
+      basePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO,
+      shape: 'rect'
     });
     const trackSection3 = new TrackSection({
       start: 125000000,
@@ -128,7 +134,8 @@ describe('TrackSVG', () => {
       chromosome: '3',
       cutoff: 300000000,
       offsetCount: 15000000,
-      basePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO
+      basePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO,
+      shape: 'rect'
     });
     const track = new Track('Rat', [trackSection1, trackSection2, trackSection3]);
 
@@ -195,7 +202,8 @@ describe('TrackSVG', () => {
       backboneStop: 10000000,
       chromosome: '1',
       cutoff: 120000000,
-      basePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO
+      basePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO,
+      shape: 'rect'
     });
     const backboneTrack = new Track('Human', [backboneTrackSection]);
     const wrapper = shallowMount(TrackSVG, {

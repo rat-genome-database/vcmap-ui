@@ -1,12 +1,14 @@
 <template>
   <div class="grid unpadded col-5">
     <div class="col-12">
-      <h4>Backbone</h4>
+      <h4>Overview</h4>
       <div class="grid unpadded">
         <div class="col-5">Displaying:</div>
         <div class="col-7 bold" data-test="backbone-overview-display">{{backboneSpecies?.name}} chr{{backboneChromosome?.chromosome}}:{{displayBackboneStart}}-{{displayBackboneStop}}</div>
         <div class="col-5">Length:</div>
         <div class="col-7 bold">{{displayBackboneLength}}bp</div>
+        <div class="col-5">Synteny Threshold:</div>
+        <div class="col-7 bold">{{syntenyThreshold}}bp</div>
         <div class="col-5">Selection:</div>
         <div class="col-7 bold">
           <span>{{selectionRange}}</span>
@@ -19,6 +21,12 @@
         </div>
         <div class="col-5">Zoom Level:</div>
         <div class="col-7 bold"><Zoom type="backbone"/></div>
+        <div class="col-5">Show Gaps:</div>
+        <div class="col-7">
+          <div class="p-field-checkbox">
+            <Checkbox id="gaps" v-model="showGaps" :binary="true" @input="changeOverviewGaps" />
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -26,12 +34,18 @@
 
 <script lang="ts" setup>
 import { Formatter } from '@/utils/Formatter';
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useStore } from 'vuex';
 import Zoom from '@/components/Zoom.vue';
 import BackboneSelection from '@/models/BackboneSelection';
 
 const store = useStore();
+
+let showGaps = ref<boolean>(false);
+
+onMounted(() => {
+  showGaps.value = store.getters.getShowOverviewGaps;
+});
 
 const backboneSpecies = computed(() => {
   return store.getters.getSpecies;
@@ -63,34 +77,29 @@ const selectionRange = computed(() => {
   return `${Formatter.addCommasToBasePair(selectedRegion.basePairStart)}bp - ${Formatter.addCommasToBasePair(selectedRegion.basePairStop)}bp`;
 });
 
+const syntenyThreshold = computed(() => {
+  return store.getters.getOverviewSyntenyThreshold;
+});
+
 const clearSelection = () => {
   store.dispatch('setSelectedBackboneRegion', null);
+};
+
+const changeOverviewGaps = (val: boolean) => {
+  store.dispatch('setShowOverviewGaps', val);
 };
 </script>
 
 <style lang="scss" scoped>
-.grid
-{
-  &.unpadded
-  {
-    padding: 0;
-    div[class^="col-"]
-    {
-      padding-top: 0;
-      padding-bottom: 0;
-    }
-  }
-
-  div.bold
-  {
-    font-weight: bold;
-  }
-}
-
 .p-button.p-button-sm.clear-btn
 {
   margin-left: 0.5rem;
   padding: 0.1rem;
   width: 1.5rem;
+}
+
+.gaps-label
+{
+  margin-right: 1rem;
 }
 </style>

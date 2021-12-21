@@ -11,6 +11,7 @@ interface TrackSectionParams
   cutoff: number; // last base pair that is displayed for the backbone
   offsetCount?: number; // number of base pairs before this section should begin, useful for knowing when to begin drawing the section
   basePairToHeightRatio: number; // number of base pairs per unit of height in the SVG, use the Resolution module to get the correct ratio
+  shape: 'rect' | 'line';
 }
 
 export default class TrackSection
@@ -21,11 +22,13 @@ export default class TrackSection
   backboneStop: number = 0;
   chromosome: string = '';
   isHighlighted: boolean = false;
+  shape: 'rect' | 'line' = 'rect';
   private _offsetCount: number = 0;
   private _backboneCutoff: number = 0;
   private _BPToHeightRatio: number = 0;
   private _displayBackboneStart: number = 0; // the displayed starting base pair position on the backbone that this section lines up with
   private _displayBackboneStop: number = 0; // the displayed ending base pair position on the backbone that this section lines up with
+  private _cachedSVGYPosition: number | null = null;
 
   constructor(params: TrackSectionParams)
   {
@@ -34,6 +37,7 @@ export default class TrackSection
     this.backboneStart = params.backboneStart;
     this.backboneStop = params.backboneStop;
     this.chromosome = params.chromosome;
+    this.shape = params.shape;
     this._backboneCutoff = params.cutoff;
     this._offsetCount = params.offsetCount ?? 0;
     this._BPToHeightRatio = params.basePairToHeightRatio;
@@ -76,6 +80,16 @@ export default class TrackSection
   {
     // offset height cannot be negative (happens if synteny block starts before start of the backbone region)
     return (this._offsetCount >= 0) ? (this._offsetCount / this._BPToHeightRatio) : 0;
+  }
+
+  public cacheSVGYPosition(y: number)
+  {
+    this._cachedSVGYPosition = y;  
+  }
+
+  public get cachedSVGYPosition()
+  {
+    return this._cachedSVGYPosition;
   }
 
   private calculateDisplayedBPRegionRelativeToBackbone()

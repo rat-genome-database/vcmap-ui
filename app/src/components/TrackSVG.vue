@@ -1,4 +1,5 @@
 <template>
+  <!-- SVG definitions -->
   <defs>
     <linearGradient id="selectedStripes" gradientUnits="userSpaceOnUse"
       x2="5" spreadMethod="repeat" gradientTransform="rotate(-45)">
@@ -10,6 +11,7 @@
   </defs>
 
   <template v-for="(section, index) in track.sections" :key="index">
+    <!-- Start BP label -->
     <text v-if="showStartStop" 
       data-test="start-bp-label"
       class="label small" 
@@ -17,7 +19,9 @@
       :y="getSectionYPosition(posY, index) + LABEL_Y_OFFSET">
       - {{section.startBPLabel}}
     </text>
-    <rect 
+
+    <!-- Track SVG -->
+    <rect v-if="section.shape !== 'line'"
       data-test="track-section-svg"
       class="section"
       :class="{'selectable': isSelectable}"
@@ -29,6 +33,23 @@
       :x="posX" :y="getSectionYPosition(posY, index)" 
       :width="width" 
       :height="section.height" />
+    <line v-else
+      data-test="track-section-svg"
+      class="section gap"
+      :x1="posX + (width / 2)" :x2="posX + (width / 2)" 
+      :y1="getSectionYPosition(posY, index)" :y2="getSectionYPosition(posY, index) + section.height" />
+
+    <!-- Chromosome Label -->
+    <text v-if="showChromosome && section.height > 15" 
+      class="chromosome-label" 
+      :x="posX + (width / 2)" 
+      :y="getSectionYPosition(posY, index) + (section.height / 2)"
+      dominant-baseline="middle"
+      text-anchor="middle">
+      {{section.chromosome}}
+    </text>
+
+    <!-- Selected Region on Track -->
     <rect v-if="isSelectable && selectedRegion.svgHeight > 0"
       data-test="selected-region"
       class="selected-region"
@@ -40,6 +61,8 @@
       :height="selectedRegion.svgHeight"
       @mousedown="initSelectStart($event, section, index)"
       @mousemove="updateSelectionHeight" />
+
+    <!-- Stop Label -->
     <text v-if="showStartStop" 
       data-test="stop-bp-label"
       class="label small" 
@@ -74,6 +97,7 @@ interface Props
   isSelectable?: boolean;
   isHighlightable?: boolean;
   showStartStop?: boolean;
+  showChromosome?: boolean;
   posX: number;
   posY: number;
   width: number;
@@ -107,7 +131,7 @@ watch(() => props.track, () => {
 });
 
 watch(() => store.getters.getSelectedBackboneRegion, (newVal, oldVal) => {
-  // Watch for possible clear out of the selected backbone region (triggered by backbone configuration changes)
+  // Watch for possible clear out of the selected backbone region
   if (props.isSelectable && oldVal != null && newVal == null)
   {
     console.debug('Clearing out backbone selection');
@@ -120,6 +144,14 @@ watch(() => store.getters.getSelectedBackboneRegion, (newVal, oldVal) => {
  * and any offsets that might need to be applied for gaps.
  */
 const getSectionYPosition = (startingYPos: number, sectionIndex: number) => {
+  let currentSection = props.track.sections[sectionIndex];
+
+  // Get cached SVG Y position for this section if present
+  if (currentSection.cachedSVGYPosition != null)
+  {
+    return currentSection.cachedSVGYPosition;
+  }
+
   let currentYPos = startingYPos;
   let previousSectionIndex = sectionIndex - 1;
   while (previousSectionIndex >= 0 && sectionIndex !== 0)
@@ -131,6 +163,8 @@ const getSectionYPosition = (startingYPos: number, sectionIndex: number) => {
 
   // Add offset if one is defined
   currentYPos += props.track.sections[sectionIndex].offsetHeight;
+
+  currentSection.cacheSVGYPosition(currentYPos);
   return currentYPos;
 };
 
@@ -219,12 +253,23 @@ const getMousePosSVG = (e: any) => {
   font: normal 8px sans-serif;
 }
 
+.chromosome-label
+{
+  font: normal 12px sans-serif;
+  fill: white;
+}
+
 .section
 {
   stroke-width: 0;
   &.selectable
   {
     cursor: crosshair;
+  }
+  &.gap
+  {
+    stroke-width: 1;
+    stroke: black;
   }
 }
 

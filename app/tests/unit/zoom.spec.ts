@@ -24,9 +24,12 @@ describe('Zoom', () => {
     displayStartPos: 0,
     displayStopPos: 0,
     backboneBasePairToHeightRatio: 1000,
-    backboneSyntenyThreshold: 0,
+    overviewSyntenyThreshold: 0,
     comparativeBasePairToHeightRatio: 1000,
-    comparativeSyntenyThreshold: 0,
+    detailsSyntenyThreshold: 0,
+    showOverviewGaps: false,
+    showDetailsGaps: false,
+    backboneDataTracks: [],
   };
   let getters = {
     getBackboneZoom(state: VCMapState) {
