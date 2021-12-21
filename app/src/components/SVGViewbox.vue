@@ -64,6 +64,9 @@ import ViewSize from '@/utils/ViewSize';
 import BackboneSelection from '@/models/BackboneSelection';
 import DataTrack from '@/models/DataTrack';
 
+const GENES_DATA_TRACK_THRESHOLD_MULTIPLIER = 3;
+const GAPS_THRESHOLD_MULTIPLIER = 10;
+
 const store = useStore();
 
 // Reactive data props
@@ -195,8 +198,13 @@ const updateOverviewPanel = async () => {
     {
       setBackboneDataTracks(tempBackboneTracks);
     }
-    comparativeTracks.value = await createSyntenyTracks(backboneStart, backboneStop, store.getters.getBackboneBasePairToHeightRatio, store.getters.getShowOverviewGaps) ?? null;
-    setDisplayedObjects(false);
+    comparativeTracks.value = await createSyntenyTracks(
+      backboneStart, 
+      backboneStop, 
+      store.getters.getBackboneBasePairToHeightRatio, 
+      store.getters.getShowOverviewGaps,
+      store.getters.getOverviewSyntenyThreshold
+    );
   }
   else
   {
@@ -204,6 +212,8 @@ const updateOverviewPanel = async () => {
     comparativeTracks.value = [];
     backboneDataTracks.value = [];
   }
+
+  setDisplayedObjects(false);
 };
 
 const updateDetailsPanel = async () => {
@@ -215,29 +225,36 @@ const updateDetailsPanel = async () => {
   {
     backboneSelectionTrack.value = null;
     comparativeSelectionTracks.value = [];
-    return;
-  }
-
-  const { start: selectedBackboneStart, stop: selectedBackboneStop } = getZoomedStartAndStopPositions(selectedStart, selectedStop, store.getters.getComparativeZoom);
-
-  if (selectedBackboneStart != null && selectedBackboneStop != null)
-  {
-    store.dispatch('setComparativeResolution', selectedBackboneStop - selectedBackboneStart);
-    backboneSelectionTrack.value = createBackboneTrack(selectedBackboneStart, selectedBackboneStop, store.getters.getComparativeBasePairToHeightRatio) ?? null;
-
-    let tempBackboneTracks = await createBackboneDataTracks(selectedBackboneStart, selectedBackboneStop, store.getters.getComparativeBasePairToHeightRatio, true) as DataTrack;
-    if (tempBackboneTracks != null)
-    {
-      setBackboneDataTracks(tempBackboneTracks);
-    }
-    comparativeSelectionTracks.value = await createSyntenyTracks(selectedBackboneStart, selectedBackboneStop, store.getters.getComparativeBasePairToHeightRatio, store.getters.getShowDetailsGaps) ?? null;
-    setDisplayedObjects(true);
   }
   else
   {
-    backboneSelectionTrack.value = null;
-    comparativeSelectionTracks.value = [];
+    const { start: selectedBackboneStart, stop: selectedBackboneStop } = getZoomedStartAndStopPositions(selectedStart, selectedStop, store.getters.getComparativeZoom);
+
+    if (selectedBackboneStart != null && selectedBackboneStop != null)
+    {
+      store.dispatch('setComparativeResolution', selectedBackboneStop - selectedBackboneStart);
+      backboneSelectionTrack.value = createBackboneTrack(selectedBackboneStart, selectedBackboneStop, store.getters.getComparativeBasePairToHeightRatio) ?? null;
+
+      let tempBackboneTracks = await createBackboneDataTracks(selectedBackboneStart, selectedBackboneStop, store.getters.getComparativeBasePairToHeightRatio, true) as DataTrack;
+      if (tempBackboneTracks != null)
+      {
+        setBackboneDataTracks(tempBackboneTracks);
+      }
+      comparativeSelectionTracks.value = await createSyntenyTracks(
+        selectedBackboneStart, 
+        selectedBackboneStop, 
+        store.getters.getComparativeBasePairToHeightRatio, 
+        store.getters.getShowDetailsGaps,
+        store.getters.getDetailsSyntenyThreshold
+      );
+    }
+    else
+    {
+      backboneSelectionTrack.value = null;
+      comparativeSelectionTracks.value = [];
+    }
   }
+  setDisplayedObjects(true);
 };
 
 /**
@@ -278,7 +295,7 @@ const createBackboneTrack = (startPos: number, stopPos: number, basePairToHeight
   }
 };
 
-const createSyntenyTracks = async (backboneStart: number, backboneStop: number, basePairToHeightRatio: number, includeGaps: boolean) => {
+const createSyntenyTracks = async (backboneStart: number, backboneStop: number, basePairToHeightRatio: number, includeGaps: boolean, syntenyThreshold: number) => {
   const backboneChr = store.getters.getChromosome as Chromosome;
   const comparativeSpecies: Species[] = [];
   
@@ -357,7 +374,7 @@ const createSyntenyTracks = async (backboneStart: number, backboneStop: number, 
     for (let speciesName in speciesSyntenyMap)
     {
       console.debug(`-- Building synteny track for species: ${speciesName} --`);
-      const trackSections = splitBlocksAndGapsIntoSections(speciesSyntenyMap[speciesName], backboneStart, backboneStop, basePairToHeightRatio);
+      const trackSections = splitBlocksAndGapsIntoSections(speciesSyntenyMap[speciesName], backboneStart, backboneStop, basePairToHeightRatio, syntenyThreshold);
       const track = new Track(speciesName, trackSections);
       tracks.push(track);
     }
@@ -391,7 +408,7 @@ const createBackboneDataTracks =  async (startPos: number, stopPos: number, base
   
     for (let gene of tempGeneTracks)
     {
-      let threshold = store.getters.getOverviewSyntenyThreshold * 3;
+      let threshold = store.getters.getOverviewSyntenyThreshold * GENES_DATA_TRACK_THRESHOLD_MULTIPLIER;
       let geneSize = gene.stop - gene.start;
       if ( geneSize < threshold)
       {
@@ -533,13 +550,15 @@ function removeOverviewDataTracks()
     }
   }
 }
-const splitBlocksAndGapsIntoSections = (regions: SyntenyRegionData[], backboneStart: number, backboneStop: number, basePairToHeightRatio: number) => {
+
+const splitBlocksAndGapsIntoSections = (regions: SyntenyRegionData[], backboneStart: number, backboneStop: number, basePairToHeightRatio: number, threshold: number) => {
   let trackSections: TrackSection[] = [];
   let previousBlockBackboneStop = backboneStart;
 
+  console.debug(`Filtering out gaps with threshold: ${threshold * GAPS_THRESHOLD_MULTIPLIER}`);
   regions.forEach(region => {
     const block = region.block;
-    const gaps = region.gaps;
+    const gaps = region.gaps.filter(g => { return g.length >= threshold * GAPS_THRESHOLD_MULTIPLIER; });
 
     if (gaps.length === 0)
     {
@@ -561,6 +580,7 @@ const splitBlocksAndGapsIntoSections = (regions: SyntenyRegionData[], backboneSt
 
     // Split the block and its gaps into their own TrackSections
     gaps.forEach((gap, index) => {
+
       if (index === 0 && (gap.backboneStart <= backboneStart))
       {
         // Block starts off with a gap
