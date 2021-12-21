@@ -123,13 +123,11 @@ watch(() => store.getters.getComparativeZoom, () => {
 });
 
 watch(() => store.getters.getShowOverviewGaps, () => {
-  removeOverviewDataTracks();
-  updateOverviewPanel();
+  updateOverviewPanelComparativeTracks();
 });
 
 watch(() => store.getters.getShowDetailsGaps, () => {
-  removeSelectionDataTracks();
-  updateDetailsPanel();
+  updateDetailsPanelComparativeTracks();
 });
 
 watch(() => store.getters.getBackboneDataTracks, (newVal) => {
@@ -214,6 +212,57 @@ const updateOverviewPanel = async () => {
   }
 
   setDisplayedObjects(false);
+};
+
+const updateOverviewPanelComparativeTracks = async () => {
+  let backboneStart = store.getters.getDisplayStartPosition;
+  let backboneStop = store.getters.getDisplayStopPosition;
+  if (backboneStop - backboneStart > 0)
+  {
+    comparativeTracks.value = await createSyntenyTracks(
+      backboneStart, 
+      backboneStop, 
+      store.getters.getBackboneBasePairToHeightRatio, 
+      store.getters.getShowOverviewGaps,
+      store.getters.getOverviewSyntenyThreshold
+    );
+  }
+  else
+  {
+    comparativeTracks.value = [];
+  }
+  setDisplayedObjects(false);
+};
+
+const updateDetailsPanelComparativeTracks = async () => {
+  let originalSelectedBackboneRegion = store.getters.getSelectedBackboneRegion as BackboneSelection | null;
+  let selectedStart = originalSelectedBackboneRegion?.basePairStart;
+  let selectedStop = originalSelectedBackboneRegion?.basePairStop;
+
+  if (originalSelectedBackboneRegion == null || selectedStart == null || selectedStop == null)
+  {
+    comparativeSelectionTracks.value = [];
+  }
+  else
+  {
+    const { start: selectedBackboneStart, stop: selectedBackboneStop } = getZoomedStartAndStopPositions(selectedStart, selectedStop, store.getters.getComparativeZoom);
+
+    if (selectedBackboneStart != null && selectedBackboneStop != null)
+    {
+      comparativeSelectionTracks.value = await createSyntenyTracks(
+        selectedBackboneStart, 
+        selectedBackboneStop,
+        store.getters.getComparativeBasePairToHeightRatio, 
+        store.getters.getShowDetailsGaps,
+        store.getters.getDetailsSyntenyThreshold
+      );
+    }
+    else
+    {
+      comparativeSelectionTracks.value = [];
+    }
+  }
+  setDisplayedObjects(true);
 };
 
 const updateDetailsPanel = async () => {
