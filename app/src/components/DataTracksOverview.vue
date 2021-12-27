@@ -1,9 +1,9 @@
 <template>
   <div class="grid unpadded col-2">
     <div class="col-12">
-      <h4>Data Tracks Loaded <span v-if="backboneDataTracks">({{backboneDataTracks.length}})</span></h4>
+      <h4>Data Tracks Loaded <span v-if="store.getters.getBackboneDataTracks">({{store.getters.getBackboneDataTracks.length}})</span></h4>
       <div class="grid unpadded">
-        <div v-for="dataTrack, index in backboneDataTracks" class="col-12" :key="dataTrack.name">
+        <div v-for="dataTrack, index in store.getters.getBackboneDataTracks" class="col-12" :key="dataTrack.name">
           <div v-if="!showComparativeTracks && !dataTrack.isComparativeView">
             <div class="p-field-checkbox data-track-checkbox">
               <Checkbox v-model="dataTrack.isDisplayed" :id="dataTrack.name" @input="updateVisibility($event, index)" :binary="true"/>
@@ -23,7 +23,7 @@
             </div> -->
           </div>   
         </div>
-        <div v-if="backboneDataTracks.length === 0">
+        <div v-if="store.getters.getBackboneDataTracks.length === 0">
           <p>No Data Tracks Loaded</p>
         </div>
       </div>
@@ -33,26 +33,15 @@
 
 <script lang="ts" setup>
 import DataTrack from '@/models/DataTrack';
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch } from 'vue';
 import { useStore } from 'vuex';
 
 const store = useStore();
 
-let backboneDataTracks = ref<DataTrack[]>([]);
 let showComparativeTracks = ref<boolean>(false);
 
-onMounted(() => {
-  if (store.getters.getBackboneDataTracks) {
-    backboneDataTracks.value = store.getters.getBackboneDataTracks;
-  }
-});
-
-watch(() => store.getters.getBackboneDataTracks, (newVal) => {
-  backboneDataTracks.value = newVal;
-});
-
 watch(() => store.getters.getSelectedBackboneRegion, (newVal) => {
-  if (newVal && backboneDataTracks.value.length)
+  if (newVal && store.getters.getBackboneDataTracks.length)
   {
     showComparativeTracks.value = true;
   }
@@ -65,7 +54,7 @@ watch(() => store.getters.getSelectedBackboneRegion, (newVal) => {
 }; */
 
 const updateVisibility = (value: any, index: number) => {
-  let dataTrack = backboneDataTracks.value[index] as DataTrack;
+  let dataTrack = store.getters.getBackboneDataTracks[index] as DataTrack;
   dataTrack.isDisplayed = value;
 
   updateStoreDataTracks(dataTrack);

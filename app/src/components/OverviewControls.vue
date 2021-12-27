@@ -4,11 +4,11 @@
       <h4>Overview</h4>
       <div class="grid unpadded">
         <div class="col-5">Displaying:</div>
-        <div class="col-7 bold" data-test="backbone-overview-display">{{backboneSpecies?.name}} chr{{backboneChromosome?.chromosome}}:{{displayBackboneStart}}-{{displayBackboneStop}}</div>
+        <div class="col-7 bold" data-test="backbone-overview-display">{{store.getters.getSpecies?.name}} chr{{store.getters.getChromosome?.chromosome}}:{{displayBackboneStart}}-{{displayBackboneStop}}</div>
         <div class="col-5">Length:</div>
         <div class="col-7 bold">{{displayBackboneLength}}bp</div>
         <div class="col-5">Synteny Threshold:</div>
-        <div class="col-7 bold">{{syntenyThreshold}}bp</div>
+        <div class="col-7 bold">{{store.getters.getOverviewSyntenyThreshold}}bp</div>
         <div class="col-5">Selection:</div>
         <div class="col-7 bold">
           <span>{{selectionRange}}</span>
@@ -47,14 +47,6 @@ onMounted(() => {
   showGaps.value = store.getters.getShowOverviewGaps;
 });
 
-const backboneSpecies = computed(() => {
-  return store.getters.getSpecies;
-});
-
-const backboneChromosome = computed(() => {
-  return store.getters.getChromosome;
-});
-
 const displayBackboneStart = computed(() => {
   return Formatter.addCommasToBasePair(store.getters.getDisplayStartPosition);
 });
@@ -75,10 +67,6 @@ const selectionRange = computed(() => {
   }
 
   return `${Formatter.addCommasToBasePair(selectedRegion.basePairStart)}bp - ${Formatter.addCommasToBasePair(selectedRegion.basePairStop)}bp`;
-});
-
-const syntenyThreshold = computed(() => {
-  return store.getters.getOverviewSyntenyThreshold;
 });
 
 const clearSelection = () => {
