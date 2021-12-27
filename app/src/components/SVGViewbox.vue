@@ -36,7 +36,7 @@
     <!-- comparative backbone data tracks -->
     <template v-for="(dataTrack, index) in drawnDetailsTracks" :key="dataTrack">
       <text v-if="dataTrack.type === 'dataTrack'  && dataTrack.isComparative" class="label small" :x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :y="ViewSize.trackLabelYPosition">{{dataTrack.trackType}}</text>
-      <TrackSVG v-if="dataTrack.type === 'dataTrack'  && dataTrack.isComparative" :pos-x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="dataTrack.track as Track" />
+      <TrackSVG v-if="dataTrack.type === 'dataTrack'  && dataTrack.isComparative" show-chromosome :pos-x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="dataTrack.track as Track" />
     </template>
 
     <!-- Comparative species (selected region) synteny tracks -->
