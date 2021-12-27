@@ -16,7 +16,7 @@
             data-test="clear-selection-btn"
             v-tooltip.right="'Clear Selection'" 
             icon="pi pi-trash" 
-            class="p-button-info p-button-sm clear-btn" 
+            class="p-button-danger p-button-sm clear-btn" 
             @click="clearSelection"/>
         </div>
         <div class="col-5">Zoom Level:</div>

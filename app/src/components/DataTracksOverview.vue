@@ -2,21 +2,21 @@
   <div class="grid unpadded col-2">
     <div class="col-12">
       <h4>Data Tracks Loaded <span v-if="backboneDataTracks">({{backboneDataTracks.length}})</span></h4>
-      <div class="data-tracks">
-        <div v-for="dataTrack, index in backboneDataTracks" class="grid" :key="dataTrack.name">
-          <div v-if="!showComparativeTracks && !dataTrack.isComparativeView" class="grid">
-            <div class="p-field-checkbox" style="height: 2.5em">
-              <Checkbox style="margin-left: .2em;" v-model="dataTrack.isDisplayed" :id="dataTrack.name" @input="updateVisibility($event, index)" :binary="true"/>
-              <label style="padding-left: .5em;" :for="dataTrack.name">{{ dataTrack.name }}</label>
+      <div class="grid unpadded">
+        <div v-for="dataTrack, index in backboneDataTracks" class="col-12" :key="dataTrack.name">
+          <div v-if="!showComparativeTracks && !dataTrack.isComparativeView">
+            <div class="p-field-checkbox data-track-checkbox">
+              <Checkbox v-model="dataTrack.isDisplayed" :id="dataTrack.name" @input="updateVisibility($event, index)" :binary="true"/>
+              <label :for="dataTrack.name">{{ dataTrack.name }}</label>
             </div>
             <!-- <div class="col-2" style="height: 3em">
               <ColorPicker :defaultColor="dataTrack.color" @change="updateColor($event, index)" />
             </div> -->
           </div>
-          <div v-else-if="showComparativeTracks" class="grid">
-            <div class="p-field-checkbox" style="height: 2.5em">
+          <div v-else-if="showComparativeTracks">
+            <div class="p-field-checkbox data-track-checkbox">
               <Checkbox v-model="dataTrack.isDisplayed" :id="dataTrack.name" @input="updateVisibility($event, index)" :binary="true"/>
-              <label style="padding-left: .5em;" :for="dataTrack.name">{{ dataTrack.name }}</label>
+              <label :for="dataTrack.name">{{ dataTrack.name }}</label>
             </div>
             <!-- <div class="col-2" style="height: 3em">
               <ColorPicker :defaultColor="dataTrack.color" @change="updateColor($event, index)" />
@@ -47,7 +47,7 @@ onMounted(() => {
   }
 });
 
-watch(() => store.getters.getBackboneDataTracks, (newVal, ) => {
+watch(() => store.getters.getBackboneDataTracks, (newVal) => {
   backboneDataTracks.value = newVal;
 });
 
@@ -78,24 +78,12 @@ const updateStoreDataTracks = (track: DataTrack) => {
 </script>
 
 <style lang="scss" scoped>
-.data-tracks
+.data-track-checkbox
 {
-  margin-top: 1rem;
-}
-
-.grid.unpadded
-{
-  padding: 0;
-  div[class^="col-"]
+  height: 2em;
+  label
   {
-    padding-top: 0;
-    padding-bottom: 0;
+    padding-left: 0.5em;
   }
-}
-.track-color
-{
-  color: white;
-  font-weight: bold;
-  border-radius: 1rem;
 }
 </style>
