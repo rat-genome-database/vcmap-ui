@@ -4,7 +4,7 @@
     <h3 class="header">VCMap</h3><span class="version-label">v{{VERSION}}</span>
   </div>
   <div>
-    <TabView v-model:activeIndex="active">
+    <TabView v-model:activeIndex="activeTab">
       <TabPanel header="Load by Position" >
         <div class="grid">
           <div class="col-12 text-center">
@@ -18,7 +18,7 @@
                   v-model="selectedSpecies" 
                   :options="speciesOptions" 
                   :loading="isLoadingSpecies"
-                  @change="updateStoreSpecies"
+                  @change="onSpeciesChange"
                   optionLabel="name" 
                   placeholder="Backbone Species" />
               </div>
@@ -33,6 +33,7 @@
                   v-model="selectedChromosome"
                   :disabled = "!chromosomeOptions.length"
                   :options="chromosomeOptions"
+                  :loading="isLoadingChromosome"
                   optionLabel="chromosome"
                   />
               </div>
@@ -115,7 +116,7 @@
                   v-model="selectedSpecies" 
                   :options="speciesOptions" 
                   :loading="isLoadingSpecies"
-                  @change="updateStoreSpecies"
+                  @change="onSpeciesChange"
                   optionLabel="name" 
                   placeholder="Backbone Species" />
               </div>
@@ -123,7 +124,7 @@
             <div class="grid">
               <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1 p-fluid">
                 <h4>Gene Symbol</h4>
-                <div v-if="isLoadingGene == true">
+                <div v-if="isLoadingGene">
                   <ProgressSpinner style="width:50px;height:50px"/>
                 </div>
                 <AutoComplete
@@ -222,19 +223,19 @@ import Chromosome from '@/models/Chromosome';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import { VERSION } from '@/version';
+import { AxiosError } from 'axios';
+
+const TABS = {
+  POSITION: 0,
+  GENE: 1
+};
 
 const router = useRouter();
 const store = useStore();
 
-
-// Reactive Properties
 let speciesOptions = ref<Species[]>([]);
 let selectedSpecies = ref<Species | null>(null);
 let isLoadingSpecies = ref(false);
-
-/* let mapOptions = ref<Map[]>([]);
-let selectedMap = ref({});
-let isLoadingMap = ref(false); */
 
 let geneSuggestions = ref<Gene[]>([]);
 let selectedGene = ref<Gene | null>(null);
@@ -251,184 +252,20 @@ let maxPosition = ref<number | null>();
 let comparativeSpeciesOne = ref<Species>();
 let comparativeSpeciesTwo = ref<Species>();
 
-let active = ref(0);
+let activeTab = ref(TABS.POSITION);
 
-// Lifecycle Hooks
-onMounted(async () => {
-  //resetStore();
-  isLoadingSpecies.value = true;
-  try
-  {
-    speciesOptions.value = await SpeciesApi.getSpecies();
-  }
-  catch (err)
-  {
-    console.error(err);
-  }
-  finally
-  {
-    isLoadingSpecies.value = false;
-  }
-  
-  if (store.getters.getSpecies)
-  {
-    selectedSpecies.value = store.getters.getSpecies;
-    
-    isLoadingChromosome.value = true;
-    try
-    {
-      chromosomeOptions.value = await SpeciesApi.getChromosomes(store.getters.getSpecies.defaultMapKey);
-    }
-    catch (err)
-    {
-      console.error(err);
-    }
-    finally
-    {
-      isLoadingChromosome.value = false;
-    }
-  }
+onMounted(prepopulateConfigOptions);
+watch(() => store.getters.getGene, onGeneChange);
+watch(() => store.getters.getChromosome, resetChromosomeStartAndStop);
 
-  if (store.getters.getGene)
-  {
-    selectedGene.value = store.getters.getGene;
-    let chrInfo = await SpeciesApi.getChromosomeInfo(store.getters.getGene.chromosome, store.getters.getSpecies.defaultMapKey);
-    store.dispatch('setChromosome', chrInfo);
-    selectedChromosome.value = store.getters.getChromosome;
-  }
-
-  if (store.getters.getChromosome)
-  {
-    selectedChromosome.value = store.getters.getChromosome;
-    maxPosition.value = store.getters.getChromosome.seqLength;
-  }
-
-  if (store.getters.getStartPosition)
-  {
-    startPosition.value = store.getters.getStartPosition;
-  }
-
-  if (store.getters.getStopPosition)
-  {
-    stopPosition.value = store.getters.getStopPosition;
-  }
-
-  if (store.getters.getComparativeSpeciesOne)
-  {
-    comparativeSpeciesOne.value = store.getters.getComparativeSpeciesOne;
-  }
-
-  if (store.getters.getComparativeSpeciesTwo)
-  {
-    comparativeSpeciesTwo.value = store.getters.getComparativeSpeciesTwo;
-  }
-});
-
-watch(() => store.getters.getSpecies, (newVal, oldVal) => {
-  if (newVal !== oldVal && newVal !== null)
-  {
-    isLoadingChromosome.value = true;
-    try
-    {
-      store.dispatch('setGene', null);
-      store.dispatch('setChromosome', null);
-      store.dispatch('setStartPosition', null);
-      store.dispatch('setStopPosition', null);
-
-      chromosomeOptions.value = [];
-      selectedChromosome.value = null;
-      startPosition.value = null;
-      stopPosition.value = null;
-      maxPosition.value = null;
-
-      if (active.value == 0)
-      {
-        selectedSpecies.value = store.getters.getSpecies;
-        SpeciesApi.getChromosomes(store.getters.getSpecies.defaultMapKey).then(chromosomes => {
-          chromosomeOptions.value = chromosomes;
-          isLoadingChromosome.value = false;
-        });
-      }
-    }
-    catch (err)
-    {
-      console.error(err);
-    }
-  }
-});
-
-watch(() => store.getters.getGene, (newVal, oldVal) => {
-  if (newVal !== oldVal && newVal !== null)
-  {
-    isLoadingChromosome.value = true;
-    try
-    {
-      store.dispatch('setChromosome', null);
-      store.dispatch('setStartPosition', null);
-      store.dispatch('setStopPosition', null);
-
-      startPosition.value = null;
-      stopPosition.value = null;
-      maxPosition.value = null;
-
-      selectedGene.value = store.getters.getGene;
-
-      SpeciesApi.getChromosomeInfo(newVal.chromosome, store.getters.getSpecies.defaultMapKey).then(chrInfo => {
-        store.dispatch('setChromosome', chrInfo);
-        selectedChromosome.value = store.getters.getChromosome;
-      });      
-    }
-    catch (err)
-    {
-      console.error(err);
-    }
-    finally
-    {
-      isLoadingChromosome.value = false;
-    }
-  }
-});
-
-watch(() => store.getters.getChromosome, (newVal, oldVal) => {
-  if (newVal !== oldVal && newVal !== null)
-  {
-    try
-    {
-      store.dispatch('setStartPosition', null);
-      store.dispatch('setStopPosition', null);
-
-      startPosition.value = null;
-      stopPosition.value = null;
-      maxPosition.value = null;
-
-      selectedChromosome.value = store.getters.getChromosome;
-      maxPosition.value = store.getters.getChromosome.seqLength;    
-    }
-    catch (err)
-    {
-      console.error(err);
-    }
-    finally
-    {
-      isLoadingChromosome.value = false;
-    }
-  }
-});
 
 // Methods
 const goToMainScreen = () => {
   router.push('/main');
-};
-
-const updateStoreSpecies = (event: any) => {
-  store.dispatch('setSpecies', event.value);
-};
-
-/* const updateStoreMap = (event: any) => {
-  store.dispatch('setMap', event.value);
-}; */
+}
 
 const updateStoreChromosome = (event: any) => {
+  console.log('update chromosome called')
   store.dispatch('setChromosome', event.value);
 };
 
@@ -467,17 +304,158 @@ const updateStoreComparativeSpeciesTwo = (event: any) => {
 async function searchGene(event: any)
 {
   isLoadingGene.value = true;
-  let matches = await SpeciesApi.getGenesBySymbol(store.getters.getSpecies.defaultMapKey, event.query);
-  geneSuggestions.value = matches;
-  isLoadingGene.value = false;
+  try
+  {
+    const matches = await SpeciesApi.getGenesBySymbol(store.getters.getSpecies.defaultMapKey, event.query);
+    geneSuggestions.value = matches;
+  }
+  catch (err: any)
+  {
+    onNetworkError(err);
+  }
+  finally
+  {
+    isLoadingGene.value = false;
+  }
 }
 
-/* function resetStore() {
-  store.dispatch('setSpecies', null);
-  store.dispatch('setMap', null);
-  store.dispatch('setChromosomeNum', null);
-  store.dispatch('setChromosome', null);
-} */
+async function onSpeciesChange(changeEvent: any)
+{
+  store.dispatch('setSpecies', changeEvent.value);
+
+  isLoadingChromosome.value = true;
+  try
+  {
+    store.dispatch('setGene', null);
+    store.dispatch('setChromosome', null);
+    store.dispatch('setStartPosition', null);
+    store.dispatch('setStopPosition', null);
+
+    chromosomeOptions.value = [];
+    selectedChromosome.value = null;
+    startPosition.value = null;
+    stopPosition.value = null;
+    maxPosition.value = null;
+
+    if (activeTab.value === TABS.POSITION)
+    {
+      selectedSpecies.value = store.getters.getSpecies;
+      const chromosomes = await SpeciesApi.getChromosomes(store.getters.getSpecies.defaultMapKey);
+      chromosomeOptions.value = chromosomes;
+    }
+  }
+  catch (err: any)
+  {
+    onNetworkError(err);
+  }
+  finally
+  {
+    isLoadingChromosome.value = false;
+  }
+}
+
+async function onGeneChange(gene: Gene)
+{
+  isLoadingChromosome.value = true;
+  try
+  {
+    store.dispatch('setChromosome', null);
+    store.dispatch('setStartPosition', null);
+    store.dispatch('setStopPosition', null);
+
+    startPosition.value = null;
+    stopPosition.value = null;
+    maxPosition.value = null;
+
+    selectedGene.value = store.getters.getGene;
+
+    const chrInfo = await SpeciesApi.getChromosomeInfo(gene.chromosome, store.getters.getSpecies.defaultMapKey);
+    store.dispatch('setChromosome', chrInfo);
+    selectedChromosome.value = store.getters.getChromosome; 
+  }
+  catch (err: any)
+  {
+    onNetworkError(err);
+  }
+  finally
+  {
+    isLoadingChromosome.value = false;
+  }
+}
+
+function resetChromosomeStartAndStop()
+{
+  store.dispatch('setStartPosition', null);
+  store.dispatch('setStopPosition', null);
+
+  startPosition.value = null;
+  stopPosition.value = null;
+  selectedChromosome.value = store.getters.getChromosome;
+  maxPosition.value = store.getters.getChromosome?.seqLength; 
+}
+
+async function prepopulateConfigOptions()
+{
+  console.log('mounted');
+  isLoadingSpecies.value = true;
+  try
+  {
+    speciesOptions.value = await SpeciesApi.getSpecies();
+  }
+  catch (err: any)
+  {
+    onNetworkError(err);
+  }
+  finally
+  {
+    isLoadingSpecies.value = false;
+  }
+  
+  if (store.getters.getSpecies)
+  {
+    selectedSpecies.value = store.getters.getSpecies;
+    
+    isLoadingChromosome.value = true;
+    try
+    {
+      chromosomeOptions.value = await SpeciesApi.getChromosomes(store.getters.getSpecies.defaultMapKey);
+    }
+    catch (err: any)
+    {
+     onNetworkError(err);
+    }
+    finally
+    {
+      isLoadingChromosome.value = false;
+    }
+  }
+
+  selectedGene.value = store.getters.getGene;
+  if (store.getters.getGene && !store.getters.getChromosome)
+  {
+    // If chromosome not present in the store, set it based on the gene
+    let chrInfo = await SpeciesApi.getChromosomeInfo(store.getters.getGene.chromosome, store.getters.getSpecies.defaultMapKey);
+    store.dispatch('setChromosome', chrInfo);
+    selectedChromosome.value = store.getters.getChromosome;
+  }
+  else
+  {
+    // Chromosome data exists on the store
+    selectedChromosome.value = store.getters.getChromosome;
+    maxPosition.value = store.getters.getChromosome?.seqLength;
+    startPosition.value = store.getters.getStartPosition ?? 0;
+    stopPosition.value = store.getters.getStopPosition ?? 0;
+  }
+  
+  // Pre-populate previously selected comparative species
+  comparativeSpeciesOne.value = store.getters.getComparativeSpeciesOne;
+  comparativeSpeciesTwo.value = store.getters.getComparativeSpeciesTwo;
+}
+
+function onNetworkError(err: AxiosError)
+{
+  console.error(err.response?.data);
+}
 </script>
 
 <style lang="scss" scoped>
