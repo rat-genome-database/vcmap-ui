@@ -15,6 +15,8 @@ import TabPanel from 'primevue/tabpanel';
 import AutoComplete from 'primevue/autocomplete';
 import Checkbox from 'primevue/checkbox';
 import ColorPicker from 'primevue/colorpicker';
+import Message from 'primevue/message';
+import InlineMessage from 'primevue/inlinemessage';
 
 /**
  * Add any plugins/configs that you want to be globally registered:
@@ -39,6 +41,8 @@ const COMPONENTS: {[key: string]: Component} = {
   'AutoComplete': AutoComplete,
   'Checkbox': Checkbox,
   'ColorPicker': ColorPicker,
+  'Message': Message,
+  'InlineMessage': InlineMessage,
 };
 
 /**

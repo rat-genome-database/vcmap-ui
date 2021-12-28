@@ -18,9 +18,7 @@ export interface VCMapState
   stopPos: number | null; // original backbone stop position
   gene: Gene | null; // backbone gene
 
-  // FIXME: Should be an array of species for flexibility
-  comparativeSpeciesOne: Species | null;
-  comparativeSpeciesTwo: Species | null;
+  comparativeSpecies: Species[];
 
   selectedBackboneRegion: BackboneSelection | null;
   backboneZoom: number;
@@ -54,8 +52,7 @@ export default createStore({
     stopPos: null,
     gene: null,
 
-    comparativeSpeciesOne: null,
-    comparativeSpeciesTwo: null,
+    comparativeSpecies: [],
 
     selectedBackboneRegion: null,
     backboneZoom: 1,
@@ -94,12 +91,29 @@ export default createStore({
     gene (state: VCMapState, gene: Gene) {
       state.gene = gene;
     },
-    comparativeSpeciesOne (state: VCMapState, species: Species) {
-      state.comparativeSpeciesOne = species;
+
+    comparativeSpecies (state: VCMapState, speciesArray: Species[]) {
+      state.comparativeSpecies = speciesArray;
     },
-    comparativeSpeciesTwo (state: VCMapState, species: Species) {
-      state.comparativeSpeciesTwo = species;
+    addComparativeSpecies(state: VCMapState, species: Species ) {
+      if (state.comparativeSpecies.indexOf(species) == -1) 
+      {
+        state.comparativeSpecies.push(species);
+      }
     },
+    removeComparativeSpecies(state: VCMapState, index: number) {
+      state.comparativeSpecies.splice(index, 1);
+    },
+    changeComparativeSpecies(state: VCMapState, species: Species) {
+      for (let index = 0; index < state.backboneDataTracks.length; index++)
+      {
+        if (state.comparativeSpecies[index].name === species.name)
+        {
+          state.comparativeSpecies[index] = species;
+        }
+      }
+    },
+
     selectedBackboneRegion ( state: VCMapState, selection: BackboneSelection) {
       state.selectedBackboneRegion = selection;
     },
@@ -190,12 +204,6 @@ export default createStore({
     setGene(context: ActionContext<VCMapState, VCMapState>, gene: Gene) {
       context.commit('gene', gene);
     },
-    setComparativeSpeciesOne (context: ActionContext<VCMapState, VCMapState>, species: Species) {
-      context.commit('comparativeSpeciesOne', species);
-    },
-    setComparativeSpeciesTwo (context: ActionContext<VCMapState, VCMapState>, species: Species) {
-      context.commit('comparativeSpeciesTwo', species);
-    },
     setSelectedBackboneRegion (context: ActionContext<VCMapState, VCMapState>, selection: BackboneSelection) {
       context.commit('selectedBackboneRegion', selection);
     },
@@ -220,6 +228,9 @@ export default createStore({
       context.commit('comparativeBasePairToHeightRatio', backboneLength / (ViewSize.viewboxHeight - 100));
       // Note: Dividing by 10,000 is arbitary when calculating synteny threshold
       context.commit('detailsSyntenyThreshold', (backboneLength > 1000000) ? Math.floor((backboneLength) / 10000) : 0);
+    },
+    resetComparativeSpecies(context: ActionContext<VCMapState, VCMapState>) {
+      context.commit('comparativeSpecies', []);
     },
     resetBackboneDataTracks(context: ActionContext<VCMapState, VCMapState>) {
       context.commit('backboneDataTracks', []);
@@ -254,11 +265,8 @@ export default createStore({
     getGene (state: VCMapState) {
       return state.gene;
     },
-    getComparativeSpeciesOne (state: VCMapState) {
-      return state.comparativeSpeciesOne;
-    },
-    getComparativeSpeciesTwo (state: VCMapState) {
-      return state.comparativeSpeciesTwo;
+    getComparativeSpecies (state: VCMapState) {
+      return state.comparativeSpecies as Species[];
     },
     getSelectedBackboneRegion (state: VCMapState) {
       return state.selectedBackboneRegion;

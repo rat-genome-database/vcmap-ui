@@ -71,28 +71,25 @@
             <div class="col-12 text-center">
               <h2>Comparative Species</h2>
             </div>
-            <div class="grid">
-              <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
+            <div class="col-12 text-center">
+              <Button @click="addTempComparativeSpecies" label="Add Species" icon="pi pi-plus-circle" class="p-button" style="margin-right: .5em"/>
+            </div>
+            <div class="col-6 col-offset-3 text-center">
+              <Message severity="warn" closeable v-if="comparativeSpecies.length >= 3">Selecting 3 or more species might cause display errors</Message>
+            </div>
+            <div class="grid" v-for="species, index in comparativeSpecies" :key="species">
+              <div class="lg:col-4 lg:col-offset-3 md:col-6 md:col-offset-2 sm:col-8 sm:col-offset-1">
                 <Dropdown 
-                  label="Comparative Species 1"
+                  label="Comparative Species 2"
                   class="configuration-input" 
-                  v-model="comparativeSpeciesOne" 
+                  v-model="comparativeSpecies[index]" 
                   :loading="isLoadingSpecies"
                   :options="speciesOptions"
                   optionLabel="name" 
                   />
               </div>
-            </div>
-            <div class="grid">
-              <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
-                <Dropdown 
-                  label="Comparative Species 2"
-                  class="configuration-input"
-                  v-model="comparativeSpeciesTwo" 
-                  :loading="isLoadingSpecies"
-                  :options="speciesOptions"
-                  optionLabel="name" 
-                  />
+              <div class="col-1 text-center">
+                <Button @click="removeTempComparativeSpecies(index)" label="Remove" icon="pi pi-minus-circle" class="p-button-sm " />
               </div>
             </div>
           </div>
@@ -175,28 +172,22 @@
             <div class="col-12 text-center">
               <h2>Comparative Species</h2>
             </div>
-            <div class="grid">
-              <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
+            <div class="col-12 text-center">
+              <Button @click="addTempComparativeSpecies" label="Add Species" icon="pi pi-plus-circle" class="p-button" style="margin-right: .5em"/>
+            </div>
+            <div class="grid" v-for="species, index in comparativeSpecies" :key="species">
+              <div class="lg:col-4 lg:col-offset-3 md:col-6 md:col-offset-2 sm:col-8 sm:col-offset-1">
                 <Dropdown 
-                  label="Comparative Species 1"
-                  class="configuration-input"
-                  v-model="comparativeSpeciesOne" 
+                  label="Comparative Species 2"
+                  class="configuration-input" 
+                  v-model="comparativeSpecies[index]" 
                   :loading="isLoadingSpecies"
                   :options="speciesOptions"
                   optionLabel="name" 
                   />
               </div>
-            </div>
-            <div class="grid">
-              <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
-                <Dropdown 
-                  label="Comparative Species 2"
-                  class="configuration-input"
-                  v-model="comparativeSpeciesTwo" 
-                  :loading="isLoadingSpecies"
-                  :options="speciesOptions"
-                  optionLabel="name" 
-                  />
+              <div class="col-1 text-center">
+                <Button @click="removeTempComparativeSpecies(index)" label="Remove" icon="pi pi-minus-circle" class="p-button-sm " />
               </div>
             </div>
           </div>
@@ -257,8 +248,8 @@ const startPosition = ref<number | null>(null);
 const stopPosition = ref<number | null>(null);
 const maxPosition = ref<number | null>(null);
 
-const comparativeSpeciesOne = ref<Species | null>(null);
-const comparativeSpeciesTwo = ref<Species | null>(null);
+let comparativeSpecies = ref<Species[] | Number[]>([]);
+let active = ref(0);
 
 onMounted(prepopulateConfigOptions);
 
@@ -421,8 +412,10 @@ async function prepopulateConfigOptions()
   }
   
   // Pre-populate previously selected comparative species
-  comparativeSpeciesOne.value = store.getters.getComparativeSpeciesOne;
-  comparativeSpeciesTwo.value = store.getters.getComparativeSpeciesTwo;
+  if (store.getters.getComparativeSpecies)
+  {
+    comparativeSpecies.value = store.getters.getComparativeSpecies;
+  }
 }
 
 function saveConfigToStoreAndGoToMainScreen()
@@ -452,10 +445,48 @@ function saveConfigToStoreAndGoToMainScreen()
   router.push('/main');
 }
 
+// Methods
+const goToMainScreen = () => {
+  for (let index = 0; index < comparativeSpecies.value.length; index++)
+  {
+    if (typeof comparativeSpecies.value[index] === 'number')
+    {
+      comparativeSpecies.value.splice(index, 1);
+      index--;
+    }
+  }
+
+  store.commit('comparativeSpecies', comparativeSpecies.value);
+  router.push('/main');
+};
+
+
 function onNetworkError(err: AxiosError)
 {
   console.error(err.response?.data);
 }
+
+function addTempComparativeSpecies()
+{
+  let currLength = comparativeSpecies.value.length;
+  if (currLength < 5)
+  {
+    comparativeSpecies.value.push(currLength + 1);
+  }
+}
+
+function removeTempComparativeSpecies(index: number)
+{
+  comparativeSpecies.value.splice(index, 1);
+}
+
+
+/* function resetStore() {
+  store.dispatch('setSpecies', null);
+  store.dispatch('setMap', null);
+  store.dispatch('setChromosomeNum', null);
+  store.dispatch('setChromosome', null);
+} */
 </script>
 
 <style lang="scss" scoped>

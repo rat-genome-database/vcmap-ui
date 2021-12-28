@@ -78,9 +78,9 @@ let comparativeTracks = ref<Track[]>([]);
 let isLoading = ref<boolean>(false);
 let backboneSelectionTrack = ref<Track | null>(null);
 let comparativeSelectionTracks = ref<Track[]>([]);
-// FIXME: Can we make these types more specific? Typescript shows errors in the template because none of the properties being accessed would exist on a type of 'Object'
-let drawnOverviewTracks = ref<Object[]>([]);
-let drawnDetailsTracks = ref<Object[]>([]);
+
+let drawnOverviewTracks = ref<DataTrack[] | Track[]>([]);
+let drawnDetailsTracks = ref<DataTrack[] | Track[]>([]);
 
 /**
  * Once mounted, let's set our reactive data props and create the backbone and synteny tracks
@@ -203,6 +203,7 @@ const updateOverviewPanel = async () => {
       store.getters.getShowOverviewGaps,
       store.getters.getOverviewSyntenyThreshold
     );
+    console.log(comparativeTracks.value);
   }
   else
   {
@@ -346,16 +347,11 @@ const createBackboneTrack = (startPos: number, stopPos: number, basePairToHeight
 
 const createSyntenyTracks = async (backboneStart: number, backboneStop: number, basePairToHeightRatio: number, includeGaps: boolean, syntenyThreshold: number) => {
   const backboneChr = store.getters.getChromosome as Chromosome;
-  const comparativeSpecies: Species[] = [];
+  let comparativeSpecies: Species[] = [];
   
-  if (store.getters.getComparativeSpeciesOne)
+  if (store.getters.getComparativeSpecies)
   {
-    comparativeSpecies.push(store.getters.getComparativeSpeciesOne as Species);
-  }
-
-  if (store.getters.getComparativeSpeciesTwo)
-  {
-    comparativeSpecies.push(store.getters.getComparativeSpeciesTwo as Species);
+    comparativeSpecies = store.getters.getComparativeSpecies;
   }
 
   let tempComparativeTracks: Track[] = [];
