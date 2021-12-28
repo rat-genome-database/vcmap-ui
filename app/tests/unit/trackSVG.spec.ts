@@ -34,6 +34,7 @@ describe('TrackSVG', () => {
     showOverviewGaps: false,
     showDetailsGaps: false,
     backboneDataTracks: [],
+    configTab: 0
   };
   let getters = {
     getSelectedBackboneRegion(state: VCMapState) {

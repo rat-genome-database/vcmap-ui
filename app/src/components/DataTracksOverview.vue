@@ -1,7 +1,7 @@
 <template>
   <div class="grid unpadded col-2">
     <div class="col-12">
-      <h4>Data Tracks Loaded <span v-if="store.getters.getBackboneDataTracks">({{store.getters.getBackboneDataTracks.length}})</span></h4>
+      <h4>Data Tracks Loaded <span v-if="store.getters.getBackboneDataTracks">({{store.getters.getBackboneDataTracks?.length}})</span></h4>
       <div class="grid unpadded">
         <div v-for="dataTrack, index in store.getters.getBackboneDataTracks" class="col-12" :key="dataTrack.name">
           <div v-if="!showComparativeTracks && !dataTrack.isComparativeView">
@@ -23,7 +23,7 @@
             </div> -->
           </div>   
         </div>
-        <div v-if="store.getters.getBackboneDataTracks.length === 0">
+        <div v-if="store.getters.getBackboneDataTracks == null || store.getters.getBackboneDataTracks.length === 0">
           <p>No Data Tracks Loaded</p>
         </div>
       </div>
@@ -41,7 +41,7 @@ const store = useStore();
 let showComparativeTracks = ref<boolean>(false);
 
 watch(() => store.getters.getSelectedBackboneRegion, (newVal) => {
-  if (newVal && store.getters.getBackboneDataTracks.length)
+  if (newVal && store.getters.getBackboneDataTracks?.length)
   {
     showComparativeTracks.value = true;
   }

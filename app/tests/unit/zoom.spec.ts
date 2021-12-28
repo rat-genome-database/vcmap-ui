@@ -30,6 +30,7 @@ describe('Zoom', () => {
     showOverviewGaps: false,
     showDetailsGaps: false,
     backboneDataTracks: [],
+    configTab: 0
   };
   let getters = {
     getBackboneZoom(state: VCMapState) {

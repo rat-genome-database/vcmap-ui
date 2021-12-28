@@ -31,6 +31,7 @@ describe('OverviewControls', () => {
     showOverviewGaps: false,
     showDetailsGaps: false,
     backboneDataTracks: [],
+    configTab: 0
   };
   let getters = {
     getSpecies(state: VCMapState) {

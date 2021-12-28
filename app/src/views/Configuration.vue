@@ -344,6 +344,8 @@ async function setGeneChromosomeAndDefaultStartAndStopPositions(event: {value: G
 
 async function prepopulateConfigOptions()
 {
+  activeTab.value = store.getters.getConfigTab;
+
   isLoadingSpecies.value = true;
   try
   {
@@ -426,7 +428,8 @@ function saveConfigToStoreAndGoToMainScreen()
   }
   store.dispatch('setComparativeSpeciesOne', comparativeSpeciesOne.value);
   store.dispatch('setComparativeSpeciesTwo', comparativeSpeciesTwo.value);
-
+  store.dispatch('setConfigTab', activeTab.value);
+  
   router.push('/main');
 }
 
