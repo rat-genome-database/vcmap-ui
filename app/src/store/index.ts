@@ -7,6 +7,7 @@ import Gene from '@/models/Gene';
 import BackboneSelection from '@/models/BackboneSelection';
 import DataTrack from '@/models/DataTrack';
 import ViewSize from '@/utils/ViewSize';
+import TooltipData from '@/models/TooltipData';
 
 
 export interface VCMapState
@@ -37,6 +38,8 @@ export interface VCMapState
   showDetailsGaps: boolean;
 
   configTab: number;
+
+  tooltipData: TooltipData | null;
 }
 
 const vuexLocal = new VuexPersistence<VCMapState>({
@@ -70,6 +73,8 @@ export default createStore({
     showDetailsGaps: false,
 
     configTab: 0,
+
+    tooltipData: null,
   }),
 
   mutations: {
@@ -179,6 +184,9 @@ export default createStore({
     configTab(state: VCMapState, tab: number) {
       state.configTab = tab;
     },
+    tooltipData(state: VCMapState, tooltip: TooltipData) {
+      state.tooltipData = tooltip;
+    },
   },
 
   actions: {
@@ -244,6 +252,9 @@ export default createStore({
     setConfigTab(context: ActionContext<VCMapState, VCMapState>, tab: number) {
       context.commit('configTab', tab);
     },
+    setTooltipData(context: ActionContext<VCMapState, VCMapState>, tooltip: TooltipData) {
+      context.commit('tooltipData', tooltip);
+    },
   },
 
   getters: {
@@ -306,6 +317,9 @@ export default createStore({
     },
     getConfigTab(state: VCMapState) {
       return state.configTab;
+    },
+    getTooltipData(state: VCMapState) {
+      return state.tooltipData;
     },
   },
 

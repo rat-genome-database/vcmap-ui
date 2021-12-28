@@ -30,6 +30,7 @@ interface Props
 
 interface Emits
 {
+  // eslint-disable-next-line
   (eventName: 'update:show', value: boolean): void
 }
 
