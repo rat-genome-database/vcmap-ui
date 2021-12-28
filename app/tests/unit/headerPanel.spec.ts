@@ -27,6 +27,7 @@ const mockStore = createStore({
     showOverviewGaps: false,
     showDetailsGaps: false,
     backboneDataTracks: [],
+    configTab: 0
   },
   getters: {
     getSpecies(state: VCMapState) {

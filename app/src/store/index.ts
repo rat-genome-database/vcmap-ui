@@ -37,6 +37,8 @@ export interface VCMapState
 
   showOverviewGaps: boolean;
   showDetailsGaps: boolean;
+
+  configTab: number;
 }
 
 const vuexLocal = new VuexPersistence<VCMapState>({
@@ -69,6 +71,8 @@ export default createStore({
     backboneDataTracks: [],
     showOverviewGaps: false,
     showDetailsGaps: false,
+
+    configTab: 0,
   }),
 
   mutations: {
@@ -158,6 +162,9 @@ export default createStore({
     showDetailsGaps(state: VCMapState, show: boolean) {
       state.showDetailsGaps = show;
     },
+    configTab(state: VCMapState, tab: number) {
+      state.configTab = tab;
+    },
   },
 
   actions: {
@@ -223,6 +230,9 @@ export default createStore({
     setShowDetailsGaps(context: ActionContext<VCMapState, VCMapState>, show: boolean) {
       context.commit('showDetailsGaps', show);
     },
+    setConfigTab(context: ActionContext<VCMapState, VCMapState>, tab: number) {
+      context.commit('configTab', tab);
+    },
   },
 
   getters: {
@@ -285,6 +295,9 @@ export default createStore({
     },
     getShowDetailsGaps(state: VCMapState) {
       return state.showDetailsGaps;
+    },
+    getConfigTab(state: VCMapState) {
+      return state.configTab;
     },
   },
 

@@ -6,7 +6,7 @@
         <div class="col-5">Displaying:</div>
         <div class="col-7 bold">{{comparativeSpecies?.map(s => s.name).join(', ')}}</div>
         <div class="col-5">Synteny Threshold:</div>
-        <div class="col-7 bold">{{syntenyThreshold}}bp</div>
+        <div class="col-7 bold">{{store.getters.getDetailsSyntenyThreshold}}bp</div>
         <div class="col-5">Zoom Level:</div>
         <div class="col-7 bold"><Zoom type="comparative" :min="1" /></div>
         <div class="col-5">Show Gaps:</div>
@@ -47,10 +47,6 @@ const comparativeSpecies = computed(() => {
   }
 
   return species;
-});
-
-const syntenyThreshold = computed(() => {
-  return store.getters.getDetailsSyntenyThreshold;
 });
 
 const changeDetailsGaps = (val: boolean) => {
