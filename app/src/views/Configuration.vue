@@ -38,8 +38,8 @@
                   />
               </div>
             </div>
-            <div class="grid">
-              <div class="lg:col-2 lg:col-offset-3 md:col-4 md:col-offset-1 sm:col-5 sm:col-offset-1">
+            <div class="p-fluid grid">
+              <div class="lg:col-3 lg:col-offset-3 md:col-4 md:col-offset-1 sm:col-5 sm:col-offset-1">
                 <h4 :class="{'config-label': backboneChromosome}">Start Position</h4>
                 <p v-if="backboneChromosome" class="label-description">Min: 0bp</p>
                 <InputNumber
@@ -53,19 +53,21 @@
                   :min="0"
                 />
               </div>
-              <div class="lg:col-3 md:col-5 md:col-offset-1 sm:col-6 sm:col-offset-1">
-                <h4 :class="{'config-label': backboneChromosome}">Stop Position</h4>
-                <p v-if="maxPosition" class="label-description">Max: {{Formatter.addCommasToBasePair(maxPosition)}}bp</p>
-                <InputNumber
-                  class="configuration-input" 
-                  showButtons
-                  v-model="stopPosition"
-                  :disabled="!backboneChromosome"
-                  suffix="bp"
-                  :step="500"
-                  :max="maxPosition"
-                  :min="1"
-                />
+              <div class="lg:col-3 md:col-3 sm:col-5">
+                <div>
+                  <h4 :class="{'config-label': backboneChromosome}">Stop Position</h4>
+                  <p v-if="maxPosition" class="label-description">Max: {{Formatter.addCommasToBasePair(maxPosition)}}bp</p>
+                  <InputNumber
+                    class="configuration-input" 
+                    showButtons
+                    v-model="stopPosition"
+                    :disabled="!backboneChromosome"
+                    suffix="bp"
+                    :step="500"
+                    :max="maxPosition"
+                    :min="1"
+                  />
+                </div>
               </div>
             </div>
             <div class="col-12 text-center">
@@ -78,7 +80,7 @@
               <Message severity="warn" closeable v-if="comparativeSpecies.length >= 3">Selecting 3 or more species might cause display errors</Message>
             </div>
             <div class="grid" v-for="species, index in comparativeSpecies" :key="species">
-              <div class="lg:col-4 lg:col-offset-3 md:col-6 md:col-offset-2 sm:col-8 sm:col-offset-1">
+              <div class="lg:col-5 lg:col-offset-3 md:col-6 md:col-offset-2 sm:col-8 sm:col-offset-1">
                 <Dropdown 
                   label="Comparative Species 2"
                   class="configuration-input" 
@@ -88,8 +90,8 @@
                   optionLabel="name" 
                   />
               </div>
-              <div class="col-1 text-center">
-                <Button @click="removeTempComparativeSpecies(index)" label="Remove" icon="pi pi-minus-circle" class="p-button-sm " />
+              <div class="lg:col-1 md:col-2 sm:col-2">
+                <Button @click="removeTempComparativeSpecies(index)" label="Remove" icon="pi pi-minus-circle" class="p-button-sm p-button-danger" />
               </div>
             </div>
           </div>
@@ -114,8 +116,8 @@
                   placeholder="Backbone Species" />
               </div>
             </div>
-            <div class="grid">
-              <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1 p-fluid">
+            <div class="p-fluid grid">
+              <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
                 <h4>Gene Symbol</h4>
                 <div v-if="isLoadingGene">
                   <ProgressSpinner style="width:50px;height:50px"/>
@@ -133,11 +135,11 @@
               </div>
             </div>
             <div class="grid">
-              <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1 p-fluid">
-                <p class="label-description">Chromosome: {{geneChromosome?.chromosome}} (Length: {{Formatter.addCommasToBasePair(maxPosition)}}bp)</p>
+              <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
+                <p class="label-description">Chromosome: {{geneChromosome?.chromosome}} <span v-if="geneChromosome">(Length: {{Formatter.addCommasToBasePair(maxPosition)}}bp)</span></p>
               </div>
             </div>
-            <div class="grid">
+            <div class="p-fluid grid">
               <div class="lg:col-3 lg:col-offset-3 md:col-4 md:col-offset-1 sm:col-5 sm:col-offset-1">
                 <h4 :class="{'config-label': backboneGene}">Upstream Length</h4>
                 <p v-if="backboneGene" class="label-description">Gene Start: {{Formatter.addCommasToBasePair(backboneGene.start)}}bp</p>
@@ -153,7 +155,7 @@
                   :min="0"
                 />
               </div>
-              <div class="lg:col-3 md:col-3 md:col-offset-1 sm:col-5 sm:col-offset-1">
+              <div class="lg:col-3 md:col-3 sm:col-5">
                 <h4 :class="{'config-label': backboneGene}">Downstream Length</h4>
                 <p v-if="backboneGene" class="label-description">Gene Stop: {{Formatter.addCommasToBasePair(backboneGene.stop)}}bp</p>
                 <InputNumber
@@ -176,7 +178,7 @@
               <Button @click="addTempComparativeSpecies" label="Add Species" icon="pi pi-plus-circle" class="p-button" style="margin-right: .5em"/>
             </div>
             <div class="grid" v-for="species, index in comparativeSpecies" :key="species">
-              <div class="lg:col-4 lg:col-offset-3 md:col-6 md:col-offset-2 sm:col-8 sm:col-offset-1">
+              <div class="lg:col-5 lg:col-offset-3 md:col-6 md:col-offset-2 sm:col-8 sm:col-offset-1">
                 <Dropdown 
                   label="Comparative Species 2"
                   class="configuration-input" 
@@ -186,8 +188,8 @@
                   optionLabel="name" 
                   />
               </div>
-              <div class="col-1 text-center">
-                <Button @click="removeTempComparativeSpecies(index)" label="Remove" icon="pi pi-minus-circle" class="p-button-sm " />
+              <div class="lg:col-1 md:col-2 sm:col-2">
+                <Button @click="removeTempComparativeSpecies(index)" label="Remove" icon="pi pi-minus-circle" class="p-button-sm p-button-danger" />
               </div>
             </div>
           </div>
