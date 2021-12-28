@@ -1,5 +1,6 @@
 <template>
   <rect v-if="props.tooltipData"
+    data-test="tooltip-data-svg"
     fill="bisque"
     stroke="black"
     stroke-width="0.5"
@@ -7,9 +8,9 @@
     :width="width"
     :height="DEFAULT_HEIGHT" />
   <template v-if="props.tooltipData?.genomicSection">
-    <text class="label small" :x="xPos + 2" :y="props.tooltipData.y + 10">Chromosome: {{props.tooltipData.genomicSection.chromosome}}</text>
-    <text class="label small" :x="xPos + 2" :y="props.tooltipData.y + 20">Region: {{props.tooltipData.genomicSection.startBPLabel}} - {{props.tooltipData.genomicSection.stopBPLabel}}</text>
-    <text v-if="props.tooltipData.genomicSection.gene" class="label small" :x="xPos + 2" :y="props.tooltipData.y + 30">Gene: {{props.tooltipData.genomicSection.gene}}</text>
+    <text data-test="chromosome-name" class="label small" :x="xPos + 2" :y="props.tooltipData.y + 10">Chromosome: {{props.tooltipData.genomicSection.chromosome}}</text>
+    <text data-test="start-stop" class="label small" :x="xPos + 2" :y="props.tooltipData.y + 20">Region: {{props.tooltipData.genomicSection.startBPLabel}} - {{props.tooltipData.genomicSection.stopBPLabel}}</text>
+    <text v-if="props.tooltipData.genomicSection.gene" data-test="gene-name" class="label small" :x="xPos + 2" :y="props.tooltipData.y + 30">Gene: {{props.tooltipData.genomicSection.gene}}</text>
   </template>
 </template>
 

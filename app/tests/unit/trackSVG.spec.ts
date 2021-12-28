@@ -20,8 +20,7 @@ describe('TrackSVG', () => {
     startPos: null,
     stopPos: null,
     gene: null,
-    comparativeSpeciesOne: null,
-    comparativeSpeciesTwo: null,
+    comparativeSpecies: [],
     selectedBackboneRegion: null,
     backboneZoom: 1,
     comparativeZoom: 1,
@@ -34,7 +33,8 @@ describe('TrackSVG', () => {
     showOverviewGaps: false,
     showDetailsGaps: false,
     backboneDataTracks: [],
-    configTab: 0
+    configTab: 0,
+    tooltipData: null,
   };
   let getters = {
     getSelectedBackboneRegion(state: VCMapState) {
