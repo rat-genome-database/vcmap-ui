@@ -459,6 +459,7 @@ const createBackboneDataTracks =  async (startPos: number, stopPos: number, base
 
   let tempGeneTracks: Gene[] = [];
 
+  isLoading.value = true;
   try
   {
     tempGeneTracks = await SpeciesApi.getGenesByRegion(backboneChr.chromosome, startPos, stopPos, backboneSpecies.defaultMapKey);
@@ -518,6 +519,10 @@ const createBackboneDataTracks =  async (startPos: number, stopPos: number, base
   catch (err)
   {
     onError(err, 'An error occurred while attempting to load the genes data track for the backbone species');
+  }
+  finally
+  {
+    isLoading.value = false;
   }
 };
 
