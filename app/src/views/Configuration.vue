@@ -15,10 +15,10 @@
               <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
                 <h4>Backbone Species</h4>
                 <Dropdown 
-                  v-model="selectedSpecies" 
+                  v-model="backboneSpecies" 
                   :options="speciesOptions" 
                   :loading="isLoadingSpecies"
-                  @change="onSpeciesChange"
+                  @change="setChromosomeOptions"
                   optionLabel="name" 
                   placeholder="Backbone Species" />
               </div>
@@ -29,8 +29,8 @@
                 <h4>Chromosome</h4>
                 <Dropdown 
                   class="configuration-input"
-                  @change="updateStoreChromosome" 
-                  v-model="selectedChromosome"
+                  @change="setDefaultStartAndStopPositions" 
+                  v-model="backboneChromosome"
                   :disabled = "!chromosomeOptions.length"
                   :options="chromosomeOptions"
                   :loading="isLoadingChromosome"
@@ -40,28 +40,27 @@
             </div>
             <div class="grid">
               <div class="lg:col-2 lg:col-offset-3 md:col-4 md:col-offset-1 sm:col-5 sm:col-offset-1">
-                <h4>Start Position</h4>
+                <h4 class="config-label">Start Position</h4>
+                <p class="label-description">Min: 0bp</p>
                 <InputNumber
                   class="configuration-input"
                   showButtons
-                  @input="updateStoreStartPosition" 
                   v-model="startPosition"
-                  :disabled="!selectedChromosome"
+                  :disabled="!backboneChromosome"
                   suffix="bp"
                   :step="500"
                   :max="(maxPosition != null) ? maxPosition - 1 : 1"
-                  :min="1"
+                  :min="0"
                 />
               </div>
               <div class="lg:col-3 md:col-5 md:col-offset-1 sm:col-6 sm:col-offset-1">
-                <h4 v-if="maxPosition">Stop Position {{ '(' + maxPosition + ' max)'}}</h4>
-                <h4 v-else>Stop Position</h4>
+                <h4 class="config-label">Stop Position</h4>
+                <p v-if="maxPosition" class="label-description">Max: {{Formatter.addCommasToBasePair(maxPosition)}}bp</p>
                 <InputNumber
                   class="configuration-input" 
                   showButtons
-                  @input="updateStoreStopPosition"
                   v-model="stopPosition"
-                  :disabled="!selectedChromosome"
+                  :disabled="!backboneChromosome"
                   suffix="bp"
                   :step="500"
                   :max="maxPosition"
@@ -77,7 +76,6 @@
                 <Dropdown 
                   label="Comparative Species 1"
                   class="configuration-input" 
-                  @change="updateStoreComparativeSpeciesOne"
                   v-model="comparativeSpeciesOne" 
                   :loading="isLoadingSpecies"
                   :options="speciesOptions"
@@ -89,8 +87,7 @@
               <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
                 <Dropdown 
                   label="Comparative Species 2"
-                  class="configuration-input" 
-                  @change="updateStoreComparativeSpeciesTwo"
+                  class="configuration-input"
                   v-model="comparativeSpeciesTwo" 
                   :loading="isLoadingSpecies"
                   :options="speciesOptions"
@@ -98,7 +95,6 @@
                   />
               </div>
             </div>
-            
           </div>
         </div>
       </TabPanel>
@@ -113,10 +109,10 @@
               <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1 ">
                 <h4>Backbone Species</h4>
                 <Dropdown 
-                  v-model="selectedSpecies" 
+                  v-model="backboneSpecies" 
                   :options="speciesOptions" 
                   :loading="isLoadingSpecies"
-                  @change="onSpeciesChange"
+                  @change="setChromosomeOptions"
                   optionLabel="name" 
                   placeholder="Backbone Species" />
               </div>
@@ -129,42 +125,45 @@
                 </div>
                 <AutoComplete
                   class="configuration-input"
-                  v-model="selectedGene"
+                  v-model="backboneGene"
                   :suggestions="geneSuggestions"
-                  :disabled="!selectedSpecies"
+                  :disabled="!backboneSpecies"
                   @complete="searchGene($event)"
-                  @item-select="updateStoreGene"
+                  @item-select="setGeneChromosomeAndDefaultStartAndStopPositions"
                   field="symbol"
                   :minLength="3"
                 />
               </div>
             </div>
             <div class="grid">
+              <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1 p-fluid">
+                <p class="label-description">Chromosome: {{geneChromosome?.chromosome}} (Length: {{Formatter.addCommasToBasePair(maxPosition)}}bp)</p>
+              </div>
+            </div>
+            <div class="grid">
               <div class="lg:col-3 lg:col-offset-3 md:col-4 md:col-offset-1 sm:col-5 sm:col-offset-1">
-                <h4 v-if="selectedGene">Upstream Length {{ '(Gene Start: ' + selectedGene.start + ')' }}</h4>
-                <h4 v-else>Upstream Length</h4>
+                <h4 class="config-label">Upstream Length</h4>
+                <p v-if="backboneGene" class="label-description">Gene Start: {{Formatter.addCommasToBasePair(backboneGene.start)}}bp</p>
                 <InputNumber
                   class="configuration-input"
                   showButtons
-                  @input="updateStoreStartUpstream" 
-                  v-model="startPosition"
-                  :disabled="!selectedChromosome"
+                  v-model="geneOptionStartPosition"
+                  :disabled="!geneChromosome"
                   required
                   suffix="bp"
                   :step="500"
                   :max="(maxPosition != null) ? maxPosition - 1 : 1"
-                  :min="1"
+                  :min="0"
                 />
               </div>
               <div class="lg:col-3 md:col-3 md:col-offset-1 sm:col-5 sm:col-offset-1">
-                <h4 v-if="selectedGene">Downstream Length {{ '(Gene Stop: ' + selectedGene.stop + ')' }}</h4>
-                <h4 v-else>Downstream Length</h4>
+                <h4 class="config-label">Downstream Length</h4>
+                <p v-if="backboneGene" class="label-description">Gene Stop: {{Formatter.addCommasToBasePair(backboneGene.stop)}}bp</p>
                 <InputNumber
                   class="configuration-input" 
                   showButtons
-                  @input="updateStoreStopDownstream"
-                  v-model="stopPosition"
-                  :disabled="!selectedChromosome"
+                  v-model="geneOptionStopPosition"
+                  :disabled="!geneChromosome"
                   required
                   suffix="bp"
                   :step="500"
@@ -180,8 +179,7 @@
               <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
                 <Dropdown 
                   label="Comparative Species 1"
-                  class="configuration-input" 
-                  @change="updateStoreComparativeSpeciesOne"
+                  class="configuration-input"
                   v-model="comparativeSpeciesOne" 
                   :loading="isLoadingSpecies"
                   :options="speciesOptions"
@@ -193,8 +191,7 @@
               <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
                 <Dropdown 
                   label="Comparative Species 2"
-                  class="configuration-input" 
-                  @change="updateStoreComparativeSpeciesTwo"
+                  class="configuration-input"
                   v-model="comparativeSpeciesTwo" 
                   :loading="isLoadingSpecies"
                   :options="speciesOptions"
@@ -208,14 +205,14 @@
     </TabView>
     <div class="grid">
       <div class="col-12 text-center">
-        <Button @click="goToMainScreen" label="Load VCMap" icon="pi pi-play" class="p-button-lg" />
+        <Button @click="saveConfigToStoreAndGoToMainScreen" label="Load VCMap" icon="pi pi-play" class="p-button-lg" />
       </div>
     </div>
   </div>
 </template>
 
-<script lang="ts" setup>
-import { ref, onMounted, watch } from 'vue';
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
 import SpeciesApi from '@/api/SpeciesApi';
 import Species from '@/models/Species';
 import Gene from '@/models/Gene';
@@ -224,89 +221,53 @@ import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import { VERSION } from '@/version';
 import { AxiosError } from 'axios';
+import { Formatter } from '@/utils/Formatter';
+
+const router = useRouter();
+const store = useStore();
 
 const TABS = {
   POSITION: 0,
   GENE: 1
 };
 
-const router = useRouter();
-const store = useStore();
+const activeTab = ref(TABS.POSITION);
 
-let speciesOptions = ref<Species[]>([]);
-let selectedSpecies = ref<Species | null>(null);
-let isLoadingSpecies = ref(false);
+const speciesOptions = ref<Species[]>([]);
+const backboneSpecies = ref<Species | null>(null);
+const isLoadingSpecies = ref(false);
 
-let geneSuggestions = ref<Gene[]>([]);
-let selectedGene = ref<Gene | null>(null);
-let isLoadingGene = ref(false);
+const geneSuggestions = ref<Gene[]>([]);
+const backboneGene = ref<Gene | null>(null);
+const geneChromosome = ref<Chromosome | null>(null);
+const isLoadingGene = ref(false);
+const geneOptionStartPosition = ref<number | null>(0);
+const geneOptionStopPosition = ref<number | null>(0);
 
-let chromosomeOptions = ref<Chromosome[]>([]);
-let selectedChromosome = ref<Chromosome | null>();
-let isLoadingChromosome = ref(false);
+const chromosomeOptions = ref<Chromosome[]>([]);
+const backboneChromosome = ref<Chromosome | null>(null);
+const isLoadingChromosome = ref(false);
 
-let startPosition = ref<Number | null>();
-let stopPosition = ref<Number | null>();
-let maxPosition = ref<number | null>();
+const startPosition = ref<number | null>(null);
+const stopPosition = ref<number | null>(null);
+const maxPosition = ref<number | null>(null);
 
-let comparativeSpeciesOne = ref<Species>();
-let comparativeSpeciesTwo = ref<Species>();
-
-let activeTab = ref(TABS.POSITION);
+const comparativeSpeciesOne = ref<Species | null>(null);
+const comparativeSpeciesTwo = ref<Species | null>(null);
 
 onMounted(prepopulateConfigOptions);
-watch(() => store.getters.getGene, onGeneChange);
-watch(() => store.getters.getChromosome, resetChromosomeStartAndStop);
 
-
-// Methods
-const goToMainScreen = () => {
-  router.push('/main');
-}
-
-const updateStoreChromosome = (event: any) => {
-  console.log('update chromosome called')
-  store.dispatch('setChromosome', event.value);
-};
-
-const updateStoreStartPosition = (event: any) => {
-  store.dispatch('setStartPosition', event.value);
-};
-
-const updateStoreStopPosition = (event: any) => {
-  store.dispatch('setStopPosition', event.value);
-};
-
-const updateStoreStartUpstream = (event: any) => {
-  let start = parseInt(selectedGene.value.start) - parseInt(event.value);
-  start <= 0 ? start = 1 : start;
-  store.dispatch('setStartPosition', start);
-};
-
-const updateStoreStopDownstream = (event: any) => {
-  let stop = parseInt(selectedGene.value.stop) + parseInt(event.value);
-  stop > maxPosition.value ? stop = maxPosition.value : stop;
-  store.dispatch('setStopPosition', stop);
-};
-
-const updateStoreGene = (event: any) => {
-  store.dispatch('setGene', event.value);
-};
-
-const updateStoreComparativeSpeciesOne = (event: any) => {
-  store.dispatch('setComparativeSpeciesOne', event.value);
-};
-
-const updateStoreComparativeSpeciesTwo = (event: any) => {
-  store.dispatch('setComparativeSpeciesTwo', event.value);
-};
-
-async function searchGene(event: any)
+async function searchGene(event: {query: string})
 {
+  if (backboneSpecies.value == null)
+  {
+    return;
+  }
+
   isLoadingGene.value = true;
   try
   {
-    const matches = await SpeciesApi.getGenesBySymbol(store.getters.getSpecies.defaultMapKey, event.query);
+    const matches = await SpeciesApi.getGenesBySymbol(backboneSpecies.value.defaultMapKey, event.query);
     geneSuggestions.value = matches;
   }
   catch (err: any)
@@ -319,84 +280,70 @@ async function searchGene(event: any)
   }
 }
 
-async function onSpeciesChange(changeEvent: any)
+async function setChromosomeOptions(event: {value: Species | null})
 {
-  store.dispatch('setSpecies', changeEvent.value);
-
-  isLoadingChromosome.value = true;
-  try
-  {
-    store.dispatch('setGene', null);
-    store.dispatch('setChromosome', null);
-    store.dispatch('setStartPosition', null);
-    store.dispatch('setStopPosition', null);
-
-    chromosomeOptions.value = [];
-    selectedChromosome.value = null;
-    startPosition.value = null;
-    stopPosition.value = null;
-    maxPosition.value = null;
-
-    if (activeTab.value === TABS.POSITION)
-    {
-      selectedSpecies.value = store.getters.getSpecies;
-      const chromosomes = await SpeciesApi.getChromosomes(store.getters.getSpecies.defaultMapKey);
-      chromosomeOptions.value = chromosomes;
-    }
-  }
-  catch (err: any)
-  {
-    onNetworkError(err);
-  }
-  finally
-  {
-    isLoadingChromosome.value = false;
-  }
-}
-
-async function onGeneChange(gene: Gene)
-{
-  isLoadingChromosome.value = true;
-  try
-  {
-    store.dispatch('setChromosome', null);
-    store.dispatch('setStartPosition', null);
-    store.dispatch('setStopPosition', null);
-
-    startPosition.value = null;
-    stopPosition.value = null;
-    maxPosition.value = null;
-
-    selectedGene.value = store.getters.getGene;
-
-    const chrInfo = await SpeciesApi.getChromosomeInfo(gene.chromosome, store.getters.getSpecies.defaultMapKey);
-    store.dispatch('setChromosome', chrInfo);
-    selectedChromosome.value = store.getters.getChromosome; 
-  }
-  catch (err: any)
-  {
-    onNetworkError(err);
-  }
-  finally
-  {
-    isLoadingChromosome.value = false;
-  }
-}
-
-function resetChromosomeStartAndStop()
-{
-  store.dispatch('setStartPosition', null);
-  store.dispatch('setStopPosition', null);
-
+  chromosomeOptions.value = [];
+  backboneChromosome.value = null;
   startPosition.value = null;
   stopPosition.value = null;
-  selectedChromosome.value = store.getters.getChromosome;
-  maxPosition.value = store.getters.getChromosome?.seqLength; 
+  maxPosition.value = null;
+
+  if (event.value == null)
+  {
+    return;
+  }
+
+  isLoadingChromosome.value = true;
+  try
+  {
+    const chromosomes = await SpeciesApi.getChromosomes(event.value.defaultMapKey);
+    chromosomeOptions.value = chromosomes;
+  }
+  catch (err: any)
+  {
+    onNetworkError(err);
+  }
+  finally
+  {
+    isLoadingChromosome.value = false;
+  }
+}
+
+// Maybe there is a better way to do this? Based on the v-model this event can either be a Chromosome or null, so need to cast here
+function setDefaultStartAndStopPositions(event: {value: Chromosome | null})
+{
+  const chromosome = event.value;
+  startPosition.value = 0;
+  stopPosition.value = chromosome?.seqLength ?? 0;
+  maxPosition.value = backboneChromosome.value?.seqLength ?? null;
+}
+
+async function setGeneChromosomeAndDefaultStartAndStopPositions(event: {value: Gene | null})
+{
+  const gene = event.value;
+  if (gene != null && backboneSpecies.value != null)
+  {
+    isLoadingChromosome.value = true;
+    try
+    {
+      geneChromosome.value = await SpeciesApi.getChromosomeInfo(gene.chromosome, backboneSpecies.value.defaultMapKey);
+    }
+    catch (err: any)
+    {
+      onNetworkError(err);
+    }
+    finally
+    {
+      isLoadingChromosome.value = false;
+    }
+  }
+
+  geneOptionStartPosition.value = gene?.start ?? 0;
+  geneOptionStopPosition.value = gene?.stop ?? 0;
 }
 
 async function prepopulateConfigOptions()
 {
-  console.log('mounted');
   isLoadingSpecies.value = true;
   try
   {
@@ -413,7 +360,7 @@ async function prepopulateConfigOptions()
   
   if (store.getters.getSpecies)
   {
-    selectedSpecies.value = store.getters.getSpecies;
+    backboneSpecies.value = store.getters.getSpecies;
     
     isLoadingChromosome.value = true;
     try
@@ -422,7 +369,7 @@ async function prepopulateConfigOptions()
     }
     catch (err: any)
     {
-     onNetworkError(err);
+      onNetworkError(err);
     }
     finally
     {
@@ -430,26 +377,57 @@ async function prepopulateConfigOptions()
     }
   }
 
-  selectedGene.value = store.getters.getGene;
-  if (store.getters.getGene && !store.getters.getChromosome)
+  if (store.getters.getChromosome)
   {
-    // If chromosome not present in the store, set it based on the gene
-    let chrInfo = await SpeciesApi.getChromosomeInfo(store.getters.getGene.chromosome, store.getters.getSpecies.defaultMapKey);
-    store.dispatch('setChromosome', chrInfo);
-    selectedChromosome.value = store.getters.getChromosome;
-  }
-  else
-  {
-    // Chromosome data exists on the store
-    selectedChromosome.value = store.getters.getChromosome;
+    backboneChromosome.value = store.getters.getChromosome;
     maxPosition.value = store.getters.getChromosome?.seqLength;
     startPosition.value = store.getters.getStartPosition ?? 0;
     stopPosition.value = store.getters.getStopPosition ?? 0;
+  }
+
+  if (store.getters.getGene)
+  {
+    backboneGene.value = store.getters.getGene;
+    geneOptionStartPosition.value = store.getters.getStartPosition ?? 0;
+    geneOptionStopPosition.value = store.getters.getStopPosition ?? 0;
+    if (!store.getters.getChromosome)
+    {
+      // If chromosome not present in the store, set it based on the gene
+      const chromosome = await SpeciesApi.getChromosomeInfo(store.getters.getGene.chromosome, store.getters.getSpecies.defaultMapKey);
+      backboneChromosome.value = chromosome;
+    }
+    geneChromosome.value = backboneChromosome.value;
   }
   
   // Pre-populate previously selected comparative species
   comparativeSpeciesOne.value = store.getters.getComparativeSpeciesOne;
   comparativeSpeciesTwo.value = store.getters.getComparativeSpeciesTwo;
+}
+
+function saveConfigToStoreAndGoToMainScreen()
+{
+  store.dispatch('setSpecies', backboneSpecies.value);
+  if (activeTab.value === TABS.GENE)
+  {
+    store.dispatch('setGene', backboneGene.value);
+    store.dispatch('setChromosome', geneChromosome.value);
+    store.dispatch('setStartPosition', geneOptionStartPosition.value);
+    store.dispatch('setStopPosition', geneOptionStopPosition.value);
+  }
+  else if (activeTab.value === TABS.POSITION)
+  {
+    store.dispatch('setChromosome', backboneChromosome.value);
+    store.dispatch('setStartPosition', startPosition.value);
+    store.dispatch('setStopPosition', stopPosition.value);
+  }
+  else
+  {
+    console.warn('Unknown active tab. State may not be set correctly.');
+  }
+  store.dispatch('setComparativeSpeciesOne', comparativeSpeciesOne.value);
+  store.dispatch('setComparativeSpeciesTwo', comparativeSpeciesTwo.value);
+
+  router.push('/main');
 }
 
 function onNetworkError(err: AxiosError)
@@ -477,5 +455,16 @@ function onNetworkError(err: AxiosError)
   {
     margin-left: 2rem;
   }
+}
+
+p.label-description
+{
+  margin: 0 0 0.5rem 0;
+  font-style: italic;
+}
+
+.config-label
+{
+  margin-bottom: 0;
 }
 </style>
