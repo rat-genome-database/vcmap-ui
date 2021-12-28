@@ -474,7 +474,7 @@ const createBackboneDataTracks =  async (startPos: number, stopPos: number, base
   
     for (let gene of tempGeneTracks)
     {
-      let threshold = store.getters.getOverviewSyntenyThreshold * GENES_DATA_TRACK_THRESHOLD_MULTIPLIER;
+      let threshold = (isComparative) ? (store.getters.getDetailsSyntenyThreshold * GENES_DATA_TRACK_THRESHOLD_MULTIPLIER) : store.getters.getOverviewSyntenyThreshold * GENES_DATA_TRACK_THRESHOLD_MULTIPLIER;
       let geneSize = gene.stop - gene.start;
       if ( geneSize < threshold)
       {
