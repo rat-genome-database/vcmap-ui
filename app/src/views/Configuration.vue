@@ -247,14 +247,13 @@ const isLoadingChromosome = ref(false);
 const startPosition = ref<number | null>(null);
 const stopPosition = ref<number | null>(null);
 const maxPosition = ref<number | null>(null);
-
+//numbers represent placeholder values until a species is selected.  On submit all nonSpecies values are removed
 let comparativeSpecies = ref<Species[] | Number[]>([]);
-let active = ref(0);
 
 onMounted(prepopulateConfigOptions);
 
 const isValidConfig = computed(() => {
-  const isCommonConfigValid = backboneSpecies.value && comparativeSpeciesOne.value && comparativeSpeciesTwo.value;
+  const isCommonConfigValid = backboneSpecies.value && comparativeSpecies.value.length > 0;
   if (!isCommonConfigValid)
   {
     return false;
@@ -438,15 +437,7 @@ function saveConfigToStoreAndGoToMainScreen()
   {
     console.warn('Unknown active tab. State may not be set correctly.');
   }
-  store.dispatch('setComparativeSpeciesOne', comparativeSpeciesOne.value);
-  store.dispatch('setComparativeSpeciesTwo', comparativeSpeciesTwo.value);
-  store.dispatch('setConfigTab', activeTab.value);
 
-  router.push('/main');
-}
-
-// Methods
-const goToMainScreen = () => {
   for (let index = 0; index < comparativeSpecies.value.length; index++)
   {
     if (typeof comparativeSpecies.value[index] === 'number')
@@ -455,11 +446,11 @@ const goToMainScreen = () => {
       index--;
     }
   }
-
   store.commit('comparativeSpecies', comparativeSpecies.value);
-  router.push('/main');
-};
+  store.dispatch('setConfigTab', activeTab.value);
 
+  router.push('/main');
+}
 
 function onNetworkError(err: AxiosError)
 {

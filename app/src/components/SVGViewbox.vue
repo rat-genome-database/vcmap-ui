@@ -203,7 +203,6 @@ const updateOverviewPanel = async () => {
       store.getters.getShowOverviewGaps,
       store.getters.getOverviewSyntenyThreshold
     );
-    console.log(comparativeTracks.value);
   }
   else
   {
