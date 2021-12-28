@@ -267,11 +267,11 @@ const isValidConfig = computed(() => {
 
   if (activeTab.value === TABS.POSITION)
   {
-    return backboneChromosome.value && startPosition.value != null && stopPosition.value != null;
+    return backboneChromosome.value;
   }
   else if (activeTab.value === TABS.GENE)
   {
-    return geneChromosome.value && geneOptionStartPosition.value != null && geneOptionStopPosition.value != null;
+    return geneChromosome.value;
   }
 
   return false;
@@ -430,14 +430,14 @@ function saveConfigToStoreAndGoToMainScreen()
   {
     store.dispatch('setGene', backboneGene.value);
     store.dispatch('setChromosome', geneChromosome.value);
-    store.dispatch('setStartPosition', geneOptionStartPosition.value);
-    store.dispatch('setStopPosition', geneOptionStopPosition.value);
+    store.dispatch('setStartPosition', geneOptionStartPosition.value ?? backboneGene.value?.start);
+    store.dispatch('setStopPosition', geneOptionStopPosition.value ?? backboneGene.value?.stop);
   }
   else if (activeTab.value === TABS.POSITION)
   {
     store.dispatch('setChromosome', backboneChromosome.value);
-    store.dispatch('setStartPosition', startPosition.value);
-    store.dispatch('setStopPosition', stopPosition.value);
+    store.dispatch('setStartPosition', startPosition.value ?? 0);
+    store.dispatch('setStopPosition', stopPosition.value ?? backboneChromosome.value?.seqLength);
   }
   else
   {
