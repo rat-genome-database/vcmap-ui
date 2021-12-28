@@ -229,13 +229,13 @@ export default createStore({
     },
     setBackboneResolution(context: ActionContext<VCMapState, VCMapState>, backboneLength: number) {
       context.commit('backboneBasePairToHeightRatio', backboneLength / (ViewSize.viewboxHeight - 100));
-      // Note: Dividing by 10,000 is arbitary when calculating synteny threshold
-      context.commit('overviewSyntenyThreshold', (backboneLength > 1000000) ? Math.floor((backboneLength) / 10000) : 0);
+      // Note: Dividing by 8,000 is arbitary when calculating synteny threshold
+      context.commit('overviewSyntenyThreshold', (backboneLength > 1000000) ? Math.floor((backboneLength) / 8000) : 0);
     },
     setComparativeResolution(context: ActionContext<VCMapState, VCMapState>, backboneLength: number) {
       context.commit('comparativeBasePairToHeightRatio', backboneLength / (ViewSize.viewboxHeight - 100));
-      // Note: Dividing by 10,000 is arbitary when calculating synteny threshold
-      context.commit('detailsSyntenyThreshold', (backboneLength > 1000000) ? Math.floor((backboneLength) / 10000) : 0);
+      // Note: Dividing by 8,000 is arbitary when calculating synteny threshold
+      context.commit('detailsSyntenyThreshold', (backboneLength > 1000000) ? Math.floor((backboneLength) / 8000) : 0);
     },
     resetComparativeSpecies(context: ActionContext<VCMapState, VCMapState>) {
       context.commit('comparativeSpecies', []);

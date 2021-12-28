@@ -71,7 +71,7 @@ import DataTrack from '@/models/DataTrack';
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import TooltipSVG from './TooltipSVG.vue';
 
-const GENES_DATA_TRACK_THRESHOLD_MULTIPLIER = 3;
+const GENES_DATA_TRACK_THRESHOLD_MULTIPLIER = 4;
 const GAPS_THRESHOLD_MULTIPLIER = 10;
 
 const store = useStore();
