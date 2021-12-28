@@ -1,6 +1,7 @@
 <template>
   <ProgressBar class="vcmap-loader" :mode="(isLoading) ? 'indeterminate' : 'determinate'" :value="0" :showValue="false"/>
   <svg :viewBox="'0 0 1000 ' + ViewSize.viewboxHeight" xmlns="http://www.w3.org/2000/svg">
+
     <!-- Outside panel -->
     <rect class="panel" x="0" width="1000" :height="ViewSize.viewboxHeight" />
     <!-- Inner panels -->
@@ -19,13 +20,13 @@
     <!-- backbone data tracks -->
     <template v-for="(dataTrack, index) in drawnOverviewTracks" :key="dataTrack">
       <text v-if="dataTrack.type === 'dataTrack' && !dataTrack.isComparative" class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{dataTrack.trackType}}</text>
-      <TrackSVG v-if="dataTrack.type === 'dataTrack' && !dataTrack.isComparative" show-chromosome :pos-x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="dataTrack.track as Track" />
+      <TrackSVG v-if="dataTrack.type === 'dataTrack' && !dataTrack.isComparative" show-data-on-hover show-chromosome :pos-x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="dataTrack.track as Track" />
     </template>
 
     <!-- Comparative species synteny tracks -->
     <template v-for="(track, index) in drawnOverviewTracks" :key="track">
       <text v-if="track.type === 'track'" class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{track.name}}</text>
-      <TrackSVG v-if="track.type === 'track'" is-highlightable show-chromosome :pos-x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="track.track as Track" />
+      <TrackSVG v-if="track.type === 'track'" show-data-on-hover show-chromosome :pos-x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="track.track as Track" />
     </template>
 
     <!-- Comparative panel SVGs ----------------------------------------->
@@ -36,20 +37,22 @@
     <!-- comparative backbone data tracks -->
     <template v-for="(dataTrack, index) in drawnDetailsTracks" :key="dataTrack">
       <text v-if="dataTrack.type === 'dataTrack'  && dataTrack.isComparative" class="label small" :x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :y="ViewSize.trackLabelYPosition">{{dataTrack.trackType}}</text>
-      <TrackSVG v-if="dataTrack.type === 'dataTrack'  && dataTrack.isComparative" show-chromosome :pos-x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="dataTrack.track as Track" />
+      <TrackSVG v-if="dataTrack.type === 'dataTrack'  && dataTrack.isComparative" show-start-stop show-data-on-hover show-chromosome :pos-x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="dataTrack.track as Track" />
     </template>
 
     <!-- Comparative species (selected region) synteny tracks -->
     <template v-for="(track, index) in drawnDetailsTracks" :key="track">
       <text v-if="track.type === 'track'" class="label small" :x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :y="ViewSize.trackLabelYPosition">{{track.name}}</text>
-      <TrackSVG v-if="track.type === 'track'" is-highlightable show-start-stop show-chromosome :pos-x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="track.track as Track" />
+      <TrackSVG v-if="track.type === 'track'" show-data-on-hover show-start-stop show-chromosome :pos-x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="track.track as Track" />
     </template>
+
+    <TooltipSVG :tooltip-data="store.getters.getTooltipData"/>
   </svg>
 
   <VCMapDialog v-model:show="showDialog" :header="dialogHeader" :message="dialogMessage" />
 </template>
 
-<script lang="ts" setup>
+<script setup lang="ts" >
 import Species from '@/models/Species';
 import TrackSection from '@/models/TrackSection';
 import Track from '@/models/Track';
@@ -66,8 +69,9 @@ import ViewSize from '@/utils/ViewSize';
 import BackboneSelection from '@/models/BackboneSelection';
 import DataTrack from '@/models/DataTrack';
 import VCMapDialog from '@/components/VCMapDialog.vue';
+import TooltipSVG from './TooltipSVG.vue';
 
-const GENES_DATA_TRACK_THRESHOLD_MULTIPLIER = 3;
+const GENES_DATA_TRACK_THRESHOLD_MULTIPLIER = 4;
 const GAPS_THRESHOLD_MULTIPLIER = 10;
 
 const store = useStore();
@@ -94,6 +98,7 @@ const dialogMessage = ref('');
  */
 onMounted(() => {
   // Clear any prior selections
+  store.dispatch('setTooltipData', null);
   store.dispatch('setSelectedBackboneRegion', null);
   store.dispatch('resetBackboneDataTracks');
 
@@ -469,7 +474,7 @@ const createBackboneDataTracks =  async (startPos: number, stopPos: number, base
   
     for (let gene of tempGeneTracks)
     {
-      let threshold = store.getters.getOverviewSyntenyThreshold * GENES_DATA_TRACK_THRESHOLD_MULTIPLIER;
+      let threshold = (isComparative) ? (store.getters.getDetailsSyntenyThreshold * GENES_DATA_TRACK_THRESHOLD_MULTIPLIER) : store.getters.getOverviewSyntenyThreshold * GENES_DATA_TRACK_THRESHOLD_MULTIPLIER;
       let geneSize = gene.stop - gene.start;
       if ( geneSize < threshold)
       {
@@ -492,7 +497,8 @@ const createBackboneDataTracks =  async (startPos: number, stopPos: number, base
             cutoff: stopPos, 
             offsetCount: gene.start - previousBlockBackboneStop,
             basePairToHeightRatio: basePairToHeightRatio,
-            shape: 'rect'
+            shape: 'rect',
+            gene: gene.name
           });
 
           sections.push(trackSection);
@@ -772,21 +778,6 @@ rect.panel
   fill: white;
   stroke-width: 2;
   stroke: lightgray;
-}
-
-.label.small
-{
-  font: normal 8px sans-serif;
-}
-
-.label.medium
-{
-  font: normal 11px sans-serif;
-}
-
-.label.bold
-{
-  font-style: bold;
 }
 
 .vcmap-loader.p-progressbar

@@ -13,8 +13,7 @@ const mockStore = createStore({
     startPos: null,
     stopPos: null,
     gene: null,
-    comparativeSpeciesOne: new Species({ typeKey: 2, name: 'Test Species 2', defaultMapKey: 2 }),
-    comparativeSpeciesTwo: new Species({ typeKey: 3, name: 'Test Species 3', defaultMapKey: 3 }),
+    comparativeSpecies: [new Species({ typeKey: 2, name: 'Test Species 2', defaultMapKey: 2 }), new Species({ typeKey: 3, name: 'Test Species 3', defaultMapKey: 3 })],
     selectedBackboneRegion: null,
     backboneZoom: 1,
     comparativeZoom: 1,
@@ -27,17 +26,15 @@ const mockStore = createStore({
     showOverviewGaps: false,
     showDetailsGaps: false,
     backboneDataTracks: [],
-    configTab: 0
+    configTab: 0,
+    tooltipData: null,
   },
   getters: {
     getSpecies(state: VCMapState) {
       return state.species;
     },
-    getComparativeSpeciesOne(state: VCMapState) {
-      return state.comparativeSpeciesOne;
-    },
-    getComparativeSpeciesTwo(state: VCMapState) {
-      return state.comparativeSpeciesTwo;
+    getComparativeSpecies(state: VCMapState) {
+      return state.comparativeSpecies;
     }
   }
 });

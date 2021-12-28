@@ -39,4 +39,19 @@
     font-weight: bold;
   }
 }
+
+.label.small
+{
+  font: normal 8px sans-serif;
+}
+
+.label.medium
+{
+  font: normal 11px sans-serif;
+}
+
+.label.bold
+{
+  font-style: bold;
+}
 </style>

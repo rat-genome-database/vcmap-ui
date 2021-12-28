@@ -11,8 +11,8 @@
   </defs>
 
   <template v-for="(section, index) in track.sections" :key="index">
-    <!-- Start BP label -->
-    <text v-if="showStartStop" 
+    <!-- Start BP label: Only show if there is enough of an offset b/w this section and the previous section-->
+    <text v-if="showStartStop && (section.offsetHeight > 10 || index === 0)" 
       data-test="start-bp-label"
       class="label small" 
       :x="posX + width" 
@@ -25,11 +25,11 @@
       data-test="track-section-svg"
       class="section"
       :class="{'selectable': isSelectable}"
-      @mouseenter="highlight(section)"
-      @mouseleave="unhighlight(section)"
+      @mouseenter="showTooltipData($event, section)"
+      @mouseleave="hideTooltipData(section)"
       @mousedown="initSelectStart($event, section, index)"
       @mousemove="updateSelectionHeight"
-      :fill="section.isHighlighted && isHighlightable ? HIGHLIGHT_COLOR : section.color" 
+      :fill="section.isHighlighted && showDataOnHover ? HIGHLIGHT_COLOR : section.color" 
       :x="posX" :y="getSectionYPosition(posY, index)" 
       :width="width" 
       :height="section.height" />
@@ -62,8 +62,8 @@
       @mousedown="initSelectStart($event, section, index)"
       @mousemove="updateSelectionHeight" />
 
-    <!-- Stop Label -->
-    <text v-if="showStartStop" 
+    <!-- Stop Label: Only show if the section is big enough so that it doesn't overlap with the start label -->
+    <text v-if="showStartStop && section.height > 10" 
       data-test="stop-bp-label"
       class="label small" 
       :x="posX + width" 
@@ -75,6 +75,7 @@
 
 <script lang="ts" setup>
 import BackboneSelection from '@/models/BackboneSelection';
+import TooltipData from '@/models/TooltipData';
 import Track from '@/models/Track';
 import TrackSection from '@/models/TrackSection';
 import { toRefs } from '@vue/reactivity';
@@ -83,6 +84,7 @@ import { useStore } from 'vuex';
 
 const LABEL_Y_OFFSET = 3;
 const HIGHLIGHT_COLOR = 'aquamarine';
+
 const store = useStore();
 const svg = document.querySelector('svg');
 
@@ -95,7 +97,7 @@ let startingPoint: DOMPoint;
 interface Props 
 {
   isSelectable?: boolean;
-  isHighlightable?: boolean;
+  showDataOnHover?: boolean;
   showStartStop?: boolean;
   showChromosome?: boolean;
   posX: number;
@@ -108,9 +110,7 @@ const props = defineProps<Props>();
 
 //Converts each property in this object to its own reactive prop
 toRefs(props);
-let selectedRegion = ref<BackboneSelection>(
-  new BackboneSelection(0, 0, 0, 0)
-);
+const selectedRegion = ref(new BackboneSelection(0, 0, 0, 0));
 
 watch(() => props.track, () => {
   if (props.isSelectable && store.getters.getSelectedBackboneRegion)
@@ -224,12 +224,22 @@ const completeSelect = () => {
   store.dispatch('setSelectedBackboneRegion', selectedRegion.value);
 };
 
-const highlight = (section: TrackSection) => {
+const showTooltipData = (event: any, section: TrackSection) => {
+  if (!props.showDataOnHover)
+  {
+    return;
+  }
+
   section.isHighlighted = true;
+
+  let currentSVGPoint = getMousePosSVG(event) as DOMPoint;
+  const tooltipData = new TooltipData(props.posX, currentSVGPoint.y, section);
+  store.dispatch('setTooltipData', tooltipData);
 };
 
-const unhighlight = (section: TrackSection) => {
+const hideTooltipData = (section: TrackSection) => {
   section.isHighlighted = false;
+  store.dispatch('setTooltipData', null);
 };
 
 /**

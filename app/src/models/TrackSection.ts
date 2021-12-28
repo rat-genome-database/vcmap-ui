@@ -12,6 +12,7 @@ interface TrackSectionParams
   offsetCount?: number; // number of base pairs before this section should begin, useful for knowing when to begin drawing the section
   basePairToHeightRatio: number; // number of base pairs per unit of height in the SVG, use the Resolution module to get the correct ratio
   shape: 'rect' | 'line';
+  gene?: string; // name of the gene this section represents (optional)
 }
 
 export default class TrackSection
@@ -21,6 +22,7 @@ export default class TrackSection
   backboneStart: number = 0;
   backboneStop: number = 0;
   chromosome: string = '';
+  gene?: string;
   isHighlighted: boolean = false;
   shape: 'rect' | 'line' = 'rect';
   private _offsetCount: number = 0;
@@ -37,6 +39,7 @@ export default class TrackSection
     this.backboneStart = params.backboneStart;
     this.backboneStop = params.backboneStop;
     this.chromosome = params.chromosome;
+    this.gene = params.gene;
     this.shape = params.shape;
     this._backboneCutoff = params.cutoff;
     this._offsetCount = params.offsetCount ?? 0;

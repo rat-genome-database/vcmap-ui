@@ -17,8 +17,7 @@ describe('OverviewControls', () => {
     startPos: 1,
     stopPos: 10000,
     gene: null,
-    comparativeSpeciesOne: null,
-    comparativeSpeciesTwo: null,
+    comparativeSpecies: [],
     selectedBackboneRegion: null,
     backboneZoom: 1,
     comparativeZoom: 1,
@@ -31,7 +30,8 @@ describe('OverviewControls', () => {
     showOverviewGaps: false,
     showDetailsGaps: false,
     backboneDataTracks: [],
-    configTab: 0
+    configTab: 0,
+    tooltipData: null,
   };
   let getters = {
     getSpecies(state: VCMapState) {

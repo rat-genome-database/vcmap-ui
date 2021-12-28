@@ -438,6 +438,7 @@ function saveConfigToStoreAndGoToMainScreen()
     store.dispatch('setChromosome', backboneChromosome.value);
     store.dispatch('setStartPosition', startPosition.value ?? 0);
     store.dispatch('setStopPosition', stopPosition.value ?? backboneChromosome.value?.seqLength);
+    store.dispatch('setGene', null);
   }
   else
   {
