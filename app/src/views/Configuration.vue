@@ -205,7 +205,7 @@
       </div>
     </div>
   </div>
-  <VCMapDialog v-model:show="showError" header="Error" :message="errorMessage" />
+  <VCMapDialog v-model:show="showError" header="Error" :message="errorMessage" theme="error" />
 </template>
 
 <script setup lang="ts">

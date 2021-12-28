@@ -45,6 +45,8 @@
       <TrackSVG v-if="track.type === 'track'" is-highlightable show-start-stop show-chromosome :pos-x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="track.track as Track" />
     </template>
   </svg>
+
+  <VCMapDialog v-model:show="showDialog" :header="dialogHeader" :message="dialogMessage" />
 </template>
 
 <script lang="ts" setup>
@@ -63,6 +65,7 @@ import SpeciesApi from '@/api/SpeciesApi';
 import ViewSize from '@/utils/ViewSize';
 import BackboneSelection from '@/models/BackboneSelection';
 import DataTrack from '@/models/DataTrack';
+import VCMapDialog from '@/components/VCMapDialog.vue';
 
 const GENES_DATA_TRACK_THRESHOLD_MULTIPLIER = 3;
 const GAPS_THRESHOLD_MULTIPLIER = 10;
@@ -70,17 +73,21 @@ const GAPS_THRESHOLD_MULTIPLIER = 10;
 const store = useStore();
 
 // Reactive data props
-let backboneSpecies = ref<Species | null>(null);
-let backboneChromosome = ref<Chromosome | null>(null);
-let backboneTrack = ref<Track | null>(null);
-let backboneDataTracks = ref<DataTrack[]>([]);
-let comparativeTracks = ref<Track[]>([]);
-let isLoading = ref<boolean>(false);
-let backboneSelectionTrack = ref<Track | null>(null);
-let comparativeSelectionTracks = ref<Track[]>([]);
+const backboneSpecies = ref<Species | null>(null);
+const backboneChromosome = ref<Chromosome | null>(null);
+const backboneTrack = ref<Track | null>(null);
+const backboneDataTracks = ref<DataTrack[]>([]);
+const comparativeTracks = ref<Track[]>([]);
+const isLoading = ref(false);
+const backboneSelectionTrack = ref<Track | null>(null);
+const comparativeSelectionTracks = ref<Track[]>([]);
 
-let drawnOverviewTracks = ref<DataTrack[] | Track[]>([]);
-let drawnDetailsTracks = ref<DataTrack[] | Track[]>([]);
+const drawnOverviewTracks = ref<DataTrack[] | Track[]>([]);
+const drawnDetailsTracks = ref<DataTrack[] | Track[]>([]);
+
+const showDialog = ref(false);
+const dialogHeader = ref('');
+const dialogMessage = ref('');
 
 /**
  * Once mounted, let's set our reactive data props and create the backbone and synteny tracks
@@ -382,7 +389,10 @@ const createSyntenyTracks = async (backboneStart: number, backboneStop: number, 
 
     if (backboneStart == null || backboneStop == null || backboneChr == null || comparativeSpeciesMaps.length === 0)
     {
-      console.error('Cannot get synteny blocks with missing backbone chromosome, backbone start, backbone stop, or comparative species maps');
+      onError(
+        new Error(`Missing properties required for synteny. Values given: [${backboneStart}, ${backboneStop}, ${backboneChr?.chromosome}, ${comparativeSpeciesMaps.length}]`), 
+        'Cannot load synteny with missing backbone chromosome, backbone start, backbone stop, or comparative species maps'
+      );
       return [];
     }
 
@@ -426,12 +436,18 @@ const createSyntenyTracks = async (backboneStart: number, backboneStop: number, 
   }
   catch (err)
   {
-    console.error(err);
+    onError(err, 'An error occurred while attempting to show the syntenic regions for the comparative species');
     return [];
   }
   finally
   {
     isLoading.value = false;
+  }
+
+  let resultsFound = tempComparativeTracks.some(track => track.sections.length > 0);
+  if (!resultsFound)
+  {
+    showNoResultsDialog();
   }
 
   return tempComparativeTracks;
@@ -501,7 +517,7 @@ const createBackboneDataTracks =  async (startPos: number, stopPos: number, base
   }
   catch (err)
   {
-    console.error(err);
+    onError(err, 'An error occurred while attempting to load the genes data track for the backbone species');
   }
 };
 
@@ -729,6 +745,19 @@ const warnIfNegativeHeight = (trackSections: TrackSection[]) => {
       console.warn('Negative height', index, section);
     }
   });
+};
+
+const onError = (err: any, userMessage: string) => {
+  console.error(err);
+  dialogHeader.value = 'Error';
+  dialogMessage.value = userMessage;
+  showDialog.value = true;
+};
+
+const showNoResultsDialog = () => {
+  dialogHeader.value = 'No Results';
+  dialogMessage.value = 'No syntenic regions were found for the selected species and base pair range.';
+  showDialog.value = true;
 };
 </script>
 

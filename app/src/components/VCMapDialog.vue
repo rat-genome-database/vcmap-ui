@@ -9,7 +9,7 @@
     :modal="true">
     <p>{{props.message}}</p>
     <template #footer>
-      <Button label="Ok" class="p-button-danger" @click="close" autofocus />
+      <Button label="Ok" :class="{'p-button-danger': (props.theme === 'error')}" @click="close" autofocus />
     </template>
   </Dialog>
 </template>
@@ -25,6 +25,7 @@ interface Props
   header: string;
   message: string;
   show: boolean;
+  theme?: 'error' | 'normal'
 }
 
 interface Emits
