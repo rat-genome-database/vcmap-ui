@@ -226,7 +226,6 @@ import Chromosome from '@/models/Chromosome';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import { VERSION } from '@/version';
-import { AxiosError } from 'axios';
 import { Formatter } from '@/utils/Formatter';
 import VCMapDialog from '@/components/VCMapDialog.vue';
 
@@ -301,7 +300,7 @@ async function searchGene(event: {query: string})
   }
   catch (err: any)
   {
-    onNetworkError(err);
+    onApiError(err, 'An error occurred while looking up genes');
   }
   finally
   {
@@ -330,7 +329,7 @@ async function setChromosomeOptions(event: {value: Species | null})
   }
   catch (err: any)
   {
-    onNetworkError(err);
+    onApiError(err, 'An error occurred while looking up chromosomes for the selected backbone species');
   }
   finally
   {
@@ -358,7 +357,7 @@ async function setGeneChromosomeAndDefaultStartAndStopPositions(event: {value: G
     }
     catch (err: any)
     {
-      onNetworkError(err);
+      onApiError(err, 'An error occurred while getting chromosome data for the gene');
     }
   }
 
@@ -377,7 +376,7 @@ async function prepopulateConfigOptions()
   }
   catch (err: any)
   {
-    onNetworkError(err);
+    onApiError(err, 'An error occurred while looking up the available species');
   }
   finally
   {
@@ -395,7 +394,7 @@ async function prepopulateConfigOptions()
     }
     catch (err: any)
     {
-      onNetworkError(err);
+      onApiError(err, 'An error occurred while looking up chromosomes for the selected backbone species');
     }
     finally
     {
@@ -457,10 +456,10 @@ function saveConfigToStoreAndGoToMainScreen()
   router.push('/main');
 }
 
-function onNetworkError(err: AxiosError)
+function onApiError(err: any, userMessage: string)
 {
-  console.error(err.response?.data);
-  errorMessage.value = err.response?.data.message;
+  console.error(err);
+  errorMessage.value = userMessage;
   showError.value = true;
 }
 </script>
