@@ -74,6 +74,9 @@
             <div class="col-12 text-center">
               <Button @click="addTempComparativeSpecies" label="Add Species" icon="pi pi-plus-circle" class="p-button" style="margin-right: .5em"/>
             </div>
+            <div class="col-6 col-offset-3 text-center">
+              <Message severity="warn" closeable v-if="comparativeSpecies.length >= 3">Selecting 3 or more species might cause display errors</Message>
+            </div>
             <div class="grid" v-for="species, index in comparativeSpecies" :key="species">
               <div class="lg:col-4 lg:col-offset-3 md:col-6 md:col-offset-2 sm:col-8 sm:col-offset-1">
                 <Dropdown 
@@ -233,9 +236,6 @@ let stopPosition = ref<Number | null>();
 let maxPosition = ref<number | null>();
 
 let comparativeSpecies = ref<Species[] | Number[]>([]);
-
-
-
 let active = ref(0);
 
 // Lifecycle Hooks
