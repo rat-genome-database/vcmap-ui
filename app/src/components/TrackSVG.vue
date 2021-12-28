@@ -11,8 +11,8 @@
   </defs>
 
   <template v-for="(section, index) in track.sections" :key="index">
-    <!-- Start BP label -->
-    <text v-if="showStartStop" 
+    <!-- Start BP label: Only show if there is enough of an offset b/w this section and the previous section-->
+    <text v-if="showStartStop && (section.offsetHeight > 10 || index === 0)" 
       data-test="start-bp-label"
       class="label small" 
       :x="posX + width" 
@@ -62,8 +62,8 @@
       @mousedown="initSelectStart($event, section, index)"
       @mousemove="updateSelectionHeight" />
 
-    <!-- Stop Label -->
-    <text v-if="showStartStop" 
+    <!-- Stop Label: Only show if the section is big enough so that it doesn't overlap with the start label -->
+    <text v-if="showStartStop && section.height > 10" 
       data-test="stop-bp-label"
       class="label small" 
       :x="posX + width" 
