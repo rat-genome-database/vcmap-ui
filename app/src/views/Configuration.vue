@@ -214,6 +214,7 @@
       </div>
     </div>
   </div>
+  <VCMapDialog v-model:show="showError" header="Error" :message="errorMessage" />
 </template>
 
 <script setup lang="ts">
@@ -227,6 +228,7 @@ import { useStore } from 'vuex';
 import { VERSION } from '@/version';
 import { AxiosError } from 'axios';
 import { Formatter } from '@/utils/Formatter';
+import VCMapDialog from '@/components/VCMapDialog.vue';
 
 const router = useRouter();
 const store = useStore();
@@ -259,6 +261,9 @@ const maxPosition = ref<number | null>(null);
 
 const comparativeSpeciesOne = ref<Species | null>(null);
 const comparativeSpeciesTwo = ref<Species | null>(null);
+
+const showError = ref(false);
+const errorMessage = ref('');
 
 onMounted(prepopulateConfigOptions);
 
@@ -455,6 +460,8 @@ function saveConfigToStoreAndGoToMainScreen()
 function onNetworkError(err: AxiosError)
 {
   console.error(err.response?.data);
+  errorMessage.value = err.response?.data.message;
+  showError.value = true;
 }
 </script>
 
