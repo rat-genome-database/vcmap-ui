@@ -35,15 +35,10 @@ onMounted(() => {
 });
 
 const comparativeSpecies = computed(() => {
-  let species = [];
-  if (store.getters.getComparativeSpeciesOne)
+  let species = [] as Species[];
+  if (store.getters.getComparativeSpecies)
   {
-    species.push(store.getters.getComparativeSpeciesOne as Species);
-  }
-
-  if (store.getters.getComparativeSpeciesTwo)
-  {
-    species.push(store.getters.getComparativeSpeciesTwo as Species);
+    species = store.getters.getComparativeSpecies;
   }
 
   return species;

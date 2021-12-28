@@ -71,30 +71,22 @@
             <div class="col-12 text-center">
               <h2>Comparative Species</h2>
             </div>
-            <div class="grid">
-              <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
+            <div class="col-12 text-center">
+              <Button @click="addTempComparativeSpecies" label="Add Species" icon="pi pi-plus-circle" class="p-button" style="margin-right: .5em"/>
+            </div>
+            <div class="grid" v-for="species, index in comparativeSpecies" :key="species">
+              <div class="lg:col-4 lg:col-offset-3 md:col-6 md:col-offset-2 sm:col-8 sm:col-offset-1">
                 <Dropdown 
-                  label="Comparative Species 1"
+                  label="Comparative Species 2"
                   class="configuration-input" 
-                  @change="updateStoreComparativeSpeciesOne"
-                  v-model="comparativeSpeciesOne" 
+                  v-model="comparativeSpecies[index]" 
                   :loading="isLoadingSpecies"
                   :options="speciesOptions"
                   optionLabel="name" 
                   />
               </div>
-            </div>
-            <div class="grid">
-              <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
-                <Dropdown 
-                  label="Comparative Species 2"
-                  class="configuration-input" 
-                  @change="updateStoreComparativeSpeciesTwo"
-                  v-model="comparativeSpeciesTwo" 
-                  :loading="isLoadingSpecies"
-                  :options="speciesOptions"
-                  optionLabel="name" 
-                  />
+              <div class="col-1 text-center">
+                <Button @click="removeTempComparativeSpecies(index)" label="Remove" icon="pi pi-minus-circle" class="p-button-sm " />
               </div>
             </div>
             
@@ -175,30 +167,22 @@
             <div class="col-12 text-center">
               <h2>Comparative Species</h2>
             </div>
-            <div class="grid">
-              <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
+            <div class="col-12 text-center">
+              <Button @click="addTempComparativeSpecies" label="Add Species" icon="pi pi-plus-circle" class="p-button" style="margin-right: .5em"/>
+            </div>
+            <div class="grid" v-for="species, index in comparativeSpecies" :key="species">
+              <div class="lg:col-4 lg:col-offset-3 md:col-6 md:col-offset-2 sm:col-8 sm:col-offset-1">
                 <Dropdown 
-                  label="Comparative Species 1"
+                  label="Comparative Species 2"
                   class="configuration-input" 
-                  @change="updateStoreComparativeSpeciesOne"
-                  v-model="comparativeSpeciesOne" 
+                  v-model="comparativeSpecies[index]" 
                   :loading="isLoadingSpecies"
                   :options="speciesOptions"
                   optionLabel="name" 
                   />
               </div>
-            </div>
-            <div class="grid">
-              <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
-                <Dropdown 
-                  label="Comparative Species 2"
-                  class="configuration-input" 
-                  @change="updateStoreComparativeSpeciesTwo"
-                  v-model="comparativeSpeciesTwo" 
-                  :loading="isLoadingSpecies"
-                  :options="speciesOptions"
-                  optionLabel="name" 
-                  />
+              <div class="col-1 text-center">
+                <Button @click="removeTempComparativeSpecies(index)" label="Remove" icon="pi pi-minus-circle" class="p-button-sm " />
               </div>
             </div>
           </div>
@@ -248,8 +232,9 @@ let startPosition = ref<Number | null>();
 let stopPosition = ref<Number | null>();
 let maxPosition = ref<number | null>();
 
-let comparativeSpeciesOne = ref<Species>();
-let comparativeSpeciesTwo = ref<Species>();
+let comparativeSpecies = ref<Species[] | Number[]>([]);
+
+
 
 let active = ref(0);
 
@@ -313,15 +298,11 @@ onMounted(async () => {
     stopPosition.value = store.getters.getStopPosition;
   }
 
-  if (store.getters.getComparativeSpeciesOne)
+  if (store.getters.getComparativeSpecies)
   {
-    comparativeSpeciesOne.value = store.getters.getComparativeSpeciesOne;
+    comparativeSpecies.value = store.getters.getComparativeSpecies;
   }
-
-  if (store.getters.getComparativeSpeciesTwo)
-  {
-    comparativeSpeciesTwo.value = store.getters.getComparativeSpeciesTwo;
-  }
+  
 });
 
 watch(() => store.getters.getSpecies, (newVal, oldVal) => {
@@ -417,6 +398,16 @@ watch(() => store.getters.getChromosome, (newVal, oldVal) => {
 
 // Methods
 const goToMainScreen = () => {
+  for (let index = 0; index < comparativeSpecies.value.length; index++)
+  {
+    if (typeof comparativeSpecies.value[index] === 'number')
+    {
+      comparativeSpecies.value.splice(index, 1);
+      index--;
+    }
+  }
+
+  store.commit('comparativeSpecies', comparativeSpecies.value);
   router.push('/main');
 };
 
@@ -456,13 +447,6 @@ const updateStoreGene = (event: any) => {
   store.dispatch('setGene', event.value);
 };
 
-const updateStoreComparativeSpeciesOne = (event: any) => {
-  store.dispatch('setComparativeSpeciesOne', event.value);
-};
-
-const updateStoreComparativeSpeciesTwo = (event: any) => {
-  store.dispatch('setComparativeSpeciesTwo', event.value);
-};
 
 async function searchGene(event: any)
 {
@@ -471,6 +455,21 @@ async function searchGene(event: any)
   geneSuggestions.value = matches;
   isLoadingGene.value = false;
 }
+
+function addTempComparativeSpecies()
+{
+  let currLength = comparativeSpecies.value.length;
+  if (currLength < 5)
+  {
+    comparativeSpecies.value.push(currLength + 1);
+  }
+}
+
+function removeTempComparativeSpecies(index: number)
+{
+  comparativeSpecies.value.splice(index, 1);
+}
+
 
 /* function resetStore() {
   store.dispatch('setSpecies', null);
