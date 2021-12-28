@@ -40,8 +40,8 @@
             </div>
             <div class="grid">
               <div class="lg:col-2 lg:col-offset-3 md:col-4 md:col-offset-1 sm:col-5 sm:col-offset-1">
-                <h4 class="config-label">Start Position</h4>
-                <p class="label-description">Min: 0bp</p>
+                <h4 :class="{'config-label': backboneChromosome}">Start Position</h4>
+                <p v-if="backboneChromosome" class="label-description">Min: 0bp</p>
                 <InputNumber
                   class="configuration-input"
                   showButtons
@@ -54,7 +54,7 @@
                 />
               </div>
               <div class="lg:col-3 md:col-5 md:col-offset-1 sm:col-6 sm:col-offset-1">
-                <h4 class="config-label">Stop Position</h4>
+                <h4 :class="{'config-label': backboneChromosome}">Stop Position</h4>
                 <p v-if="maxPosition" class="label-description">Max: {{Formatter.addCommasToBasePair(maxPosition)}}bp</p>
                 <InputNumber
                   class="configuration-input" 
@@ -142,7 +142,7 @@
             </div>
             <div class="grid">
               <div class="lg:col-3 lg:col-offset-3 md:col-4 md:col-offset-1 sm:col-5 sm:col-offset-1">
-                <h4 class="config-label">Upstream Length</h4>
+                <h4 :class="{'config-label': backboneGene}">Upstream Length</h4>
                 <p v-if="backboneGene" class="label-description">Gene Start: {{Formatter.addCommasToBasePair(backboneGene.start)}}bp</p>
                 <InputNumber
                   class="configuration-input"
@@ -157,7 +157,7 @@
                 />
               </div>
               <div class="lg:col-3 md:col-3 md:col-offset-1 sm:col-5 sm:col-offset-1">
-                <h4 class="config-label">Downstream Length</h4>
+                <h4 :class="{'config-label': backboneGene}">Downstream Length</h4>
                 <p v-if="backboneGene" class="label-description">Gene Stop: {{Formatter.addCommasToBasePair(backboneGene.stop)}}bp</p>
                 <InputNumber
                   class="configuration-input" 
@@ -205,14 +205,19 @@
     </TabView>
     <div class="grid">
       <div class="col-12 text-center">
-        <Button @click="saveConfigToStoreAndGoToMainScreen" label="Load VCMap" icon="pi pi-play" class="p-button-lg" />
+        <Button 
+          @click="saveConfigToStoreAndGoToMainScreen" 
+          :disabled="!isValidConfig"
+          label="Load VCMap" 
+          icon="pi pi-play" 
+          class="p-button-lg" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import SpeciesApi from '@/api/SpeciesApi';
 import Species from '@/models/Species';
 import Gene from '@/models/Gene';
@@ -256,6 +261,25 @@ const comparativeSpeciesOne = ref<Species | null>(null);
 const comparativeSpeciesTwo = ref<Species | null>(null);
 
 onMounted(prepopulateConfigOptions);
+
+const isValidConfig = computed(() => {
+  const isCommonConfigValid = backboneSpecies.value && comparativeSpeciesOne.value && comparativeSpeciesTwo.value;
+  if (!isCommonConfigValid)
+  {
+    return false;
+  }
+
+  if (activeTab.value === TABS.POSITION)
+  {
+    return backboneChromosome.value && startPosition.value != null && stopPosition.value != null;
+  }
+  else if (activeTab.value === TABS.GENE)
+  {
+    return geneChromosome.value && geneOptionStartPosition.value != null && geneOptionStopPosition.value != null;
+  }
+
+  return false;
+});
 
 async function searchGene(event: {query: string})
 {
@@ -323,7 +347,6 @@ async function setGeneChromosomeAndDefaultStartAndStopPositions(event: {value: G
   const gene = event.value;
   if (gene != null && backboneSpecies.value != null)
   {
-    isLoadingChromosome.value = true;
     try
     {
       geneChromosome.value = await SpeciesApi.getChromosomeInfo(gene.chromosome, backboneSpecies.value.defaultMapKey);
@@ -331,10 +354,6 @@ async function setGeneChromosomeAndDefaultStartAndStopPositions(event: {value: G
     catch (err: any)
     {
       onNetworkError(err);
-    }
-    finally
-    {
-      isLoadingChromosome.value = false;
     }
   }
 
@@ -429,7 +448,7 @@ function saveConfigToStoreAndGoToMainScreen()
   store.dispatch('setComparativeSpeciesOne', comparativeSpeciesOne.value);
   store.dispatch('setComparativeSpeciesTwo', comparativeSpeciesTwo.value);
   store.dispatch('setConfigTab', activeTab.value);
-  
+
   router.push('/main');
 }
 
