@@ -17,6 +17,7 @@ import Checkbox from 'primevue/checkbox';
 import ColorPicker from 'primevue/colorpicker';
 import Message from 'primevue/message';
 import InlineMessage from 'primevue/inlinemessage';
+import Dialog from 'primevue/dialog';
 
 /**
  * Add any plugins/configs that you want to be globally registered:
@@ -43,6 +44,7 @@ const COMPONENTS: {[key: string]: Component} = {
   'ColorPicker': ColorPicker,
   'Message': Message,
   'InlineMessage': InlineMessage,
+  'Dialog': Dialog,
 };
 
 /**

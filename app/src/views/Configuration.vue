@@ -205,6 +205,7 @@
       </div>
     </div>
   </div>
+  <VCMapDialog v-model:show="showError" header="Error" :message="errorMessage" />
 </template>
 
 <script setup lang="ts">
@@ -216,8 +217,8 @@ import Chromosome from '@/models/Chromosome';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import { VERSION } from '@/version';
-import { AxiosError } from 'axios';
 import { Formatter } from '@/utils/Formatter';
+import VCMapDialog from '@/components/VCMapDialog.vue';
 
 const router = useRouter();
 const store = useStore();
@@ -249,6 +250,9 @@ const stopPosition = ref<number | null>(null);
 const maxPosition = ref<number | null>(null);
 //numbers represent placeholder values until a species is selected.  On submit all nonSpecies values are removed
 let comparativeSpecies = ref<Species[] | Number[]>([]);
+
+const showError = ref(false);
+const errorMessage = ref('');
 
 onMounted(prepopulateConfigOptions);
 
@@ -286,7 +290,7 @@ async function searchGene(event: {query: string})
   }
   catch (err: any)
   {
-    onNetworkError(err);
+    onApiError(err, 'An error occurred while looking up genes');
   }
   finally
   {
@@ -315,7 +319,7 @@ async function setChromosomeOptions(event: {value: Species | null})
   }
   catch (err: any)
   {
-    onNetworkError(err);
+    onApiError(err, 'An error occurred while looking up chromosomes for the selected backbone species');
   }
   finally
   {
@@ -343,7 +347,7 @@ async function setGeneChromosomeAndDefaultStartAndStopPositions(event: {value: G
     }
     catch (err: any)
     {
-      onNetworkError(err);
+      onApiError(err, 'An error occurred while getting chromosome data for the gene');
     }
   }
 
@@ -362,7 +366,7 @@ async function prepopulateConfigOptions()
   }
   catch (err: any)
   {
-    onNetworkError(err);
+    onApiError(err, 'An error occurred while looking up the available species');
   }
   finally
   {
@@ -380,7 +384,7 @@ async function prepopulateConfigOptions()
     }
     catch (err: any)
     {
-      onNetworkError(err);
+      onApiError(err, 'An error occurred while looking up chromosomes for the selected backbone species');
     }
     finally
     {
@@ -452,9 +456,11 @@ function saveConfigToStoreAndGoToMainScreen()
   router.push('/main');
 }
 
-function onNetworkError(err: AxiosError)
+function onApiError(err: any, userMessage: string)
 {
-  console.error(err.response?.data);
+  console.error(err);
+  errorMessage.value = userMessage;
+  showError.value = true;
 }
 
 function addTempComparativeSpecies()
