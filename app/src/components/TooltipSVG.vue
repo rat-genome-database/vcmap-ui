@@ -10,7 +10,7 @@
   <template v-if="props.tooltipData?.genomicSection">
     <text data-test="chromosome-name" class="label small" :x="xPos + 2" :y="props.tooltipData.y + 10">Chromosome: {{props.tooltipData.genomicSection.chromosome}}</text>
     <text data-test="start-stop" class="label small" :x="xPos + 2" :y="props.tooltipData.y + 20">Region: {{props.tooltipData.genomicSection.startBPLabel}} - {{props.tooltipData.genomicSection.stopBPLabel}}</text>
-    <text v-if="props.tooltipData.genomicSection.gene" data-test="gene-name" class="label small" :x="xPos + 2" :y="props.tooltipData.y + 30">Symbol: {{props.tooltipData.genomicSection.gene.symbol}}</text>
+    <text v-if="props.tooltipData.genomicSection.gene" data-test="gene-symbol" class="label small" :x="xPos + 2" :y="props.tooltipData.y + 30">Symbol: {{props.tooltipData.genomicSection.gene.symbol}}</text>
     <text v-if="props.tooltipData.genomicSection.gene" data-test="gene-name" class="label small" :x="xPos + 2" :y="props.tooltipData.y + 40">Name: {{props.tooltipData.genomicSection.gene.name}}</text>
   </template>
 </template>
