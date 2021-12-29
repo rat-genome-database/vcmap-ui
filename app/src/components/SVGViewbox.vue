@@ -32,7 +32,7 @@
     <!-- Comparative panel SVGs ----------------------------------------->
     <text class="label medium bold" :x="ViewSize.selectedBackboneXPosition" :y="ViewSize.panelTitleYPosition">Detailed</text>
     <text v-if="backboneSpecies" class="label small" :x="ViewSize.selectedBackboneXPosition" :y="ViewSize.trackLabelYPosition">{{backboneSpecies.name}} (backbone)</text>
-    <TrackSVG v-if="backboneSelectionTrack" show-start-stop show-chromosome :pos-x="ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="backboneSelectionTrack as Track" />
+    <TrackSVG v-if="backboneSelectionTrack" show-data-on-hover show-start-stop show-chromosome :pos-x="ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="backboneSelectionTrack as Track" />
 
     <!-- comparative backbone data tracks -->
     <template v-for="(dataTrack, index) in drawnDetailsTracks" :key="dataTrack">
@@ -61,7 +61,6 @@ import { onMounted, ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import TrackSVG from './TrackSVG.vue';
 import Chromosome from '@/models/Chromosome';
-import Map from '@/models/Map';
 import Gene from '@/models/Gene';
 import { SyntenyRegionData } from '@/models/SyntenicRegion';
 import SpeciesApi from '@/api/SpeciesApi';
@@ -369,28 +368,19 @@ const createSyntenyTracks = async (backboneStart: number, backboneStop: number, 
   try
   {
     isLoading.value = true;
-    // Primary maps for comparative species
-    const mapCalls = comparativeSpecies.map(s => SpeciesApi.getMaps(s.typeKey));
-    const mapResults = await Promise.allSettled(mapCalls);
-    const comparativeSpeciesMaps: Map[] = [];
-    mapResults.forEach(result => {
-      if (result.status === 'fulfilled')
+    // Use primary maps for comparative species
+    const comparativeSpeciesMaps = [];
+    for (const species of comparativeSpecies)
+    {
+      for (const map of species.maps)
       {
-        const maps = result.value;
-        for (let i = 0; i < maps.length; i++)
+        if (species.defaultMapKey === map.key)
         {
-          if (maps[i].primaryRefAssembly)
-          {
-            comparativeSpeciesMaps.push(maps[i]);
-            break;
-          }
+          comparativeSpeciesMaps.push(map);
+          break;
         }
       }
-      else
-      {
-        console.error(result.status, result.reason);
-      }
-    });
+    }
 
     if (backboneStart == null || backboneStop == null || backboneChr == null || comparativeSpeciesMaps.length === 0)
     {
@@ -498,7 +488,7 @@ const createBackboneDataTracks =  async (startPos: number, stopPos: number, base
             offsetCount: gene.start - previousBlockBackboneStop,
             basePairToHeightRatio: basePairToHeightRatio,
             shape: 'rect',
-            gene: gene.name
+            gene: gene
           });
 
           sections.push(trackSection);
@@ -557,8 +547,8 @@ const setDisplayedObjects = (isComparative: boolean) => {
     for (let index = 0; index < comparativeSyntenyTracks.length; index++)
     {
       let currentTrack = comparativeSyntenyTracks[index];
-        let drawnObject = {'type': 'track', 'track': currentTrack, 'name': currentTrack.name, };
-        drawnDetailsTracks.value.push(drawnObject);
+      let drawnObject = {'type': 'track', 'track': currentTrack, 'name': currentTrack.name, };
+      drawnDetailsTracks.value.push(drawnObject);
     }
   }
   else
@@ -584,8 +574,8 @@ const setDisplayedObjects = (isComparative: boolean) => {
     for (let index = 0; index < overviewSyntenyTracks.length; index++)
     {
       let currentTrack = overviewSyntenyTracks[index];
-        let drawnObject = {'type': 'track', 'track': currentTrack, 'name': currentTrack.name, };
-        drawnOverviewTracks.value.push(drawnObject);
+      let drawnObject = {'type': 'track', 'track': currentTrack, 'name': currentTrack.name, };
+      drawnOverviewTracks.value.push(drawnObject);
     }
   }
 };

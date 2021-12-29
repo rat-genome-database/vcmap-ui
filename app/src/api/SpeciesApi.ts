@@ -8,21 +8,22 @@ export default class SpeciesApi
 {
   static async getSpecies(): Promise<Species[]>
   {
-    const res = await httpInstance.get(`/lookup/speciesTypeKeys`);
-    const mapRes = await httpInstance.get(`/vcmap/species`);
+    const speciesRes = await httpInstance.get(`/vcmap/species`);
     const speciesList: Species[] = [];
-    for (const name in res.data)
+    for (const species of speciesRes.data)
     {
-      const typeKey = res.data[name];
-      let defaultMap = 0;
-      for (const map of mapRes.data)
+      const mapsList: Map[] = [];
+      let defaultMapKey = null;
+      for (const map of species.maps)
       {
-        if (map.name === name)
+        if (map.primaryRefAssembly)
         {
-          defaultMap = map.maps[0].key;
+          defaultMapKey = map.key;
         }
+        mapsList.push(new Map({ key: map.key, name: map.name, description: map.description, notes: map.notes, primaryRefAssembly: map.primaryRefAssembly }));
       }
-      speciesList.push(new Species({ typeKey: typeKey, name: name, defaultMapKey: defaultMap }));
+
+      speciesList.push(new Species({ typeKey: species.speciesTypeKey, name: species.name, defaultMapKey: defaultMapKey ?? species.maps[0].key, maps: mapsList }));
     }
     return speciesList;
   }

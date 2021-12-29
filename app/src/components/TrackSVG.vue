@@ -83,7 +83,7 @@ import { ref, watch } from 'vue';
 import { useStore } from 'vuex';
 
 const LABEL_Y_OFFSET = 3;
-const HIGHLIGHT_COLOR = 'aquamarine';
+const HIGHLIGHT_COLOR = 'bisque';
 
 const store = useStore();
 const svg = document.querySelector('svg');

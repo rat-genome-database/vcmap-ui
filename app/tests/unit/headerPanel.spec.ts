@@ -2,18 +2,22 @@ import { mount } from '@vue/test-utils';
 import HeaderPanel from '@/components/HeaderPanel.vue';
 import { VCMapState } from '@/store';
 import Species from '@/models/Species';
+import Map from '@/models/Map';
 import { createStore } from 'vuex';
 import { ExternalComponentsHandler } from '@/utils/ExternalComponentsHandler';
 
 const mockStore = createStore({
   state: {
-    species: new Species({ typeKey: 1, name: 'Test Species', defaultMapKey: 1 }),
+    species: new Species({ typeKey: 1, name: 'Test Species', defaultMapKey: 1, maps: [new Map({ key: 1, primaryRefAssembly: true, description: '', notes: '', name: 'GRCh38'})]}),
     map: null,
     chromosome: null,
     startPos: null,
     stopPos: null,
     gene: null,
-    comparativeSpecies: [new Species({ typeKey: 2, name: 'Test Species 2', defaultMapKey: 2 }), new Species({ typeKey: 3, name: 'Test Species 3', defaultMapKey: 3 })],
+    comparativeSpecies: [
+      new Species({ typeKey: 2, name: 'Test Species 2', defaultMapKey: 2, maps: [new Map({ key: 2, primaryRefAssembly: true, description: '', notes: '', name: 'GRCh37'})] }), 
+      new Species({ typeKey: 3, name: 'Test Species 3', defaultMapKey: 3, maps: [new Map({ key: 3, primaryRefAssembly: true, description: '', notes: '', name: 'GRCh36'})] })
+    ],
     selectedBackboneRegion: null,
     backboneZoom: 1,
     comparativeZoom: 1,

@@ -5,10 +5,12 @@
       <div class="grid unpadded">
         <div class="col-5">Displaying:</div>
         <div class="col-7 bold" data-test="backbone-overview-display">{{store.getters.getSpecies?.name}} chr{{store.getters.getChromosome?.chromosome}}:{{displayBackboneStart}}-{{displayBackboneStop}}</div>
+        <div class="col-5">Assembly:</div>
+        <div class="col-7 bold">{{store.getters.getSpecies?.activeMap.name}}</div>
         <div class="col-5">Length:</div>
         <div class="col-7 bold">{{displayBackboneLength}}bp</div>
         <div class="col-5">Synteny Threshold:</div>
-        <div class="col-7 bold">{{store.getters.getOverviewSyntenyThreshold}}bp</div>
+        <div class="col-7 bold">{{Formatter.addCommasToBasePair(store.getters.getOverviewSyntenyThreshold)}}bp</div>
         <div class="col-5">Selection:</div>
         <div class="col-7 bold">
           <span>{{selectionRange}}</span>
