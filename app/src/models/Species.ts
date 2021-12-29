@@ -18,4 +18,14 @@ export default class Species extends SpeciesDTO
     Object.assign(this, dto);
     this.activeMap = this.maps?.filter(m => m.key === this.defaultMapKey)[0];
   }
+
+  public copy()
+  {
+    return new Species({
+      typeKey: this.typeKey,
+      name: this.name,
+      defaultMapKey: this.defaultMapKey,
+      maps: this.maps
+    });
+  }
 }
