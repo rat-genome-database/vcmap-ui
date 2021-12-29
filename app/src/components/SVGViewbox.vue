@@ -61,7 +61,6 @@ import { onMounted, ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import TrackSVG from './TrackSVG.vue';
 import Chromosome from '@/models/Chromosome';
-import Map from '@/models/Map';
 import Gene from '@/models/Gene';
 import { SyntenyRegionData } from '@/models/SyntenicRegion';
 import SpeciesApi from '@/api/SpeciesApi';
@@ -369,28 +368,19 @@ const createSyntenyTracks = async (backboneStart: number, backboneStop: number, 
   try
   {
     isLoading.value = true;
-    // Primary maps for comparative species
-    const mapCalls = comparativeSpecies.map(s => SpeciesApi.getMaps(s.typeKey));
-    const mapResults = await Promise.allSettled(mapCalls);
-    const comparativeSpeciesMaps: Map[] = [];
-    mapResults.forEach(result => {
-      if (result.status === 'fulfilled')
+    // Use primary maps for comparative species
+    const comparativeSpeciesMaps = [];
+    for (const species of comparativeSpecies)
+    {
+      for (const map of species.maps)
       {
-        const maps = result.value;
-        for (let i = 0; i < maps.length; i++)
+        if (species.defaultMapKey === map.key)
         {
-          if (maps[i].primaryRefAssembly)
-          {
-            comparativeSpeciesMaps.push(maps[i]);
-            break;
-          }
+          comparativeSpeciesMaps.push(map);
+          break;
         }
       }
-      else
-      {
-        console.error(result.status, result.reason);
-      }
-    });
+    }
 
     if (backboneStart == null || backboneStop == null || backboneChr == null || comparativeSpeciesMaps.length === 0)
     {
@@ -557,8 +547,8 @@ const setDisplayedObjects = (isComparative: boolean) => {
     for (let index = 0; index < comparativeSyntenyTracks.length; index++)
     {
       let currentTrack = comparativeSyntenyTracks[index];
-        let drawnObject = {'type': 'track', 'track': currentTrack, 'name': currentTrack.name, };
-        drawnDetailsTracks.value.push(drawnObject);
+      let drawnObject = {'type': 'track', 'track': currentTrack, 'name': currentTrack.name, };
+      drawnDetailsTracks.value.push(drawnObject);
     }
   }
   else
@@ -584,8 +574,8 @@ const setDisplayedObjects = (isComparative: boolean) => {
     for (let index = 0; index < overviewSyntenyTracks.length; index++)
     {
       let currentTrack = overviewSyntenyTracks[index];
-        let drawnObject = {'type': 'track', 'track': currentTrack, 'name': currentTrack.name, };
-        drawnOverviewTracks.value.push(drawnObject);
+      let drawnObject = {'type': 'track', 'track': currentTrack, 'name': currentTrack.name, };
+      drawnOverviewTracks.value.push(drawnObject);
     }
   }
 };
