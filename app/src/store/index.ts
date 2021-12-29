@@ -1,7 +1,6 @@
 import { ActionContext, createStore } from 'vuex';
 import VuexPersistence from 'vuex-persist';
 import Species from '@/models/Species';
-import Map from '@/models/Map';
 import Chromosome from '@/models/Chromosome';
 import Gene from '@/models/Gene';
 import BackboneSelection from '@/models/BackboneSelection';
@@ -21,8 +20,8 @@ export interface VCMapState
   comparativeSpecies: Species[];
 
   selectedBackboneRegion: BackboneSelection | null;
-  backboneZoom: number;
-  comparativeZoom: number;
+  overviewZoom: number;
+  detailsZoom: number;
   displayStartPos: number; // the displayed start position of the backbone (changes due to zoom level)
   displayStopPos: number; // the displayed stop position of the backbone (changes due to zoom level)
 
@@ -56,8 +55,8 @@ export default createStore({
     comparativeSpecies: [],
 
     selectedBackboneRegion: null,
-    backboneZoom: 1,
-    comparativeZoom: 1,
+    overviewZoom: 1,
+    detailsZoom: 1,
     displayStartPos: 0,
     displayStopPos: 0,
 
@@ -117,11 +116,11 @@ export default createStore({
     selectedBackboneRegion ( state: VCMapState, selection: BackboneSelection) {
       state.selectedBackboneRegion = selection;
     },
-    backboneZoom (state: VCMapState, zoom: number) {
-      state.backboneZoom = zoom;
+    overviewZoom (state: VCMapState, zoom: number) {
+      state.overviewZoom = zoom;
     },
-    comparativeZoom (state: VCMapState, zoom: number) {
-      state.comparativeZoom = zoom;
+    detailsZoom (state: VCMapState, zoom: number) {
+      state.detailsZoom = zoom;
     },
     displayStartPosition(state: VCMapState, start: number) {
       state.displayStartPos = start;
@@ -194,12 +193,12 @@ export default createStore({
     setStartPosition(context: ActionContext<VCMapState, VCMapState>, startPos: number) {
       context.commit('startPosition', startPos);
       context.commit('displayStartPosition', startPos);
-      context.commit('backboneZoom', 1);
+      context.commit('overviewZoom', 1);
     },
     setStopPosition(context: ActionContext<VCMapState, VCMapState>, stopPos: number) {
       context.commit('stopPosition', stopPos);
       context.commit('displayStopPosition', stopPos);
-      context.commit('backboneZoom', 1);
+      context.commit('overviewZoom', 1);
     },
     setGene(context: ActionContext<VCMapState, VCMapState>, gene: Gene) {
       context.commit('gene', gene);
@@ -207,11 +206,11 @@ export default createStore({
     setSelectedBackboneRegion (context: ActionContext<VCMapState, VCMapState>, selection: BackboneSelection) {
       context.commit('selectedBackboneRegion', selection);
     },
-    setBackboneZoom (context: ActionContext<VCMapState, VCMapState>, zoom: number) {
-      context.commit('backboneZoom', zoom);
+    setOverviewZoom (context: ActionContext<VCMapState, VCMapState>, zoom: number) {
+      context.commit('overviewZoom', zoom);
     },
-    setComparativeZoom (context: ActionContext<VCMapState, VCMapState>, zoom: number) {
-      context.commit('comparativeZoom', zoom);
+    setDetailsZoom (context: ActionContext<VCMapState, VCMapState>, zoom: number) {
+      context.commit('detailsZoom', zoom);
     },
     setDisplayStartPosition(context: ActionContext<VCMapState, VCMapState>, start: number) {
       context.commit('displayStartPosition', start);
@@ -219,12 +218,12 @@ export default createStore({
     setDisplayStopPosition(context: ActionContext<VCMapState, VCMapState>, stop: number) {
       context.commit('displayStopPosition', stop);
     },
-    setBackboneResolution(context: ActionContext<VCMapState, VCMapState>, backboneLength: number) {
+    setOverviewResolution(context: ActionContext<VCMapState, VCMapState>, backboneLength: number) {
       context.commit('backboneBasePairToHeightRatio', backboneLength / (ViewSize.viewboxHeight - 100));
       // Note: Dividing by 8,000 is arbitary when calculating synteny threshold
       context.commit('overviewSyntenyThreshold', (backboneLength > 1000000) ? Math.floor((backboneLength) / 8000) : 0);
     },
-    setComparativeResolution(context: ActionContext<VCMapState, VCMapState>, backboneLength: number) {
+    setDetailsResolution(context: ActionContext<VCMapState, VCMapState>, backboneLength: number) {
       context.commit('comparativeBasePairToHeightRatio', backboneLength / (ViewSize.viewboxHeight - 100));
       // Note: Dividing by 8,000 is arbitary when calculating synteny threshold
       context.commit('detailsSyntenyThreshold', (backboneLength > 1000000) ? Math.floor((backboneLength) / 8000) : 0);
@@ -271,11 +270,11 @@ export default createStore({
     getSelectedBackboneRegion (state: VCMapState) {
       return state.selectedBackboneRegion;
     },
-    getBackboneZoom(state: VCMapState) {
-      return state.backboneZoom;
+    getOverviewZoom(state: VCMapState) {
+      return state.overviewZoom;
     },
-    getComparativeZoom(state: VCMapState) {
-      return state.comparativeZoom;
+    getDetailsZoom(state: VCMapState) {
+      return state.detailsZoom;
     },
     getDisplayStartPosition(state: VCMapState) {
       return state.displayStartPos;

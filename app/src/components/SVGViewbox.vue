@@ -108,12 +108,12 @@ onMounted(() => {
 });
 
 watch(() => store.getters.getSelectedBackboneRegion, () => {
-  store.dispatch('setComparativeZoom', 1);
+  store.dispatch('setDetailsZoom', 1);
   removeSelectionDataTracks();
   updateDetailsPanel();
 });
 
-watch(() => store.getters.getBackboneZoom, (newVal, oldVal) => {
+watch(() => store.getters.getOverviewZoom, (newVal, oldVal) => {
   let backboneStart = store.getters.getStartPosition;
   let backboneStop = store.getters.getStopPosition;
 
@@ -128,7 +128,7 @@ watch(() => store.getters.getBackboneZoom, (newVal, oldVal) => {
   updateOverviewPanel();
 });
 
-watch(() => store.getters.getComparativeZoom, () => {
+watch(() => store.getters.getDetailsZoom, () => {
   removeSelectionDataTracks();
   updateDetailsPanel();
 });
@@ -199,7 +199,7 @@ const updateOverviewPanel = async () => {
   let backboneStop = store.getters.getDisplayStopPosition;
   if (backboneStop - backboneStart > 0)
   {
-    store.dispatch('setBackboneResolution', backboneStop - backboneStart);
+    store.dispatch('setOverviewResolution', backboneStop - backboneStart);
     backboneTrack.value = createBackboneTrack(backboneStart, backboneStop, store.getters.getBackboneBasePairToHeightRatio) ?? null;
 
     let tempBackboneTracks = await createBackboneDataTracks(backboneStart, backboneStop, store.getters.getBackboneBasePairToHeightRatio, false) as DataTrack;
@@ -256,7 +256,7 @@ const updateDetailsPanelComparativeTracks = async () => {
   }
   else
   {
-    const { start: selectedBackboneStart, stop: selectedBackboneStop } = getZoomedStartAndStopPositions(selectedStart, selectedStop, store.getters.getComparativeZoom);
+    const { start: selectedBackboneStart, stop: selectedBackboneStop } = getZoomedStartAndStopPositions(selectedStart, selectedStop, store.getters.getDetailsZoom);
 
     if (selectedBackboneStart != null && selectedBackboneStop != null)
     {
@@ -288,11 +288,11 @@ const updateDetailsPanel = async () => {
   }
   else
   {
-    const { start: selectedBackboneStart, stop: selectedBackboneStop } = getZoomedStartAndStopPositions(selectedStart, selectedStop, store.getters.getComparativeZoom);
+    const { start: selectedBackboneStart, stop: selectedBackboneStop } = getZoomedStartAndStopPositions(selectedStart, selectedStop, store.getters.getDetailsZoom);
 
     if (selectedBackboneStart != null && selectedBackboneStop != null)
     {
-      store.dispatch('setComparativeResolution', selectedBackboneStop - selectedBackboneStart);
+      store.dispatch('setDetailsResolution', selectedBackboneStop - selectedBackboneStart);
       backboneSelectionTrack.value = createBackboneTrack(selectedBackboneStart, selectedBackboneStop, store.getters.getComparativeBasePairToHeightRatio) ?? null;
 
       let tempBackboneTracks = await createBackboneDataTracks(selectedBackboneStart, selectedBackboneStop, store.getters.getComparativeBasePairToHeightRatio, true) as DataTrack;

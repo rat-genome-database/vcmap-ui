@@ -17,8 +17,8 @@ describe('Zoom', () => {
     gene: null,
     comparativeSpecies: [],
     selectedBackboneRegion: null,
-    backboneZoom: 1,
-    comparativeZoom: 1,
+    overviewZoom: 1,
+    detailsZoom: 1,
     displayStartPos: 0,
     displayStopPos: 0,
     backboneBasePairToHeightRatio: 1000,
@@ -32,14 +32,14 @@ describe('Zoom', () => {
     tooltipData: null,
   };
   let getters = {
-    getBackboneZoom(state: VCMapState) {
-      return state.backboneZoom;
+    getOverviewZoom(state: VCMapState) {
+      return state.overviewZoom;
     }
   };
 
   beforeEach(() => {
     actions = {
-      setBackboneZoom: jest.fn()
+      setOverviewZoom: jest.fn()
     };
 
     store = createStore({
@@ -52,7 +52,7 @@ describe('Zoom', () => {
   it('increase button dispatches new zoom level to store', async () => {
     const wrapper = mount(Zoom, {
       props: {
-        type: 'backbone'
+        type: 'overview'
       },
       global: {
         plugins: ExternalComponentsHandler.getPlugins(),
@@ -67,14 +67,14 @@ describe('Zoom', () => {
     const increaseZoomBtn = wrapper.get('[data-test="increase-zoom-btn"]');
 
     await increaseZoomBtn.trigger('click');
-    expect(actions.setBackboneZoom).toBeCalledTimes(1);
-    expect(actions.setBackboneZoom).toBeCalledWith(expect.anything(), 2);
+    expect(actions.setOverviewZoom).toBeCalledTimes(1);
+    expect(actions.setOverviewZoom).toBeCalledWith(expect.anything(), 2);
   });
 
   it('increase button dispatches new zoom level to store', async () => {
     const wrapper = mount(Zoom, {
       props: {
-        type: 'backbone'
+        type: 'overview'
       },
       global: {
         plugins: ExternalComponentsHandler.getPlugins(),
@@ -89,7 +89,7 @@ describe('Zoom', () => {
     const decreaseZoomBtn = wrapper.get('[data-test="decrease-zoom-btn"]');
 
     await decreaseZoomBtn.trigger('click');
-    expect(actions.setBackboneZoom).toBeCalledTimes(1);
-    expect(actions.setBackboneZoom).toBeCalledWith(expect.anything(), 0.5);
+    expect(actions.setOverviewZoom).toBeCalledTimes(1);
+    expect(actions.setOverviewZoom).toBeCalledWith(expect.anything(), 0.5);
   });
 });

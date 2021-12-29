@@ -8,7 +8,7 @@
         <div class="col-5">Synteny Threshold:</div>
         <div class="col-7 bold">{{Formatter.addCommasToBasePair(store.getters.getDetailsSyntenyThreshold)}}bp</div>
         <div class="col-5">Zoom Level:</div>
-        <div class="col-7 bold"><Zoom type="comparative" :min="1" /></div>
+        <div class="col-7 bold"><Zoom type="details" :min="1" /></div>
         <div class="col-5">Show Gaps:</div>
         <div class="col-7">
           <div class="p-field-checkbox">

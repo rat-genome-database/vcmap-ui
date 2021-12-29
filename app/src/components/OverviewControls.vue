@@ -22,7 +22,7 @@
             @click="clearSelection"/>
         </div>
         <div class="col-5">Zoom Level:</div>
-        <div class="col-7 bold"><Zoom type="backbone"/></div>
+        <div class="col-7 bold"><Zoom type="overview"/></div>
         <div class="col-5">Show Gaps:</div>
         <div class="col-7">
           <div class="p-field-checkbox">

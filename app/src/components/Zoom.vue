@@ -23,7 +23,7 @@ const store = useStore();
 
 interface Props 
 {
-  type: 'backbone' | 'comparative';
+  type: 'overview' | 'details';
   min?: number;
 }
 
