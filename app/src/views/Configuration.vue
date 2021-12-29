@@ -194,9 +194,12 @@
             <div class="col-12 text-center">
               <Button @click="addTempComparativeSpecies" label="Add Species" icon="pi pi-plus-circle" class="p-button" style="margin-right: .5em"/>
             </div>
+            <div class="col-6 col-offset-3 text-center">
+              <Message severity="warn" closeable v-if="comparativeSpecies.length >= 3">Selecting 3 or more species might cause display errors</Message>
+            </div>
             <div class="grid" v-for="(species, index) in comparativeSpecies" :key="index">
               <div class="lg:col-5 lg:col-offset-3 md:col-6 md:col-offset-2 sm:col-8 sm:col-offset-1">
-                <Dropdown
+                <Dropdown 
                   v-model="comparativeSpecies[index]" 
                   :loading="isLoadingSpecies"
                   :options="speciesOptions"
@@ -212,13 +215,13 @@
       </TabPanel>
     </TabView>
     <div class="grid">
-      <div class="col-12 text-center">
+      <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
         <Button 
           @click="saveConfigToStoreAndGoToMainScreen" 
           :disabled="!isValidConfig"
           label="Load VCMap" 
           icon="pi pi-play" 
-          class="p-button-lg" />
+          class="p-button-lg p-button-success" />
       </div>
     </div>
   </div>
