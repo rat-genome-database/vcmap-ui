@@ -95,6 +95,7 @@
                   v-model="comparativeSpeciesSelections[index].typeKey" 
                   :loading="isLoadingSpecies"
                   :options="speciesOptions"
+                  @change="setPrimaryAssembly(index)"
                   optionValue="typeKey"
                   optionLabel="name" 
                   placeholder="Comparative Species"
@@ -215,6 +216,7 @@
                   v-model="comparativeSpeciesSelections[index].typeKey" 
                   :loading="isLoadingSpecies"
                   :options="speciesOptions"
+                  @change="setPrimaryAssembly(index)"
                   optionValue="typeKey"
                   optionLabel="name" 
                   placeholder="Comparative Species"
@@ -657,6 +659,24 @@ function getAssemblyOptionsForSpecies(index: number)
 function getAssemblyOptionLabel(assembly: Map)
 {
   return assembly.primaryRefAssembly ? `${assembly.name} (primary)` : assembly.name;
+}
+
+function setPrimaryAssembly(index: number)
+{
+  let selectedSpecies: Species | undefined;
+  for (let i = 0; i < speciesOptions.value.length; i++)
+  {
+    if (speciesOptions.value[i].typeKey === comparativeSpeciesSelections.value[index].typeKey)
+    {
+      selectedSpecies = speciesOptions.value[i];
+      break;
+    }
+  }
+
+  if (selectedSpecies != null)
+  {
+    comparativeSpeciesSelections.value[index].mapKey = selectedSpecies.defaultMapKey;
+  }
 }
 </script>
 
