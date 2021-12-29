@@ -10,9 +10,12 @@ export class SpeciesDTO
 
 export default class Species extends SpeciesDTO
 {
+  activeMap: Map;
+
   constructor(dto: SpeciesDTO)
   {
     super();
     Object.assign(this, dto);
+    this.activeMap = this.maps?.filter(m => m.key === this.defaultMapKey)[0];
   }
 }
