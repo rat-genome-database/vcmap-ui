@@ -587,14 +587,6 @@ function removeTempComparativeSpecies(index: number)
 {
   comparativeSpecies.value.splice(index, 1);
 }
-
-
-/* function resetStore() {
-  store.dispatch('setSpecies', null);
-  store.dispatch('setMap', null);
-  store.dispatch('setChromosomeNum', null);
-  store.dispatch('setChromosome', null);
-} */
 </script>
 
 <style lang="scss" scoped>

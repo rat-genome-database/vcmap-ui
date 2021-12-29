@@ -10,7 +10,6 @@ describe('Zoom', () => {
   let actions: ActionTree<VCMapState, VCMapState>;
   let state = {
     species: null,
-    map: null,
     chromosomeNum: null,
     chromosome: null,
     startPos: null,

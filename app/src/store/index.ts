@@ -13,7 +13,6 @@ import TooltipData from '@/models/TooltipData';
 export interface VCMapState
 {
   species: Species | null; // backbone species
-  map: Map | null; // backbone map
   chromosome: Chromosome | null; // backbone chromosome
   startPos: number | null; // original backbone start position
   stopPos: number | null; // original backbone stop position
@@ -49,7 +48,6 @@ const vuexLocal = new VuexPersistence<VCMapState>({
 export default createStore({
   state: (): VCMapState => ({
     species: null,
-    map: null,
     chromosome: null,
     startPos: null,
     stopPos: null,
@@ -80,9 +78,6 @@ export default createStore({
   mutations: {
     species (state: VCMapState, species: Species) {
       state.species = species;
-    },
-    map(state: VCMapState, map: Map) {
-      state.map = map;
     },
     chromosome (state: VCMapState, chromosome: Chromosome) {
       state.chromosome = chromosome;
@@ -193,9 +188,6 @@ export default createStore({
     setSpecies (context: ActionContext<VCMapState, VCMapState>, species: Species) {
       context.commit('species', species);
     },
-    setMap (context: ActionContext<VCMapState, VCMapState>, map: Map) {
-      context.commit('map', map);
-    },
     setChromosome (context: ActionContext<VCMapState, VCMapState>, chromosome: Chromosome) {
       context.commit('chromosome', chromosome);
     },
@@ -260,9 +252,6 @@ export default createStore({
   getters: {
     getSpecies (state: VCMapState) {
       return state.species;
-    },
-    getMap (state: VCMapState) {
-      return state.map;
     },
     getChromosome (state: VCMapState) {
       return state.chromosome;
