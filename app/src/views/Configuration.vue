@@ -90,12 +90,22 @@
               <Message severity="warn" closeable v-if="comparativeSpecies.length >= 3">Selecting 3 or more species might cause display errors</Message>
             </div>
             <div class="grid" v-for="(species, index) in comparativeSpecies" :key="index">
-              <div class="lg:col-5 lg:col-offset-3 md:col-6 md:col-offset-2 sm:col-8 sm:col-offset-1">
+              <div class="lg:col-3 lg:col-offset-3 md:col-3 md:col-offset-2 sm:col-4 sm:col-offset-1">
                 <Dropdown 
                   v-model="comparativeSpecies[index]" 
                   :loading="isLoadingSpecies"
                   :options="speciesOptions"
                   optionLabel="name" 
+                  placeholder="Comparative Species"
+                  />
+              </div>
+              <div class="lg:col-2 md:col-3 sm:col-4">
+                <Dropdown 
+                  v-model="(comparativeSpecies[index] as Species).activeMap"
+                  :disabled="!(comparativeSpecies[index] as Species).typeKey"
+                  :options="getAssemblyOptionsForSpecies(index)"
+                  :optionLabel="getAssemblyOptionLabel" 
+                  placeholder="Comparative Assembly"
                   />
               </div>
               <div class="lg:col-1 md:col-2 sm:col-2">
@@ -114,7 +124,7 @@
           <div class="col-12">
             <div class="grid">
               <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1 ">
-                <h4>Backbone Species</h4>
+                <h4>Species</h4>
                 <Dropdown 
                   v-model="backboneSpecies" 
                   :options="speciesOptions" 
@@ -126,13 +136,13 @@
             </div>
             <div class="grid">
               <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
-                <h4>Backbone Assembly</h4>
+                <h4>Assembly</h4>
                 <Dropdown 
                   v-model="backboneAssembly" 
                   :options="backboneAssemblies" 
                   :disabled="!backboneSpecies"
                   @change="setChromosomeOptions($event.value)"
-                  :optionLabel="(assembly: Map) => assembly.primaryRefAssembly ? `${assembly.name} (primary)` : assembly.name" 
+                  :optionLabel="getAssemblyOptionLabel" 
                   placeholder="Backbone Assembly" />
               </div>
             </div>
@@ -198,12 +208,22 @@
               <Message severity="warn" closeable v-if="comparativeSpecies.length >= 3">Selecting 3 or more species might cause display errors</Message>
             </div>
             <div class="grid" v-for="(species, index) in comparativeSpecies" :key="index">
-              <div class="lg:col-5 lg:col-offset-3 md:col-6 md:col-offset-2 sm:col-8 sm:col-offset-1">
+              <div class="lg:col-3 lg:col-offset-3 md:col-3 md:col-offset-2 sm:col-4 sm:col-offset-1">
                 <Dropdown 
                   v-model="comparativeSpecies[index]" 
                   :loading="isLoadingSpecies"
                   :options="speciesOptions"
                   optionLabel="name" 
+                  placeholder="Comparative Species"
+                  />
+              </div>
+              <div class="lg:col-2 md:col-3 sm:col-4">
+                <Dropdown 
+                  v-model="(comparativeSpecies[index] as Species).activeMap"
+                  :disabled="!(comparativeSpecies[index] as Species).typeKey"
+                  :options="getAssemblyOptionsForSpecies(index)"
+                  :optionLabel="getAssemblyOptionLabel" 
+                  placeholder="Comparative Assembly"
                   />
               </div>
               <div class="lg:col-1 md:col-2 sm:col-2">
@@ -271,8 +291,8 @@ const isLoadingChromosome = ref(false);
 const startPosition = ref<number | null>(null);
 const stopPosition = ref<number | null>(null);
 const maxPosition = ref<number | null>(null);
-//numbers represent placeholder values until a species is selected.  On submit all nonSpecies values are removed
-let comparativeSpecies = ref<Species[] | Number[]>([]);
+
+const comparativeSpecies = ref<(Species|Number)[]>([]);
 
 const showError = ref(false);
 const errorMessage = ref('');
@@ -561,7 +581,7 @@ function saveConfigToStoreAndGoToMainScreen()
       index--;
     }
   }
-  store.commit('comparativeSpecies', comparativeSpecies.value);
+  store.dispatch('setComparativeSpecies', comparativeSpecies.value);
   store.dispatch('setConfigTab', activeTab.value);
 
   router.push('/main');
@@ -586,6 +606,22 @@ function addTempComparativeSpecies()
 function removeTempComparativeSpecies(index: number)
 {
   comparativeSpecies.value.splice(index, 1);
+}
+
+function getAssemblyOptionsForSpecies(index: number)
+{
+  if (comparativeSpecies.value.length <= index)
+  {
+    return [];
+  }
+
+  const species = (comparativeSpecies.value[index] as Species);
+  return species.maps ?? [];
+}
+
+function getAssemblyOptionLabel(assembly: Map)
+{
+  return assembly.primaryRefAssembly ? `${assembly.name} (primary)` : assembly.name;
 }
 </script>
 

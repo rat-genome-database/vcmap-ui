@@ -90,29 +90,9 @@ export default createStore({
     gene (state: VCMapState, gene: Gene) {
       state.gene = gene;
     },
-
     comparativeSpecies (state: VCMapState, speciesArray: Species[]) {
       state.comparativeSpecies = speciesArray;
     },
-    addComparativeSpecies(state: VCMapState, species: Species ) {
-      if (state.comparativeSpecies.indexOf(species) == -1) 
-      {
-        state.comparativeSpecies.push(species);
-      }
-    },
-    removeComparativeSpecies(state: VCMapState, index: number) {
-      state.comparativeSpecies.splice(index, 1);
-    },
-    changeComparativeSpecies(state: VCMapState, species: Species) {
-      for (let index = 0; index < state.backboneDataTracks.length; index++)
-      {
-        if (state.comparativeSpecies[index].name === species.name)
-        {
-          state.comparativeSpecies[index] = species;
-        }
-      }
-    },
-
     selectedBackboneRegion ( state: VCMapState, selection: BackboneSelection) {
       state.selectedBackboneRegion = selection;
     },
@@ -144,22 +124,18 @@ export default createStore({
       console.debug(`Setting details panel synteny threshold to ${threshold}bp`);
       state.detailsSyntenyThreshold = threshold;
     },
-
     backboneDataTracks(state: VCMapState, tracks: DataTrack[]) {
       state.backboneDataTracks = tracks;
     },
-
     addBackboneDataTrack(state: VCMapState, track: DataTrack ) {
       if (state.backboneDataTracks.indexOf(track) == -1) 
       {
         state.backboneDataTracks.push(track);
       }
     },
-
     removeBackboneDataTrack(state: VCMapState, index: number) {
       state.backboneDataTracks.splice(index, 1);
     },
-
     changeBackboneDataTrack(state: VCMapState, track: DataTrack ) {
       for (let index = 0; index < state.backboneDataTracks.length; index++)
       {
@@ -246,6 +222,9 @@ export default createStore({
     setTooltipData(context: ActionContext<VCMapState, VCMapState>, tooltip: TooltipData) {
       context.commit('tooltipData', tooltip);
     },
+    setComparativeSpecies(context: ActionContext<VCMapState, VCMapState>, species: Species[]) {
+      context.commit('comparativeSpecies', species);
+    },
   },
 
   getters: {
@@ -265,7 +244,7 @@ export default createStore({
       return state.gene;
     },
     getComparativeSpecies (state: VCMapState) {
-      return state.comparativeSpecies as Species[];
+      return state.comparativeSpecies;
     },
     getSelectedBackboneRegion (state: VCMapState) {
       return state.selectedBackboneRegion;
