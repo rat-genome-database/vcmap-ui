@@ -1,5 +1,6 @@
 import { Formatter } from '@/utils/Formatter';
 import Chromosome from './Chromosome';
+import Gene from './Gene';
 
 interface TrackSectionParams
 {
@@ -12,7 +13,7 @@ interface TrackSectionParams
   offsetCount?: number; // number of base pairs before this section should begin, useful for knowing when to begin drawing the section
   basePairToHeightRatio: number; // number of base pairs per unit of height in the SVG, use the Resolution module to get the correct ratio
   shape: 'rect' | 'line';
-  gene?: string; // name of the gene this section represents (optional)
+  gene?: Gene; // optional - the gene that this section represents
 }
 
 export default class TrackSection
@@ -22,7 +23,7 @@ export default class TrackSection
   backboneStart: number = 0;
   backboneStop: number = 0;
   chromosome: string = '';
-  gene?: string;
+  gene?: Gene;
   isHighlighted: boolean = false;
   shape: 'rect' | 'line' = 'rect';
   private _offsetCount: number = 0;

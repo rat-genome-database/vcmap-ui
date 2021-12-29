@@ -10,7 +10,8 @@
   <template v-if="props.tooltipData?.genomicSection">
     <text data-test="chromosome-name" class="label small" :x="xPos + 2" :y="props.tooltipData.y + 10">Chromosome: {{props.tooltipData.genomicSection.chromosome}}</text>
     <text data-test="start-stop" class="label small" :x="xPos + 2" :y="props.tooltipData.y + 20">Region: {{props.tooltipData.genomicSection.startBPLabel}} - {{props.tooltipData.genomicSection.stopBPLabel}}</text>
-    <text v-if="props.tooltipData.genomicSection.gene" data-test="gene-name" class="label small" :x="xPos + 2" :y="props.tooltipData.y + 30">Gene: {{props.tooltipData.genomicSection.gene}}</text>
+    <text v-if="props.tooltipData.genomicSection.gene" data-test="gene-name" class="label small" :x="xPos + 2" :y="props.tooltipData.y + 30">Symbol: {{props.tooltipData.genomicSection.gene.symbol}}</text>
+    <text v-if="props.tooltipData.genomicSection.gene" data-test="gene-name" class="label small" :x="xPos + 2" :y="props.tooltipData.y + 40">Name: {{props.tooltipData.genomicSection.gene.name}}</text>
   </template>
 </template>
 
@@ -36,9 +37,9 @@ const width = computed(() => {
     return DEFAULT_WIDTH;
   }
 
-  const gene = props.tooltipData.genomicSection.gene;
-  // Based on font size, the width will need to increase if the gene name is longer than 26 chars...
-  const diff = (gene.length - 24);
+  const geneName = props.tooltipData.genomicSection.gene.name;
+  // Based on font size, the width will need to increase if the geneName name is longer than 26 chars...
+  const diff = (geneName.length - 24);
   if (diff > 0)
   {
     // Use larger multiplier for gene names that are just barely over the width limit 
