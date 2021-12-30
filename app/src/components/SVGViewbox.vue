@@ -113,7 +113,6 @@ onMounted(() => {
 
 watch(() => store.getters.getSelectedBackboneRegion, () => {
   store.dispatch('setDetailsZoom', 1);
-  removeSelectionDataTracks();
   updateDetailsPanel();
 });
 
@@ -133,7 +132,6 @@ watch(() => store.getters.getOverviewZoom, (newVal, oldVal) => {
 });
 
 watch(() => store.getters.getDetailsZoom, () => {
-  removeSelectionDataTracks();
   updateDetailsPanel();
 });
 
@@ -293,6 +291,9 @@ const updateDetailsPanelComparativeTracks = async () => {
 };
 
 const updateDetailsPanel = async () => {
+  
+  removeSelectionDataTracks();
+
   let originalSelectedBackboneRegion = store.getters.getSelectedBackboneRegion as BackboneSelection | null;
   let selectedStart = originalSelectedBackboneRegion?.basePairStart;
   let selectedStop = originalSelectedBackboneRegion?.basePairStop;

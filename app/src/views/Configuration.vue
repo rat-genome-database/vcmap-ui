@@ -312,7 +312,7 @@ const errorMessage = ref('');
 onMounted(prepopulateConfigOptions);
 
 const isValidConfig = computed(() => {
-  const isCommonConfigValid = backboneSpecies.value && comparativeSpeciesSelections.value.length > 0;
+  const isCommonConfigValid = backboneSpecies.value && comparativeSpeciesSelections.value.length > 0 && comparativeSpeciesSelections.value.every(s => s.typeKey !== 0 && s.mapKey !== 0);
   if (!isCommonConfigValid)
   {
     return false;

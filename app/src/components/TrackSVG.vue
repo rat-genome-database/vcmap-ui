@@ -40,7 +40,7 @@
       :y1="getSectionYPosition(posY, index)" :y2="getSectionYPosition(posY, index) + section.height" />
 
     <!-- Chromosome Label -->
-    <text v-if="showChromosome && section.height > 15" 
+    <text v-if="showChromosome && section.height > 15 && section.shape !== 'line'" 
       class="chromosome-label" 
       :x="posX + (width / 2)" 
       :y="getSectionYPosition(posY, index) + (section.height / 2)"
