@@ -9,7 +9,6 @@ import { ExternalComponentsHandler } from '@/utils/ExternalComponentsHandler';
 const mockStore = createStore({
   state: {
     species: new Species({ typeKey: 1, name: 'Test Species', defaultMapKey: 1, maps: [new Map({ key: 1, primaryRefAssembly: true, description: '', notes: '', name: 'GRCh38'})]}),
-    map: null,
     chromosome: null,
     startPos: null,
     stopPos: null,
@@ -19,8 +18,8 @@ const mockStore = createStore({
       new Species({ typeKey: 3, name: 'Test Species 3', defaultMapKey: 3, maps: [new Map({ key: 3, primaryRefAssembly: true, description: '', notes: '', name: 'GRCh36'})] })
     ],
     selectedBackboneRegion: null,
-    backboneZoom: 1,
-    comparativeZoom: 1,
+    overviewZoom: 1,
+    detailsZoom: 1,
     displayStartPos: 0,
     displayStopPos: 0,
     backboneBasePairToHeightRatio: 1000,

@@ -13,15 +13,14 @@ describe('OverviewControls', () => {
   let actions: ActionTree<VCMapState, VCMapState>;
   let state = {
     species: new Species({ typeKey: 1, name: 'Test Species', defaultMapKey: 1, maps: [new Map({ key: 1, primaryRefAssembly: true, description: '', notes: '', name: 'GRCh38'})]}),
-    map: null,
     chromosome: new Chromosome({ chromosome: '1', mapKey: 38, seqLength: 1000000, gapCount: 5, gapLength: 10000, contigCount: 100, ordinalNumber: 1 }),
     startPos: 1,
     stopPos: 10000,
     gene: null,
     comparativeSpecies: [],
     selectedBackboneRegion: null,
-    backboneZoom: 1,
-    comparativeZoom: 1,
+    overviewZoom: 1,
+    detailsZoom: 1,
     displayStartPos: 1,
     displayStopPos: 10000,
     backboneBasePairToHeightRatio: 1000,

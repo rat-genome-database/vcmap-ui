@@ -4,11 +4,13 @@ export default class Track
 {
   sections: TrackSection[] = [];
   name: string;
+  mapName?: string;
 
-  constructor(speciesName: string, sections: TrackSection[])
+  constructor(speciesName: string, sections: TrackSection[], mapName?: string)
   {
     this.name = speciesName;
     this.sections = sections;
+    this.mapName = mapName;
   }
 
   public get height()

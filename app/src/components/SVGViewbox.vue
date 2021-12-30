@@ -15,6 +15,7 @@
     <!-- backbone species track -->
     <text class="label medium bold" :x="ViewSize.overviewTitleXPosition" :y="ViewSize.panelTitleYPosition">Overview</text>
     <text v-if="backboneSpecies" class="label small" :x="ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{backboneSpecies.name}} (backbone)</text>
+    <text v-if="backboneSpecies" class="label small" :x="ViewSize.backboneXPosition" :y="ViewSize.trackMapLabelYPosition">{{backboneSpecies.activeMap.name}}</text>
     <TrackSVG v-if="backboneTrack" is-selectable show-start-stop show-chromosome :pos-x="ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="backboneTrack as Track" />
 
     <!-- backbone data tracks -->
@@ -26,12 +27,14 @@
     <!-- Comparative species synteny tracks -->
     <template v-for="(track, index) in drawnOverviewTracks" :key="track">
       <text v-if="track.type === 'track'" class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{track.name}}</text>
+      <text v-if="track.type === 'track'" class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :y="ViewSize.trackMapLabelYPosition">{{track.mapName}}</text>
       <TrackSVG v-if="track.type === 'track'" show-data-on-hover show-chromosome :pos-x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="track.track as Track" />
     </template>
 
     <!-- Comparative panel SVGs ----------------------------------------->
     <text class="label medium bold" :x="ViewSize.selectedBackboneXPosition" :y="ViewSize.panelTitleYPosition">Detailed</text>
-    <text v-if="backboneSpecies" class="label small" :x="ViewSize.selectedBackboneXPosition" :y="ViewSize.trackLabelYPosition">{{backboneSpecies.name}} (backbone)</text>
+    <text v-if="backboneSpecies && backboneSelectionTrack" class="label small" :x="ViewSize.selectedBackboneXPosition" :y="ViewSize.trackLabelYPosition">{{backboneSpecies.name}} (backbone)</text>
+    <text v-if="backboneSpecies && backboneSelectionTrack" class="label small" :x="ViewSize.selectedBackboneXPosition" :y="ViewSize.trackMapLabelYPosition">{{backboneSpecies.activeMap.name}}</text>
     <TrackSVG v-if="backboneSelectionTrack" show-data-on-hover show-start-stop show-chromosome :pos-x="ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="backboneSelectionTrack as Track" />
 
     <!-- comparative backbone data tracks -->
@@ -43,6 +46,7 @@
     <!-- Comparative species (selected region) synteny tracks -->
     <template v-for="(track, index) in drawnDetailsTracks" :key="track">
       <text v-if="track.type === 'track'" class="label small" :x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :y="ViewSize.trackLabelYPosition">{{track.name}}</text>
+      <text v-if="track.type === 'track'" class="label small" :x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :y="ViewSize.trackMapLabelYPosition">{{track.mapName}}</text>
       <TrackSVG v-if="track.type === 'track'" show-data-on-hover show-start-stop show-chromosome :pos-x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="track.track as Track" />
     </template>
 
@@ -85,8 +89,8 @@ const isLoading = ref(false);
 const backboneSelectionTrack = ref<Track | null>(null);
 const comparativeSelectionTracks = ref<Track[]>([]);
 
-const drawnOverviewTracks = ref<DataTrack[] | Track[]>([]);
-const drawnDetailsTracks = ref<DataTrack[] | Track[]>([]);
+const drawnOverviewTracks = ref<(DataTrack|Track)[]>([]);
+const drawnDetailsTracks = ref<(DataTrack|Track)[]>([]);
 
 const showDialog = ref(false);
 const dialogHeader = ref('');
@@ -95,7 +99,7 @@ const dialogMessage = ref('');
 /**
  * Once mounted, let's set our reactive data props and create the backbone and synteny tracks
  */
-onMounted(() => {
+onMounted(async () => {
   // Clear any prior selections
   store.dispatch('setTooltipData', null);
   store.dispatch('setSelectedBackboneRegion', null);
@@ -104,16 +108,16 @@ onMounted(() => {
   backboneSpecies.value = store.getters.getSpecies;
   backboneChromosome.value = store.getters.getChromosome;
 
-  updateOverviewPanel();
+  await updateOverviewPanel();
+  checkSyntenyResultsOnComparativeSpecies();
 });
 
 watch(() => store.getters.getSelectedBackboneRegion, () => {
-  store.dispatch('setComparativeZoom', 1);
-  removeSelectionDataTracks();
+  store.dispatch('setDetailsZoom', 1);
   updateDetailsPanel();
 });
 
-watch(() => store.getters.getBackboneZoom, (newVal, oldVal) => {
+watch(() => store.getters.getOverviewZoom, (newVal, oldVal) => {
   let backboneStart = store.getters.getStartPosition;
   let backboneStop = store.getters.getStopPosition;
 
@@ -128,8 +132,7 @@ watch(() => store.getters.getBackboneZoom, (newVal, oldVal) => {
   updateOverviewPanel();
 });
 
-watch(() => store.getters.getComparativeZoom, () => {
-  removeSelectionDataTracks();
+watch(() => store.getters.getDetailsZoom, () => {
   updateDetailsPanel();
 });
 
@@ -199,7 +202,7 @@ const updateOverviewPanel = async () => {
   let backboneStop = store.getters.getDisplayStopPosition;
   if (backboneStop - backboneStart > 0)
   {
-    store.dispatch('setBackboneResolution', backboneStop - backboneStart);
+    store.dispatch('setOverviewResolution', backboneStop - backboneStart);
     backboneTrack.value = createBackboneTrack(backboneStart, backboneStop, store.getters.getBackboneBasePairToHeightRatio) ?? null;
 
     let tempBackboneTracks = await createBackboneDataTracks(backboneStart, backboneStop, store.getters.getBackboneBasePairToHeightRatio, false) as DataTrack;
@@ -256,7 +259,7 @@ const updateDetailsPanelComparativeTracks = async () => {
   }
   else
   {
-    const { start: selectedBackboneStart, stop: selectedBackboneStop } = getZoomedStartAndStopPositions(selectedStart, selectedStop, store.getters.getComparativeZoom);
+    const { start: selectedBackboneStart, stop: selectedBackboneStop } = getZoomedStartAndStopPositions(selectedStart, selectedStop, store.getters.getDetailsZoom);
 
     if (selectedBackboneStart != null && selectedBackboneStop != null)
     {
@@ -277,6 +280,9 @@ const updateDetailsPanelComparativeTracks = async () => {
 };
 
 const updateDetailsPanel = async () => {
+
+  removeSelectionDataTracks();
+
   let originalSelectedBackboneRegion = store.getters.getSelectedBackboneRegion as BackboneSelection | null;
   let selectedStart = originalSelectedBackboneRegion?.basePairStart;
   let selectedStop = originalSelectedBackboneRegion?.basePairStop;
@@ -288,11 +294,11 @@ const updateDetailsPanel = async () => {
   }
   else
   {
-    const { start: selectedBackboneStart, stop: selectedBackboneStop } = getZoomedStartAndStopPositions(selectedStart, selectedStop, store.getters.getComparativeZoom);
+    const { start: selectedBackboneStart, stop: selectedBackboneStop } = getZoomedStartAndStopPositions(selectedStart, selectedStop, store.getters.getDetailsZoom);
 
     if (selectedBackboneStart != null && selectedBackboneStop != null)
     {
-      store.dispatch('setComparativeResolution', selectedBackboneStop - selectedBackboneStart);
+      store.dispatch('setDetailsResolution', selectedBackboneStop - selectedBackboneStart);
       backboneSelectionTrack.value = createBackboneTrack(selectedBackboneStart, selectedBackboneStop, store.getters.getComparativeBasePairToHeightRatio) ?? null;
 
       let tempBackboneTracks = await createBackboneDataTracks(selectedBackboneStart, selectedBackboneStop, store.getters.getComparativeBasePairToHeightRatio, true) as DataTrack;
@@ -368,20 +374,8 @@ const createSyntenyTracks = async (backboneStart: number, backboneStop: number, 
   try
   {
     isLoading.value = true;
-    // Use primary maps for comparative species
-    const comparativeSpeciesMaps = [];
-    for (const species of comparativeSpecies)
-    {
-      for (const map of species.maps)
-      {
-        if (species.defaultMapKey === map.key)
-        {
-          comparativeSpeciesMaps.push(map);
-          break;
-        }
-      }
-    }
 
+    const comparativeSpeciesMaps = comparativeSpecies.map(s => s.activeMap);
     if (backboneStart == null || backboneStop == null || backboneChr == null || comparativeSpeciesMaps.length === 0)
     {
       onError(
@@ -406,27 +400,24 @@ const createSyntenyTracks = async (backboneStart: number, backboneStop: number, 
     });
 
     const syntenyBlockResults = await Promise.allSettled(syntenyCalls);
-    let speciesSyntenyMap: {[speciesName: string]: SyntenyRegionData[]} = {};
+    const tracks: Track[] = [];
     syntenyBlockResults.forEach((result, index) => {
       if (result.status === 'fulfilled')
       {
-        speciesSyntenyMap[comparativeSpecies[index].name] = result.value;
+        const speciesName = comparativeSpecies[index].name;
+        const mapName = comparativeSpeciesMaps[index].name;
+        // Build synteny tracks for successful API calls
+        console.debug(`-- Building synteny track for species: ${speciesName} / ${mapName} --`);
+        const trackSections = splitBlocksAndGapsIntoSections(result.value, backboneStart, backboneStop, basePairToHeightRatio, syntenyThreshold);
+        const track = new Track(speciesName, trackSections, mapName);
+        tracks.push(track);
       }
       else
       {
         console.error(result.status, result.reason);
-        speciesSyntenyMap[comparativeSpecies[index].name] = [];
       }
     });
 
-    const tracks: Track[] = [];
-    for (let speciesName in speciesSyntenyMap)
-    {
-      console.debug(`-- Building synteny track for species: ${speciesName} --`);
-      const trackSections = splitBlocksAndGapsIntoSections(speciesSyntenyMap[speciesName], backboneStart, backboneStop, basePairToHeightRatio, syntenyThreshold);
-      const track = new Track(speciesName, trackSections);
-      tracks.push(track);
-    }
     tempComparativeTracks = tracks;
   }
   catch (err)
@@ -437,12 +428,6 @@ const createSyntenyTracks = async (backboneStart: number, backboneStop: number, 
   finally
   {
     isLoading.value = false;
-  }
-
-  let resultsFound = tempComparativeTracks.some(track => track.sections.length > 0);
-  if (!resultsFound)
-  {
-    showNoResultsDialog();
   }
 
   return tempComparativeTracks;
@@ -547,7 +532,7 @@ const setDisplayedObjects = (isComparative: boolean) => {
     for (let index = 0; index < comparativeSyntenyTracks.length; index++)
     {
       let currentTrack = comparativeSyntenyTracks[index];
-      let drawnObject = {'type': 'track', 'track': currentTrack, 'name': currentTrack.name, };
+      let drawnObject = {'type': 'track', 'track': currentTrack, 'name': currentTrack.name, mapName: currentTrack.mapName };
       drawnDetailsTracks.value.push(drawnObject);
     }
   }
@@ -574,7 +559,7 @@ const setDisplayedObjects = (isComparative: boolean) => {
     for (let index = 0; index < overviewSyntenyTracks.length; index++)
     {
       let currentTrack = overviewSyntenyTracks[index];
-      let drawnObject = {'type': 'track', 'track': currentTrack, 'name': currentTrack.name, };
+      let drawnObject = {'type': 'track', 'track': currentTrack, 'name': currentTrack.name, mapName: currentTrack.mapName };
       drawnOverviewTracks.value.push(drawnObject);
     }
   }
@@ -759,6 +744,26 @@ const showNoResultsDialog = () => {
   dialogHeader.value = 'No Results';
   dialogMessage.value = 'No syntenic regions were found for the selected species and base pair range.';
   showDialog.value = true;
+};
+
+const showPartialResultsDialog = (emptyTracks: Track[]) => {
+  dialogHeader.value = 'Missing Results';
+  dialogMessage.value = `We did not find syntenic regions for the following species: ${emptyTracks.map(t => `${t.name} (${t.mapName})`).join(', ')}`;
+  showDialog.value = true;
+};
+
+const checkSyntenyResultsOnComparativeSpecies = () => {
+  let resultsFound = comparativeTracks.value.some(track => track.sections.length > 0);
+    if (!resultsFound)
+    {
+      showNoResultsDialog();
+    }
+    else if (comparativeTracks.value.some(track => track.sections.length === 0))
+    {
+      // If only some results were found -- notify user about which ones produced no results
+      const emptyTracks = comparativeTracks.value.filter(track => track.sections.length === 0);
+      showPartialResultsDialog(emptyTracks as Track[]);
+    }
 };
 </script>
 

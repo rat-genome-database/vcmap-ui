@@ -4,11 +4,11 @@
       <h4>Details</h4>
       <div class="grid unpadded">
         <div class="col-5">Displaying:</div>
-        <div class="col-7 bold">{{comparativeSpecies?.map(s => s.name).join(', ')}}</div>
+        <div class="col-7 bold">{{displayedSpeciesText}}</div>
         <div class="col-5">Synteny Threshold:</div>
         <div class="col-7 bold">{{Formatter.addCommasToBasePair(store.getters.getDetailsSyntenyThreshold)}}bp</div>
         <div class="col-5">Zoom Level:</div>
-        <div class="col-7 bold"><Zoom type="comparative" :min="1" /></div>
+        <div class="col-7 bold"><Zoom type="details" :min="1" /></div>
         <div class="col-5">Show Gaps:</div>
         <div class="col-7">
           <div class="p-field-checkbox">
@@ -29,20 +29,24 @@ import { Formatter } from '@/utils/Formatter';
 
 const store = useStore();
 
-let showGaps = ref<boolean>(false);
+let showGaps = ref(false);
 
 onMounted(() => {
   showGaps.value = store.getters.getShowDetailsGaps;
 });
 
-const comparativeSpecies = computed(() => {
-  let species = [] as Species[];
-  if (store.getters.getComparativeSpecies)
-  {
-    species = store.getters.getComparativeSpecies;
-  }
+const displayedSpeciesText = computed(() => {
+  let text = '';
+  store.getters.getComparativeSpecies.forEach((species: Species) => {
+    if (text.length > 0)
+    {
+      text += ', ';
+    }
 
-  return species;
+    text += `${species.name} (${species.activeMap.name})`;
+  });
+
+  return text;
 });
 
 const changeDetailsGaps = (val: boolean) => {

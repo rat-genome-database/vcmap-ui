@@ -87,15 +87,28 @@
               <Button @click="addTempComparativeSpecies" label="Add Species" icon="pi pi-plus-circle" class="p-button" style="margin-right: .5em"/>
             </div>
             <div class="col-6 col-offset-3 text-center">
-              <Message severity="warn" closeable v-if="comparativeSpecies.length >= 3">Selecting 3 or more species might cause display errors</Message>
+              <Message severity="warn" closeable v-if="comparativeSpeciesSelections.length >= 3">Selecting 3 or more species might cause display errors</Message>
             </div>
-            <div class="grid" v-for="(species, index) in comparativeSpecies" :key="index">
-              <div class="lg:col-5 lg:col-offset-3 md:col-6 md:col-offset-2 sm:col-8 sm:col-offset-1">
+            <div class="grid" v-for="(species, index) in comparativeSpeciesSelections" :key="index">
+              <div class="lg:col-3 lg:col-offset-3 md:col-3 md:col-offset-2 sm:col-4 sm:col-offset-1">
                 <Dropdown 
-                  v-model="comparativeSpecies[index]" 
+                  v-model="comparativeSpeciesSelections[index].typeKey" 
                   :loading="isLoadingSpecies"
                   :options="speciesOptions"
+                  @change="setPrimaryAssembly(index)"
+                  optionValue="typeKey"
                   optionLabel="name" 
+                  placeholder="Comparative Species"
+                  />
+              </div>
+              <div class="lg:col-2 md:col-3 sm:col-4">
+                <Dropdown 
+                  v-model="comparativeSpeciesSelections[index].mapKey"
+                  :disabled="comparativeSpeciesSelections[index].typeKey === 0"
+                  :options="getAssemblyOptionsForSpecies(index)"
+                  :optionLabel="getAssemblyOptionLabel"
+                  optionValue="key"
+                  placeholder="Comparative Assembly"
                   />
               </div>
               <div class="lg:col-1 md:col-2 sm:col-2">
@@ -114,7 +127,7 @@
           <div class="col-12">
             <div class="grid">
               <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1 ">
-                <h4>Backbone Species</h4>
+                <h4>Species</h4>
                 <Dropdown 
                   v-model="backboneSpecies" 
                   :options="speciesOptions" 
@@ -126,13 +139,13 @@
             </div>
             <div class="grid">
               <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
-                <h4>Backbone Assembly</h4>
+                <h4>Assembly</h4>
                 <Dropdown 
                   v-model="backboneAssembly" 
                   :options="backboneAssemblies" 
                   :disabled="!backboneSpecies"
                   @change="setChromosomeOptions($event.value)"
-                  :optionLabel="(assembly: Map) => assembly.primaryRefAssembly ? `${assembly.name} (primary)` : assembly.name" 
+                  :optionLabel="getAssemblyOptionLabel" 
                   placeholder="Backbone Assembly" />
               </div>
             </div>
@@ -195,15 +208,28 @@
               <Button @click="addTempComparativeSpecies" label="Add Species" icon="pi pi-plus-circle" class="p-button" style="margin-right: .5em"/>
             </div>
             <div class="col-6 col-offset-3 text-center">
-              <Message severity="warn" closeable v-if="comparativeSpecies.length >= 3">Selecting 3 or more species might cause display errors</Message>
+              <Message severity="warn" closeable v-if="comparativeSpeciesSelections.length >= 3">Selecting 3 or more species might cause display errors</Message>
             </div>
-            <div class="grid" v-for="(species, index) in comparativeSpecies" :key="index">
-              <div class="lg:col-5 lg:col-offset-3 md:col-6 md:col-offset-2 sm:col-8 sm:col-offset-1">
+            <div class="grid" v-for="(species, index) in comparativeSpeciesSelections" :key="index">
+              <div class="lg:col-3 lg:col-offset-3 md:col-3 md:col-offset-2 sm:col-4 sm:col-offset-1">
                 <Dropdown 
-                  v-model="comparativeSpecies[index]" 
+                  v-model="comparativeSpeciesSelections[index].typeKey" 
                   :loading="isLoadingSpecies"
                   :options="speciesOptions"
+                  @change="setPrimaryAssembly(index)"
+                  optionValue="typeKey"
                   optionLabel="name" 
+                  placeholder="Comparative Species"
+                  />
+              </div>
+              <div class="lg:col-2 md:col-3 sm:col-4">
+                <Dropdown 
+                  v-model="comparativeSpeciesSelections[index].mapKey"
+                  :disabled="comparativeSpeciesSelections[index].typeKey === 0"
+                  :options="getAssemblyOptionsForSpecies(index)"
+                  :optionLabel="getAssemblyOptionLabel"
+                  optionValue="key"
+                  placeholder="Comparative Assembly"
                   />
               </div>
               <div class="lg:col-1 md:col-2 sm:col-2">
@@ -241,6 +267,12 @@ import { VERSION } from '@/version';
 import { Formatter } from '@/utils/Formatter';
 import VCMapDialog from '@/components/VCMapDialog.vue';
 
+interface ComparativeSpeciesSelection
+{
+  typeKey: number;
+  mapKey: number;
+}
+
 const router = useRouter();
 const store = useStore();
 
@@ -271,8 +303,8 @@ const isLoadingChromosome = ref(false);
 const startPosition = ref<number | null>(null);
 const stopPosition = ref<number | null>(null);
 const maxPosition = ref<number | null>(null);
-//numbers represent placeholder values until a species is selected.  On submit all nonSpecies values are removed
-let comparativeSpecies = ref<Species[] | Number[]>([]);
+
+const comparativeSpeciesSelections = ref<ComparativeSpeciesSelection[]>([]);
 
 const showError = ref(false);
 const errorMessage = ref('');
@@ -280,7 +312,7 @@ const errorMessage = ref('');
 onMounted(prepopulateConfigOptions);
 
 const isValidConfig = computed(() => {
-  const isCommonConfigValid = backboneSpecies.value && comparativeSpecies.value.length > 0;
+  const isCommonConfigValid = backboneSpecies.value && comparativeSpeciesSelections.value.length > 0 && comparativeSpeciesSelections.value.every(s => s.typeKey !== 0 && s.mapKey !== 0);
   if (!isCommonConfigValid)
   {
     return false;
@@ -509,20 +541,15 @@ async function prepopulateConfigOptions()
   // Pre-populate previously selected comparative species
   if (store.getters.getComparativeSpecies)
   {
-    // Avoiding setting the exact object from the store to our ref variable so that it doesn't get mutated on accident
     const prevComparativeSpecies = store.getters.getComparativeSpecies as Species[];
-    const tempSpecies: Species[] = [];
-    for (let i = 0; i < prevComparativeSpecies.length; i++)
-    {
-      for (let j = 0; j < speciesOptions.value.length; j++)
-      {
-        if (prevComparativeSpecies[i].typeKey === speciesOptions.value[j].typeKey)
-        {
-          tempSpecies.push(speciesOptions.value[j]);
-        }
-      }
-    }
-    comparativeSpecies.value = tempSpecies;
+    const selections: ComparativeSpeciesSelection[] = [];
+    prevComparativeSpecies.forEach(s => {
+      selections.push({
+        typeKey: s.typeKey, 
+        mapKey: (s.activeMap) ? s.activeMap.key : s.defaultMapKey
+      });
+    });
+    comparativeSpeciesSelections.value = selections;
   }
 }
 
@@ -553,15 +580,34 @@ function saveConfigToStoreAndGoToMainScreen()
     console.warn('Unknown active tab. State may not be set correctly.');
   }
 
-  for (let index = 0; index < comparativeSpecies.value.length; index++)
-  {
-    if (typeof comparativeSpecies.value[index] === 'number')
+  // Make copies of the selected comparative species/assemblies from our available options and push them onto an array before saving them to the store
+  const comparativeSpecies: Species[] = [];
+  comparativeSpeciesSelections.value.forEach(s => {
+    if (s.typeKey === 0)
     {
-      comparativeSpecies.value.splice(index, 1);
-      index--;
+      return;
     }
-  }
-  store.commit('comparativeSpecies', comparativeSpecies.value);
+
+    for (let i = 0; i < speciesOptions.value.length; i++)
+    {
+      if (speciesOptions.value[i].typeKey === s.typeKey)
+      {
+        const selectedSpecies = speciesOptions.value[i].copy();
+        for (let j = 0; j < selectedSpecies.maps.length; j++)
+        {
+          if (selectedSpecies.maps[j].key === s.mapKey)
+          {
+            selectedSpecies.activeMap = selectedSpecies.maps[j];
+            break;
+          }
+        }
+        comparativeSpecies.push(selectedSpecies);
+        break;
+      }
+    }
+  });
+
+  store.dispatch('setComparativeSpecies', comparativeSpecies);
   store.dispatch('setConfigTab', activeTab.value);
 
   router.push('/main');
@@ -576,25 +622,62 @@ function onApiError(err: any, userMessage: string)
 
 function addTempComparativeSpecies()
 {
-  let currLength = comparativeSpecies.value.length;
+  let currLength = comparativeSpeciesSelections.value.length;
   if (currLength < 5)
   {
-    comparativeSpecies.value.push(currLength + 1);
+    comparativeSpeciesSelections.value.push({ typeKey: 0, mapKey: 0 });
+  }
+  else
+  {
+    // Show message about not being able to handle more than 5 TODO
   }
 }
 
 function removeTempComparativeSpecies(index: number)
 {
-  comparativeSpecies.value.splice(index, 1);
+  comparativeSpeciesSelections.value.splice(index, 1);
 }
 
+function getAssemblyOptionsForSpecies(index: number)
+{
+  if (comparativeSpeciesSelections.value.length <= index)
+  {
+    return [];
+  }
 
-/* function resetStore() {
-  store.dispatch('setSpecies', null);
-  store.dispatch('setMap', null);
-  store.dispatch('setChromosomeNum', null);
-  store.dispatch('setChromosome', null);
-} */
+  for (let i = 0; i < speciesOptions.value.length; i++)
+  {
+    if (speciesOptions.value[i].typeKey === comparativeSpeciesSelections.value[index].typeKey)
+    {
+      return speciesOptions.value[i].maps;
+    }
+  }
+
+  return [];
+}
+
+function getAssemblyOptionLabel(assembly: Map)
+{
+  return assembly.primaryRefAssembly ? `${assembly.name} (primary)` : assembly.name;
+}
+
+function setPrimaryAssembly(index: number)
+{
+  let selectedSpecies: Species | undefined;
+  for (let i = 0; i < speciesOptions.value.length; i++)
+  {
+    if (speciesOptions.value[i].typeKey === comparativeSpeciesSelections.value[index].typeKey)
+    {
+      selectedSpecies = speciesOptions.value[i];
+      break;
+    }
+  }
+
+  if (selectedSpecies != null)
+  {
+    comparativeSpeciesSelections.value[index].mapKey = selectedSpecies.defaultMapKey;
+  }
+}
 </script>
 
 <style lang="scss" scoped>
