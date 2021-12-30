@@ -99,7 +99,7 @@ const dialogMessage = ref('');
 /**
  * Once mounted, let's set our reactive data props and create the backbone and synteny tracks
  */
-onMounted(() => {
+onMounted(async () => {
   // Clear any prior selections
   store.dispatch('setTooltipData', null);
   store.dispatch('setSelectedBackboneRegion', null);
@@ -108,7 +108,8 @@ onMounted(() => {
   backboneSpecies.value = store.getters.getSpecies;
   backboneChromosome.value = store.getters.getChromosome;
 
-  updateOverviewPanel();
+  await updateOverviewPanel();
+  checkSyntenyResultsOnComparativeSpecies();
 });
 
 watch(() => store.getters.getSelectedBackboneRegion, () => {
@@ -216,18 +217,6 @@ const updateOverviewPanel = async () => {
       store.getters.getShowOverviewGaps,
       store.getters.getOverviewSyntenyThreshold
     );
-
-    let resultsFound = comparativeTracks.value.some(track => track.sections.length > 0);
-    if (!resultsFound)
-    {
-      showNoResultsDialog();
-    }
-    else if (comparativeTracks.value.some(track => track.sections.length === 0))
-    {
-      // If only some results were found -- notify user about which ones produced no results
-      const emptyTracks = comparativeTracks.value.filter(track => track.sections.length === 0);
-      showPartialResultsDialog(emptyTracks as Track[]);
-    }
   }
   else
   {
@@ -291,7 +280,7 @@ const updateDetailsPanelComparativeTracks = async () => {
 };
 
 const updateDetailsPanel = async () => {
-  
+
   removeSelectionDataTracks();
 
   let originalSelectedBackboneRegion = store.getters.getSelectedBackboneRegion as BackboneSelection | null;
@@ -761,6 +750,20 @@ const showPartialResultsDialog = (emptyTracks: Track[]) => {
   dialogHeader.value = 'Missing Results';
   dialogMessage.value = `We did not find syntenic regions for the following species: ${emptyTracks.map(t => `${t.name} (${t.mapName})`).join(', ')}`;
   showDialog.value = true;
+};
+
+const checkSyntenyResultsOnComparativeSpecies = () => {
+  let resultsFound = comparativeTracks.value.some(track => track.sections.length > 0);
+    if (!resultsFound)
+    {
+      showNoResultsDialog();
+    }
+    else if (comparativeTracks.value.some(track => track.sections.length === 0))
+    {
+      // If only some results were found -- notify user about which ones produced no results
+      const emptyTracks = comparativeTracks.value.filter(track => track.sections.length === 0);
+      showPartialResultsDialog(emptyTracks as Track[]);
+    }
 };
 </script>
 
