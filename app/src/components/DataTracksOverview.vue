@@ -38,7 +38,7 @@ import { useStore } from 'vuex';
 
 const store = useStore();
 
-let showComparativeTracks = ref<boolean>(false);
+let showComparativeTracks = ref<boolean>(true);
 
 watch(() => store.getters.getSelectedBackboneRegion, (newVal) => {
   if (newVal && store.getters.getBackboneDataTracks?.length)
