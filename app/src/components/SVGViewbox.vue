@@ -133,6 +133,7 @@ watch(() => store.getters.getOverviewZoom, (newVal, oldVal) => {
 });
 
 watch(() => store.getters.getDetailsZoom, () => {
+  removeSelectionDataTracks();
   updateDetailsPanel();
 });
 
@@ -208,7 +209,33 @@ const updateOverviewPanel = async () => {
     let tempBackboneTracks = await createBackboneDataTracks(backboneStart, backboneStop, store.getters.getBackboneBasePairToHeightRatio, false) as DataTrack;
     if (tempBackboneTracks != null)
     {
-      setBackboneDataTracks(tempBackboneTracks);
+      if (store.getters.getBackboneDataTracks.length > 0)
+      {
+        let backboneDataTracks = store.getters.getBackboneDataTracks;
+        let overviewTrackPresent = false;
+        for (let index = 0; index < backboneDataTracks.length; index++)
+        {
+          let dataTrack = backboneDataTracks[index];
+          if (dataTrack.name == tempBackboneTracks.name)
+          {
+            overviewTrackPresent = true;
+            break;
+          }
+        }
+
+        if (overviewTrackPresent)
+        {
+          store.commit('changeBackboneDataTrack', tempBackboneTracks);
+        }
+        else
+        {
+          setBackboneDataTracks(tempBackboneTracks);
+        }
+      }
+      else
+      {
+        setBackboneDataTracks(tempBackboneTracks);
+      }
     }
     comparativeTracks.value = await createSyntenyTracks(
       backboneStart, 
@@ -304,7 +331,33 @@ const updateDetailsPanel = async () => {
       let tempBackboneTracks = await createBackboneDataTracks(selectedBackboneStart, selectedBackboneStop, store.getters.getComparativeBasePairToHeightRatio, true) as DataTrack;
       if (tempBackboneTracks != null)
       {
-        setBackboneDataTracks(tempBackboneTracks);
+        if (store.getters.getBackboneDataTracks.length > 0)
+        {
+          let detailTrackPresent = false;
+          let backboneDataTracks = store.getters.getBackboneDataTracks;
+          for (let index = 0; index < backboneDataTracks.length; index++)
+          {
+            let dataTrack = backboneDataTracks[index];
+            if (dataTrack.name == tempBackboneTracks.name)
+            {
+              detailTrackPresent = true;
+              break;
+            }
+          }
+
+          if (detailTrackPresent)
+          {
+            store.commit('changeBackboneDataTrack', tempBackboneTracks);
+          }
+          else
+          {
+            setBackboneDataTracks(tempBackboneTracks);
+          }
+        }
+        else
+        {
+          setBackboneDataTracks(tempBackboneTracks);
+        }
       }
       comparativeSelectionTracks.value = await createSyntenyTracks(
         selectedBackboneStart, 
@@ -488,10 +541,13 @@ const createBackboneDataTracks =  async (startPos: number, stopPos: number, base
     { 
       geneDataTrack = new DataTrack('Genes', backboneSpecies.name + ' Detailed Genes', geneTrack, 'red');
       geneDataTrack.setIsComparativeView(true);
+      geneDataTrack.isDisplayed = true;
+
     }
     else
     {
       geneDataTrack = new DataTrack('Genes', backboneSpecies.name + ' Overview Genes', geneTrack, 'red');
+      geneDataTrack.isDisplayed = true;
     }
     
 
