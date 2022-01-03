@@ -11,7 +11,7 @@
         <template #icons>
           <Button 
             @click="goToConfigurationScreen"
-            v-tooltip.left="'Load New Configuration'" 
+            v-tooltip.left="'Edit Configuration'" 
             icon="pi pi-cog" 
             class="p-panel-header-icon p-link p-mr-2" 
             data-test="load-config-btn" />

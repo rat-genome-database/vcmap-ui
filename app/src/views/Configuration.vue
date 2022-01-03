@@ -10,6 +10,9 @@
           <div class="col-12 text-center">
             <h2>Backbone Configuration</h2>
           </div>
+          <div class="col-12 text-center">
+            <Button @click="clearConfigSelections" label="Clear All" class="p-button-sm p-button-secondary" style="margin-right: .5em"/>
+          </div>
           <div class="col-12">
             <div class="grid">
               <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
@@ -123,6 +126,9 @@
         <div class="grid">
           <div class="col-12 text-center">
             <h2>Backbone Configuration</h2>
+          </div>
+          <div class="col-12 text-center">
+            <Button @click="clearConfigSelections" label="Clear All" class="p-button-sm p-button-secondary" style="margin-right: .5em"/>
           </div>
           <div class="col-12">
             <div class="grid">
@@ -677,6 +683,27 @@ function setPrimaryAssembly(index: number)
   {
     comparativeSpeciesSelections.value[index].mapKey = selectedSpecies.defaultMapKey;
   }
+}
+
+function clearConfigSelections()
+{
+  backboneSpecies.value = null;
+  backboneAssembly.value = null;
+  backboneChromosome.value = null;
+  backboneGene.value = null;
+  geneChromosome.value = null;
+  startPosition.value = null;
+  stopPosition.value = null;
+  maxPosition.value = null;
+  comparativeSpeciesSelections.value = [];
+
+  // Clear the store
+  store.dispatch('setSpecies', null);
+  store.dispatch('setGene', null);
+  store.dispatch('setChromosome', null);
+  store.dispatch('setStartPosition', null);
+  store.dispatch('setStopPosition', null);
+  store.dispatch('setComparativeSpecies', []);
 }
 </script>
 
