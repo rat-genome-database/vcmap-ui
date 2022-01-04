@@ -87,7 +87,7 @@
               <h2>Comparative Species</h2>
             </div>
             <div class="col-12 text-center">
-              <Button @click="addTempComparativeSpecies" label="Add Species" icon="pi pi-plus-circle" class="p-button" style="margin-right: .5em"/>
+              <Button @click="addTempComparativeSpecies" :label="(comparativeSpeciesLimitReached) ? 'Limit Reached' : 'Add Species'" :disabled="comparativeSpeciesLimitReached" icon="pi pi-plus-circle" class="p-button" style="margin-right: .5em"/>
             </div>
             <div class="col-6 col-offset-3">
               <Message severity="warn" closeable v-if="comparativeSpeciesSelections.length >= 3">Selecting 3 or more species might cause display errors</Message>
@@ -214,7 +214,7 @@
               <h2>Comparative Species</h2>
             </div>
             <div class="col-12 text-center">
-              <Button @click="addTempComparativeSpecies" label="Add Species" icon="pi pi-plus-circle" class="p-button" style="margin-right: .5em"/>
+              <Button @click="addTempComparativeSpecies" :label="(comparativeSpeciesLimitReached) ? 'Limit Reached' : 'Add Species'" :disabled="comparativeSpeciesLimitReached" icon="pi pi-plus-circle" class="p-button" style="margin-right: .5em"/>
             </div>
             <div class="col-6 col-offset-3">
               <Message severity="warn" closeable v-if="comparativeSpeciesSelections.length >= 3">Selecting 3 or more species might cause display errors</Message>
@@ -347,6 +347,10 @@ const isValidConfig = computed(() => {
   }
 
   return false;
+});
+
+const comparativeSpeciesLimitReached = computed(() => {
+  return (comparativeSpeciesSelections.value.length >= 5);
 });
 
 async function searchGene(event: {query: string})
@@ -647,10 +651,6 @@ function addTempComparativeSpecies()
   if (currLength < 5)
   {
     comparativeSpeciesSelections.value.push({ typeKey: 0, mapKey: 0, showWarning: false });
-  }
-  else
-  {
-    // Show message about not being able to handle more than 5 TODO
   }
 }
 
