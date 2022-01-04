@@ -87,9 +87,9 @@
               <h2>Comparative Species</h2>
             </div>
             <div class="col-12 text-center">
-              <Button @click="addTempComparativeSpecies" label="Add Species" icon="pi pi-plus-circle" class="p-button" style="margin-right: .5em"/>
+              <Button @click="addTempComparativeSpecies" :label="(comparativeSpeciesLimitReached) ? 'Limit Reached' : 'Add Species'" :disabled="comparativeSpeciesLimitReached" icon="pi pi-plus-circle" class="p-button" style="margin-right: .5em"/>
             </div>
-            <div class="col-6 col-offset-3 text-center">
+            <div class="col-6 col-offset-3">
               <Message severity="warn" closeable v-if="comparativeSpeciesSelections.length >= 3">Selecting 3 or more species might cause display errors</Message>
             </div>
             <div class="grid" v-for="(species, index) in comparativeSpeciesSelections" :key="index">
@@ -110,9 +110,12 @@
                   :disabled="comparativeSpeciesSelections[index].typeKey === 0"
                   :options="getAssemblyOptionsForSpecies(index)"
                   :optionLabel="getAssemblyOptionLabel"
+                  @change="checkAgainstBackboneSpeciesAndAssembly(comparativeSpeciesSelections[index])"
                   optionValue="key"
                   placeholder="Comparative Assembly"
+                  :class="{'border-warning': comparativeSpeciesSelections[index].showWarning}"
                   />
+                <small v-if="comparativeSpeciesSelections[index].showWarning" class="warning-text">Warning: Selected same species and assembly as the backbone</small>
               </div>
               <div class="lg:col-1 md:col-2 sm:col-2">
                 <Button @click="removeTempComparativeSpecies(index)" label="Remove" icon="pi pi-minus-circle" class="p-button-sm p-button-danger" />
@@ -211,9 +214,9 @@
               <h2>Comparative Species</h2>
             </div>
             <div class="col-12 text-center">
-              <Button @click="addTempComparativeSpecies" label="Add Species" icon="pi pi-plus-circle" class="p-button" style="margin-right: .5em"/>
+              <Button @click="addTempComparativeSpecies" :label="(comparativeSpeciesLimitReached) ? 'Limit Reached' : 'Add Species'" :disabled="comparativeSpeciesLimitReached" icon="pi pi-plus-circle" class="p-button" style="margin-right: .5em"/>
             </div>
-            <div class="col-6 col-offset-3 text-center">
+            <div class="col-6 col-offset-3">
               <Message severity="warn" closeable v-if="comparativeSpeciesSelections.length >= 3">Selecting 3 or more species might cause display errors</Message>
             </div>
             <div class="grid" v-for="(species, index) in comparativeSpeciesSelections" :key="index">
@@ -234,9 +237,12 @@
                   :disabled="comparativeSpeciesSelections[index].typeKey === 0"
                   :options="getAssemblyOptionsForSpecies(index)"
                   :optionLabel="getAssemblyOptionLabel"
+                  @change="checkAgainstBackboneSpeciesAndAssembly(comparativeSpeciesSelections[index])"
                   optionValue="key"
                   placeholder="Comparative Assembly"
+                  :class="{'border-warning': comparativeSpeciesSelections[index].showWarning}"
                   />
+                <small v-if="comparativeSpeciesSelections[index].showWarning" class="warning-text">Warning: Selected same species and assembly as the backbone</small>
               </div>
               <div class="lg:col-1 md:col-2 sm:col-2">
                 <Button @click="removeTempComparativeSpecies(index)" label="Remove" icon="pi pi-minus-circle" class="p-button-sm p-button-danger" />
@@ -261,7 +267,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import SpeciesApi from '@/api/SpeciesApi';
 import Species from '@/models/Species';
 import Gene from '@/models/Gene';
@@ -277,6 +283,7 @@ interface ComparativeSpeciesSelection
 {
   typeKey: number;
   mapKey: number;
+  showWarning: boolean;
 }
 
 const router = useRouter();
@@ -317,6 +324,12 @@ const errorMessage = ref('');
 
 onMounted(prepopulateConfigOptions);
 
+watch(backboneAssembly, () => {
+  comparativeSpeciesSelections.value.forEach(selection => {
+    checkAgainstBackboneSpeciesAndAssembly(selection);
+  }); 
+});
+
 const isValidConfig = computed(() => {
   const isCommonConfigValid = backboneSpecies.value && comparativeSpeciesSelections.value.length > 0 && comparativeSpeciesSelections.value.every(s => s.typeKey !== 0 && s.mapKey !== 0);
   if (!isCommonConfigValid)
@@ -334,6 +347,10 @@ const isValidConfig = computed(() => {
   }
 
   return false;
+});
+
+const comparativeSpeciesLimitReached = computed(() => {
+  return (comparativeSpeciesSelections.value.length >= 5);
 });
 
 async function searchGene(event: {query: string})
@@ -552,10 +569,12 @@ async function prepopulateConfigOptions()
     prevComparativeSpecies.forEach(s => {
       selections.push({
         typeKey: s.typeKey, 
-        mapKey: (s.activeMap) ? s.activeMap.key : s.defaultMapKey
+        mapKey: (s.activeMap) ? s.activeMap.key : s.defaultMapKey,
+        showWarning: false,
       });
     });
     comparativeSpeciesSelections.value = selections;
+    comparativeSpeciesSelections.value.forEach(selection => checkAgainstBackboneSpeciesAndAssembly(selection));
   }
 }
 
@@ -631,11 +650,7 @@ function addTempComparativeSpecies()
   let currLength = comparativeSpeciesSelections.value.length;
   if (currLength < 5)
   {
-    comparativeSpeciesSelections.value.push({ typeKey: 0, mapKey: 0 });
-  }
-  else
-  {
-    // Show message about not being able to handle more than 5 TODO
+    comparativeSpeciesSelections.value.push({ typeKey: 0, mapKey: 0, showWarning: false });
   }
 }
 
@@ -683,6 +698,20 @@ function setPrimaryAssembly(index: number)
   {
     comparativeSpeciesSelections.value[index].mapKey = selectedSpecies.defaultMapKey;
   }
+
+  checkAgainstBackboneSpeciesAndAssembly(comparativeSpeciesSelections.value[index]);
+}
+
+function checkAgainstBackboneSpeciesAndAssembly(selection: ComparativeSpeciesSelection)
+{
+  if (backboneSpecies.value != null && backboneAssembly.value != null && selection.typeKey === backboneSpecies.value.typeKey && selection.mapKey === backboneAssembly.value.key)
+  {
+    selection.showWarning = true;
+  }
+  else
+  {
+    selection.showWarning = false;
+  }
 }
 
 function clearConfigSelections()
@@ -708,9 +737,20 @@ function clearConfigSelections()
 </script>
 
 <style lang="scss" scoped>
-.p-dropdown
+$warning-color: #a3852b;
+
+.p-dropdown.p-component
 {
   width: 100%;
+  &.border-warning
+  {
+    border-color: $warning-color;
+  }
+}
+
+.warning-text
+{
+  color: $warning-color
 }
 
 .start-button
