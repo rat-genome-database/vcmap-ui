@@ -24,7 +24,7 @@ export default class TrackSection
   backboneStop: number = 0;
   chromosome: string = '';
   gene?: Gene;
-  isHighlighted: boolean = false;
+  isHovered: boolean = false;
   shape: 'rect' | 'line' = 'rect';
   private _offsetCount: number = 0;
   private _backboneCutoff: number = 0;

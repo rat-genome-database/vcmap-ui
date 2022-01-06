@@ -25,11 +25,11 @@
       data-test="track-section-svg"
       class="section"
       :class="{'selectable': isSelectable}"
-      @mouseenter="showTooltipData($event, section)"
-      @mouseleave="hideTooltipData(section)"
+      @mouseenter="onMouseEnter($event, section)"
+      @mouseleave="onMouseLeave(section)"
       @mousedown="initSelectStart($event, section, index)"
       @mousemove="updateSelectionHeight"
-      :fill="section.isHighlighted && showDataOnHover ? HIGHLIGHT_COLOR : section.color" 
+      :fill="section.isHovered && showDataOnHover ? HIGHLIGHT_COLOR : section.color" 
       :x="posX" :y="getSectionYPosition(posY, index)" 
       :width="width" 
       :height="section.height" />
@@ -70,6 +70,18 @@
       :y="getSectionYPosition(posY, index) + section.height + LABEL_Y_OFFSET">
       - {{section.stopBPLabel}}
     </text>
+
+    <!-- Syntenic Lines -->
+    <template v-if="showSyntenyOnHover">
+      <line v-if="section.isHovered"
+      class="section connection-line"
+      :x1="posX + width" :x2="ViewSize.backboneXPosition" 
+      :y1="getSectionYPosition(posY, index)" :y2="getSectionYPosition(posY, index)" />
+    <line v-if="section.isHovered"
+      class="section connection-line"
+      :x1="posX + width" :x2="ViewSize.backboneXPosition" 
+      :y1="getSectionYPosition(posY, index) + section.height" :y2="getSectionYPosition(posY, index) + section.height" />
+    </template>
   </template>
 </template>
 
@@ -81,6 +93,7 @@ import TrackSection from '@/models/TrackSection';
 import { toRefs } from '@vue/reactivity';
 import { ref, watch } from 'vue';
 import { useStore } from 'vuex';
+import ViewSize from '@/utils/ViewSize';
 
 const LABEL_Y_OFFSET = 3;
 const HIGHLIGHT_COLOR = 'bisque';
@@ -98,6 +111,7 @@ interface Props
 {
   isSelectable?: boolean;
   showDataOnHover?: boolean;
+  showSyntenyOnHover?: boolean;
   showStartStop?: boolean;
   showChromosome?: boolean;
   posX: number;
@@ -224,21 +238,19 @@ const completeSelect = () => {
   store.dispatch('setSelectedBackboneRegion', selectedRegion.value);
 };
 
-const showTooltipData = (event: any, section: TrackSection) => {
-  if (!props.showDataOnHover)
+const onMouseEnter = (event: any, section: TrackSection) => {
+  section.isHovered = true;
+
+  if (props.showDataOnHover)
   {
-    return;
+    let currentSVGPoint = getMousePosSVG(event) as DOMPoint;
+    const tooltipData = new TooltipData(props.posX, currentSVGPoint.y, section);
+    store.dispatch('setTooltipData', tooltipData);
   }
-
-  section.isHighlighted = true;
-
-  let currentSVGPoint = getMousePosSVG(event) as DOMPoint;
-  const tooltipData = new TooltipData(props.posX, currentSVGPoint.y, section);
-  store.dispatch('setTooltipData', tooltipData);
 };
 
-const hideTooltipData = (section: TrackSection) => {
-  section.isHighlighted = false;
+const onMouseLeave = (section: TrackSection) => {
+  section.isHovered = false;
   store.dispatch('setTooltipData', null);
 };
 
@@ -280,6 +292,13 @@ const getMousePosSVG = (e: any) => {
   {
     stroke-width: 1;
     stroke: black;
+  }
+
+  &.connection-line
+  {
+    stroke-width: 1;
+    stroke: black;
+    stroke-dasharray: 4;
   }
 }
 

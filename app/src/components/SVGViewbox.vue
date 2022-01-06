@@ -16,38 +16,67 @@
     <text class="label medium bold" :x="ViewSize.overviewTitleXPosition" :y="ViewSize.panelTitleYPosition">Overview</text>
     <text v-if="backboneSpecies" class="label small" :x="ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{backboneSpecies.name}} (backbone)</text>
     <text v-if="backboneSpecies" class="label small" :x="ViewSize.backboneXPosition" :y="ViewSize.trackMapLabelYPosition">{{backboneSpecies.activeMap.name}}</text>
-    <TrackSVG v-if="backboneTrack" is-selectable show-start-stop show-chromosome :pos-x="ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="backboneTrack as Track" />
+    <TrackSVG v-if="backboneTrack" 
+      is-selectable 
+      show-start-stop 
+      show-chromosome 
+      :pos-x="ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" 
+      :width="ViewSize.trackWidth" :track="backboneTrack as Track" />
 
     <!-- backbone data tracks -->
     <template v-for="(dataTrack, index) in drawnOverviewTracks" :key="dataTrack">
       <text v-if="dataTrack.type === 'dataTrack' && !dataTrack.isComparative" class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{dataTrack.trackType}}</text>
-      <TrackSVG v-if="dataTrack.type === 'dataTrack' && !dataTrack.isComparative" show-data-on-hover show-chromosome :pos-x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="dataTrack.track as Track" />
+      <TrackSVG v-if="dataTrack.type === 'dataTrack' && !dataTrack.isComparative" 
+        show-data-on-hover 
+        show-chromosome 
+        :pos-x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" 
+        :width="ViewSize.trackWidth" :track="dataTrack.track as Track" />
     </template>
 
-    <!-- Comparative species synteny tracks -->
+    <!-- Comparative species synteny tracks (overview) -->
     <template v-for="(track, index) in drawnOverviewTracks" :key="track">
       <text v-if="track.type === 'track'" class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{track.name}}</text>
       <text v-if="track.type === 'track'" class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :y="ViewSize.trackMapLabelYPosition">{{track.mapName}}</text>
-      <TrackSVG v-if="track.type === 'track'" show-data-on-hover show-chromosome :pos-x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="track.track as Track" />
+      <TrackSVG v-if="track.type === 'track'" 
+        show-data-on-hover 
+        show-synteny-on-hover
+        show-chromosome 
+        :pos-x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" 
+        :width="ViewSize.trackWidth" :track="track.track as Track" />
     </template>
 
     <!-- Comparative panel SVGs ----------------------------------------->
     <text class="label medium bold" :x="ViewSize.selectedBackboneXPosition" :y="ViewSize.panelTitleYPosition">Detailed</text>
     <text v-if="backboneSpecies && backboneSelectionTrack" class="label small" :x="ViewSize.selectedBackboneXPosition" :y="ViewSize.trackLabelYPosition">{{backboneSpecies.name}} (backbone)</text>
     <text v-if="backboneSpecies && backboneSelectionTrack" class="label small" :x="ViewSize.selectedBackboneXPosition" :y="ViewSize.trackMapLabelYPosition">{{backboneSpecies.activeMap.name}}</text>
-    <TrackSVG v-if="backboneSelectionTrack" show-data-on-hover show-start-stop show-chromosome :pos-x="ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="backboneSelectionTrack as Track" />
+    <TrackSVG v-if="backboneSelectionTrack" 
+      show-data-on-hover 
+      show-start-stop 
+      show-chromosome 
+      :pos-x="ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" 
+      :width="ViewSize.trackWidth" :track="backboneSelectionTrack as Track" />
 
     <!-- comparative backbone data tracks -->
     <template v-for="(dataTrack, index) in drawnDetailsTracks" :key="dataTrack">
       <text v-if="dataTrack.type === 'dataTrack'  && dataTrack.isComparative" class="label small" :x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :y="ViewSize.trackLabelYPosition">{{dataTrack.trackType}}</text>
-      <TrackSVG v-if="dataTrack.type === 'dataTrack'  && dataTrack.isComparative" show-start-stop show-data-on-hover show-chromosome :pos-x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="dataTrack.track as Track" />
+      <TrackSVG v-if="dataTrack.type === 'dataTrack'  && dataTrack.isComparative" 
+        show-start-stop 
+        show-data-on-hover 
+        show-chromosome 
+        :pos-x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" 
+        :width="ViewSize.trackWidth" :track="dataTrack.track as Track" />
     </template>
 
     <!-- Comparative species (selected region) synteny tracks -->
     <template v-for="(track, index) in drawnDetailsTracks" :key="track">
       <text v-if="track.type === 'track'" class="label small" :x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :y="ViewSize.trackLabelYPosition">{{track.name}}</text>
       <text v-if="track.type === 'track'" class="label small" :x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :y="ViewSize.trackMapLabelYPosition">{{track.mapName}}</text>
-      <TrackSVG v-if="track.type === 'track'" show-data-on-hover show-start-stop show-chromosome :pos-x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="track.track as Track" />
+      <TrackSVG v-if="track.type === 'track'" 
+        show-data-on-hover 
+        show-start-stop 
+        show-chromosome 
+        :pos-x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" 
+        :width="ViewSize.trackWidth" :track="track.track as Track" />
     </template>
 
     <TooltipSVG :tooltip-data="store.getters.getTooltipData"/>
