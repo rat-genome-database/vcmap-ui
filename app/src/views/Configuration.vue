@@ -398,6 +398,7 @@ function setAssemblyOptions(species: Species | null)
 
   backboneAssemblies.value = species.maps;
   backboneAssembly.value = species.activeMap;
+  setChromosomeOptions(backboneAssembly.value);
 }
 
 async function setChromosomeOptions(map: Map | null)
