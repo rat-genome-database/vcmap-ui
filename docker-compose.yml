@@ -5,6 +5,8 @@ services:
     build:
       context: .
       dockerfile: ./docker/Dockerfile
+    environment:
+      - CODESANDBOX_SSE=1
     image: vcmap-ui
     volumes:
       - type: bind
