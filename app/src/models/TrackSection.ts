@@ -14,6 +14,7 @@ interface TrackSectionParams
   basePairToHeightRatio: number; // number of base pairs per unit of height in the SVG, use the Resolution module to get the correct ratio
   shape: 'rect' | 'line';
   gene?: Gene; // optional - the gene that this section represents
+  hiddenGenes?: TrackSection[]; // optional - list of gene track sections that are hidden due to threshold or contained by this section
 }
 
 export default class TrackSection
@@ -24,6 +25,7 @@ export default class TrackSection
   backboneStop: number = 0;
   chromosome: string = '';
   gene?: Gene;
+  hiddenGenes?: TrackSection[] = [];
   isHighlighted: boolean = false;
   shape: 'rect' | 'line' = 'rect';
   private _offsetCount: number = 0;
@@ -41,6 +43,7 @@ export default class TrackSection
     this.backboneStop = params.backboneStop;
     this.chromosome = params.chromosome;
     this.gene = params.gene;
+    this.hiddenGenes = params.hiddenGenes;
     this.shape = params.shape;
     this._backboneCutoff = params.cutoff;
     this._offsetCount = params.offsetCount ?? 0;
@@ -73,6 +76,29 @@ export default class TrackSection
     }
 
     return Formatter.convertBasePairToLabel(this.sectionStop);
+  }
+
+  public get geneLabel()
+  {
+    if (this.gene)
+    {
+      let geneName = this.gene.symbol;
+      const truncatedGenes = this.hiddenGenes && this.hiddenGenes.length > 0 ? `...(${this.hiddenGenes.length})` : '';
+      
+      if (truncatedGenes.length > 0)
+      {
+        truncatedGenes.length > 9 ? geneName = geneName.substring(0, 4) : geneName = geneName.substring(0, 5);
+        geneName += truncatedGenes;
+      }
+      else
+      {
+        if (geneName.length > 9)
+        {
+          geneName = geneName.substring(0, 8) + '...';
+        }
+      }
+      return geneName;
+    }
   }
 
   public get height()

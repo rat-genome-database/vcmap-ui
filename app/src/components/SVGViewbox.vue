@@ -21,7 +21,7 @@
     <!-- backbone data tracks -->
     <template v-for="(dataTrack, index) in drawnOverviewTracks" :key="dataTrack">
       <text v-if="dataTrack.type === 'dataTrack' && !dataTrack.isComparative" class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{dataTrack.trackType}}</text>
-      <TrackSVG v-if="dataTrack.type === 'dataTrack' && !dataTrack.isComparative" show-data-on-hover show-chromosome :pos-x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="dataTrack.track as Track" />
+      <TrackSVG v-if="dataTrack.type === 'dataTrack' && !dataTrack.isComparative" show-data-on-hover show-chromosome show-gene-label :pos-x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" :width="ViewSize.trackWidth" :track="dataTrack.track as Track" />
     </template>
 
     <!-- Comparative species synteny tracks -->
@@ -498,6 +498,7 @@ const createBackboneDataTracks =  async (startPos: number, stopPos: number, base
     tempGeneTracks = await SpeciesApi.getGenesByRegion(backboneChr.chromosome, startPos, stopPos, backboneSpecies.defaultMapKey);
     
     const sections: TrackSection[] = [];
+    let hiddenSections: TrackSection[] = [];
     let previousBlockBackboneStop = startPos;
   
     for (let gene of tempGeneTracks)
@@ -506,7 +507,20 @@ const createBackboneDataTracks =  async (startPos: number, stopPos: number, base
       let geneSize = gene.stop - gene.start;
       if ( geneSize < threshold)
       {
-        continue;
+        const hiddenTrackSection = new TrackSection({
+          start: gene.start,
+          stop: gene.stop,
+          backboneStart: gene.start, 
+          backboneStop: gene.stop, 
+          chromosome: gene.chromosome, 
+          cutoff: stopPos, 
+          offsetCount: gene.start - previousBlockBackboneStop,
+          basePairToHeightRatio: basePairToHeightRatio,
+          shape: 'rect',
+          gene: gene
+        });
+
+        hiddenSections.push(hiddenTrackSection);
       }
       else
       {
@@ -526,9 +540,11 @@ const createBackboneDataTracks =  async (startPos: number, stopPos: number, base
             offsetCount: gene.start - previousBlockBackboneStop,
             basePairToHeightRatio: basePairToHeightRatio,
             shape: 'rect',
-            gene: gene
+            gene: gene,
+            hiddenGenes: hiddenSections.length > 0 ? hiddenSections : []
           });
 
+          hiddenSections =  [];
           sections.push(trackSection);
           previousBlockBackboneStop = gene.stop;
         }
@@ -549,7 +565,6 @@ const createBackboneDataTracks =  async (startPos: number, stopPos: number, base
       geneDataTrack = new DataTrack('Genes', backboneSpecies.name + ' Overview Genes', geneTrack, 'red');
       geneDataTrack.isDisplayed = true;
     }
-    
 
     return geneDataTrack;
   }
