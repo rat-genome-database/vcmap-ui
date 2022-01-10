@@ -142,26 +142,11 @@ onMounted(async () => {
 });
 
 watch(() => store.getters.getSelectedBackboneRegion, () => {
-  store.dispatch('setDetailsZoom', 1);
+  store.dispatch('setZoom', 1);
   updateDetailsPanel();
 });
 
-watch(() => store.getters.getOverviewZoom, (newVal, oldVal) => {
-  let backboneStart = store.getters.getStartPosition;
-  let backboneStop = store.getters.getStopPosition;
-
-  if (oldVal === newVal || backboneStart == null || backboneStop == null)
-  {
-    return;
-  }
-  removeOverviewDataTracks();
-  const zoomedPositions = getZoomedStartAndStopPositions(backboneStart, backboneStop, newVal);
-  store.dispatch('setDisplayStartPosition', zoomedPositions.start);
-  store.dispatch('setDisplayStopPosition', zoomedPositions.stop);
-  updateOverviewPanel();
-});
-
-watch(() => store.getters.getDetailsZoom, () => {
+watch(() => store.getters.getZoom, () => {
   removeSelectionDataTracks();
   updateDetailsPanel();
 });
@@ -315,7 +300,7 @@ const updateDetailsPanelComparativeTracks = async () => {
   }
   else
   {
-    const { start: selectedBackboneStart, stop: selectedBackboneStop } = getZoomedStartAndStopPositions(selectedStart, selectedStop, store.getters.getDetailsZoom);
+    const { start: selectedBackboneStart, stop: selectedBackboneStop } = getZoomedStartAndStopPositions(selectedStart, selectedStop, store.getters.getZoom);
 
     if (selectedBackboneStart != null && selectedBackboneStop != null)
     {
@@ -350,7 +335,7 @@ const updateDetailsPanel = async () => {
   }
   else
   {
-    const { start: selectedBackboneStart, stop: selectedBackboneStop } = getZoomedStartAndStopPositions(selectedStart, selectedStop, store.getters.getDetailsZoom);
+    const { start: selectedBackboneStart, stop: selectedBackboneStop } = getZoomedStartAndStopPositions(selectedStart, selectedStop, store.getters.getZoom);
 
     if (selectedBackboneStart != null && selectedBackboneStop != null)
     {

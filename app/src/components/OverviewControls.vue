@@ -21,8 +21,6 @@
             class="p-button-danger p-button-sm clear-btn" 
             @click="clearSelection"/>
         </div>
-        <div class="col-5">Zoom Level:</div>
-        <div class="col-7 bold"><Zoom type="overview"/></div>
         <div class="col-5">Show Gaps:</div>
         <div class="col-7">
           <div class="p-field-checkbox">
@@ -38,7 +36,6 @@
 import { Formatter } from '@/utils/Formatter';
 import { computed, onMounted, ref } from 'vue';
 import { useStore } from 'vuex';
-import Zoom from '@/components/Zoom.vue';
 import BackboneSelection from '@/models/BackboneSelection';
 
 const store = useStore();

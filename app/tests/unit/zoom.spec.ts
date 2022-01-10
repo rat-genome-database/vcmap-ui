@@ -17,8 +17,7 @@ describe('Zoom', () => {
     gene: null,
     comparativeSpecies: [],
     selectedBackboneRegion: null,
-    overviewZoom: 1,
-    detailsZoom: 1,
+    zoom: 1,
     displayStartPos: 0,
     displayStopPos: 0,
     backboneBasePairToHeightRatio: 1000,
@@ -32,14 +31,14 @@ describe('Zoom', () => {
     tooltipData: null,
   };
   let getters = {
-    getOverviewZoom(state: VCMapState) {
-      return state.overviewZoom;
+    getZoom(state: VCMapState) {
+      return state.zoom;
     }
   };
 
   beforeEach(() => {
     actions = {
-      setOverviewZoom: jest.fn()
+      setZoom: jest.fn()
     };
 
     store = createStore({
@@ -51,9 +50,6 @@ describe('Zoom', () => {
 
   it('increase button dispatches new zoom level to store', async () => {
     const wrapper = mount(Zoom, {
-      props: {
-        type: 'overview'
-      },
       global: {
         plugins: ExternalComponentsHandler.getPlugins(),
         components: ExternalComponentsHandler.getComponents(),
@@ -67,15 +63,12 @@ describe('Zoom', () => {
     const increaseZoomBtn = wrapper.get('[data-test="increase-zoom-btn"]');
 
     await increaseZoomBtn.trigger('click');
-    expect(actions.setOverviewZoom).toBeCalledTimes(1);
-    expect(actions.setOverviewZoom).toBeCalledWith(expect.anything(), 2);
+    expect(actions.setZoom).toBeCalledTimes(1);
+    expect(actions.setZoom).toBeCalledWith(expect.anything(), 2);
   });
 
   it('increase button dispatches new zoom level to store', async () => {
     const wrapper = mount(Zoom, {
-      props: {
-        type: 'overview'
-      },
       global: {
         plugins: ExternalComponentsHandler.getPlugins(),
         components: ExternalComponentsHandler.getComponents(),
@@ -89,7 +82,7 @@ describe('Zoom', () => {
     const decreaseZoomBtn = wrapper.get('[data-test="decrease-zoom-btn"]');
 
     await decreaseZoomBtn.trigger('click');
-    expect(actions.setOverviewZoom).toBeCalledTimes(1);
-    expect(actions.setOverviewZoom).toBeCalledWith(expect.anything(), 0.5);
+    expect(actions.setZoom).toBeCalledTimes(1);
+    expect(actions.setZoom).toBeCalledWith(expect.anything(), 0.5);
   });
 });

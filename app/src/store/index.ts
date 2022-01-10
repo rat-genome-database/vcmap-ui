@@ -20,8 +20,7 @@ export interface VCMapState
   comparativeSpecies: Species[];
 
   selectedBackboneRegion: BackboneSelection | null;
-  overviewZoom: number;
-  detailsZoom: number;
+  zoom: number;
   displayStartPos: number; // the displayed start position of the backbone (changes due to zoom level)
   displayStopPos: number; // the displayed stop position of the backbone (changes due to zoom level)
 
@@ -55,8 +54,7 @@ export default createStore({
     comparativeSpecies: [],
 
     selectedBackboneRegion: null,
-    overviewZoom: 1,
-    detailsZoom: 1,
+    zoom: 1,
     displayStartPos: 0,
     displayStopPos: 0,
 
@@ -96,11 +94,8 @@ export default createStore({
     selectedBackboneRegion ( state: VCMapState, selection: BackboneSelection) {
       state.selectedBackboneRegion = selection;
     },
-    overviewZoom (state: VCMapState, zoom: number) {
-      state.overviewZoom = zoom;
-    },
-    detailsZoom (state: VCMapState, zoom: number) {
-      state.detailsZoom = zoom;
+    zoom (state: VCMapState, zoom: number) {
+      state.zoom = zoom;
     },
     displayStartPosition(state: VCMapState, start: number) {
       state.displayStartPos = start;
@@ -169,12 +164,10 @@ export default createStore({
     setStartPosition(context: ActionContext<VCMapState, VCMapState>, startPos: number) {
       context.commit('startPosition', startPos);
       context.commit('displayStartPosition', startPos);
-      context.commit('overviewZoom', 1);
     },
     setStopPosition(context: ActionContext<VCMapState, VCMapState>, stopPos: number) {
       context.commit('stopPosition', stopPos);
       context.commit('displayStopPosition', stopPos);
-      context.commit('overviewZoom', 1);
     },
     setGene(context: ActionContext<VCMapState, VCMapState>, gene: Gene) {
       context.commit('gene', gene);
@@ -182,11 +175,8 @@ export default createStore({
     setSelectedBackboneRegion (context: ActionContext<VCMapState, VCMapState>, selection: BackboneSelection) {
       context.commit('selectedBackboneRegion', selection);
     },
-    setOverviewZoom (context: ActionContext<VCMapState, VCMapState>, zoom: number) {
-      context.commit('overviewZoom', zoom);
-    },
-    setDetailsZoom (context: ActionContext<VCMapState, VCMapState>, zoom: number) {
-      context.commit('detailsZoom', zoom);
+    setZoom (context: ActionContext<VCMapState, VCMapState>, zoom: number) {
+      context.commit('zoom', zoom);
     },
     setDisplayStartPosition(context: ActionContext<VCMapState, VCMapState>, start: number) {
       context.commit('displayStartPosition', start);
@@ -249,11 +239,8 @@ export default createStore({
     getSelectedBackboneRegion (state: VCMapState) {
       return state.selectedBackboneRegion;
     },
-    getOverviewZoom(state: VCMapState) {
-      return state.overviewZoom;
-    },
-    getDetailsZoom(state: VCMapState) {
-      return state.detailsZoom;
+    getZoom(state: VCMapState) {
+      return state.zoom;
     },
     getDisplayStartPosition(state: VCMapState) {
       return state.displayStartPos;
