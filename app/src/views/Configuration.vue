@@ -469,7 +469,6 @@ async function setGeneChromosomeAndDefaultStartAndStopPositions(gene: Gene | nul
 async function prepopulateConfigOptions()
 {
   activeTab.value = store.getters.getConfigTab;
-
   isLoadingSpecies.value = true;
   try
   {

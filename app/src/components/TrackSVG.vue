@@ -20,12 +20,22 @@
       - {{section.startBPLabel}}
     </text>
 
+    <!-- Gene Labels: only shown with ample offset-->
+    <text v-if="showGeneLabel && (section.offsetHeight > 6 || index === 0)" 
+      class="label small" 
+      @mouseenter="onMouseEnter($event, section, true)"
+      @mouseleave="onMouseLeave(section)"
+      :x="posX + width" 
+      :y="getSectionYPosition(posY, index) + LABEL_Y_OFFSET">
+      - {{section.geneLabel}}
+    </text>
+
     <!-- Track SVG -->
     <rect v-if="section.shape !== 'line'"
       data-test="track-section-svg"
       class="section"
       :class="{'selectable': isSelectable}"
-      @mouseenter="onMouseEnter($event, section)"
+      @mouseenter="onMouseEnter($event, section, false)"
       @mouseleave="onMouseLeave(section)"
       @mousedown="initSelectStart($event, section, index)"
       @mousemove="updateSelectionHeight"
@@ -114,6 +124,7 @@ interface Props
   showSyntenyOnHover?: boolean;
   showStartStop?: boolean;
   showChromosome?: boolean;
+  showGeneLabel?: boolean;
   posX: number;
   posY: number;
   width: number;
@@ -238,7 +249,7 @@ const completeSelect = () => {
   store.dispatch('setSelectedBackboneRegion', selectedRegion.value);
 };
 
-const onMouseEnter = (event: any, section: TrackSection) => {
+const onMouseEnter = (event: any, section: TrackSection, isGeneLabel: boolean) => {
   section.isHovered = true;
 
   if (props.showDataOnHover)
@@ -247,6 +258,19 @@ const onMouseEnter = (event: any, section: TrackSection) => {
     const tooltipData = new TooltipData(props.posX, currentSVGPoint.y, section);
     store.dispatch('setTooltipData', tooltipData);
   }
+
+  section.isHighlighted = true;
+  if (isGeneLabel)
+  {
+    if (!section.hiddenGenes || section.hiddenGenes.length <= 0)
+    {
+      return;
+    } 
+  }
+
+  let currentSVGPoint = getMousePosSVG(event) as DOMPoint;
+  const tooltipData = new TooltipData(props.posX, currentSVGPoint.y, section, isGeneLabel);
+  store.dispatch('setTooltipData', tooltipData);
 };
 
 const onMouseLeave = (section: TrackSection) => {
