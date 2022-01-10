@@ -653,20 +653,6 @@ function removeSelectionDataTracks()
   }
 }
 
-function removeOverviewDataTracks()
-{
-  let dataTracks = store.getters.getBackboneDataTracks;
-  for (let index = 0; index < dataTracks.length; index++)
-  {
-    let currentDataTrack = dataTracks[index];
-    if (!currentDataTrack.isComparativeView)
-    {
-      store.commit('removeBackboneDataTrack', index);
-      index--;
-    }
-  }
-}
-
 const splitBlocksAndGapsIntoSections = (regions: SyntenyRegionData[], backboneStart: number, backboneStop: number, basePairToHeightRatio: number, threshold: number) => {
   let trackSections: TrackSection[] = [];
   let previousBlockBackboneStop = backboneStart;

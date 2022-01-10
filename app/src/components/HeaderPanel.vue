@@ -10,10 +10,9 @@
         </template>
         <template #icons>
           <Button 
+            label="New Configuration" 
+            class="p-button-info header-btn"
             @click="goToConfigurationScreen"
-            v-tooltip.left="'Edit Configuration'" 
-            icon="pi pi-cog" 
-            class="p-panel-header-icon p-link p-mr-2" 
             data-test="load-config-btn" />
         </template>
         <div class="grid p-d-flex">
@@ -51,5 +50,10 @@ const goToConfigurationScreen = () => {
   {
     margin-left: 2rem;
   }
+}
+
+.p-button.p-component.header-btn
+{
+  margin-right: 1rem;
 }
 </style>
