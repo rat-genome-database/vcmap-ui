@@ -102,11 +102,14 @@ import BackboneSelection from '@/models/BackboneSelection';
 import DataTrack from '@/models/DataTrack';
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import TooltipSVG from './TooltipSVG.vue';
+import useDialog from '@/composables/useDialog';
 
 const GENES_DATA_TRACK_THRESHOLD_MULTIPLIER = 4;
 const GAPS_THRESHOLD_MULTIPLIER = 10;
 
 const store = useStore();
+
+const { showDialog, dialogHeader, dialogMessage, onError, checkSyntenyResultsOnComparativeSpecies } = useDialog();
 
 // Reactive data props
 const backboneSpecies = ref<Species | null>(null);
@@ -121,10 +124,6 @@ const comparativeSelectionTracks = ref<Track[]>([]);
 const drawnOverviewTracks = ref<(DataTrack|Track)[]>([]);
 const drawnDetailsTracks = ref<(DataTrack|Track)[]>([]);
 
-const showDialog = ref(false);
-const dialogHeader = ref('');
-const dialogMessage = ref('');
-
 /**
  * Once mounted, let's set our reactive data props and create the backbone and synteny tracks
  */
@@ -138,7 +137,10 @@ onMounted(async () => {
   backboneChromosome.value = store.getters.getChromosome;
 
   await updateOverviewPanel();
-  checkSyntenyResultsOnComparativeSpecies();
+  // We shouldn't have to cast this variable as Track[] but Typescript is complaining if we don't.
+  // Might have something to do with initializing a typed ref to an empty array: ref<Track[]>([])
+  // Still looking into it...
+  checkSyntenyResultsOnComparativeSpecies(comparativeTracks.value as Track[]);
 });
 
 watch(() => store.getters.getSelectedBackboneRegion, () => {
@@ -787,39 +789,6 @@ const warnIfNegativeHeight = (trackSections: TrackSection[]) => {
       console.warn('Negative height', index, section);
     }
   });
-};
-
-const onError = (err: any, userMessage: string) => {
-  console.error(err);
-  dialogHeader.value = 'Error';
-  dialogMessage.value = userMessage;
-  showDialog.value = true;
-};
-
-const showNoResultsDialog = () => {
-  dialogHeader.value = 'No Results';
-  dialogMessage.value = 'No syntenic regions were found for the selected species and base pair range.';
-  showDialog.value = true;
-};
-
-const showPartialResultsDialog = (emptyTracks: Track[]) => {
-  dialogHeader.value = 'Missing Results';
-  dialogMessage.value = `We did not find syntenic regions for the following species: ${emptyTracks.map(t => `${t.name} (${t.mapName})`).join(', ')}`;
-  showDialog.value = true;
-};
-
-const checkSyntenyResultsOnComparativeSpecies = () => {
-  let resultsFound = comparativeTracks.value.some(track => track.sections.length > 0);
-    if (!resultsFound)
-    {
-      showNoResultsDialog();
-    }
-    else if (comparativeTracks.value.some(track => track.sections.length === 0))
-    {
-      // If only some results were found -- notify user about which ones produced no results
-      const emptyTracks = comparativeTracks.value.filter(track => track.sections.length === 0);
-      showPartialResultsDialog(emptyTracks as Track[]);
-    }
 };
 </script>
 
