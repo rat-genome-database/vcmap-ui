@@ -6,13 +6,15 @@ import TrackSection from "./TrackSection";
 export default class TooltipData
 {
   genomicSection: TrackSection;
+  isGeneLabel: boolean = false;
   x: number;
   y: number;
 
-  constructor(svgX: number, svgY: number, section: TrackSection)
+  constructor(svgX: number, svgY: number, section: TrackSection, isGeneLabel: boolean)
   {
-    this.genomicSection = section;
     this.x = svgX;
     this.y = svgY;
+    this.genomicSection = section;
+    this.isGeneLabel = isGeneLabel;
   }
 }

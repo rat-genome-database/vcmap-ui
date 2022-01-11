@@ -2,6 +2,7 @@ import { shallowMount } from '@vue/test-utils';
 import TooltipSVG from '@/components/TooltipSVG.vue';
 import TooltipData from '@/models/TooltipData';
 import TrackSection from '@/models/TrackSection';
+import Gene from '@/models/Gene';
 
 describe('TooltipSVG', () => {
 
@@ -15,7 +16,7 @@ describe('TooltipSVG', () => {
       cutoff: 50000,
       basePairToHeightRatio: 100,
       shape: 'rect',
-      gene: 'Test 123'
+      gene: new Gene({symbol: 'TEST', name: 'Test 123', type: '', key: 0, rgdId: 0, chromosome: '1', start: 0, stop: 10000, speciesTypeKey: 1})
     });
     const tooltipData = new TooltipData(0, 0, section);
     const wrapper = shallowMount(TooltipSVG, {
@@ -26,7 +27,7 @@ describe('TooltipSVG', () => {
 
     const geneTextSVG = wrapper.get('[data-test="gene-name"]');
 
-    expect(geneTextSVG.text()).toEqual('Gene: Test 123');
+    expect(geneTextSVG.text()).toEqual('Name: Test 123');
   });
 
   it('displays data about the genomic region', async () => {
@@ -64,7 +65,7 @@ describe('TooltipSVG', () => {
       cutoff: 50000,
       basePairToHeightRatio: 100,
       shape: 'rect',
-      gene: 'This is a really long test gene name'
+      gene: new Gene({symbol: 'TEST', name: 'This is a really long gene test name', type: '', key: 0, rgdId: 0, chromosome: '1', start: 0, stop: 10000, speciesTypeKey: 1})
     });
     const tooltipData = new TooltipData(0, 0, section);
     const wrapper = shallowMount(TooltipSVG, {

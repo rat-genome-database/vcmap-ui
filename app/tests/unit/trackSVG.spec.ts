@@ -14,7 +14,6 @@ describe('TrackSVG', () => {
   let actions: ActionTree<VCMapState, VCMapState>;
   let state = {
     species: null,
-    map: null,
     chromosomeNum: null,
     chromosome: null,
     startPos: null,
@@ -22,8 +21,7 @@ describe('TrackSVG', () => {
     gene: null,
     comparativeSpecies: [],
     selectedBackboneRegion: null,
-    backboneZoom: 1,
-    comparativeZoom: 1,
+    zoom: 1,
     displayStartPos: 0,
     displayStopPos: 0,
     backboneBasePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO,

@@ -6,7 +6,7 @@
     class="p-button-info p-button-sm zoom-btn" 
     :disabled="isZoomOutDisabled"
     @click="decreaseZoom"/>
-    <span class="zoom-level">{{zoomLevel}}x</span>
+    <span class="zoom-level">{{store.getters.getZoom}}x</span>
   <Button 
     data-test="increase-zoom-btn"
     v-tooltip.right="'Zoom In'" 
@@ -23,21 +23,13 @@ const store = useStore();
 
 interface Props 
 {
-  type: 'backbone' | 'comparative';
   min?: number;
 }
 
 const props = defineProps<Props>();
 
-const setter = `set${props.type.charAt(0).toUpperCase() + props.type.slice(1)}Zoom`;
-const getter = `get${props.type.charAt(0).toUpperCase() + props.type.slice(1)}Zoom`;
-
-const zoomLevel = computed(() => {
-  return store.getters[getter];
-});
-
 const isZoomOutDisabled = computed(() => {
-  if (props.min != null && props.min > 0 && (zoomLevel.value / 2) < props.min)
+  if (props.min != null && props.min > 0 && (store.getters.getZoom / 2) < props.min)
   {
     return 'disabled';
   }
@@ -47,13 +39,13 @@ const isZoomOutDisabled = computed(() => {
 
 const decreaseZoom = () => {
   let newZoomLevel = 1;
-  if (zoomLevel.value <= 1)
+  if (store.getters.getZoom <= 1)
   {
-    newZoomLevel = zoomLevel.value / 2;
+    newZoomLevel = store.getters.getZoom / 2;
   }
   else
   {
-    newZoomLevel = zoomLevel.value - 1;
+    newZoomLevel = store.getters.getZoom - 1;
   }
 
   if (props.min != null && newZoomLevel < props.min)
@@ -61,21 +53,21 @@ const decreaseZoom = () => {
     return;
   }
 
-  store.dispatch(setter, newZoomLevel);
+  store.dispatch('setZoom', newZoomLevel);
 };
 
 const increaseZoom = () => {
   let newZoomLevel = 1;
-  if (zoomLevel.value <= 1)
+  if (store.getters.getZoom <= 1)
   {
-    newZoomLevel = zoomLevel.value * 2;
+    newZoomLevel = store.getters.getZoom * 2;
   }
   else
   {
-    newZoomLevel = zoomLevel.value + 1;
+    newZoomLevel = store.getters.getZoom + 1;
   }
 
-  store.dispatch(setter, newZoomLevel);
+  store.dispatch('setZoom', newZoomLevel);
 };
 </script>
 
