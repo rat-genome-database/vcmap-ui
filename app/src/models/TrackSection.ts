@@ -27,7 +27,6 @@ export default class TrackSection
   gene?: Gene;
   isHovered: boolean = false;
   hiddenGenes?: TrackSection[] = [];
-  isHighlighted: boolean = false;
   shape: 'rect' | 'line' = 'rect';
   private _offsetCount: number = 0;
   private _backboneCutoff: number = 0;
