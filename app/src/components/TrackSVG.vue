@@ -259,7 +259,6 @@ const onMouseEnter = (event: any, section: TrackSection, isGeneLabel: boolean) =
     store.dispatch('setTooltipData', tooltipData);
   }
 
-  section.isHighlighted = true;
   if (isGeneLabel)
   {
     if (!section.hiddenGenes || section.hiddenGenes.length <= 0)
