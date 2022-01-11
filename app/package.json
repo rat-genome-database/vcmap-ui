@@ -1,6 +1,6 @@
 {
   "name": "vcmap-web",
-  "version": "0.2.0-work",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "serve": "npm run prebuild && vue-cli-service serve",
