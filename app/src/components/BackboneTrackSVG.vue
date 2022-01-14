@@ -82,6 +82,7 @@ import { toRefs } from '@vue/reactivity';
 import { ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import SVGConstants from '@/utils/SVGConstants';
+import { getMousePosSVG } from '@/utils/SVGHelpers';
 
 const LABEL_Y_OFFSET = 3;
 const HIGHLIGHT_COLOR = 'bisque';
@@ -93,7 +94,7 @@ const svg = document.querySelector('svg');
 let inSelectMode = false;
 let selectedTrackSection: TrackSection;
 let selectedTrackIndex: number;
-let startingPoint: DOMPoint;
+let startingPoint: DOMPoint | { y: number, x: number };
 
 interface Props 
 {
@@ -148,7 +149,7 @@ const initSelectStart = (event: any, section: TrackSection, sectionIndex: number
   selectedTrackIndex = sectionIndex;
   selectedRegion.value = new BackboneSelection(0, 0, 0, 0);
 
-  let currentSVGPoint = getMousePosSVG(event) as DOMPoint;
+  let currentSVGPoint = getMousePosSVG(svg, event);
   startingPoint = currentSVGPoint;
   selectedRegion.value.svgYPoint = currentSVGPoint.y;
   selectedRegion.value.svgHeight = 0;
@@ -157,7 +158,7 @@ const initSelectStart = (event: any, section: TrackSection, sectionIndex: number
 const updateSelectionHeight = (event: any) => {
   if (!props.isSelectable || !inSelectMode) return;
 
-  let currentSVGPoint = getMousePosSVG(event) as DOMPoint;
+  let currentSVGPoint = getMousePosSVG(svg, event);
 
   if (currentSVGPoint.y < startingPoint.y)
   {
@@ -196,7 +197,7 @@ const onMouseEnter = (event: any, section: TrackSection) => {
   // Show data tooltip on hover
   if (props.showDataOnHover)
   {
-    let currentSVGPoint = getMousePosSVG(event) as DOMPoint;
+    let currentSVGPoint = getMousePosSVG(svg, event);
     const tooltipData = new TooltipData(props.posX, currentSVGPoint.y, section, false);
     store.dispatch('setTooltipData', tooltipData);
   }
@@ -205,20 +206,6 @@ const onMouseEnter = (event: any, section: TrackSection) => {
 const onMouseLeave = (section: TrackSection) => {
   section.isHovered = false;
   store.dispatch('setTooltipData', null);
-};
-
-/**
- * Helper method to get the coordinates of the event in the SVG viewbox
- */
-const getMousePosSVG = (e: any) => {
-  if (!svg) return 0;
-
-  let p = svg.createSVGPoint();
-  p.x = e.clientX;
-  p.y = e.clientY;
-  let ctm = svg.getScreenCTM()?.inverse();
-  p = p.matrixTransform(ctm);
-  return p;
 };
 </script>
 
