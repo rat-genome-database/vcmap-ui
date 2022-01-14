@@ -20,7 +20,7 @@
       is-selectable 
       show-start-stop 
       show-chromosome 
-      :pos-x="SVGConstants.backboneXPosition" :pos-y="SVGConstants.trackYPosition" 
+      :pos-x="SVGConstants.backboneXPosition"
       :width="SVGConstants.trackWidth" :track="backboneTrack as Track" />
 
     <!-- backbone data tracks -->
@@ -30,7 +30,7 @@
         show-data-on-hover 
         show-chromosome
         show-gene-label 
-        :pos-x="getBackbonePanelTrackXOffset(index + 1) + SVGConstants.backboneXPosition" :pos-y="SVGConstants.trackYPosition" 
+        :pos-x="getBackbonePanelTrackXOffset(index + 1) + SVGConstants.backboneXPosition"
         :width="SVGConstants.trackWidth" :track="dataTrack.track as Track" />
     </template>
 
@@ -42,7 +42,7 @@
         show-data-on-hover 
         show-synteny-on-hover
         show-chromosome 
-        :pos-x="getBackbonePanelTrackXOffset(index + 1) + SVGConstants.backboneXPosition" :pos-y="SVGConstants.trackYPosition" 
+        :pos-x="getBackbonePanelTrackXOffset(index + 1) + SVGConstants.backboneXPosition"
         :width="SVGConstants.trackWidth" :track="track.track as Track" />
     </template>
 
@@ -54,7 +54,7 @@
       show-data-on-hover 
       show-start-stop 
       show-chromosome 
-      :pos-x="SVGConstants.selectedBackboneXPosition" :pos-y="SVGConstants.trackYPosition" 
+      :pos-x="SVGConstants.selectedBackboneXPosition"
       :width="SVGConstants.trackWidth" :track="backboneSelectionTrack as Track" />
 
     <!-- comparative backbone data tracks -->
@@ -64,7 +64,7 @@
         show-start-stop 
         show-data-on-hover 
         show-chromosome 
-        :pos-x="getComparativePanelTrackXOffset(index + 1) + SVGConstants.selectedBackboneXPosition" :pos-y="SVGConstants.trackYPosition" 
+        :pos-x="getComparativePanelTrackXOffset(index + 1) + SVGConstants.selectedBackboneXPosition"
         :width="SVGConstants.trackWidth" :track="dataTrack.track as Track" />
     </template>
 
@@ -76,11 +76,11 @@
         show-data-on-hover 
         show-start-stop 
         show-chromosome 
-        :pos-x="getComparativePanelTrackXOffset(index + 1) + SVGConstants.selectedBackboneXPosition" :pos-y="SVGConstants.trackYPosition" 
+        :pos-x="getComparativePanelTrackXOffset(index + 1) + SVGConstants.selectedBackboneXPosition" 
         :width="SVGConstants.trackWidth" :track="track.track as Track" />
     </template>
 
-    <TooltipSVG :tooltip-data="store.getters.getTooltipData"/>
+    <TooltipSVG :tooltip-data="store.getters.getTooltipData" />
   </svg>
 
   <VCMapDialog v-model:show="showDialog" :header="dialogHeader" :message="dialogMessage" />

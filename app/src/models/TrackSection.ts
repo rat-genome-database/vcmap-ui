@@ -28,12 +28,12 @@ export default class TrackSection
   isHovered: boolean = false;
   hiddenGenes?: TrackSection[] = [];
   shape: 'rect' | 'line' = 'rect';
+  svgY: number = 0;
   private _offsetCount: number = 0;
   private _backboneCutoff: number = 0;
   private _BPToHeightRatio: number = 0;
   private _displayBackboneStart: number = 0; // the displayed starting base pair position on the backbone that this section lines up with
   private _displayBackboneStop: number = 0; // the displayed ending base pair position on the backbone that this section lines up with
-  private _cachedSVGYPosition: number | null = null;
 
   constructor(params: TrackSectionParams)
   {
@@ -110,16 +110,6 @@ export default class TrackSection
   {
     // offset height cannot be negative (happens if synteny block starts before start of the backbone region)
     return (this._offsetCount >= 0) ? (this._offsetCount / this._BPToHeightRatio) : 0;
-  }
-
-  public cacheSVGYPosition(y: number)
-  {
-    this._cachedSVGYPosition = y;  
-  }
-
-  public get cachedSVGYPosition()
-  {
-    return this._cachedSVGYPosition;
   }
 
   private calculateDisplayedBPRegionRelativeToBackbone()

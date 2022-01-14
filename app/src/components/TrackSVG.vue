@@ -16,7 +16,7 @@
       data-test="start-bp-label"
       class="label small" 
       :x="posX + width" 
-      :y="getSectionYPosition(posY, index) + LABEL_Y_OFFSET">
+      :y="section.svgY + LABEL_Y_OFFSET">
       - {{section.startBPLabel}}
     </text>
 
@@ -26,7 +26,7 @@
       @mouseenter="onMouseEnter($event, section, true)"
       @mouseleave="onMouseLeave(section)"
       :x="posX + width" 
-      :y="getSectionYPosition(posY, index) + LABEL_Y_OFFSET">
+      :y="section.svgY + LABEL_Y_OFFSET">
       - {{section.geneLabel}}
     </text>
 
@@ -40,20 +40,20 @@
       @mousedown="initSelectStart($event, section, index)"
       @mousemove="updateSelectionHeight"
       :fill="section.isHovered && showDataOnHover ? HIGHLIGHT_COLOR : section.color" 
-      :x="posX" :y="getSectionYPosition(posY, index)" 
+      :x="posX" :y="section.svgY" 
       :width="width" 
       :height="section.height" />
     <line v-else
       data-test="track-section-svg"
       class="section gap"
       :x1="posX + (width / 2)" :x2="posX + (width / 2)" 
-      :y1="getSectionYPosition(posY, index)" :y2="getSectionYPosition(posY, index) + section.height" />
+      :y1="section.svgY" :y2="section.svgY + section.height" />
 
     <!-- Chromosome Label -->
     <text v-if="showChromosome && section.height > 15 && section.shape !== 'line'" 
       class="chromosome-label" 
       :x="posX + (width / 2)" 
-      :y="getSectionYPosition(posY, index) + (section.height / 2)"
+      :y="section.svgY + (section.height / 2)"
       dominant-baseline="middle"
       text-anchor="middle">
       {{section.chromosome}}
@@ -77,7 +77,7 @@
       data-test="stop-bp-label"
       class="label small" 
       :x="posX + width" 
-      :y="getSectionYPosition(posY, index) + section.height + LABEL_Y_OFFSET">
+      :y="section.svgY + section.height + LABEL_Y_OFFSET">
       - {{section.stopBPLabel}}
     </text>
 
@@ -86,11 +86,11 @@
       <line v-if="section.isHovered"
       class="section connection-line"
       :x1="posX + width" :x2="SVGConstants.backboneXPosition" 
-      :y1="getSectionYPosition(posY, index)" :y2="getSectionYPosition(posY, index)" />
+      :y1="section.svgY" :y2="section.svgY" />
     <line v-if="section.isHovered"
       class="section connection-line"
       :x1="posX + width" :x2="SVGConstants.backboneXPosition" 
-      :y1="getSectionYPosition(posY, index) + section.height" :y2="getSectionYPosition(posY, index) + section.height" />
+      :y1="section.svgY + section.height" :y2="section.svgY + section.height" />
     </template>
   </template>
 </template>
@@ -126,7 +126,6 @@ interface Props
   showChromosome?: boolean;
   showGeneLabel?: boolean;
   posX: number;
-  posY: number;
   width: number;
   track: Track;
 }
@@ -141,11 +140,11 @@ watch(() => props.track, () => {
   if (props.isSelectable && store.getters.getSelectedBackboneRegion)
   {
     // There was an existing selection on this track so let's recreate it
-    let selection = store.getters.getSelectedBackboneRegion as BackboneSelection;
-    let startingYPos = props.posY;
+    const selection = store.getters.getSelectedBackboneRegion as BackboneSelection;
+    const startingYPos = SVGConstants.trackYPosition;
 
-    let selectionStart = (selection.basePairStart < store.getters.getDisplayStartPosition) ? store.getters.getDisplayStartPosition : selection.basePairStart;
-    let selectionStop = (selection.basePairStop > store.getters.getDisplayStopPosition) ? store.getters.getDisplayStopPosition : selection.basePairStop;
+    const selectionStart = (selection.basePairStart < store.getters.getDisplayStartPosition) ? store.getters.getDisplayStartPosition : selection.basePairStart;
+    const selectionStop = (selection.basePairStop > store.getters.getDisplayStopPosition) ? store.getters.getDisplayStopPosition : selection.basePairStop;
     
     selection.svgHeight = (selectionStop - selectionStart) / store.getters.getBackboneBasePairToHeightRatio;
     selection.svgYPoint = ((selectionStart - store.getters.getDisplayStartPosition) / store.getters.getBackboneBasePairToHeightRatio) + startingYPos;
@@ -161,35 +160,6 @@ watch(() => store.getters.getSelectedBackboneRegion, (newVal, oldVal) => {
     selectedRegion.value = new BackboneSelection(0, 0, 0, 0);
   }
 });
-
-/**
- * Gets the starting Y position of each track section based on the height of the previous section
- * and any offsets that might need to be applied for gaps.
- */
-const getSectionYPosition = (startingYPos: number, sectionIndex: number) => {
-  let currentSection = props.track.sections[sectionIndex];
-
-  // Get cached SVG Y position for this section if present
-  if (currentSection.cachedSVGYPosition != null)
-  {
-    return currentSection.cachedSVGYPosition;
-  }
-
-  let currentYPos = startingYPos;
-  let previousSectionIndex = sectionIndex - 1;
-  while (previousSectionIndex >= 0 && sectionIndex !== 0)
-  {
-    let previousTrackSection = props.track.sections[previousSectionIndex];
-    currentYPos += previousTrackSection.height + previousTrackSection.offsetHeight;
-    previousSectionIndex--;
-  }
-
-  // Add offset if one is defined
-  currentYPos += props.track.sections[sectionIndex].offsetHeight;
-
-  currentSection.cacheSVGYPosition(currentYPos);
-  return currentYPos;
-};
 
 const initSelectStart = (event: any, section: TrackSection, sectionIndex: number) => {
   if (!props.isSelectable) return;
@@ -238,7 +208,7 @@ const completeSelect = () => {
   {
     // Calculate the selected range in base pairs
     const totalBasePairsSelected = Math.ceil(selectedRegion.value.svgHeight * store.getters.getBackboneBasePairToHeightRatio);
-    const basePairsUpToStart = Math.floor((selectedRegion.value.svgYPoint - getSectionYPosition(props.posY, selectedTrackIndex)) * store.getters.getBackboneBasePairToHeightRatio);
+    const basePairsUpToStart = Math.floor((selectedRegion.value.svgYPoint - props.track.sections[selectedTrackIndex].svgY) * store.getters.getBackboneBasePairToHeightRatio);
     const basePairStart = selectedTrackSection.backboneStart + basePairsUpToStart;
     selectedRegion.value.basePairStart = basePairStart;
     selectedRegion.value.basePairStop = basePairStart + totalBasePairsSelected;
