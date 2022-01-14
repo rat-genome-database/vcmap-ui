@@ -16,18 +16,12 @@
     <text class="label medium bold" :x="SVGConstants.overviewTitleXPosition" :y="SVGConstants.panelTitleYPosition">Overview</text>
     <text v-if="backboneSpecies" class="label small" :x="SVGConstants.backboneXPosition" :y="SVGConstants.trackLabelYPosition">{{backboneSpecies.name}} (backbone)</text>
     <text v-if="backboneSpecies" class="label small" :x="SVGConstants.backboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{backboneSpecies.activeMap.name}}</text>
-    <TrackSVG v-if="backboneTrack" 
-      is-selectable 
-      show-start-stop 
-      show-chromosome 
-      :pos-x="SVGConstants.backboneXPosition"
-      :width="SVGConstants.trackWidth" :track="backboneTrack as Track" />
+    <BackboneTrackSVG v-if="backboneTrack" is-selectable :pos-x="SVGConstants.backboneXPosition" :track="backboneTrack as Track" />
 
     <!-- backbone data tracks -->
     <template v-for="(dataTrack, index) in drawnOverviewTracks" :key="dataTrack">
       <text v-if="dataTrack.type === 'dataTrack' && !dataTrack.isComparative" class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + SVGConstants.backboneXPosition" :y="SVGConstants.trackLabelYPosition">{{dataTrack.trackType}}</text>
-      <TrackSVG v-if="dataTrack.type === 'dataTrack' && !dataTrack.isComparative" 
-        show-data-on-hover 
+      <TrackSVG v-if="dataTrack.type === 'dataTrack' && !dataTrack.isComparative"
         show-chromosome
         show-gene-label 
         :pos-x="getBackbonePanelTrackXOffset(index + 1) + SVGConstants.backboneXPosition"
@@ -38,8 +32,7 @@
     <template v-for="(track, index) in drawnOverviewTracks" :key="track">
       <text v-if="track.type === 'track'" class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + SVGConstants.backboneXPosition" :y="SVGConstants.trackLabelYPosition">{{track.name}}</text>
       <text v-if="track.type === 'track'" class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + SVGConstants.backboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{track.mapName}}</text>
-      <TrackSVG v-if="track.type === 'track'" 
-        show-data-on-hover 
+      <TrackSVG v-if="track.type === 'track'"
         show-synteny-on-hover
         show-chromosome 
         :pos-x="getBackbonePanelTrackXOffset(index + 1) + SVGConstants.backboneXPosition"
@@ -50,19 +43,13 @@
     <text class="label medium bold" :x="SVGConstants.selectedBackboneXPosition" :y="SVGConstants.panelTitleYPosition">Detailed</text>
     <text v-if="backboneSpecies && backboneSelectionTrack" class="label small" :x="SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackLabelYPosition">{{backboneSpecies.name}} (backbone)</text>
     <text v-if="backboneSpecies && backboneSelectionTrack" class="label small" :x="SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{backboneSpecies.activeMap.name}}</text>
-    <TrackSVG v-if="backboneSelectionTrack" 
-      show-data-on-hover 
-      show-start-stop 
-      show-chromosome 
-      :pos-x="SVGConstants.selectedBackboneXPosition"
-      :width="SVGConstants.trackWidth" :track="backboneSelectionTrack as Track" />
+    <BackboneTrackSVG v-if="backboneSelectionTrack" show-data-on-hover :pos-x="SVGConstants.selectedBackboneXPosition" :track="backboneSelectionTrack as Track" />
 
     <!-- comparative backbone data tracks -->
     <template v-for="(dataTrack, index) in drawnDetailsTracks" :key="dataTrack">
       <text v-if="dataTrack.type === 'dataTrack'  && dataTrack.isComparative" class="label small" :x="getComparativePanelTrackXOffset(index + 1) + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackLabelYPosition">{{dataTrack.trackType}}</text>
       <TrackSVG v-if="dataTrack.type === 'dataTrack'  && dataTrack.isComparative" 
-        show-start-stop 
-        show-data-on-hover 
+        show-start-stop
         show-chromosome 
         :pos-x="getComparativePanelTrackXOffset(index + 1) + SVGConstants.selectedBackboneXPosition"
         :width="SVGConstants.trackWidth" :track="dataTrack.track as Track" />
@@ -72,8 +59,7 @@
     <template v-for="(track, index) in drawnDetailsTracks" :key="track">
       <text v-if="track.type === 'track'" class="label small" :x="getComparativePanelTrackXOffset(index + 1) + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackLabelYPosition">{{track.name}}</text>
       <text v-if="track.type === 'track'" class="label small" :x="getComparativePanelTrackXOffset(index + 1) + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{track.mapName}}</text>
-      <TrackSVG v-if="track.type === 'track'" 
-        show-data-on-hover 
+      <TrackSVG v-if="track.type === 'track'"
         show-start-stop 
         show-chromosome 
         :pos-x="getComparativePanelTrackXOffset(index + 1) + SVGConstants.selectedBackboneXPosition" 
@@ -104,6 +90,7 @@ import DataTrack from '@/models/DataTrack';
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import TooltipSVG from './TooltipSVG.vue';
 import useDialog from '@/composables/useDialog';
+import BackboneTrackSVG from './BackboneTrackSVG.vue';
 
 const GENES_DATA_TRACK_THRESHOLD_MULTIPLIER = 4;
 const GAPS_THRESHOLD_MULTIPLIER = 10;

@@ -53,7 +53,7 @@ describe('TrackSVG', () => {
   });
 
   it('renders a single section track with base pair labels', async () => {
-    const backboneTrackSection = new TrackSection({
+    const trackSection = new TrackSection({
       start: 0,
       stop: 10000000,
       backboneStart: 0,
@@ -63,13 +63,13 @@ describe('TrackSVG', () => {
       basePairToHeightRatio: 1000,
       shape: 'rect'
     });
-    const backboneTrack = new Track({ speciesName: 'Human', sections: [backboneTrackSection] });
+    const track = new Track({ speciesName: 'Human', sections: [trackSection] });
     const wrapper = shallowMount(TrackSVG, {
       props: {
         showStartStop: true,
         posX: 100,
         width: 30,
-        track: backboneTrack
+        track: track
       },
       global: {
         provide: {
@@ -189,41 +189,5 @@ describe('TrackSVG', () => {
     expect(attrs3.y).toEqual(expectedAttrs3Y); // Determined by starting position + height of previous section + offset of current section
     expect(attrs3.width).toEqual('30');
     expect(attrs3.height).toEqual((150000000 / BACKBONE_BASEPAIR_TO_HEIGHT_RATIO).toString()); // Determined by BASE_PAIR_TO_PIXEL_RATIO in TrackSection model
-  });
-
-  it('emits selected region', async () => {
-    const backboneTrackSection = new TrackSection({
-      start: 0,
-      stop: 10000000,
-      backboneStart: 0,
-      backboneStop: 10000000,
-      chromosome: '1',
-      cutoff: 120000000,
-      basePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO,
-      shape: 'rect'
-    });
-    const backboneTrack = new Track({ speciesName: 'Human', sections: [backboneTrackSection] });
-    const wrapper = shallowMount(TrackSVG, {
-      props: {
-        showStartStop: true,
-        posX: 100,
-        width: 30,
-        track: backboneTrack,
-        isSelectable: true
-      },
-      global: {
-        provide: {
-          store: store
-        }
-      }
-    });
-
-    // Select a region
-    const section = wrapper.get('[data-test="track-section-svg"]');
-    await section.trigger('mousedown');
-    await section.trigger('mousemove');
-    await section.trigger('mousedown');
-
-    expect(actions.setSelectedBackboneRegion).toBeCalledTimes(1);
   });
 });
