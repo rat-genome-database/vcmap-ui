@@ -104,9 +104,16 @@ export default class TrackSection
     }
   }
 
+  // Getter for the height of this section in SVG units
   public get height()
   {
     return (this._displayBackboneStop - this._displayBackboneStart) / this._BPToHeightRatio;
+  }
+
+  // Getter for the ending SVG Y point
+  public get svgY2()
+  {
+    return this.svgY + this.height;
   }
 
   public get offsetHeight()

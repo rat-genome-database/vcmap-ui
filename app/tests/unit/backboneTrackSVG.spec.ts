@@ -76,16 +76,15 @@ describe('BackboneTrackSVG', () => {
         }
       }
     });
-    const startLabel = wrapper.find('[data-test="start-bp-label"]');
-    const stopLabel = wrapper.find('[data-test="stop-bp-label"');
+    const bpLabels = wrapper.findAll('[data-test="bp-label"]');
     const allSVGs = wrapper.findAll('[data-test="track-section-svg"]');
     const backboneSVG = allSVGs[0];
 
     // Test visibility and text of the base pair labels
-    expect(startLabel.isVisible()).toBe(true);
-    expect(startLabel.text()).toEqual('- 0bp');
-    expect(stopLabel.isVisible()).toBe(true);
-    expect(stopLabel.text()).toEqual('- 10.00Mbp');
+    expect(bpLabels[0].isVisible()).toBe(true);
+    expect(bpLabels[0].text()).toEqual('- 0bp');
+    expect(bpLabels[1].isVisible()).toBe(true);
+    expect(bpLabels[1].text()).toEqual('- 10.00Mbp');
 
     // Test visibility of the backbone SVG track
     expect(allSVGs.length).toEqual(1);

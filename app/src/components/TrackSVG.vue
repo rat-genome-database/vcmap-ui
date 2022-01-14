@@ -10,17 +10,17 @@
     </linearGradient>
   </defs>
 
-  <template v-for="(section, index) in track.sections" :key="index">
-    <!-- Start BP label: Only show if there is enough space b/w this section and the previous section 
-      (we can't use offsetHeight here because syntenic blocks can be stacked on top of eachother) -->
-    <text v-if="showStartStop && (index === 0 || (section.svgY - (track.sections[index - 1].svgY + track.sections[index - 1].height) > 10))" 
-      data-test="start-bp-label"
+  <template v-for="(label, index) in track.labels" :key="index">
+    <text v-if="showStartStop && label.isVisible" 
+      data-test="bp-label"
       class="label small" 
       :x="posX + width" 
-      :y="section.svgY + LABEL_Y_OFFSET">
-      - {{section.startBPLabel}}
+      :y="label.svgY + LABEL_Y_OFFSET">
+      - {{label.text}}
     </text>
+  </template>
 
+  <template v-for="(section, index) in track.sections" :key="index">
     <!-- Gene Labels: only shown with ample offset-->
     <text v-if="showGeneLabel && (section.offsetHeight > 6 || index === 0)" 
       class="label small" 
@@ -46,7 +46,7 @@
       data-test="track-section-svg"
       class="section gap"
       :x1="posX + (width / 2)" :x2="posX + (width / 2)" 
-      :y1="section.svgY" :y2="section.svgY + section.height" />
+      :y1="section.svgY" :y2="section.svgY2" />
     <!-- Level 2 -->
     <rect v-else-if="section.shape !== 'line'"
       data-test="track-section-svg"
@@ -62,7 +62,7 @@
       data-test="track-section-svg"
       class="section gap"
       :x1="posX + (width / 2)" :x2="posX + (width / 2)" 
-      :y1="section.svgY" :y2="section.svgY + section.height" />
+      :y1="section.svgY" :y2="section.svgY2" />
 
     <!-- Chromosome Label -->
     <text v-if="showChromosome && section.height > 15 && section.shape !== 'line'" 
@@ -74,15 +74,6 @@
       {{section.chromosome}}
     </text>
 
-    <!-- Stop Label: Only show if the section is big enough so that it doesn't overlap with the start label -->
-    <text v-if="showStartStop && section.height > 10" 
-      data-test="stop-bp-label"
-      class="label small" 
-      :x="posX + width" 
-      :y="section.svgY + section.height + LABEL_Y_OFFSET">
-      - {{section.stopBPLabel}}
-    </text>
-
     <!-- Syntenic Lines -->
     <template v-if="showSyntenyOnHover">
       <line v-if="section.isHovered"
@@ -92,7 +83,7 @@
     <line v-if="section.isHovered"
       class="section connection-line"
       :x1="posX + width" :x2="SVGConstants.backboneXPosition" 
-      :y1="section.svgY + section.height" :y2="section.svgY + section.height" />
+      :y1="section.svgY2" :y2="section.svgY2" />
     </template>
   </template>
 </template>

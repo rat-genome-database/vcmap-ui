@@ -10,15 +10,17 @@
     </linearGradient>
   </defs>
 
-  <template v-for="(section, index) in track.sections" :key="index">
-    <!-- Start BP label -->
-    <text
-      data-test="start-bp-label"
+  <template v-for="(label, index) in track.labels" :key="index">
+    <text v-if="label.isVisible" 
+      data-test="bp-label"
       class="label small" 
       :x="posX + SVGConstants.trackWidth" 
-      :y="section.svgY + LABEL_Y_OFFSET">
-      - {{section.startBPLabel}}
+      :y="label.svgY + LABEL_Y_OFFSET">
+      - {{label.text}}
     </text>
+  </template>
+
+  <template v-for="(section, index) in track.sections" :key="index">
 
     <!-- Track SVG -->
     <rect v-if="section.shape !== 'line'"
@@ -61,15 +63,6 @@
       :height="selectedRegion.svgHeight"
       @mousedown="initSelectStart($event, section, index)"
       @mousemove="updateSelectionHeight" />
-
-    <!-- Stop Label -->
-    <text
-      data-test="stop-bp-label"
-      class="label small" 
-      :x="posX + SVGConstants.trackWidth" 
-      :y="section.svgY + section.height + LABEL_Y_OFFSET">
-      - {{section.stopBPLabel}}
-    </text>
   </template>
 </template>
 
