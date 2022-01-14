@@ -659,6 +659,7 @@ function removeSelectionDataTracks()
 }
 
 const splitLevel1And2RegionsIntoSections = (regions: SyntenyRegionData[], backboneStart: number, backboneStop: number, basePairToHeightRatio: number, threshold: number) => {
+  // FIXME: Some level 1 blocks have level 2 gaps in them...
   const level1Sections = splitBlocksAndGapsIntoSections(
     regions.filter(r => r.block.chainLevel === 1),
     backboneStart,

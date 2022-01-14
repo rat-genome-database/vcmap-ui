@@ -39,7 +39,7 @@
     <!-- Level 2 -->
     <rect v-else-if="section.shape !== 'line' && section.chainLevel === 2"
       data-test="track-section-svg"
-      class="section"
+      class="section level-2"
       @mouseenter="onMouseEnter($event, section, false)"
       @mouseleave="onMouseLeave(section)"
       :fill="section.isHovered ? HIGHLIGHT_COLOR : section.color" 
@@ -105,7 +105,7 @@ import { useStore } from 'vuex';
 import SVGConstants from '@/utils/SVGConstants';
 import { getMousePosSVG } from '@/utils/SVGHelpers';
 
-const LEVEL_2_WIDTH_MULTIPLIER = 0.8;
+const LEVEL_2_WIDTH_MULTIPLIER = 0.75;
 const LABEL_Y_OFFSET = 3;
 const HIGHLIGHT_COLOR = 'bisque';
 
@@ -177,6 +177,11 @@ const onMouseLeave = (section: TrackSection) => {
     stroke-width: 1;
     stroke: black;
     stroke-dasharray: 4;
+  }
+
+  &.level-2
+  {
+    filter: brightness(60%);
   }
 }
 </style>
