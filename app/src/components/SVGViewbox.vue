@@ -450,7 +450,7 @@ const createSyntenyTracks = async (backboneStart: number, backboneStop: number, 
         start: backboneStart,
         stop: backboneStop,
         comparativeSpeciesMap: map,
-        chainLevel: 1,
+        //chainLevel: 1,
         threshold: store.getters.getOverviewSyntenyThreshold,
         includeGaps: includeGaps
       }));
@@ -465,8 +465,8 @@ const createSyntenyTracks = async (backboneStart: number, backboneStop: number, 
         const mapName = comparativeSpeciesMaps[index].name;
         // Build synteny tracks for successful API calls
         console.debug(`-- Building synteny track for species: ${speciesName} / ${mapName} --`);
-        const trackSections = splitBlocksAndGapsIntoSections(result.value, backboneStart, backboneStop, basePairToHeightRatio, syntenyThreshold);
-        const track = new Track({ speciesName: speciesName, sections: trackSections, mapName: mapName });
+        const trackSections = splitLevel1And2RegionsIntoSections(result.value, backboneStart, backboneStop, basePairToHeightRatio, syntenyThreshold);
+        const track = new Track({ speciesName: speciesName, sections: trackSections, mapName: mapName, isSyntenyTrack: true });
         tracks.push(track);
       }
       else
@@ -658,12 +658,31 @@ function removeSelectionDataTracks()
   }
 }
 
+const splitLevel1And2RegionsIntoSections = (regions: SyntenyRegionData[], backboneStart: number, backboneStop: number, basePairToHeightRatio: number, threshold: number) => {
+  const level1Sections = splitBlocksAndGapsIntoSections(
+    regions.filter(r => r.block.chainLevel === 1),
+    backboneStart,
+    backboneStop,
+    basePairToHeightRatio,
+    threshold
+  );
+  const level2Sections = splitBlocksAndGapsIntoSections(
+    regions.filter(r => r.block.chainLevel === 2),
+    backboneStart,
+    backboneStop,
+    basePairToHeightRatio,
+    threshold
+  );
+
+  return level1Sections.concat(level2Sections);
+};
+
 const splitBlocksAndGapsIntoSections = (regions: SyntenyRegionData[], backboneStart: number, backboneStop: number, basePairToHeightRatio: number, threshold: number) => {
   let trackSections: TrackSection[] = [];
   let previousBlockBackboneStop = backboneStart;
 
   console.debug(`Filtering out gaps with threshold: ${threshold * GAPS_THRESHOLD_MULTIPLIER}`);
-  regions.forEach(region => {
+  regions.filter(r => r.block.chainLevel === 1 || r.block.chainLevel === 2).forEach(region => {
     const block = region.block;
     const gaps = region.gaps.filter(g => { return g.length >= threshold * GAPS_THRESHOLD_MULTIPLIER; });
 
@@ -679,7 +698,8 @@ const splitBlocksAndGapsIntoSections = (regions: SyntenyRegionData[], backboneSt
         cutoff: backboneStop, 
         offsetCount: block.backboneStart - previousBlockBackboneStop,
         basePairToHeightRatio: basePairToHeightRatio,
-        shape: 'rect'
+        shape: 'rect',
+        chainLevel: block.chainLevel,
       }));
       previousBlockBackboneStop = block.backboneStop;
       return;
@@ -700,7 +720,8 @@ const splitBlocksAndGapsIntoSections = (regions: SyntenyRegionData[], backboneSt
           cutoff: backboneStop, 
           offsetCount: gap.backboneStart - previousBlockBackboneStop,
           basePairToHeightRatio: basePairToHeightRatio,
-          shape: 'line'
+          shape: 'line',
+          chainLevel: block.chainLevel,
         }));
       }
       else if (index === 0)
@@ -715,7 +736,8 @@ const splitBlocksAndGapsIntoSections = (regions: SyntenyRegionData[], backboneSt
           cutoff: backboneStop, 
           offsetCount: block.backboneStart - previousBlockBackboneStop,
           basePairToHeightRatio: basePairToHeightRatio,
-          shape: 'rect'
+          shape: 'rect',
+          chainLevel: block.chainLevel,
         }));
 
         trackSections.push(new TrackSection({
@@ -726,7 +748,8 @@ const splitBlocksAndGapsIntoSections = (regions: SyntenyRegionData[], backboneSt
           chromosome: gap.chromosome, 
           cutoff: backboneStop,
           basePairToHeightRatio: basePairToHeightRatio,
-          shape: 'line'
+          shape: 'line',
+          chainLevel: block.chainLevel,
         }));
       }
       else
@@ -741,7 +764,8 @@ const splitBlocksAndGapsIntoSections = (regions: SyntenyRegionData[], backboneSt
           chromosome: block.chromosome, 
           cutoff: backboneStop,
           basePairToHeightRatio: basePairToHeightRatio,
-          shape: 'rect'
+          shape: 'rect',
+          chainLevel: block.chainLevel,
         }));
 
         trackSections.push(new TrackSection({
@@ -752,7 +776,8 @@ const splitBlocksAndGapsIntoSections = (regions: SyntenyRegionData[], backboneSt
           chromosome: gap.chromosome, 
           cutoff: backboneStop,
           basePairToHeightRatio: basePairToHeightRatio,
-          shape: 'line'
+          shape: 'line',
+          chainLevel: block.chainLevel,
         }));
       }
     });
@@ -769,7 +794,8 @@ const splitBlocksAndGapsIntoSections = (regions: SyntenyRegionData[], backboneSt
         chromosome: block.chromosome, 
         cutoff: backboneStop,
         basePairToHeightRatio: basePairToHeightRatio,
-        shape: 'rect'
+        shape: 'rect',
+        chainLevel: block.chainLevel,
       }));
     }
     else

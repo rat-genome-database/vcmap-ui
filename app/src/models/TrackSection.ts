@@ -15,6 +15,7 @@ interface TrackSectionParams
   shape: 'rect' | 'line';
   gene?: Gene; // optional - the gene that this section represents
   hiddenGenes?: TrackSection[]; // optional - list of gene track sections that are hidden due to threshold or contained by this section
+  chainLevel?: number;
 }
 
 export default class TrackSection
@@ -24,6 +25,7 @@ export default class TrackSection
   backboneStart: number = 0;
   backboneStop: number = 0;
   chromosome: string = '';
+  chainLevel?: number;
   gene?: Gene;
   isHovered: boolean = false;
   hiddenGenes?: TrackSection[] = [];
@@ -48,6 +50,7 @@ export default class TrackSection
     this._backboneCutoff = params.cutoff;
     this._offsetCount = params.offsetCount ?? 0;
     this._BPToHeightRatio = params.basePairToHeightRatio;
+    this.chainLevel = params.chainLevel;
 
     // Calculate the display start BP and stop BP relative to the backbone that this section might aligning against:
     this.calculateDisplayedBPRegionRelativeToBackbone();

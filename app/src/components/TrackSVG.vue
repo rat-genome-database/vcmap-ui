@@ -11,7 +11,7 @@
   </defs>
 
   <template v-for="(section, index) in track.sections" :key="index">
-    <!-- Start BP label: Only show if there is enough of an offset b/w this section and the previous section-->
+    <!-- Start BP label: Only show if there is enough of an offset b/w this section and the previous section -->
     <text v-if="showStartStop && (section.offsetHeight > 10 || index === 0)" 
       data-test="start-bp-label"
       class="label small" 
@@ -30,8 +30,24 @@
       - {{section.geneLabel}}
     </text>
 
-    <!-- Track SVG -->
-    <rect v-if="section.shape !== 'line'"
+    <!-- Level 1 Gaps -->
+    <line v-if="section.shape === 'line' && section.chainLevel !== 2"
+      data-test="track-section-svg"
+      class="section gap"
+      :x1="posX + (width / 2)" :x2="posX + (width / 2)" 
+      :y1="section.svgY" :y2="section.svgY + section.height" />
+    <!-- Level 2 -->
+    <rect v-else-if="section.shape !== 'line' && section.chainLevel === 2"
+      data-test="track-section-svg"
+      class="section"
+      @mouseenter="onMouseEnter($event, section, false)"
+      @mouseleave="onMouseLeave(section)"
+      :fill="section.isHovered ? HIGHLIGHT_COLOR : section.color" 
+      :x="posX + ((width * (1 - LEVEL_2_WIDTH_MULTIPLIER)) / 2)" :y="section.svgY" 
+      :width="width * LEVEL_2_WIDTH_MULTIPLIER" 
+      :height="section.height" />
+    <!-- Level 1 or unleveled section -->
+    <rect v-else-if="section.shape !== 'line' && section.chainLevel !== 2"
       data-test="track-section-svg"
       class="section"
       @mouseenter="onMouseEnter($event, section, false)"
@@ -40,7 +56,8 @@
       :x="posX" :y="section.svgY" 
       :width="width" 
       :height="section.height" />
-    <line v-else
+    <!-- Level 2 Gaps -->
+    <line v-else-if="section.shape === 'line'"
       data-test="track-section-svg"
       class="section gap"
       :x1="posX + (width / 2)" :x2="posX + (width / 2)" 
@@ -88,6 +105,7 @@ import { useStore } from 'vuex';
 import SVGConstants from '@/utils/SVGConstants';
 import { getMousePosSVG } from '@/utils/SVGHelpers';
 
+const LEVEL_2_WIDTH_MULTIPLIER = 0.8;
 const LABEL_Y_OFFSET = 3;
 const HIGHLIGHT_COLOR = 'bisque';
 
