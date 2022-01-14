@@ -68,7 +68,6 @@ describe('TrackSVG', () => {
       props: {
         showStartStop: true,
         posX: 100,
-        posY: 150,
         width: 30,
         track: backboneTrack
       },
@@ -97,7 +96,7 @@ describe('TrackSVG', () => {
     const backboneAttributes = backboneSVG.attributes();
     expect(backboneAttributes.fill).toEqual(Chromosome.getColor('1'));
     expect(backboneAttributes.x).toEqual('100');
-    expect(backboneAttributes.y).toEqual('150');
+    expect(backboneAttributes.y).toEqual('60');
     expect(backboneAttributes.width).toEqual('30');
     expect(backboneAttributes.height).toEqual((10000000 / BACKBONE_BASEPAIR_TO_HEIGHT_RATIO).toString());
   });
@@ -141,7 +140,6 @@ describe('TrackSVG', () => {
     const wrapper = shallowMount(TrackSVG, {
       props: {
         posX: 100,
-        posY: 150,
         width: 30,
         track: track
       },
@@ -172,7 +170,7 @@ describe('TrackSVG', () => {
     const attrs1 = section1.attributes();
     expect(attrs1.fill).toEqual(Chromosome.getColor('1'));
     expect(attrs1.x).toEqual('100');
-    expect(attrs1.y).toEqual('150'); // Determined by starting position + height of previous section + offset of current section
+    expect(attrs1.y).toEqual('60'); // Determined by starting position + height of previous section + offset of current section
     expect(attrs1.width).toEqual('30');
     expect(attrs1.height).toEqual((10000000 / BACKBONE_BASEPAIR_TO_HEIGHT_RATIO).toString()); // Determined by BASE_PAIR_TO_PIXEL_RATIO in TrackSection model
 
@@ -209,7 +207,6 @@ describe('TrackSVG', () => {
       props: {
         showStartStop: true,
         posX: 100,
-        posY: 150,
         width: 30,
         track: backboneTrack,
         isSelectable: true
