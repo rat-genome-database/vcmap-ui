@@ -44,6 +44,13 @@ export default class Track
       const level2Sections = sections.filter(s => s.chainLevel === 2);
       level1Sections.forEach((section, index) => this.setSectionYPosition(section, index, level1Sections));
       level2Sections.forEach((section, index) => this.setSectionYPosition(section, index, level2Sections));
+
+      // The order of the sections in the array determines which SVGs will be in the foreground. Sections at the end
+      // will be in the foreground while sections at the beginning will be further in the background.
+      this.sections = level2Sections.filter(s => s.shape === 'line') // level 2 gaps should be in the background
+        .concat(level1Sections.filter(s => s.shape !== 'line')) // level 1 blocks
+        .concat(level2Sections.filter(s => s.shape !== 'line')) // level 2 blocks
+        .concat(level1Sections.filter(s => s.shape === 'line')); // level 1 gaps should be in the foreground
     }
     else
     {

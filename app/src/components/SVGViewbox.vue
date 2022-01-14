@@ -450,7 +450,6 @@ const createSyntenyTracks = async (backboneStart: number, backboneStop: number, 
         start: backboneStart,
         stop: backboneStop,
         comparativeSpeciesMap: map,
-        //chainLevel: 1,
         threshold: store.getters.getOverviewSyntenyThreshold,
         includeGaps: includeGaps
       }));
