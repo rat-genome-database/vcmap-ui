@@ -15,6 +15,7 @@ interface TrackSectionParams
   shape: 'rect' | 'line';
   gene?: Gene; // optional - the gene that this section represents
   hiddenGenes?: TrackSection[]; // optional - list of gene track sections that are hidden due to threshold or contained by this section
+  chainLevel?: number;
 }
 
 export default class TrackSection
@@ -24,16 +25,17 @@ export default class TrackSection
   backboneStart: number = 0;
   backboneStop: number = 0;
   chromosome: string = '';
+  chainLevel?: number;
   gene?: Gene;
   isHovered: boolean = false;
   hiddenGenes?: TrackSection[] = [];
   shape: 'rect' | 'line' = 'rect';
+  svgY: number = 0;
   private _offsetCount: number = 0;
   private _backboneCutoff: number = 0;
   private _BPToHeightRatio: number = 0;
   private _displayBackboneStart: number = 0; // the displayed starting base pair position on the backbone that this section lines up with
   private _displayBackboneStop: number = 0; // the displayed ending base pair position on the backbone that this section lines up with
-  private _cachedSVGYPosition: number | null = null;
 
   constructor(params: TrackSectionParams)
   {
@@ -48,6 +50,7 @@ export default class TrackSection
     this._backboneCutoff = params.cutoff;
     this._offsetCount = params.offsetCount ?? 0;
     this._BPToHeightRatio = params.basePairToHeightRatio;
+    this.chainLevel = params.chainLevel;
 
     // Calculate the display start BP and stop BP relative to the backbone that this section might aligning against:
     this.calculateDisplayedBPRegionRelativeToBackbone();
@@ -101,25 +104,22 @@ export default class TrackSection
     }
   }
 
+  // Getter for the height of this section in SVG units
   public get height()
   {
     return (this._displayBackboneStop - this._displayBackboneStart) / this._BPToHeightRatio;
+  }
+
+  // Getter for the ending SVG Y point
+  public get svgY2()
+  {
+    return this.svgY + this.height;
   }
 
   public get offsetHeight()
   {
     // offset height cannot be negative (happens if synteny block starts before start of the backbone region)
     return (this._offsetCount >= 0) ? (this._offsetCount / this._BPToHeightRatio) : 0;
-  }
-
-  public cacheSVGYPosition(y: number)
-  {
-    this._cachedSVGYPosition = y;  
-  }
-
-  public get cachedSVGYPosition()
-  {
-    return this._cachedSVGYPosition;
   }
 
   private calculateDisplayedBPRegionRelativeToBackbone()

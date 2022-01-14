@@ -1,86 +1,72 @@
 <template>
   <ProgressBar class="vcmap-loader" :mode="(isLoading) ? 'indeterminate' : 'determinate'" :value="0" :showValue="false"/>
-  <svg :viewBox="'0 0 1000 ' + ViewSize.viewboxHeight" xmlns="http://www.w3.org/2000/svg">
+  <svg :viewBox="'0 0 1000 ' + SVGConstants.viewboxHeight" xmlns="http://www.w3.org/2000/svg">
 
     <!-- Outside panel -->
-    <rect class="panel" x="0" width="1000" :height="ViewSize.viewboxHeight" />
+    <rect class="panel" x="0" width="1000" :height="SVGConstants.viewboxHeight" />
     <!-- Inner panels -->
-    <rect class="panel" x="0" :width="ViewSize.overviewPanelWidth" :height="ViewSize.viewboxHeight" />
-    <rect class="panel" :x="ViewSize.overviewPanelWidth" :width="ViewSize.detailsPanelWidth" :height="ViewSize.viewboxHeight" />
+    <rect class="panel" x="0" :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.viewboxHeight" />
+    <rect class="panel" :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.viewboxHeight" />
     <!-- Title panels -->
-    <rect class="panel" x="0" :width="ViewSize.overviewPanelWidth" :height="ViewSize.panelTitleHeight" />
-    <rect class="panel" :x="ViewSize.overviewPanelWidth" :width="ViewSize.detailsPanelWidth" :height="ViewSize.panelTitleHeight" />
+    <rect class="panel" x="0" :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.panelTitleHeight" />
+    <rect class="panel" :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.panelTitleHeight" />
 
     <!-- Backbone panel SVGs ------------------------------------------->
     <!-- backbone species track -->
-    <text class="label medium bold" :x="ViewSize.overviewTitleXPosition" :y="ViewSize.panelTitleYPosition">Overview</text>
-    <text v-if="backboneSpecies" class="label small" :x="ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{backboneSpecies.name}} (backbone)</text>
-    <text v-if="backboneSpecies" class="label small" :x="ViewSize.backboneXPosition" :y="ViewSize.trackMapLabelYPosition">{{backboneSpecies.activeMap.name}}</text>
-    <TrackSVG v-if="backboneTrack" 
-      is-selectable 
-      show-start-stop 
-      show-chromosome 
-      :pos-x="ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" 
-      :width="ViewSize.trackWidth" :track="backboneTrack as Track" />
+    <text class="label medium bold" :x="SVGConstants.overviewTitleXPosition" :y="SVGConstants.panelTitleYPosition">Overview</text>
+    <text v-if="backboneSpecies" class="label small" :x="SVGConstants.backboneXPosition" :y="SVGConstants.trackLabelYPosition">{{backboneSpecies.name}} (backbone)</text>
+    <text v-if="backboneSpecies" class="label small" :x="SVGConstants.backboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{backboneSpecies.activeMap.name}}</text>
+    <BackboneTrackSVG v-if="backboneTrack" is-selectable :pos-x="SVGConstants.backboneXPosition" :track="backboneTrack as Track" />
 
     <!-- backbone data tracks -->
     <template v-for="(dataTrack, index) in drawnOverviewTracks" :key="dataTrack">
-      <text v-if="dataTrack.type === 'dataTrack' && !dataTrack.isComparative" class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{dataTrack.trackType}}</text>
-      <TrackSVG v-if="dataTrack.type === 'dataTrack' && !dataTrack.isComparative" 
-        show-data-on-hover 
+      <text v-if="dataTrack.type === 'dataTrack' && !dataTrack.isComparative" class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + SVGConstants.backboneXPosition" :y="SVGConstants.trackLabelYPosition">{{dataTrack.trackType}}</text>
+      <TrackSVG v-if="dataTrack.type === 'dataTrack' && !dataTrack.isComparative"
         show-chromosome
         show-gene-label 
-        :pos-x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" 
-        :width="ViewSize.trackWidth" :track="dataTrack.track as Track" />
+        :pos-x="getBackbonePanelTrackXOffset(index + 1) + SVGConstants.backboneXPosition"
+        :width="SVGConstants.trackWidth" :track="dataTrack.track as Track" />
     </template>
 
     <!-- Comparative species synteny tracks (overview) -->
     <template v-for="(track, index) in drawnOverviewTracks" :key="track">
-      <text v-if="track.type === 'track'" class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :y="ViewSize.trackLabelYPosition">{{track.name}}</text>
-      <text v-if="track.type === 'track'" class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :y="ViewSize.trackMapLabelYPosition">{{track.mapName}}</text>
-      <TrackSVG v-if="track.type === 'track'" 
-        show-data-on-hover 
+      <text v-if="track.type === 'track'" class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + SVGConstants.backboneXPosition" :y="SVGConstants.trackLabelYPosition">{{track.name}}</text>
+      <text v-if="track.type === 'track'" class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + SVGConstants.backboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{track.mapName}}</text>
+      <TrackSVG v-if="track.type === 'track'"
         show-synteny-on-hover
         show-chromosome 
-        :pos-x="getBackbonePanelTrackXOffset(index + 1) + ViewSize.backboneXPosition" :pos-y="ViewSize.trackYPosition" 
-        :width="ViewSize.trackWidth" :track="track.track as Track" />
+        :pos-x="getBackbonePanelTrackXOffset(index + 1) + SVGConstants.backboneXPosition"
+        :width="SVGConstants.trackWidth" :track="track.track as Track" />
     </template>
 
     <!-- Comparative panel SVGs ----------------------------------------->
-    <text class="label medium bold" :x="ViewSize.selectedBackboneXPosition" :y="ViewSize.panelTitleYPosition">Detailed</text>
-    <text v-if="backboneSpecies && backboneSelectionTrack" class="label small" :x="ViewSize.selectedBackboneXPosition" :y="ViewSize.trackLabelYPosition">{{backboneSpecies.name}} (backbone)</text>
-    <text v-if="backboneSpecies && backboneSelectionTrack" class="label small" :x="ViewSize.selectedBackboneXPosition" :y="ViewSize.trackMapLabelYPosition">{{backboneSpecies.activeMap.name}}</text>
-    <TrackSVG v-if="backboneSelectionTrack" 
-      show-data-on-hover 
-      show-start-stop 
-      show-chromosome 
-      :pos-x="ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" 
-      :width="ViewSize.trackWidth" :track="backboneSelectionTrack as Track" />
+    <text class="label medium bold" :x="SVGConstants.selectedBackboneXPosition" :y="SVGConstants.panelTitleYPosition">Detailed</text>
+    <text v-if="backboneSpecies && backboneSelectionTrack" class="label small" :x="SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackLabelYPosition">{{backboneSpecies.name}} (backbone)</text>
+    <text v-if="backboneSpecies && backboneSelectionTrack" class="label small" :x="SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{backboneSpecies.activeMap.name}}</text>
+    <BackboneTrackSVG v-if="backboneSelectionTrack" show-data-on-hover :pos-x="SVGConstants.selectedBackboneXPosition" :track="backboneSelectionTrack as Track" />
 
     <!-- comparative backbone data tracks -->
     <template v-for="(dataTrack, index) in drawnDetailsTracks" :key="dataTrack">
-      <text v-if="dataTrack.type === 'dataTrack'  && dataTrack.isComparative" class="label small" :x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :y="ViewSize.trackLabelYPosition">{{dataTrack.trackType}}</text>
+      <text v-if="dataTrack.type === 'dataTrack'  && dataTrack.isComparative" class="label small" :x="getComparativePanelTrackXOffset(index + 1) + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackLabelYPosition">{{dataTrack.trackType}}</text>
       <TrackSVG v-if="dataTrack.type === 'dataTrack'  && dataTrack.isComparative" 
-        show-start-stop 
-        show-data-on-hover 
+        show-start-stop
         show-chromosome 
-        :pos-x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" 
-        :width="ViewSize.trackWidth" :track="dataTrack.track as Track" />
+        :pos-x="getComparativePanelTrackXOffset(index + 1) + SVGConstants.selectedBackboneXPosition"
+        :width="SVGConstants.trackWidth" :track="dataTrack.track as Track" />
     </template>
 
     <!-- Comparative species (selected region) synteny tracks -->
     <template v-for="(track, index) in drawnDetailsTracks" :key="track">
-      <text v-if="track.type === 'track'" class="label small" :x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :y="ViewSize.trackLabelYPosition">{{track.name}}</text>
-      <text v-if="track.type === 'track'" class="label small" :x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :y="ViewSize.trackMapLabelYPosition">{{track.mapName}}</text>
-      <TrackSVG v-if="track.type === 'track'" 
-        show-data-on-hover 
+      <text v-if="track.type === 'track'" class="label small" :x="getComparativePanelTrackXOffset(index + 1) + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackLabelYPosition">{{track.name}}</text>
+      <text v-if="track.type === 'track'" class="label small" :x="getComparativePanelTrackXOffset(index + 1) + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{track.mapName}}</text>
+      <TrackSVG v-if="track.type === 'track'"
         show-start-stop 
         show-chromosome 
-        :pos-x="getComparativePanelTrackXOffset(index + 1) + ViewSize.selectedBackboneXPosition" :pos-y="ViewSize.trackYPosition" 
-        :width="ViewSize.trackWidth" :track="track.track as Track" />
+        :pos-x="getComparativePanelTrackXOffset(index + 1) + SVGConstants.selectedBackboneXPosition" 
+        :width="SVGConstants.trackWidth" :track="track.track as Track" />
     </template>
 
-    <TooltipSVG :tooltip-data="store.getters.getTooltipData"/>
+    <TooltipSVG :tooltip-data="store.getters.getTooltipData" />
   </svg>
 
   <VCMapDialog v-model:show="showDialog" :header="dialogHeader" :message="dialogMessage" />
@@ -98,12 +84,13 @@ import Chromosome from '@/models/Chromosome';
 import Gene from '@/models/Gene';
 import { SyntenyRegionData } from '@/models/SyntenicRegion';
 import SpeciesApi from '@/api/SpeciesApi';
-import ViewSize from '@/utils/ViewSize';
+import SVGConstants from '@/utils/SVGConstants';
 import BackboneSelection from '@/models/BackboneSelection';
 import DataTrack from '@/models/DataTrack';
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import TooltipSVG from './TooltipSVG.vue';
 import useDialog from '@/composables/useDialog';
+import BackboneTrackSVG from './BackboneTrackSVG.vue';
 
 const GENES_DATA_TRACK_THRESHOLD_MULTIPLIER = 4;
 const GAPS_THRESHOLD_MULTIPLIER = 10;
@@ -423,7 +410,7 @@ const createBackboneTrack = (startPos: number, stopPos: number, basePairToHeight
       basePairToHeightRatio: basePairToHeightRatio,
       shape: 'rect'
     });
-    return new Track(speciesName, [trackSection]);
+    return new Track({ speciesName: speciesName, sections: [trackSection] });
   }
   else
   {
@@ -463,7 +450,6 @@ const createSyntenyTracks = async (backboneStart: number, backboneStop: number, 
         start: backboneStart,
         stop: backboneStop,
         comparativeSpeciesMap: map,
-        chainLevel: 1,
         threshold: store.getters.getOverviewSyntenyThreshold,
         includeGaps: includeGaps
       }));
@@ -478,8 +464,8 @@ const createSyntenyTracks = async (backboneStart: number, backboneStop: number, 
         const mapName = comparativeSpeciesMaps[index].name;
         // Build synteny tracks for successful API calls
         console.debug(`-- Building synteny track for species: ${speciesName} / ${mapName} --`);
-        const trackSections = splitBlocksAndGapsIntoSections(result.value, backboneStart, backboneStop, basePairToHeightRatio, syntenyThreshold);
-        const track = new Track(speciesName, trackSections, mapName);
+        const trackSections = splitLevel1And2RegionsIntoSections(result.value, backboneStart, backboneStop, basePairToHeightRatio, syntenyThreshold);
+        const track = new Track({ speciesName: speciesName, sections: trackSections, mapName: mapName, isSyntenyTrack: true });
         tracks.push(track);
       }
       else
@@ -568,7 +554,7 @@ const createBackboneDataTracks =  async (startPos: number, stopPos: number, base
       }
     }
     let geneDataTrack;
-    let geneTrack = new Track(backboneSpecies.name, sections);
+    let geneTrack = new Track({ speciesName: backboneSpecies.name, sections: sections });
 
     if (isComparative)
     { 
@@ -671,6 +657,28 @@ function removeSelectionDataTracks()
   }
 }
 
+const splitLevel1And2RegionsIntoSections = (regions: SyntenyRegionData[], backboneStart: number, backboneStop: number, basePairToHeightRatio: number, threshold: number) => {
+  // FIXME: Some level 1 blocks have level 2 gaps in them...
+  console.debug('LEVEL 1');
+  const level1Sections = splitBlocksAndGapsIntoSections(
+    regions.filter(r => r.block.chainLevel === 1),
+    backboneStart,
+    backboneStop,
+    basePairToHeightRatio,
+    threshold
+  );
+  console.debug('LEVEL 2');
+  const level2Sections = splitBlocksAndGapsIntoSections(
+    regions.filter(r => r.block.chainLevel === 2),
+    backboneStart,
+    backboneStop,
+    basePairToHeightRatio,
+    threshold
+  );
+
+  return level1Sections.concat(level2Sections);
+};
+
 const splitBlocksAndGapsIntoSections = (regions: SyntenyRegionData[], backboneStart: number, backboneStop: number, basePairToHeightRatio: number, threshold: number) => {
   let trackSections: TrackSection[] = [];
   let previousBlockBackboneStop = backboneStart;
@@ -678,7 +686,7 @@ const splitBlocksAndGapsIntoSections = (regions: SyntenyRegionData[], backboneSt
   console.debug(`Filtering out gaps with threshold: ${threshold * GAPS_THRESHOLD_MULTIPLIER}`);
   regions.forEach(region => {
     const block = region.block;
-    const gaps = region.gaps.filter(g => { return g.length >= threshold * GAPS_THRESHOLD_MULTIPLIER; });
+    const gaps = region.gaps.filter(g => { return g.length >= threshold * GAPS_THRESHOLD_MULTIPLIER && g.chainLevel === block.chainLevel; });
 
     if (gaps.length === 0)
     {
@@ -692,7 +700,8 @@ const splitBlocksAndGapsIntoSections = (regions: SyntenyRegionData[], backboneSt
         cutoff: backboneStop, 
         offsetCount: block.backboneStart - previousBlockBackboneStop,
         basePairToHeightRatio: basePairToHeightRatio,
-        shape: 'rect'
+        shape: 'rect',
+        chainLevel: block.chainLevel,
       }));
       previousBlockBackboneStop = block.backboneStop;
       return;
@@ -713,7 +722,8 @@ const splitBlocksAndGapsIntoSections = (regions: SyntenyRegionData[], backboneSt
           cutoff: backboneStop, 
           offsetCount: gap.backboneStart - previousBlockBackboneStop,
           basePairToHeightRatio: basePairToHeightRatio,
-          shape: 'line'
+          shape: 'line',
+          chainLevel: block.chainLevel,
         }));
       }
       else if (index === 0)
@@ -728,7 +738,8 @@ const splitBlocksAndGapsIntoSections = (regions: SyntenyRegionData[], backboneSt
           cutoff: backboneStop, 
           offsetCount: block.backboneStart - previousBlockBackboneStop,
           basePairToHeightRatio: basePairToHeightRatio,
-          shape: 'rect'
+          shape: 'rect',
+          chainLevel: block.chainLevel,
         }));
 
         trackSections.push(new TrackSection({
@@ -739,7 +750,8 @@ const splitBlocksAndGapsIntoSections = (regions: SyntenyRegionData[], backboneSt
           chromosome: gap.chromosome, 
           cutoff: backboneStop,
           basePairToHeightRatio: basePairToHeightRatio,
-          shape: 'line'
+          shape: 'line',
+          chainLevel: block.chainLevel,
         }));
       }
       else
@@ -754,7 +766,8 @@ const splitBlocksAndGapsIntoSections = (regions: SyntenyRegionData[], backboneSt
           chromosome: block.chromosome, 
           cutoff: backboneStop,
           basePairToHeightRatio: basePairToHeightRatio,
-          shape: 'rect'
+          shape: 'rect',
+          chainLevel: block.chainLevel,
         }));
 
         trackSections.push(new TrackSection({
@@ -765,7 +778,8 @@ const splitBlocksAndGapsIntoSections = (regions: SyntenyRegionData[], backboneSt
           chromosome: gap.chromosome, 
           cutoff: backboneStop,
           basePairToHeightRatio: basePairToHeightRatio,
-          shape: 'line'
+          shape: 'line',
+          chainLevel: block.chainLevel,
         }));
       }
     });
@@ -782,7 +796,8 @@ const splitBlocksAndGapsIntoSections = (regions: SyntenyRegionData[], backboneSt
         chromosome: block.chromosome, 
         cutoff: backboneStop,
         basePairToHeightRatio: basePairToHeightRatio,
-        shape: 'rect'
+        shape: 'rect',
+        chainLevel: block.chainLevel,
       }));
     }
     else

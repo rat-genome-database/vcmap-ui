@@ -18,7 +18,7 @@ describe('TooltipSVG', () => {
       shape: 'rect',
       gene: new Gene({symbol: 'TEST', name: 'Test 123', type: '', key: 0, rgdId: 0, chromosome: '1', start: 0, stop: 10000, speciesTypeKey: 1})
     });
-    const tooltipData = new TooltipData(0, 0, section);
+    const tooltipData = new TooltipData(0, 0, section, false);
     const wrapper = shallowMount(TooltipSVG, {
       props: {
         tooltipData: tooltipData
@@ -41,7 +41,7 @@ describe('TooltipSVG', () => {
       basePairToHeightRatio: 100,
       shape: 'rect',
     });
-    const tooltipData = new TooltipData(0, 0, section);
+    const tooltipData = new TooltipData(0, 0, section, false);
     const wrapper = shallowMount(TooltipSVG, {
       props: {
         tooltipData: tooltipData
@@ -67,7 +67,7 @@ describe('TooltipSVG', () => {
       shape: 'rect',
       gene: new Gene({symbol: 'TEST', name: 'This is a really long gene test name', type: '', key: 0, rgdId: 0, chromosome: '1', start: 0, stop: 10000, speciesTypeKey: 1})
     });
-    const tooltipData = new TooltipData(0, 0, section);
+    const tooltipData = new TooltipData(0, 0, section, false);
     const wrapper = shallowMount(TooltipSVG, {
       props: {
         tooltipData: tooltipData
