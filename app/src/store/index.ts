@@ -5,7 +5,7 @@ import Chromosome from '@/models/Chromosome';
 import Gene from '@/models/Gene';
 import BackboneSelection from '@/models/BackboneSelection';
 import DataTrack from '@/models/DataTrack';
-import ViewSize from '@/utils/ViewSize';
+import SVGConstants from '@/utils/SVGConstants';
 import TooltipData from '@/models/TooltipData';
 
 
@@ -185,12 +185,12 @@ export default createStore({
       context.commit('displayStopPosition', stop);
     },
     setOverviewResolution(context: ActionContext<VCMapState, VCMapState>, backboneLength: number) {
-      context.commit('backboneBasePairToHeightRatio', backboneLength / (ViewSize.viewboxHeight - 100));
+      context.commit('backboneBasePairToHeightRatio', backboneLength / (SVGConstants.viewboxHeight - 100));
       // Note: Dividing by 8,000 is arbitary when calculating synteny threshold
       context.commit('overviewSyntenyThreshold', (backboneLength > 1000000) ? Math.floor((backboneLength) / 8000) : 0);
     },
     setDetailsResolution(context: ActionContext<VCMapState, VCMapState>, backboneLength: number) {
-      context.commit('comparativeBasePairToHeightRatio', backboneLength / (ViewSize.viewboxHeight - 100));
+      context.commit('comparativeBasePairToHeightRatio', backboneLength / (SVGConstants.viewboxHeight - 100));
       // Note: Dividing by 8,000 is arbitary when calculating synteny threshold
       context.commit('detailsSyntenyThreshold', (backboneLength > 1000000) ? Math.floor((backboneLength) / 8000) : 0);
     },

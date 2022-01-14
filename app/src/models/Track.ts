@@ -1,16 +1,23 @@
 import TrackSection from "./TrackSection";
 
+interface TrackParams
+{
+  speciesName: string;
+  sections: TrackSection[];
+  mapName?: string;
+}
+
 export default class Track
 {
   sections: TrackSection[] = [];
   name: string;
   mapName?: string;
 
-  constructor(speciesName: string, sections: TrackSection[], mapName?: string)
+  constructor(params: TrackParams)
   {
-    this.name = speciesName;
-    this.sections = sections;
-    this.mapName = mapName;
+    this.name = params.speciesName;
+    this.sections = params.sections;
+    this.mapName = params.mapName;
   }
 
   public get height()

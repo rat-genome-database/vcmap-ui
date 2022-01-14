@@ -85,11 +85,11 @@
     <template v-if="showSyntenyOnHover">
       <line v-if="section.isHovered"
       class="section connection-line"
-      :x1="posX + width" :x2="ViewSize.backboneXPosition" 
+      :x1="posX + width" :x2="SVGConstants.backboneXPosition" 
       :y1="getSectionYPosition(posY, index)" :y2="getSectionYPosition(posY, index)" />
     <line v-if="section.isHovered"
       class="section connection-line"
-      :x1="posX + width" :x2="ViewSize.backboneXPosition" 
+      :x1="posX + width" :x2="SVGConstants.backboneXPosition" 
       :y1="getSectionYPosition(posY, index) + section.height" :y2="getSectionYPosition(posY, index) + section.height" />
     </template>
   </template>
@@ -103,7 +103,7 @@ import TrackSection from '@/models/TrackSection';
 import { toRefs } from '@vue/reactivity';
 import { ref, watch } from 'vue';
 import { useStore } from 'vuex';
-import ViewSize from '@/utils/ViewSize';
+import SVGConstants from '@/utils/SVGConstants';
 
 const LABEL_Y_OFFSET = 3;
 const HIGHLIGHT_COLOR = 'bisque';
@@ -140,7 +140,6 @@ const selectedRegion = ref(new BackboneSelection(0, 0, 0, 0));
 watch(() => props.track, () => {
   if (props.isSelectable && store.getters.getSelectedBackboneRegion)
   {
-    console.debug(`Detected existing selection. Recreating selection SVG on backbone.`);
     // There was an existing selection on this track so let's recreate it
     let selection = store.getters.getSelectedBackboneRegion as BackboneSelection;
     let startingYPos = props.posY;
@@ -159,7 +158,6 @@ watch(() => store.getters.getSelectedBackboneRegion, (newVal, oldVal) => {
   // Watch for possible clear out of the selected backbone region
   if (props.isSelectable && oldVal != null && newVal == null)
   {
-    console.debug('Clearing out backbone selection');
     selectedRegion.value = new BackboneSelection(0, 0, 0, 0);
   }
 });
@@ -255,7 +253,7 @@ const onMouseEnter = (event: any, section: TrackSection, isGeneLabel: boolean) =
   if (props.showDataOnHover)
   {
     let currentSVGPoint = getMousePosSVG(event) as DOMPoint;
-    const tooltipData = new TooltipData(props.posX, currentSVGPoint.y, section);
+    const tooltipData = new TooltipData(props.posX, currentSVGPoint.y, section, false);
     store.dispatch('setTooltipData', tooltipData);
   }
 

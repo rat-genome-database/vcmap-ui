@@ -15,17 +15,17 @@
   </template>
   <template v-else-if="props.tooltipData?.genomicSection && props.tooltipData?.isGeneLabel">
     <text class="label small" :x="xPos + 2" :y="props.tooltipData.y + 10">
-      Displayed Gene: {{props.tooltipData.genomicSection.gene.symbol}}
+      Displayed Gene: {{props.tooltipData.genomicSection.gene?.symbol}}
     </text>
-    <text v-for="gene, index in props.tooltipData.genomicSection?.hiddenGenes" :key="gene.name" class="label small" :x="xPos + 2" :y="props.tooltipData.y + ((index + 2) * 10)">
-      Hidden Gene: {{gene.gene.symbol}}
+    <text v-for="gene, index in props.tooltipData.genomicSection?.hiddenGenes" :key="index" class="label small" :x="xPos + 2" :y="props.tooltipData.y + ((index + 2) * 10)">
+      Hidden Gene: {{gene.gene?.symbol}}
     </text>
   </template>
 </template>
 
 <script setup lang="ts">
 import TooltipData from '@/models/TooltipData';
-import ViewSize from '@/utils/ViewSize';
+import SVGConstants from '@/utils/SVGConstants';
 import { computed } from 'vue';
 
 const TOOLTIP_GAP = 5; // gap between the tooltip window and the starting x position given
@@ -69,12 +69,12 @@ const width = computed(() => {
 });
 
 const height = computed(() => {
-  if (props.tooltipData == null || props.tooltipData.genomicSection.gene == null)
+  if (props.tooltipData == null || props.tooltipData.genomicSection.gene == null || props.tooltipData.genomicSection?.hiddenGenes == null)
   {
     return DEFAULT_HEIGHT;
   }
 
-  const hiddenGenes = props.tooltipData.genomicSection?.hiddenGenes;
+  const hiddenGenes = props.tooltipData.genomicSection.hiddenGenes;
   //for truncated gene labels, the default height (45) shows ~3 hidden genes
   const diff = (hiddenGenes.length - 3);
   if (diff > 0)
@@ -96,7 +96,7 @@ const xPos = computed(() => {
   if (x < 0)
   {
     // Show tooltip on the right
-    x = props.tooltipData.x + ViewSize.trackWidth + TOOLTIP_GAP;
+    x = props.tooltipData.x + SVGConstants.trackWidth + TOOLTIP_GAP;
   }
 
   return x;
