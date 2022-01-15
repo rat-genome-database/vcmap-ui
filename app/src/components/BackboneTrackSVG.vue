@@ -52,22 +52,32 @@
     </text>
 
     <!-- Selected Region on Track -->
-    <rect v-if="isSelectable && selectedRegion.svgHeight > 0"
+    <rect v-if="isSelectable && selectedRegion.baseSelection.svgHeight > 0"
       data-test="selected-region"
       class="selected-region"
       fill="url(#selectedStripes)"
       stroke="black"
-      :x="posX" :y="selectedRegion.svgYPoint"
+      :x="posX" :y="selectedRegion.baseSelection.svgYPoint"
       rx="2" ry="2"
       :width="SVGConstants.trackWidth"
-      :height="selectedRegion.svgHeight"
+      :height="selectedRegion.baseSelection.svgHeight"
+      @mousedown="initSelectStart($event, section, index)"
+      @mousemove="updateSelectionHeight" />
+
+    <!-- Inner selection that changes depending on Detailed panel zoom -->
+    <rect v-if="isSelectable && selectedRegion.innerSelection && selectedRegion.innerSelection.svgHeight > 0"
+      stroke="green"
+      fill="none"
+      :x="posX - 5" :y="selectedRegion.innerSelection.svgYPoint"
+      :width="SVGConstants.trackWidth + 10"
+      :height="selectedRegion.innerSelection.svgHeight"
       @mousedown="initSelectStart($event, section, index)"
       @mousemove="updateSelectionHeight" />
   </template>
 </template>
 
 <script lang="ts" setup>
-import BackboneSelection from '@/models/BackboneSelection';
+import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 import TooltipData from '@/models/TooltipData';
 import Track from '@/models/Track';
 import TrackSection from '@/models/TrackSection';
@@ -101,30 +111,31 @@ const props = defineProps<Props>();
 
 //Converts each property in this object to its own reactive prop
 toRefs(props);
-const selectedRegion = ref(new BackboneSelection(0, 0, 0, 0));
+const selectedRegion = ref(new BackboneSelection(new SelectedRegion(0,0,0,0), store.getters.getChromosome));
 
 watch(() => props.track, () => {
   if (props.isSelectable && store.getters.getSelectedBackboneRegion)
   {
     // There was an existing selection on this track so let's recreate it
     const selection = store.getters.getSelectedBackboneRegion as BackboneSelection;
+    const baseSelection = selection.baseSelection;
     const startingYPos = SVGConstants.trackYPosition;
 
-    const selectionStart = (selection.basePairStart < store.getters.getDisplayStartPosition) ? store.getters.getDisplayStartPosition : selection.basePairStart;
-    const selectionStop = (selection.basePairStop > store.getters.getDisplayStopPosition) ? store.getters.getDisplayStopPosition : selection.basePairStop;
+    const selectionStart = (baseSelection.basePairStart < store.getters.getDisplayStartPosition) ? store.getters.getDisplayStartPosition : baseSelection.basePairStart;
+    const selectionStop = (baseSelection.basePairStop > store.getters.getDisplayStopPosition) ? store.getters.getDisplayStopPosition : baseSelection.basePairStop;
     
-    selection.svgHeight = (selectionStop - selectionStart) / store.getters.getBackboneBasePairToHeightRatio;
-    selection.svgYPoint = ((selectionStart - store.getters.getDisplayStartPosition) / store.getters.getBackboneBasePairToHeightRatio) + startingYPos;
+    baseSelection.svgHeight = (selectionStop - selectionStart) / store.getters.getOverviewBasePairToHeightRatio;
+    baseSelection.svgYPoint = ((selectionStart - store.getters.getDisplayStartPosition) / store.getters.getOverviewBasePairToHeightRatio) + startingYPos;
     selectedRegion.value = selection;
     store.dispatch('setSelectedBackboneRegion', selectedRegion.value);
   }
 });
 
-watch(() => store.getters.getSelectedBackboneRegion, (newVal, oldVal) => {
+watch(() => store.getters.getSelectedBackboneRegion, (newVal: BackboneSelection, oldVal: BackboneSelection) => {
   // Watch for possible clear out of the selected backbone region
-  if (props.isSelectable && oldVal != null && newVal == null)
+  if (props.isSelectable && oldVal.baseSelection.svgHeight > 0 && newVal.baseSelection.svgHeight === 0)
   {
-    selectedRegion.value = new BackboneSelection(0, 0, 0, 0);
+    selectedRegion.value = new BackboneSelection(new SelectedRegion(0,0,0,0), store.getters.getChromosome);
   }
 });
 
@@ -140,12 +151,12 @@ const initSelectStart = (event: any, section: TrackSection, sectionIndex: number
   inSelectMode = true;
   selectedTrackSection = section;
   selectedTrackIndex = sectionIndex;
-  selectedRegion.value = new BackboneSelection(0, 0, 0, 0);
+  selectedRegion.value = new BackboneSelection(new SelectedRegion(0,0,0,0), store.getters.getChromosome);
 
   let currentSVGPoint = getMousePosSVG(svg, event);
   startingPoint = currentSVGPoint;
-  selectedRegion.value.svgYPoint = currentSVGPoint.y;
-  selectedRegion.value.svgHeight = 0;
+  selectedRegion.value.baseSelection.svgYPoint = currentSVGPoint.y;
+  selectedRegion.value.baseSelection.svgHeight = 0;
 };
 
 const updateSelectionHeight = (event: any) => {
@@ -156,13 +167,13 @@ const updateSelectionHeight = (event: any) => {
   if (currentSVGPoint.y < startingPoint.y)
   {
     // We are moving above the starting point, calculate height with the starting point as the largest y value
-    selectedRegion.value.svgYPoint = currentSVGPoint.y;
-    selectedRegion.value.svgHeight =  startingPoint.y - selectedRegion.value.svgYPoint;
+    selectedRegion.value.baseSelection.svgYPoint = currentSVGPoint.y;
+    selectedRegion.value.baseSelection.svgHeight =  startingPoint.y - selectedRegion.value.baseSelection.svgYPoint;
   }
   else
   {
     // We are moving below the starting point, calculate height with the current point as the largest y value
-    selectedRegion.value.svgHeight = currentSVGPoint.y - selectedRegion.value.svgYPoint;
+    selectedRegion.value.baseSelection.svgHeight = currentSVGPoint.y - selectedRegion.value.baseSelection.svgYPoint;
   }
 };
 
@@ -171,14 +182,14 @@ const completeSelect = () => {
 
   inSelectMode = false;
 
-  if (selectedRegion.value.svgHeight > 0 && selectedTrackSection)
+  if (selectedRegion.value.baseSelection.svgHeight > 0 && selectedTrackSection)
   {
     // Calculate the selected range in base pairs
-    const totalBasePairsSelected = Math.ceil(selectedRegion.value.svgHeight * store.getters.getBackboneBasePairToHeightRatio);
-    const basePairsUpToStart = Math.floor((selectedRegion.value.svgYPoint - props.track.sections[selectedTrackIndex].svgY) * store.getters.getBackboneBasePairToHeightRatio);
+    const totalBasePairsSelected = Math.ceil(selectedRegion.value.baseSelection.svgHeight * store.getters.getOverviewBasePairToHeightRatio);
+    const basePairsUpToStart = Math.floor((selectedRegion.value.baseSelection.svgYPoint - props.track.sections[selectedTrackIndex].svgY) * store.getters.getOverviewBasePairToHeightRatio);
     const basePairStart = selectedTrackSection.backboneStart + basePairsUpToStart;
-    selectedRegion.value.basePairStart = basePairStart;
-    selectedRegion.value.basePairStop = basePairStart + totalBasePairsSelected;
+    selectedRegion.value.baseSelection.basePairStart = basePairStart;
+    selectedRegion.value.baseSelection.basePairStop = basePairStart + totalBasePairsSelected;
   }
 
   store.dispatch('setSelectedBackboneRegion', selectedRegion.value);

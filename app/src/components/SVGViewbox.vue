@@ -85,7 +85,7 @@ import Gene from '@/models/Gene';
 import { SyntenyRegionData } from '@/models/SyntenicRegion';
 import SpeciesApi from '@/api/SpeciesApi';
 import SVGConstants from '@/utils/SVGConstants';
-import BackboneSelection from '@/models/BackboneSelection';
+import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 import DataTrack from '@/models/DataTrack';
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import TooltipSVG from './TooltipSVG.vue';
@@ -118,7 +118,7 @@ const drawnDetailsTracks = ref<(DataTrack|Track)[]>([]);
 onMounted(async () => {
   // Clear any prior selections
   store.dispatch('setTooltipData', null);
-  store.dispatch('setSelectedBackboneRegion', null);
+  store.dispatch('setSelectedBackboneRegion', new BackboneSelection(new SelectedRegion(0,0,0,0)));
   store.dispatch('resetBackboneDataTracks');
 
   backboneSpecies.value = store.getters.getSpecies;
@@ -174,43 +174,15 @@ watch(backboneDataTracks, (newVal) => {
   deep: true
 });
 
-
-const getZoomedStartAndStopPositions = (originalStart: number, originalStop: number, zoomLevel: number) => {
-  let zoomedStart = originalStart;
-  let zoomedStop = originalStop;
-  let originalRegionLength = originalStop - originalStart;
-  let zoomedRegionLength = originalRegionLength * (1 / zoomLevel);
-
-  if (zoomLevel > 1)
-  {
-    zoomedStart = originalStart + ((originalRegionLength - zoomedRegionLength) / 2);
-    zoomedStop = originalStop - ((originalRegionLength - zoomedRegionLength) / 2);
-  }
-  else if (zoomLevel < 1)
-  {
-    zoomedStart = originalStart - ((zoomedRegionLength - originalRegionLength) / 2);
-    zoomedStop = originalStop + ((zoomedRegionLength - originalRegionLength) / 2);
-  }
-
-  let chromosome = store.getters.getChromosome as Chromosome | null;
-  zoomedStart = (zoomedStart < 0) ? 0 : Math.floor(zoomedStart);
-  zoomedStop = (chromosome?.seqLength && zoomedStop > chromosome.seqLength) ? chromosome.seqLength : Math.ceil(zoomedStop);
-
-  return {
-    start: zoomedStart,
-    stop: zoomedStop
-  };
-};
-
 const updateOverviewPanel = async () => {
   let backboneStart = store.getters.getDisplayStartPosition;
   let backboneStop = store.getters.getDisplayStopPosition;
   if (backboneStop - backboneStart > 0)
   {
     store.dispatch('setOverviewResolution', backboneStop - backboneStart);
-    backboneTrack.value = createBackboneTrack(backboneStart, backboneStop, store.getters.getBackboneBasePairToHeightRatio) ?? null;
+    backboneTrack.value = createBackboneTrack(backboneStart, backboneStop, store.getters.getOverviewBasePairToHeightRatio) ?? null;
 
-    let tempBackboneTracks = await createBackboneDataTracks(backboneStart, backboneStop, store.getters.getBackboneBasePairToHeightRatio, false) as DataTrack;
+    let tempBackboneTracks = await createBackboneDataTracks(backboneStart, backboneStop, store.getters.getOverviewBasePairToHeightRatio, false) as DataTrack;
     if (tempBackboneTracks != null)
     {
       if (store.getters.getBackboneDataTracks.length > 0)
@@ -244,7 +216,7 @@ const updateOverviewPanel = async () => {
     comparativeTracks.value = await createSyntenyTracks(
       backboneStart, 
       backboneStop, 
-      store.getters.getBackboneBasePairToHeightRatio, 
+      store.getters.getOverviewBasePairToHeightRatio, 
       store.getters.getShowOverviewGaps,
       store.getters.getOverviewSyntenyThreshold
     );
@@ -267,7 +239,7 @@ const updateOverviewPanelComparativeTracks = async () => {
     comparativeTracks.value = await createSyntenyTracks(
       backboneStart, 
       backboneStop, 
-      store.getters.getBackboneBasePairToHeightRatio, 
+      store.getters.getOverviewBasePairToHeightRatio, 
       store.getters.getShowOverviewGaps,
       store.getters.getOverviewSyntenyThreshold
     );
@@ -281,8 +253,8 @@ const updateOverviewPanelComparativeTracks = async () => {
 
 const updateDetailsPanelComparativeTracks = async () => {
   let originalSelectedBackboneRegion = store.getters.getSelectedBackboneRegion as BackboneSelection | null;
-  let selectedStart = originalSelectedBackboneRegion?.basePairStart;
-  let selectedStop = originalSelectedBackboneRegion?.basePairStop;
+  let selectedStart = originalSelectedBackboneRegion?.baseSelection.basePairStart;
+  let selectedStop = originalSelectedBackboneRegion?.baseSelection.basePairStop;
 
   if (originalSelectedBackboneRegion == null || selectedStart == null || selectedStop == null)
   {
@@ -290,23 +262,17 @@ const updateDetailsPanelComparativeTracks = async () => {
   }
   else
   {
-    const { start: selectedBackboneStart, stop: selectedBackboneStop } = getZoomedStartAndStopPositions(selectedStart, selectedStop, store.getters.getZoom);
+    const zoomedSelection = originalSelectedBackboneRegion.generateInnerSelection(store.getters.getZoom, store.getters.getOverviewBasePairToHeightRatio);
 
-    if (selectedBackboneStart != null && selectedBackboneStop != null)
-    {
-      comparativeSelectionTracks.value = await createSyntenyTracks(
-        selectedBackboneStart, 
-        selectedBackboneStop,
-        store.getters.getComparativeBasePairToHeightRatio, 
-        store.getters.getShowDetailsGaps,
-        store.getters.getDetailsSyntenyThreshold
-      );
-    }
-    else
-    {
-      comparativeSelectionTracks.value = [];
-    }
+    comparativeSelectionTracks.value = await createSyntenyTracks(
+      zoomedSelection.basePairStart,
+      zoomedSelection.basePairStop,
+      store.getters.getComparativeBasePairToHeightRatio, 
+      store.getters.getShowDetailsGaps,
+      store.getters.getDetailsSyntenyThreshold
+    );
   }
+
   setDisplayedObjects(true);
 };
 
@@ -315,8 +281,8 @@ const updateDetailsPanel = async () => {
   removeSelectionDataTracks();
 
   let originalSelectedBackboneRegion = store.getters.getSelectedBackboneRegion as BackboneSelection | null;
-  let selectedStart = originalSelectedBackboneRegion?.basePairStart;
-  let selectedStop = originalSelectedBackboneRegion?.basePairStop;
+  let selectedStart = originalSelectedBackboneRegion?.baseSelection.basePairStart;
+  let selectedStop = originalSelectedBackboneRegion?.baseSelection.basePairStop;
 
   if (originalSelectedBackboneRegion == null || selectedStart == null || selectedStop == null)
   {
@@ -325,58 +291,51 @@ const updateDetailsPanel = async () => {
   }
   else
   {
-    const { start: selectedBackboneStart, stop: selectedBackboneStop } = getZoomedStartAndStopPositions(selectedStart, selectedStop, store.getters.getZoom);
+    const zoomedSelection = originalSelectedBackboneRegion.generateInnerSelection(store.getters.getZoom, store.getters.getOverviewBasePairToHeightRatio);
 
-    if (selectedBackboneStart != null && selectedBackboneStop != null)
+    store.dispatch('setDetailsResolution', zoomedSelection.basePairStop - zoomedSelection.basePairStart);
+    backboneSelectionTrack.value = createBackboneTrack(zoomedSelection.basePairStart, zoomedSelection.basePairStop, store.getters.getComparativeBasePairToHeightRatio) ?? null;
+
+    let tempBackboneTracks = await createBackboneDataTracks(zoomedSelection.basePairStart, zoomedSelection.basePairStop, store.getters.getComparativeBasePairToHeightRatio, true) as DataTrack;
+    if (tempBackboneTracks != null)
     {
-      store.dispatch('setDetailsResolution', selectedBackboneStop - selectedBackboneStart);
-      backboneSelectionTrack.value = createBackboneTrack(selectedBackboneStart, selectedBackboneStop, store.getters.getComparativeBasePairToHeightRatio) ?? null;
-
-      let tempBackboneTracks = await createBackboneDataTracks(selectedBackboneStart, selectedBackboneStop, store.getters.getComparativeBasePairToHeightRatio, true) as DataTrack;
-      if (tempBackboneTracks != null)
+      if (store.getters.getBackboneDataTracks.length > 0)
       {
-        if (store.getters.getBackboneDataTracks.length > 0)
+        let detailTrackPresent = false;
+        let backboneDataTracks = store.getters.getBackboneDataTracks;
+        for (let index = 0; index < backboneDataTracks.length; index++)
         {
-          let detailTrackPresent = false;
-          let backboneDataTracks = store.getters.getBackboneDataTracks;
-          for (let index = 0; index < backboneDataTracks.length; index++)
+          let dataTrack = backboneDataTracks[index];
+          if (dataTrack.name == tempBackboneTracks.name)
           {
-            let dataTrack = backboneDataTracks[index];
-            if (dataTrack.name == tempBackboneTracks.name)
-            {
-              detailTrackPresent = true;
-              break;
-            }
+            detailTrackPresent = true;
+            break;
           }
+        }
 
-          if (detailTrackPresent)
-          {
-            store.commit('changeBackboneDataTrack', tempBackboneTracks);
-          }
-          else
-          {
-            setBackboneDataTracks(tempBackboneTracks);
-          }
+        if (detailTrackPresent)
+        {
+          store.commit('changeBackboneDataTrack', tempBackboneTracks);
         }
         else
         {
           setBackboneDataTracks(tempBackboneTracks);
         }
       }
-      comparativeSelectionTracks.value = await createSyntenyTracks(
-        selectedBackboneStart, 
-        selectedBackboneStop, 
-        store.getters.getComparativeBasePairToHeightRatio, 
-        store.getters.getShowDetailsGaps,
-        store.getters.getDetailsSyntenyThreshold
-      );
+      else
+      {
+        setBackboneDataTracks(tempBackboneTracks);
+      }
     }
-    else
-    {
-      backboneSelectionTrack.value = null;
-      comparativeSelectionTracks.value = [];
-    }
+    comparativeSelectionTracks.value = await createSyntenyTracks(
+      zoomedSelection.basePairStart, 
+      zoomedSelection.basePairStop, 
+      store.getters.getComparativeBasePairToHeightRatio, 
+      store.getters.getShowDetailsGaps,
+      store.getters.getDetailsSyntenyThreshold
+    );
   }
+
   setDisplayedObjects(true);
 };
 
@@ -658,7 +617,6 @@ function removeSelectionDataTracks()
 }
 
 const splitLevel1And2RegionsIntoSections = (regions: SyntenyRegionData[], backboneStart: number, backboneStop: number, basePairToHeightRatio: number, threshold: number) => {
-  // FIXME: Some level 1 blocks have level 2 gaps in them...
   console.debug('LEVEL 1');
   const level1Sections = splitBlocksAndGapsIntoSections(
     regions.filter(r => r.block.chainLevel === 1),

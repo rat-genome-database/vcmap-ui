@@ -5,6 +5,7 @@ import Species from '@/models/Species';
 import Map from '@/models/Map';
 import { createStore } from 'vuex';
 import { ExternalComponentsHandler } from '@/utils/ExternalComponentsHandler';
+import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 
 const mockStore = createStore({
   state: {
@@ -17,11 +18,11 @@ const mockStore = createStore({
       new Species({ typeKey: 2, name: 'Test Species 2', defaultMapKey: 2, maps: [new Map({ key: 2, primaryRefAssembly: true, description: '', notes: '', name: 'GRCh37'})] }), 
       new Species({ typeKey: 3, name: 'Test Species 3', defaultMapKey: 3, maps: [new Map({ key: 3, primaryRefAssembly: true, description: '', notes: '', name: 'GRCh36'})] })
     ],
-    selectedBackboneRegion: null,
+    selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
     zoom: 1,
     displayStartPos: 0,
     displayStopPos: 0,
-    backboneBasePairToHeightRatio: 1000,
+    overviewBasePairToHeightRatio: 1000,
     overviewSyntenyThreshold: 0,
     comparativeBasePairToHeightRatio: 1000,
     detailsSyntenyThreshold: 0,

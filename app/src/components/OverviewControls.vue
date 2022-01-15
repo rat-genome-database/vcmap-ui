@@ -36,7 +36,7 @@
 import { Formatter } from '@/utils/Formatter';
 import { computed, onMounted, ref } from 'vue';
 import { useStore } from 'vuex';
-import BackboneSelection from '@/models/BackboneSelection';
+import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 
 const store = useStore();
 
@@ -60,16 +60,16 @@ const displayBackboneLength = computed(() => {
 
 const selectionRange = computed(() => {
   let selectedRegion = store.getters.getSelectedBackboneRegion as BackboneSelection;
-  if (selectedRegion == null || (selectedRegion.basePairStop - selectedRegion.basePairStart <= 0))
+  if (selectedRegion == null || (selectedRegion.baseSelection.basePairStop - selectedRegion.baseSelection.basePairStart <= 0))
   {
     return '-';
   }
 
-  return `${Formatter.addCommasToBasePair(selectedRegion.basePairStart)}bp - ${Formatter.addCommasToBasePair(selectedRegion.basePairStop)}bp`;
+  return `${Formatter.addCommasToBasePair(selectedRegion.baseSelection.basePairStart)}bp - ${Formatter.addCommasToBasePair(selectedRegion.baseSelection.basePairStop)}bp`;
 });
 
 const clearSelection = () => {
-  store.dispatch('setSelectedBackboneRegion', null);
+  store.dispatch('setSelectedBackboneRegion', new BackboneSelection(new SelectedRegion(0,0,0,0)));
 };
 
 const changeOverviewGaps = (val: boolean) => {
