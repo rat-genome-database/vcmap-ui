@@ -26,11 +26,8 @@
     <rect v-if="section.shape !== 'line'"
       data-test="track-section-svg"
       class="section"
-      :class="{'selectable': isSelectable}"
       @mouseenter="onMouseEnter($event, section)"
       @mouseleave="onMouseLeave(section)"
-      @mousedown="initSelectStart($event, section, index)"
-      @mousemove="updateSelectionHeight"
       :fill="section.isHovered && showDataOnHover ? HIGHLIGHT_COLOR : section.color" 
       :x="posX" :y="section.svgY" 
       :width="SVGConstants.trackWidth" 
@@ -60,9 +57,7 @@
       :x="posX" :y="selectedRegion.baseSelection.svgYPoint"
       rx="2" ry="2"
       :width="SVGConstants.trackWidth"
-      :height="selectedRegion.baseSelection.svgHeight"
-      @mousedown="initSelectStart($event, section, index)"
-      @mousemove="updateSelectionHeight" />
+      :height="selectedRegion.baseSelection.svgHeight" />
 
     <!-- Inner selection that changes depending on Detailed panel zoom -->
     <rect v-if="isSelectable && selectedRegion.innerSelection && selectedRegion.innerSelection.svgHeight > 0"
@@ -70,10 +65,19 @@
       fill="none"
       :x="posX - 5" :y="selectedRegion.innerSelection.svgYPoint"
       :width="SVGConstants.trackWidth + 10"
-      :height="selectedRegion.innerSelection.svgHeight"
-      @mousedown="initSelectStart($event, section, index)"
-      @mousemove="updateSelectionHeight" />
+      :height="selectedRegion.innerSelection.svgHeight" />
   </template>
+
+  <!-- Transparent rect for selection -->
+  <rect v-if="isSelectable && track.sections.length > 0" 
+    data-test="selectable-svg"
+    class="selectable"
+    pointer-events="visible"
+    fill="none"
+    :x="posX" :y="track.svgY - 10"
+    :width="SVGConstants.trackWidth" :height="track.height + 20" 
+    @mousedown="initSelectStart($event, track.sections[0], 0)"
+    @mousemove="updateSelectionHeight" />
 </template>
 
 <script lang="ts" setup>
@@ -184,6 +188,24 @@ const completeSelect = () => {
 
   if (selectedRegion.value.baseSelection.svgHeight > 0 && selectedTrackSection)
   {
+    // Adjust svgYPoint and svgHeight of the selected region if they extend past the backbone start/stop
+    if (selectedRegion.value.baseSelection.svgYPoint < selectedTrackSection.svgY)
+    {
+      selectedRegion.value.baseSelection.svgYPoint = selectedTrackSection.svgY;
+    }
+
+    if (selectedRegion.value.baseSelection.svgYPoint + selectedRegion.value.baseSelection.svgHeight > selectedTrackSection.svgY2)
+    {
+      if (selectedRegion.value.baseSelection.svgYPoint > selectedTrackSection.svgY2)
+      {
+        selectedRegion.value.baseSelection.svgYPoint = selectedTrackSection.svgY2 - selectedRegion.value.baseSelection.svgHeight;
+      }
+      else
+      {
+        selectedRegion.value.baseSelection.svgHeight = selectedTrackSection.svgY2 - selectedRegion.value.baseSelection.svgYPoint;
+      }
+    }
+
     // Calculate the selected range in base pairs
     const totalBasePairsSelected = Math.ceil(selectedRegion.value.baseSelection.svgHeight * store.getters.getOverviewBasePairToHeightRatio);
     const basePairsUpToStart = Math.floor((selectedRegion.value.baseSelection.svgYPoint - props.track.sections[selectedTrackIndex].svgY) * store.getters.getOverviewBasePairToHeightRatio);
@@ -228,15 +250,16 @@ const onMouseLeave = (section: TrackSection) => {
 .section
 {
   stroke-width: 0;
-  &.selectable
-  {
-    cursor: crosshair;
-  }
   &.gap
   {
     stroke-width: 1;
     stroke: black;
   }
+}
+
+rect.selectable
+{
+  cursor: crosshair;
 }
 
 .selected-region

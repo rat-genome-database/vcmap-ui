@@ -41,6 +41,16 @@ export default class Track
     return totalHeight;
   }
 
+  public get svgY()
+  {
+    if (this.sections.length > 0)
+    {
+      return this.sections[0].svgY;
+    }
+
+    return 0;
+  }
+
   /**
    * Sets the starting Y position of each track section based on the height of the previous section
    * and any offsets that might need to be applied for gaps.

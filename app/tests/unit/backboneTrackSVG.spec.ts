@@ -126,7 +126,7 @@ describe('BackboneTrackSVG', () => {
     });
 
     // Select a region
-    const section = wrapper.get('[data-test="track-section-svg"]');
+    const section = wrapper.get('[data-test="selectable-svg"]');
     await section.trigger('mousedown');
     await section.trigger('mousemove');
     await section.trigger('mousedown');
