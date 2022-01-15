@@ -3,6 +3,7 @@ import Zoom from '@/components/Zoom.vue';
 import { VCMapState } from '@/store';
 import { ActionTree, createStore, Store } from 'vuex';
 import { ExternalComponentsHandler } from '@/utils/ExternalComponentsHandler';
+import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 
 describe('Zoom', () => {
 
@@ -16,11 +17,11 @@ describe('Zoom', () => {
     stopPos: null,
     gene: null,
     comparativeSpecies: [],
-    selectedBackboneRegion: null,
+    selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
     zoom: 1,
     displayStartPos: 0,
     displayStopPos: 0,
-    backboneBasePairToHeightRatio: 1000,
+    overviewBasePairToHeightRatio: 1000,
     overviewSyntenyThreshold: 0,
     comparativeBasePairToHeightRatio: 1000,
     detailsSyntenyThreshold: 0,

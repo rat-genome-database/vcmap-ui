@@ -6,6 +6,7 @@ import { VCMapState } from '@/store';
 import { ActionTree, createStore, Store } from 'vuex';
 import Chromosome from '@/models/Chromosome';
 import { ExternalComponentsHandler } from '@/utils/ExternalComponentsHandler';
+import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 
 
 describe('OverviewControls', () => {
@@ -18,11 +19,11 @@ describe('OverviewControls', () => {
     stopPos: 10000,
     gene: null,
     comparativeSpecies: [],
-    selectedBackboneRegion: null,
+    selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
     zoom: 1,
     displayStartPos: 1,
     displayStopPos: 10000,
-    backboneBasePairToHeightRatio: 1000,
+    overviewBasePairToHeightRatio: 1000,
     overviewSyntenyThreshold: 0,
     comparativeBasePairToHeightRatio: 1000,
     detailsSyntenyThreshold: 0,
@@ -97,6 +98,6 @@ describe('OverviewControls', () => {
     await clearBtn.trigger('click');
 
     expect(actions.setSelectedBackboneRegion).toBeCalledTimes(1);
-    expect(actions.setSelectedBackboneRegion).toBeCalledWith(expect.anything(), null);
+    expect(actions.setSelectedBackboneRegion).toBeCalledWith(expect.anything(), new BackboneSelection(new SelectedRegion(0,0,0,0)));
   });
 });

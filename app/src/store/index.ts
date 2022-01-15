@@ -3,7 +3,7 @@ import VuexPersistence from 'vuex-persist';
 import Species from '@/models/Species';
 import Chromosome from '@/models/Chromosome';
 import Gene from '@/models/Gene';
-import BackboneSelection from '@/models/BackboneSelection';
+import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 import DataTrack from '@/models/DataTrack';
 import SVGConstants from '@/utils/SVGConstants';
 import TooltipData from '@/models/TooltipData';
@@ -19,12 +19,12 @@ export interface VCMapState
 
   comparativeSpecies: Species[];
 
-  selectedBackboneRegion: BackboneSelection | null;
+  selectedBackboneRegion: BackboneSelection;
   zoom: number;
   displayStartPos: number; // the displayed start position of the backbone (changes due to zoom level)
   displayStopPos: number; // the displayed stop position of the backbone (changes due to zoom level)
 
-  backboneBasePairToHeightRatio: number;
+  overviewBasePairToHeightRatio: number;
   overviewSyntenyThreshold: number;
   comparativeBasePairToHeightRatio: number;
   detailsSyntenyThreshold: number;
@@ -53,12 +53,12 @@ export default createStore({
 
     comparativeSpecies: [],
 
-    selectedBackboneRegion: null,
+    selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
     zoom: 1,
     displayStartPos: 0,
     displayStopPos: 0,
 
-    backboneBasePairToHeightRatio: 1000,
+    overviewBasePairToHeightRatio: 1000,
     overviewSyntenyThreshold: 0,
     comparativeBasePairToHeightRatio: 1000,
     detailsSyntenyThreshold: 0,
@@ -103,9 +103,9 @@ export default createStore({
     displayStopPosition(state: VCMapState, stop: number) {
       state.displayStopPos = stop;
     },
-    backboneBasePairToHeightRatio(state: VCMapState, ratio: number) {
+    overviewBasePairToHeightRatio(state: VCMapState, ratio: number) {
       console.debug(`Setting overview panel bp resolution to ${ratio} bp/unit`);
-      state.backboneBasePairToHeightRatio = ratio;
+      state.overviewBasePairToHeightRatio = ratio;
     },
     overviewSyntenyThreshold(state: VCMapState, threshold: number) {
       console.debug(`Setting overview panel synteny threshold to ${threshold}bp`);
@@ -185,7 +185,7 @@ export default createStore({
       context.commit('displayStopPosition', stop);
     },
     setOverviewResolution(context: ActionContext<VCMapState, VCMapState>, backboneLength: number) {
-      context.commit('backboneBasePairToHeightRatio', backboneLength / (SVGConstants.viewboxHeight - 100));
+      context.commit('overviewBasePairToHeightRatio', backboneLength / (SVGConstants.viewboxHeight - 100));
       // Note: Dividing by 8,000 is arbitary when calculating synteny threshold
       context.commit('overviewSyntenyThreshold', (backboneLength > 1000000) ? Math.floor((backboneLength) / 8000) : 0);
     },
@@ -248,8 +248,8 @@ export default createStore({
     getDisplayStopPosition(state: VCMapState) {
       return state.displayStopPos;
     },
-    getBackboneBasePairToHeightRatio(state: VCMapState) {
-      return state.backboneBasePairToHeightRatio;
+    getOverviewBasePairToHeightRatio(state: VCMapState) {
+      return state.overviewBasePairToHeightRatio;
     },
     getOverviewSyntenyThreshold(state: VCMapState) {
       return state.overviewSyntenyThreshold;

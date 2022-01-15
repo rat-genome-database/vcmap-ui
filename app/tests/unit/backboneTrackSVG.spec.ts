@@ -6,6 +6,7 @@ import Chromosome from '@/models/Chromosome';
 import { ActionTree, createStore, Store } from 'vuex';
 import { VCMapState } from '@/store';
 import SVGConstants from '@/utils/SVGConstants';
+import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 
 const BACKBONE_BASEPAIR_TO_HEIGHT_RATIO = 1000;
 
@@ -21,11 +22,11 @@ describe('BackboneTrackSVG', () => {
     stopPos: null,
     gene: null,
     comparativeSpecies: [],
-    selectedBackboneRegion: null,
+    selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
     zoom: 1,
     displayStartPos: 0,
     displayStopPos: 0,
-    backboneBasePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO,
+    overviewBasePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO,
     overviewSyntenyThreshold: 0,
     comparativeBasePairToHeightRatio: 1000,
     detailsSyntenyThreshold: 0,
@@ -125,7 +126,7 @@ describe('BackboneTrackSVG', () => {
     });
 
     // Select a region
-    const section = wrapper.get('[data-test="track-section-svg"]');
+    const section = wrapper.get('[data-test="selectable-svg"]');
     await section.trigger('mousedown');
     await section.trigger('mousemove');
     await section.trigger('mousedown');
