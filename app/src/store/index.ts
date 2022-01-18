@@ -185,12 +185,16 @@ export default createStore({
       context.commit('displayStopPosition', stop);
     },
     setOverviewResolution(context: ActionContext<VCMapState, VCMapState>, backboneLength: number) {
-      context.commit('overviewBasePairToHeightRatio', backboneLength / (SVGConstants.viewboxHeight - 100));
+      // The height of the tracks in the overview should have a little buffer on the top and bottom margins
+      const overviewTrackHeight = SVGConstants.viewboxHeight - (SVGConstants.overviewTrackYPosition + SVGConstants.navigationButtonHeight + (SVGConstants.overviewTrackYPosition - SVGConstants.panelTitleHeight));
+      context.commit('overviewBasePairToHeightRatio', backboneLength / overviewTrackHeight);
       // Note: Dividing by 8,000 is arbitary when calculating synteny threshold
       context.commit('overviewSyntenyThreshold', (backboneLength > 1000000) ? Math.floor((backboneLength) / 8000) : 0);
     },
     setDetailsResolution(context: ActionContext<VCMapState, VCMapState>, backboneLength: number) {
-      context.commit('comparativeBasePairToHeightRatio', backboneLength / (SVGConstants.viewboxHeight - 100));
+      // The tracks in the detailed panel should have no top or bottom margins
+      const detailedTrackHeight = SVGConstants.viewboxHeight - (SVGConstants.panelTitleHeight + SVGConstants.navigationButtonHeight);
+      context.commit('comparativeBasePairToHeightRatio', backboneLength / detailedTrackHeight);
       // Note: Dividing by 8,000 is arbitary when calculating synteny threshold
       context.commit('detailsSyntenyThreshold', (backboneLength > 1000000) ? Math.floor((backboneLength) / 8000) : 0);
     },

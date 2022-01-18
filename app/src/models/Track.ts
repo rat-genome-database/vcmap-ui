@@ -7,6 +7,7 @@ interface TrackParams
   sections: TrackSection[];
   mapName?: string;
   isSyntenyTrack?: boolean;
+  startingSVGY: number;
 }
 
 export interface Label
@@ -22,12 +23,14 @@ export default class Track
   name: string;
   mapName?: string;
   labels: Label[] = [];
+  startingSVGY: number = 0;
 
   constructor(params: TrackParams)
   {
     this.name = params.speciesName;
     this.sections = params.sections;
     this.mapName = params.mapName;
+    this.startingSVGY = params.startingSVGY;
     this.setSectionSVGPositions(this.sections, params.isSyntenyTrack);
     this.buildAndSortLabelObjects(this.sections);
   }
@@ -80,7 +83,8 @@ export default class Track
 
   private setSectionYPosition(section: TrackSection, index: number, sections: TrackSection[])
   {
-    let currentYPos = SVGConstants.trackYPosition;
+    // If track is in the overview, leave some space between the title panels and the track
+    let currentYPos = this.startingSVGY;
     let previousSectionIndex = index - 1;
     while (previousSectionIndex >= 0 && index !== 0)
     {
@@ -100,12 +104,12 @@ export default class Track
     const labels: Label[] = [];
     sections.forEach(s => {
       labels.push({
-        svgY: s.svgY,
+        svgY: s.svgY - SVGConstants.panelTitleHeight <= 3 ? s.svgY + 5 : s.svgY,
         text: s.startBPLabel ?? '',
         isVisible: false
       });
       labels.push({
-        svgY: s.svgY2,
+        svgY: (SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight) - s.svgY2 <= 3 ? s.svgY2 - 5 : s.svgY2,
         text: s.stopBPLabel ?? '',
         isVisible: false
       });

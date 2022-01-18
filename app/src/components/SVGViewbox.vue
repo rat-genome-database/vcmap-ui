@@ -21,7 +21,7 @@
     <!-- backbone data tracks -->
     <template v-for="(dataTrack, index) in drawnOverviewTracks" :key="dataTrack">
       <text v-if="dataTrack.type === 'dataTrack' && !dataTrack.isComparative" class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + SVGConstants.backboneXPosition" :y="SVGConstants.trackLabelYPosition">{{dataTrack.trackType}}</text>
-      <TrackSVG v-if="dataTrack.type === 'dataTrack' && !dataTrack.isComparative"
+      <TrackSVG v-if="dataTrack.type === 'dataTrack' && !dataTrack.isComparative" 
         show-chromosome
         show-gene-label 
         :pos-x="getBackbonePanelTrackXOffset(index + 1) + SVGConstants.backboneXPosition"
@@ -67,6 +67,12 @@
     </template>
 
     <TooltipSVG :tooltip-data="store.getters.getTooltipData" />
+
+    <!-- Navigation buttons -->
+    <image href="../../node_modules/primeicons/raw-svg/chevron-up.svg" :x="SVGConstants.overviewPanelWidth + (SVGConstants.detailsPanelWidth / 2)" :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
+    <rect class="navigation-btn" :x="SVGConstants.overviewPanelWidth" :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
+    <image href="../../node_modules/primeicons/raw-svg/chevron-down.svg" :x="SVGConstants.overviewPanelWidth + (SVGConstants.detailsPanelWidth / 2)" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
+    <rect class="navigation-btn" :x="SVGConstants.overviewPanelWidth" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
   </svg>
 
   <VCMapDialog v-model:show="showDialog" :header="dialogHeader" :message="dialogMessage" />
@@ -180,9 +186,9 @@ const updateOverviewPanel = async () => {
   if (backboneStop - backboneStart > 0)
   {
     store.dispatch('setOverviewResolution', backboneStop - backboneStart);
-    backboneTrack.value = createBackboneTrack(backboneStart, backboneStop, store.getters.getOverviewBasePairToHeightRatio) ?? null;
+    backboneTrack.value = createBackboneTrack(backboneStart, backboneStop, store.getters.getOverviewBasePairToHeightRatio, SVGConstants.overviewTrackYPosition) ?? null;
 
-    let tempBackboneTracks = await createBackboneDataTracks(backboneStart, backboneStop, store.getters.getOverviewBasePairToHeightRatio, false) as DataTrack;
+    let tempBackboneTracks = await createBackboneDataTracks(backboneStart, backboneStop, store.getters.getOverviewBasePairToHeightRatio, false, SVGConstants.overviewTrackYPosition) as DataTrack;
     if (tempBackboneTracks != null)
     {
       if (store.getters.getBackboneDataTracks.length > 0)
@@ -218,7 +224,8 @@ const updateOverviewPanel = async () => {
       backboneStop, 
       store.getters.getOverviewBasePairToHeightRatio, 
       store.getters.getShowOverviewGaps,
-      store.getters.getOverviewSyntenyThreshold
+      store.getters.getOverviewSyntenyThreshold,
+      SVGConstants.overviewTrackYPosition
     );
   }
   else
@@ -280,11 +287,8 @@ const updateDetailsPanel = async () => {
 
   removeSelectionDataTracks();
 
-  let originalSelectedBackboneRegion = store.getters.getSelectedBackboneRegion as BackboneSelection | null;
-  let selectedStart = originalSelectedBackboneRegion?.baseSelection.basePairStart;
-  let selectedStop = originalSelectedBackboneRegion?.baseSelection.basePairStop;
-
-  if (originalSelectedBackboneRegion == null || selectedStart == null || selectedStop == null)
+  const originalSelectedBackboneRegion = store.getters.getSelectedBackboneRegion as BackboneSelection;
+  if (originalSelectedBackboneRegion.baseSelection.svgHeight === 0)
   {
     backboneSelectionTrack.value = null;
     comparativeSelectionTracks.value = [];
@@ -354,7 +358,7 @@ const getComparativePanelTrackXOffset = (trackNumber: number) => {
 /**
  * Creates the backbone track model and sets the viewbox height based on the size of the backbone track
  */
-const createBackboneTrack = (startPos: number, stopPos: number, basePairToHeightRatio: number) => {
+const createBackboneTrack = (startPos: number, stopPos: number, basePairToHeightRatio: number, startingSVGYPos = SVGConstants.panelTitleHeight) => {
   const speciesName = backboneSpecies.value?.name;
   const backboneChromosomeString = backboneChromosome.value?.chromosome;
   if (speciesName != null && backboneChromosomeString != null)
@@ -369,7 +373,7 @@ const createBackboneTrack = (startPos: number, stopPos: number, basePairToHeight
       basePairToHeightRatio: basePairToHeightRatio,
       shape: 'rect'
     });
-    return new Track({ speciesName: speciesName, sections: [trackSection] });
+    return new Track({ speciesName: speciesName, sections: [trackSection], startingSVGY: startingSVGYPos });
   }
   else
   {
@@ -377,7 +381,7 @@ const createBackboneTrack = (startPos: number, stopPos: number, basePairToHeight
   }
 };
 
-const createSyntenyTracks = async (backboneStart: number, backboneStop: number, basePairToHeightRatio: number, includeGaps: boolean, syntenyThreshold: number) => {
+const createSyntenyTracks = async (backboneStart: number, backboneStop: number, basePairToHeightRatio: number, includeGaps: boolean, syntenyThreshold: number, startingSVGYPos = SVGConstants.panelTitleHeight) => {
   const backboneChr = store.getters.getChromosome as Chromosome;
   let comparativeSpecies: Species[] = [];
   
@@ -424,7 +428,7 @@ const createSyntenyTracks = async (backboneStart: number, backboneStop: number, 
         // Build synteny tracks for successful API calls
         console.debug(`-- Building synteny track for species: ${speciesName} / ${mapName} --`);
         const trackSections = splitLevel1And2RegionsIntoSections(result.value, backboneStart, backboneStop, basePairToHeightRatio, syntenyThreshold);
-        const track = new Track({ speciesName: speciesName, sections: trackSections, mapName: mapName, isSyntenyTrack: true });
+        const track = new Track({ speciesName: speciesName, sections: trackSections, mapName: mapName, isSyntenyTrack: true, startingSVGY: startingSVGYPos });
         tracks.push(track);
       }
       else
@@ -448,7 +452,7 @@ const createSyntenyTracks = async (backboneStart: number, backboneStop: number, 
   return tempComparativeTracks;
 };
 
-const createBackboneDataTracks =  async (startPos: number, stopPos: number, basePairToHeightRatio: number, isComparative: boolean) => {
+const createBackboneDataTracks =  async (startPos: number, stopPos: number, basePairToHeightRatio: number, isComparative: boolean, startingSVGYPos = SVGConstants.panelTitleHeight) => {
   const backboneChr = store.getters.getChromosome;
   const backboneSpecies = store.getters.getSpecies;
 
@@ -513,7 +517,7 @@ const createBackboneDataTracks =  async (startPos: number, stopPos: number, base
       }
     }
     let geneDataTrack;
-    let geneTrack = new Track({ speciesName: backboneSpecies.name, sections: sections });
+    let geneTrack = new Track({ speciesName: backboneSpecies.name, sections: sections, startingSVGY: startingSVGYPos });
 
     if (isComparative)
     { 
@@ -792,5 +796,18 @@ rect.panel
 .vcmap-loader.p-progressbar
 {
   height: 0.25em;
+}
+
+rect.navigation-btn
+{
+  fill: lightgray;
+  fill-opacity: 0.5;
+  stroke-width: 1;
+  stroke: lightslategray;
+  &:hover
+  {
+    fill: whitesmoke;
+    cursor: pointer;
+  }
 }
 </style>
