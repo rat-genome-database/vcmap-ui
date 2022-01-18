@@ -21,12 +21,6 @@
             class="p-button-danger p-button-sm clear-btn" 
             @click="clearSelection"/>
         </div>
-        <div class="col-5">Show Gaps:</div>
-        <div class="col-7">
-          <div class="p-field-checkbox">
-            <Checkbox id="gaps" v-model="showGaps" :binary="true" @input="changeOverviewGaps" />
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -34,17 +28,11 @@
 
 <script lang="ts" setup>
 import { Formatter } from '@/utils/Formatter';
-import { computed, onMounted, ref } from 'vue';
+import { computed } from 'vue';
 import { useStore } from 'vuex';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 
 const store = useStore();
-
-let showGaps = ref<boolean>(false);
-
-onMounted(() => {
-  showGaps.value = store.getters.getShowOverviewGaps;
-});
 
 const displayBackboneStart = computed(() => {
   return Formatter.addCommasToBasePair(store.getters.getDisplayStartPosition);
@@ -70,10 +58,6 @@ const selectionRange = computed(() => {
 
 const clearSelection = () => {
   store.dispatch('setSelectedBackboneRegion', new BackboneSelection(new SelectedRegion(0,0,0,0)));
-};
-
-const changeOverviewGaps = (val: boolean) => {
-  store.dispatch('setShowOverviewGaps', val);
 };
 </script>
 

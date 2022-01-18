@@ -9,12 +9,6 @@
         <div class="col-7 bold">{{Formatter.addCommasToBasePair(store.getters.getDetailsSyntenyThreshold)}}bp</div>
         <div class="col-5">Zoom Level:</div>
         <div class="col-7 bold"><Zoom :min="1" /></div>
-        <div class="col-5">Show Gaps:</div>
-        <div class="col-7">
-          <div class="p-field-checkbox">
-            <Checkbox id="gaps" v-model="showGaps" :binary="true" @input="changeDetailsGaps" />
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -22,18 +16,12 @@
 
 <script lang="ts" setup>
 import Species from '@/models/Species';
-import { computed, onMounted, ref } from 'vue';
+import { computed } from 'vue';
 import { useStore } from 'vuex';
 import Zoom from '@/components/Zoom.vue';
 import { Formatter } from '@/utils/Formatter';
 
 const store = useStore();
-
-let showGaps = ref(false);
-
-onMounted(() => {
-  showGaps.value = store.getters.getShowDetailsGaps;
-});
 
 const displayedSpeciesText = computed(() => {
   let text = '';
@@ -48,8 +36,4 @@ const displayedSpeciesText = computed(() => {
 
   return text;
 });
-
-const changeDetailsGaps = (val: boolean) => {
-  store.dispatch('setShowDetailsGaps', val);
-};
 </script>

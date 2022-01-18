@@ -31,9 +31,6 @@ export interface VCMapState
 
   backboneDataTracks: DataTrack[];
 
-  showOverviewGaps: boolean;
-  showDetailsGaps: boolean;
-
   configTab: number;
 
   tooltipData: TooltipData | null;
@@ -64,8 +61,6 @@ export default createStore({
     detailsSyntenyThreshold: 0,
 
     backboneDataTracks: [],
-    showOverviewGaps: false,
-    showDetailsGaps: false,
 
     configTab: 0,
 
@@ -140,12 +135,6 @@ export default createStore({
         }
       }
     },
-    showOverviewGaps(state: VCMapState, show: boolean) {
-      state.showOverviewGaps = show;
-    },
-    showDetailsGaps(state: VCMapState, show: boolean) {
-      state.showDetailsGaps = show;
-    },
     configTab(state: VCMapState, tab: number) {
       state.configTab = tab;
     },
@@ -204,12 +193,6 @@ export default createStore({
     resetBackboneDataTracks(context: ActionContext<VCMapState, VCMapState>) {
       context.commit('backboneDataTracks', []);
     },
-    setShowOverviewGaps(context: ActionContext<VCMapState, VCMapState>, show: boolean) {
-      context.commit('showOverviewGaps', show);
-    },
-    setShowDetailsGaps(context: ActionContext<VCMapState, VCMapState>, show: boolean) {
-      context.commit('showDetailsGaps', show);
-    },
     setConfigTab(context: ActionContext<VCMapState, VCMapState>, tab: number) {
       context.commit('configTab', tab);
     },
@@ -266,12 +249,6 @@ export default createStore({
     },
     getBackboneDataTracks(state: VCMapState) {
       return state.backboneDataTracks as DataTrack[];
-    },
-    getShowOverviewGaps(state: VCMapState) {
-      return state.showOverviewGaps;
-    },
-    getShowDetailsGaps(state: VCMapState) {
-      return state.showDetailsGaps;
     },
     getConfigTab(state: VCMapState) {
       return state.configTab;
