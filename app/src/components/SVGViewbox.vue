@@ -68,9 +68,9 @@
 
      <!-- Navigation buttons -->
     <image href="../../node_modules/primeicons/raw-svg/chevron-up.svg" :x="SVGConstants.overviewPanelWidth + (SVGConstants.detailsPanelWidth / 2)" :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
-    <rect class="navigation-btn" :x="SVGConstants.overviewPanelWidth" :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
+    <rect class="navigation-btn" :class="{'disabled': store.getters.getZoom <= 1 }" :x="SVGConstants.overviewPanelWidth" :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
     <image href="../../node_modules/primeicons/raw-svg/chevron-down.svg" :x="SVGConstants.overviewPanelWidth + (SVGConstants.detailsPanelWidth / 2)" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
-    <rect class="navigation-btn" :x="SVGConstants.overviewPanelWidth" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
+    <rect class="navigation-btn" :class="{'disabled': store.getters.getZoom <= 1 }" :x="SVGConstants.overviewPanelWidth" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
 
     <TooltipSVG :tooltip-data="store.getters.getTooltipData" />
   </svg>
@@ -748,10 +748,15 @@ rect.navigation-btn
   fill-opacity: 0.5;
   stroke-width: 1;
   stroke: lightslategray;
-  &:hover
+  &:hover:not(.disabled)
   {
     fill: whitesmoke;
     cursor: pointer;
+  }
+
+  &.disabled
+  {
+    cursor: not-allowed;
   }
 }
 </style>
