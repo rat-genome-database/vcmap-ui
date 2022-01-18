@@ -25,8 +25,6 @@ describe('Zoom', () => {
     overviewSyntenyThreshold: 0,
     comparativeBasePairToHeightRatio: 1000,
     detailsSyntenyThreshold: 0,
-    showOverviewGaps: false,
-    showDetailsGaps: false,
     backboneDataTracks: [],
     configTab: 0,
     tooltipData: null,

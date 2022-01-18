@@ -123,7 +123,7 @@ watch(() => props.track, () => {
     // There was an existing selection on this track so let's recreate it
     const selection = store.getters.getSelectedBackboneRegion as BackboneSelection;
     const baseSelection = selection.baseSelection;
-    const startingYPos = SVGConstants.trackYPosition;
+    const startingYPos = SVGConstants.overviewTrackYPosition;
 
     const selectionStart = (baseSelection.basePairStart < store.getters.getDisplayStartPosition) ? store.getters.getDisplayStartPosition : baseSelection.basePairStart;
     const selectionStop = (baseSelection.basePairStop > store.getters.getDisplayStopPosition) ? store.getters.getDisplayStopPosition : baseSelection.basePairStop;

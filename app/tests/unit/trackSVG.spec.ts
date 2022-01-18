@@ -6,6 +6,7 @@ import Chromosome from '@/models/Chromosome';
 import { ActionTree, createStore, Store } from 'vuex';
 import { VCMapState } from '@/store';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
+import SVGConstants from '@/utils/SVGConstants';
 
 const BACKBONE_BASEPAIR_TO_HEIGHT_RATIO = 1000;
 
@@ -29,8 +30,6 @@ describe('TrackSVG', () => {
     overviewSyntenyThreshold: 0,
     comparativeBasePairToHeightRatio: 1000,
     detailsSyntenyThreshold: 0,
-    showOverviewGaps: false,
-    showDetailsGaps: false,
     backboneDataTracks: [],
     configTab: 0,
     tooltipData: null,
@@ -64,7 +63,7 @@ describe('TrackSVG', () => {
       basePairToHeightRatio: 1000,
       shape: 'rect'
     });
-    const track = new Track({ speciesName: 'Human', sections: [trackSection] });
+    const track = new Track({ speciesName: 'Human', sections: [trackSection], startingSVGY: SVGConstants.panelTitleHeight });
     const wrapper = shallowMount(TrackSVG, {
       props: {
         showStartStop: true,
@@ -96,7 +95,7 @@ describe('TrackSVG', () => {
     const backboneAttributes = backboneSVG.attributes();
     expect(backboneAttributes.fill).toEqual(Chromosome.getColor('1'));
     expect(backboneAttributes.x).toEqual('100');
-    expect(backboneAttributes.y).toEqual('60');
+    expect(backboneAttributes.y).toEqual('55');
     expect(backboneAttributes.width).toEqual('30');
     expect(backboneAttributes.height).toEqual((10000000 / BACKBONE_BASEPAIR_TO_HEIGHT_RATIO).toString());
   });
@@ -135,7 +134,7 @@ describe('TrackSVG', () => {
       basePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO,
       shape: 'rect'
     });
-    const track = new Track({ speciesName: 'Rat', sections: [trackSection1, trackSection2, trackSection3] });
+    const track = new Track({ speciesName: 'Rat', sections: [trackSection1, trackSection2, trackSection3], startingSVGY: SVGConstants.panelTitleHeight });
 
     const wrapper = shallowMount(TrackSVG, {
       props: {
@@ -168,7 +167,7 @@ describe('TrackSVG', () => {
     const attrs1 = section1.attributes();
     expect(attrs1.fill).toEqual(Chromosome.getColor('1'));
     expect(attrs1.x).toEqual('100');
-    expect(attrs1.y).toEqual('60'); // Determined by starting position + height of previous section + offset of current section
+    expect(attrs1.y).toEqual('55'); // Determined by starting position + height of previous section + offset of current section
     expect(attrs1.width).toEqual('30');
     expect(attrs1.height).toEqual((10000000 / BACKBONE_BASEPAIR_TO_HEIGHT_RATIO).toString()); // Determined by BASE_PAIR_TO_PIXEL_RATIO in TrackSection model
 

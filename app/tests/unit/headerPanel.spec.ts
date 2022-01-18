@@ -26,8 +26,6 @@ const mockStore = createStore({
     overviewSyntenyThreshold: 0,
     comparativeBasePairToHeightRatio: 1000,
     detailsSyntenyThreshold: 0,
-    showOverviewGaps: false,
-    showDetailsGaps: false,
     backboneDataTracks: [],
     configTab: 0,
     tooltipData: null,
@@ -38,7 +36,10 @@ const mockStore = createStore({
     },
     getComparativeSpecies(state: VCMapState) {
       return state.comparativeSpecies;
-    }
+    },
+    getSelectedBackboneRegion(state: VCMapState) {
+      return state.selectedBackboneRegion;
+    },
   }
 });
 

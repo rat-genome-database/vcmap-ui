@@ -30,8 +30,6 @@ describe('BackboneTrackSVG', () => {
     overviewSyntenyThreshold: 0,
     comparativeBasePairToHeightRatio: 1000,
     detailsSyntenyThreshold: 0,
-    showOverviewGaps: false,
-    showDetailsGaps: false,
     backboneDataTracks: [],
     configTab: 0,
     tooltipData: null,
@@ -65,7 +63,7 @@ describe('BackboneTrackSVG', () => {
       basePairToHeightRatio: 1000,
       shape: 'rect'
     });
-    const backboneTrack = new Track({ speciesName: 'Human', sections: [backboneTrackSection] });
+    const backboneTrack = new Track({ speciesName: 'Human', sections: [backboneTrackSection], startingSVGY: SVGConstants.panelTitleHeight });
     const wrapper = shallowMount(BackboneTrackSVG, {
       props: {
         posX: 100,
@@ -95,7 +93,7 @@ describe('BackboneTrackSVG', () => {
     const backboneAttributes = backboneSVG.attributes();
     expect(backboneAttributes.fill).toEqual(Chromosome.getColor('1'));
     expect(backboneAttributes.x).toEqual('100');
-    expect(backboneAttributes.y).toEqual('60');
+    expect(backboneAttributes.y).toEqual('55');
     expect(backboneAttributes.width).toEqual(SVGConstants.trackWidth.toString());
     expect(backboneAttributes.height).toEqual((10000000 / BACKBONE_BASEPAIR_TO_HEIGHT_RATIO).toString());
   });
@@ -111,7 +109,7 @@ describe('BackboneTrackSVG', () => {
       basePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO,
       shape: 'rect'
     });
-    const backboneTrack = new Track({ speciesName: 'Human', sections: [backboneTrackSection] });
+    const backboneTrack = new Track({ speciesName: 'Human', sections: [backboneTrackSection], startingSVGY: SVGConstants.panelTitleHeight });
     const wrapper = shallowMount(BackboneTrackSVG, {
       props: {
         posX: 100,
