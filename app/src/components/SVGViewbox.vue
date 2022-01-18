@@ -68,9 +68,9 @@
 
      <!-- Navigation buttons -->
     <image href="../../node_modules/primeicons/raw-svg/chevron-up.svg" :x="SVGConstants.overviewPanelWidth + (SVGConstants.detailsPanelWidth / 2)" :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
-    <rect class="navigation-btn" :class="{'disabled': store.getters.getZoom <= 1 }" :x="SVGConstants.overviewPanelWidth" :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
+    <rect class="navigation-btn" :class="{'disabled': isNavigationDisabled }" @click="navigateUp" :x="SVGConstants.overviewPanelWidth" :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
     <image href="../../node_modules/primeicons/raw-svg/chevron-down.svg" :x="SVGConstants.overviewPanelWidth + (SVGConstants.detailsPanelWidth / 2)" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
-    <rect class="navigation-btn" :class="{'disabled': store.getters.getZoom <= 1 }" :x="SVGConstants.overviewPanelWidth" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
+    <rect class="navigation-btn" :class="{'disabled': isNavigationDisabled }" @click="navigateDown" :x="SVGConstants.overviewPanelWidth" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
 
     <TooltipSVG :tooltip-data="store.getters.getTooltipData" />
   </svg>
@@ -83,7 +83,7 @@ import Species from '@/models/Species';
 import TrackSection from '@/models/TrackSection';
 import Track from '@/models/Track';
 import SyntenyApi from '@/api/SyntenyApi';
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import TrackSVG from './TrackSVG.vue';
 import Chromosome from '@/models/Chromosome';
@@ -727,6 +727,22 @@ const warnIfNegativeHeight = (trackSections: TrackSection[]) => {
     }
   });
 };
+
+const navigateUp = () => {
+  if (isNavigationDisabled.value) return;
+
+  console.log('Navigate Up placeholder');
+};
+
+const navigateDown = () => {
+  if (isNavigationDisabled.value) return;
+
+  console.log('Navigate Down placeholder');
+};
+
+const isNavigationDisabled = computed(() => {
+  return store.getters.getZoom <= 1;
+});
 </script>
 
 <style lang="scss" scoped>
