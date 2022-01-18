@@ -4,7 +4,9 @@
       <h4>Details</h4>
       <div class="grid unpadded">
         <div class="col-5">Displaying:</div>
-        <div class="col-7 bold">{{displayedSpeciesText}}</div>
+        <div class="col-7 bold">{{store.getters.getSpecies?.name}} chr{{store.getters.getChromosome?.chromosome}}:{{displayedSpeciesRegionLabel}}</div>
+        <div class="col-5">Comparatie Species:</div>
+        <div class="col-7 bold">{{comparativeSpeciesText}}</div>
         <div class="col-5">Synteny Threshold:</div>
         <div class="col-7 bold">{{Formatter.addCommasToBasePair(store.getters.getDetailsSyntenyThreshold)}}bp</div>
         <div class="col-5">Zoom Level:</div>
@@ -20,10 +22,21 @@ import { computed } from 'vue';
 import { useStore } from 'vuex';
 import Zoom from '@/components/Zoom.vue';
 import { Formatter } from '@/utils/Formatter';
+import BackboneSelection from '@/models/BackboneSelection';
 
 const store = useStore();
 
-const displayedSpeciesText = computed(() => {
+const displayedSpeciesRegionLabel = computed(() => {
+  const selectedRegion = store.getters.getSelectedBackboneRegion as BackboneSelection;
+  if (selectedRegion.innerSelection && selectedRegion.innerSelection.svgHeight > 0)
+  {
+    return `${Formatter.addCommasToBasePair(selectedRegion.innerSelection.basePairStart)}-${Formatter.addCommasToBasePair(selectedRegion.innerSelection.basePairStop)}`;
+  }
+  
+  return '';
+});
+
+const comparativeSpeciesText = computed(() => {
   let text = '';
   store.getters.getComparativeSpecies.forEach((species: Species) => {
     if (text.length > 0)

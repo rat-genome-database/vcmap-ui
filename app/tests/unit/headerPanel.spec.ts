@@ -36,7 +36,10 @@ const mockStore = createStore({
     },
     getComparativeSpecies(state: VCMapState) {
       return state.comparativeSpecies;
-    }
+    },
+    getSelectedBackboneRegion(state: VCMapState) {
+      return state.selectedBackboneRegion;
+    },
   }
 });
 
