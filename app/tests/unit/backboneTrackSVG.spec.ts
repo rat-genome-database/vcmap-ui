@@ -28,7 +28,7 @@ describe('BackboneTrackSVG', () => {
     displayStopPos: 0,
     overviewBasePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO,
     overviewSyntenyThreshold: 0,
-    comparativeBasePairToHeightRatio: 1000,
+    detailedBasePairToHeightRatio: 1000,
     detailsSyntenyThreshold: 0,
     backboneDataTracks: [],
     configTab: 0,

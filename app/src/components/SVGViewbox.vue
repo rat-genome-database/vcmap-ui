@@ -6,7 +6,7 @@
     <rect class="panel" x="0" width="1000" :height="SVGConstants.viewboxHeight" />
     <!-- Inner panels -->
     <rect class="panel" x="0" :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.viewboxHeight" />
-    <rect class="panel" :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.viewboxHeight" />
+    <rect class="panel detailed" @mousedown="initZoomSelection" @mousemove="updateZoomSelection" @mouseup="completeZoomSelection" :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.viewboxHeight" />
     <!-- Title panels -->
     <rect class="panel" x="0" :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.panelTitleHeight" />
     <rect class="panel" :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.panelTitleHeight" />
@@ -73,6 +73,14 @@
     <rect class="navigation-btn" :class="{'disabled': isNavigationDisabled }" @click="navigateDown" :x="SVGConstants.overviewPanelWidth" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
 
     <TooltipSVG :tooltip-data="store.getters.getTooltipData" />
+
+    <rect v-if="startSelectionY && stopSelectionY" 
+      @mouseup="completeZoomSelection"
+      @mousemove="updateZoomSelection"
+      fill="lightgray"
+      fill-opacity="0.4"
+      :x="SVGConstants.overviewPanelWidth" :y="startSelectionY"
+      :width="SVGConstants.detailsPanelWidth" :height="stopSelectionY - startSelectionY" />
   </svg>
 
   <VCMapDialog v-model:show="showDialog" :header="dialogHeader" :message="dialogMessage" />
@@ -97,6 +105,7 @@ import VCMapDialog from '@/components/VCMapDialog.vue';
 import TooltipSVG from './TooltipSVG.vue';
 import useDialog from '@/composables/useDialog';
 import BackboneTrackSVG from './BackboneTrackSVG.vue';
+import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
 
 const GENES_DATA_TRACK_THRESHOLD_MULTIPLIER = 4;
 const GAPS_THRESHOLD_MULTIPLIER = 10;
@@ -104,6 +113,7 @@ const GAPS_THRESHOLD_MULTIPLIER = 10;
 const store = useStore();
 
 const { showDialog, dialogHeader, dialogMessage, onError, checkSyntenyResultsOnComparativeSpecies } = useDialog();
+const { startSelectionY, stopSelectionY, initZoomSelection, updateZoomSelection, completeZoomSelection } = useDetailedPanelZoom(store);
 
 // Reactive data props
 const backboneSpecies = ref<Species | null>(null);
@@ -244,9 +254,9 @@ const updateDetailsPanel = async () => {
     const zoomedSelection = originalSelectedBackboneRegion.generateInnerSelection(store.getters.getZoom, store.getters.getOverviewBasePairToHeightRatio);
 
     store.dispatch('setDetailsResolution', zoomedSelection.basePairStop - zoomedSelection.basePairStart);
-    backboneSelectionTrack.value = createBackboneTrack(zoomedSelection.basePairStart, zoomedSelection.basePairStop, store.getters.getComparativeBasePairToHeightRatio) ?? null;
+    backboneSelectionTrack.value = createBackboneTrack(zoomedSelection.basePairStart, zoomedSelection.basePairStop, store.getters.getDetailedBasePairToHeightRatio) ?? null;
 
-    let tempBackboneTracks = await createBackboneDataTracks(zoomedSelection.basePairStart, zoomedSelection.basePairStop, store.getters.getComparativeBasePairToHeightRatio, true) as DataTrack;
+    let tempBackboneTracks = await createBackboneDataTracks(zoomedSelection.basePairStart, zoomedSelection.basePairStop, store.getters.getDetailedBasePairToHeightRatio, true) as DataTrack;
     if (tempBackboneTracks != null)
     {
       if (store.getters.getBackboneDataTracks.length > 0)
@@ -280,7 +290,7 @@ const updateDetailsPanel = async () => {
     comparativeSelectionTracks.value = await createSyntenyTracks(
       zoomedSelection.basePairStart, 
       zoomedSelection.basePairStop, 
-      store.getters.getComparativeBasePairToHeightRatio,
+      store.getters.getDetailedBasePairToHeightRatio,
       store.getters.getDetailsSyntenyThreshold
     );
   }
@@ -751,6 +761,11 @@ rect.panel
   fill: white;
   stroke-width: 2;
   stroke: lightgray;
+
+  &.detailed
+  {
+    cursor: crosshair
+  }
 }
 
 .vcmap-loader.p-progressbar

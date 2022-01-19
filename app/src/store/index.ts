@@ -26,7 +26,7 @@ export interface VCMapState
 
   overviewBasePairToHeightRatio: number;
   overviewSyntenyThreshold: number;
-  comparativeBasePairToHeightRatio: number;
+  detailedBasePairToHeightRatio: number;
   detailsSyntenyThreshold: number;
 
   backboneDataTracks: DataTrack[];
@@ -57,7 +57,7 @@ export default createStore({
 
     overviewBasePairToHeightRatio: 1000,
     overviewSyntenyThreshold: 0,
-    comparativeBasePairToHeightRatio: 1000,
+    detailedBasePairToHeightRatio: 1000,
     detailsSyntenyThreshold: 0,
 
     backboneDataTracks: [],
@@ -106,9 +106,9 @@ export default createStore({
       console.debug(`Setting overview panel synteny threshold to ${threshold}bp`);
       state.overviewSyntenyThreshold = threshold;
     },
-    comparativeBasePairToHeightRatio(state: VCMapState, ratio: number) {
+    detailedBasePairToHeightRatio(state: VCMapState, ratio: number) {
       console.debug(`Setting details panel bp resolution to ${ratio} bp/unit`);
-      state.comparativeBasePairToHeightRatio = ratio;
+      state.detailedBasePairToHeightRatio = ratio;
     },
     detailsSyntenyThreshold(state: VCMapState, threshold: number) {
       console.debug(`Setting details panel synteny threshold to ${threshold}bp`);
@@ -183,7 +183,7 @@ export default createStore({
     setDetailsResolution(context: ActionContext<VCMapState, VCMapState>, backboneLength: number) {
       // The tracks in the detailed panel should have no top or bottom margins
       const detailedTrackHeight = SVGConstants.viewboxHeight - (SVGConstants.panelTitleHeight + SVGConstants.navigationButtonHeight);
-      context.commit('comparativeBasePairToHeightRatio', backboneLength / detailedTrackHeight);
+      context.commit('detailedBasePairToHeightRatio', backboneLength / detailedTrackHeight);
       // Note: Dividing by 8,000 is arbitary when calculating synteny threshold
       context.commit('detailsSyntenyThreshold', (backboneLength > 1000000) ? Math.floor((backboneLength) / 8000) : 0);
     },
@@ -241,8 +241,8 @@ export default createStore({
     getOverviewSyntenyThreshold(state: VCMapState) {
       return state.overviewSyntenyThreshold;
     },
-    getComparativeBasePairToHeightRatio(state: VCMapState) {
-      return state.comparativeBasePairToHeightRatio;
+    getDetailedBasePairToHeightRatio(state: VCMapState) {
+      return state.detailedBasePairToHeightRatio;
     },
     getDetailsSyntenyThreshold(state: VCMapState) {
       return state.detailsSyntenyThreshold;
