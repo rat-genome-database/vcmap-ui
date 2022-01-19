@@ -152,7 +152,7 @@ const onMouseLeave = (section: TrackSection) => {
 .chromosome-label
 {
   font: normal 12px sans-serif;
-  fill: white;
+  fill: #4c4b4b;
 }
 
 .section
