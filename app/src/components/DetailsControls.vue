@@ -28,7 +28,7 @@ const store = useStore();
 
 const displayedSpeciesRegionLabel = computed(() => {
   const selectedRegion = store.getters.getSelectedBackboneRegion as BackboneSelection;
-  if (selectedRegion.innerSelection && selectedRegion.innerSelection.svgHeight > 0)
+  if (selectedRegion && selectedRegion.innerSelection && selectedRegion.innerSelection.svgHeight > 0)
   {
     return `${Formatter.addCommasToBasePair(selectedRegion.innerSelection.basePairStart)}-${Formatter.addCommasToBasePair(selectedRegion.innerSelection.basePairStop)}`;
   }
