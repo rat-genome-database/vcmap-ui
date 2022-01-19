@@ -127,7 +127,7 @@ describe('BackboneTrackSVG', () => {
     const section = wrapper.get('[data-test="selectable-svg"]');
     await section.trigger('mousedown');
     await section.trigger('mousemove');
-    await section.trigger('mousedown');
+    await section.trigger('mouseup');
 
     expect(actions.setSelectedBackboneRegion).toBeCalledTimes(1);
   });
