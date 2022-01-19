@@ -8,11 +8,11 @@
     :width="width"
     :height="height" />
   <template v-if="props.tooltipData?.genomicSection && !props.tooltipData?.isGeneLabel">
-    <text data-test="chromosome-name" class="label small" :x="xPos + 2" :y="props.tooltipData.y + 10">Chromosome: {{props.tooltipData.genomicSection.chromosome}}</text>
-    <text data-test="start-stop" class="label small" :x="xPos + 2" :y="props.tooltipData.y + 20">Region: {{props.tooltipData.genomicSection.startBPLabel}} - {{props.tooltipData.genomicSection.stopBPLabel}}</text>
-    <text v-if="props.tooltipData.genomicSection.chainLevel != null" data-test="level" class="label small" :x="xPos + 2" :y="props.tooltipData.y + 30">Level: {{props.tooltipData.genomicSection.chainLevel}}</text>
-    <text v-if="props.tooltipData.genomicSection.gene" data-test="gene-symbol" class="label small" :x="xPos + 2" :y="props.tooltipData.y + 30">Symbol: {{props.tooltipData.genomicSection.gene.symbol}}</text>
-    <text v-if="props.tooltipData.genomicSection.gene" data-test="gene-name" class="label small" :x="xPos + 2" :y="props.tooltipData.y + 40">Name: {{props.tooltipData.genomicSection.gene.name}}</text>
+    <text v-if="props.tooltipData.genomicSection.gene" data-test="gene-symbol" class="label small" :x="xPos + 2" :y="props.tooltipData.y + 10">Symbol: {{props.tooltipData.genomicSection.gene.symbol}}</text>
+    <text v-if="props.tooltipData.genomicSection.gene" data-test="gene-name" class="label small" :x="xPos + 2" :y="props.tooltipData.y + 20">Name: {{props.tooltipData.genomicSection.gene.name}}</text>
+    <text data-test="chromosome-name" class="label small" :x="xPos + 2" :y="chromosomeDataStartingPosition">Chromosome: {{props.tooltipData.genomicSection.chromosome}}</text>
+    <text data-test="start-stop" class="label small" :x="xPos + 2" :y="chromosomeDataStartingPosition + 10">Region: {{props.tooltipData.genomicSection.startBPLabel}} - {{props.tooltipData.genomicSection.stopBPLabel}}</text>
+    <text v-if="props.tooltipData.genomicSection.chainLevel != null" data-test="level" class="label small" :x="xPos + 2" :y="chromosomeDataStartingPosition + 20">Level: {{props.tooltipData.genomicSection.chainLevel}}</text>
   </template>
   <template v-else-if="props.tooltipData?.genomicSection && props.tooltipData?.isGeneLabel">
     <text class="label small" :x="xPos + 2" :y="props.tooltipData.y + 10">
@@ -39,6 +39,19 @@ interface Props
 }
 
 const props = defineProps<Props>();
+
+const chromosomeDataStartingPosition = computed(() => {
+  if (props.tooltipData?.genomicSection.gene)
+  {
+    return props.tooltipData.y + 30;
+  }
+  else if (props.tooltipData)
+  {
+    return props.tooltipData.y + 10;
+  }
+
+  return 0;
+});
 
 const width = computed(() => {
   if (props.tooltipData == null || props.tooltipData.genomicSection.gene == null)
