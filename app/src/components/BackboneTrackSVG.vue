@@ -14,9 +14,9 @@
     <text v-if="label.isVisible" 
       data-test="bp-label"
       class="label small" 
-      :x="posX + SVGConstants.trackWidth" 
-      :y="label.svgY + LABEL_Y_OFFSET">
-      - {{label.text}}
+      :x="posX - (SVGConstants.trackWidth/2)" 
+      :y="index > 0 ? label.svgY + END_LABEL_Y_OFFSET : label.svgY + START_LABEL_Y_OFFSET">
+      {{label.text}}
     </text>
   </template>
 
@@ -95,7 +95,8 @@ import { getMousePosSVG } from '@/utils/SVGHelpers';
 
 const INNER_SELECTION_EXTRA_WIDTH = 10;
 const TRANSPARENT_SELECTION_RECT_MARGIN = 10; // SVG height units that the transparent rect extends above and below the selectable backbone track
-const LABEL_Y_OFFSET = 3;
+const START_LABEL_Y_OFFSET = -2;
+const END_LABEL_Y_OFFSET = 6;
 const HIGHLIGHT_COLOR = 'bisque';
 
 const store = useStore();

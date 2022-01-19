@@ -90,7 +90,7 @@ export default class TrackSection
       
       if (truncatedGenes.length > 0)
       {
-        truncatedGenes.length > 9 ? geneName = geneName.substring(0, 4) : geneName = geneName.substring(0, 5);
+        truncatedGenes.length > 9 ? geneName = geneName.substring(0, 2) : geneName = geneName.substring(0, 3);
         geneName += truncatedGenes;
       }
       else
