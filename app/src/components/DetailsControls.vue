@@ -5,7 +5,7 @@
       <div class="grid unpadded">
         <div class="col-5">Displaying:</div>
         <div class="col-7 bold">{{store.getters.getSpecies?.name}} chr{{store.getters.getChromosome?.chromosome}}:{{displayedSpeciesRegionLabel}}</div>
-        <div class="col-5">Comparatie Species:</div>
+        <div class="col-5">Comparative Species:</div>
         <div class="col-7 bold">{{comparativeSpeciesText}}</div>
         <div class="col-5">Synteny Threshold:</div>
         <div class="col-7 bold">{{Formatter.addCommasToBasePair(store.getters.getDetailsSyntenyThreshold)}}bp</div>
