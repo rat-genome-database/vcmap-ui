@@ -64,7 +64,7 @@
       stroke="green"
       fill="none"
       :x="posX - 5" :y="selectedRegion.innerSelection.svgYPoint"
-      :width="SVGConstants.trackWidth + 10"
+      :width="SVGConstants.trackWidth + INNER_SELECTION_EXTRA_WIDTH"
       :height="selectedRegion.innerSelection.svgHeight" />
   </template>
 
@@ -74,10 +74,12 @@
     class="selectable"
     pointer-events="visible"
     fill="none"
-    :x="posX" :y="track.svgY - 10"
-    :width="SVGConstants.trackWidth" :height="track.height + 20" 
+    :x="posX" :y="track.svgY - TRANSPARENT_SELECTION_RECT_MARGIN"
+    :width="SVGConstants.trackWidth" :height="track.height + (TRANSPARENT_SELECTION_RECT_MARGIN * 2)" 
     @mousedown="initSelectStart($event, track.sections[0], 0)"
-    @mousemove="updateSelectionHeight" />
+    @mousemove="updateSelectionHeight"
+    @mouseup="completeSelect"
+    @mouseleave="completeSelect" />
 </template>
 
 <script lang="ts" setup>
@@ -91,6 +93,8 @@ import { useStore } from 'vuex';
 import SVGConstants from '@/utils/SVGConstants';
 import { getMousePosSVG } from '@/utils/SVGHelpers';
 
+const INNER_SELECTION_EXTRA_WIDTH = 10;
+const TRANSPARENT_SELECTION_RECT_MARGIN = 10; // SVG height units that the transparent rect extends above and below the selectable backbone track
 const LABEL_Y_OFFSET = 3;
 const HIGHLIGHT_COLOR = 'bisque';
 
@@ -145,11 +149,6 @@ watch(() => store.getters.getSelectedBackboneRegion, (newVal: BackboneSelection,
 
 const initSelectStart = (event: any, section: TrackSection, sectionIndex: number) => {
   if (!props.isSelectable) return;
-
-  if (inSelectMode)
-  {
-    return completeSelect();
-  }
 
   // Begin selection mode
   inSelectMode = true;
