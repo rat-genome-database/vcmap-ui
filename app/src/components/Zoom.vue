@@ -4,20 +4,22 @@
     v-tooltip.left="'Zoom Out'" 
     icon="pi pi-minus" 
     class="p-button-info p-button-sm zoom-btn" 
-    :disabled="isZoomOutDisabled"
+    :disabled="isZoomOutDisabled || isDisabled"
     @click="decreaseZoom"/>
-    <span class="zoom-level">{{store.getters.getZoom}}x</span>
+    <span class="zoom-level">{{store.getters.getSelectedBackboneRegion?.zoomLevel}}x</span>
   <Button 
     data-test="increase-zoom-btn"
     v-tooltip.right="'Zoom In'" 
     icon="pi pi-plus" 
     class="p-button-info p-button-sm zoom-btn" 
+    :disabled="isDisabled"
     @click="increaseZoom"/>
 </template>
 
 <script lang="ts" setup>
 import { useStore } from 'vuex';
 import { computed } from 'vue';
+import BackboneSelection from '@/models/BackboneSelection';
 
 const store = useStore();
 
@@ -28,13 +30,13 @@ interface Props
 
 const props = defineProps<Props>();
 
-const isZoomOutDisabled = computed(() => {
-  if (props.min != null && props.min > 0 && (store.getters.getZoom / 2) < props.min)
-  {
-    return 'disabled';
-  }
+const isDisabled = computed(() => {
+  return (store.getters.getDetailedBasePairRange.stop - store.getters.getDetailedBasePairRange.start <= 0) ? 'disabled' : undefined;
+});
 
-  return undefined;
+const isZoomOutDisabled = computed(() => {
+  const selectedRegion = store.getters.getSelectedBackboneRegion as BackboneSelection;
+  return (selectedRegion.zoomLevel <= 1) ? 'disabled' : undefined;
 });
 
 const decreaseZoom = () => {

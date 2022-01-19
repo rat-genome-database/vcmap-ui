@@ -53,7 +53,7 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
     inSelectMode = false;
 
     const selection = store.getters.getSelectedBackboneRegion as BackboneSelection;
-    if (startSelectionY.value && stopSelectionY.value && selection.innerSelection)
+    if (startSelectionY.value != null && stopSelectionY.value != null && selection.innerSelection != null)
     {
       // Calculate start/stop base pairs based on bp to height ratio in the detailed panel
       const basePairsFromInnerSelection1 = Math.floor((startSelectionY.value - SVGConstants.panelTitleHeight) * store.getters.getDetailedBasePairToHeightRatio);
@@ -62,8 +62,7 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
       const basePairsFromInnerSelection2 = Math.floor((stopSelectionY.value - SVGConstants.panelTitleHeight) * store.getters.getDetailedBasePairToHeightRatio);
       const basePairStop = basePairsFromInnerSelection2 + selection.innerSelection.basePairStart;
 
-      // TODO: Dispatch action to zoom in on the selected region
-      console.log('Selected region (bp): ', basePairStart, basePairStop);
+      store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: basePairStop });
     }
 
     // Clear selection box

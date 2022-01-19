@@ -3,7 +3,7 @@ import VuexPersistence from 'vuex-persist';
 import Species from '@/models/Species';
 import Chromosome from '@/models/Chromosome';
 import Gene from '@/models/Gene';
-import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
+import BackboneSelection, { BasePairRange, SelectedRegion } from '@/models/BackboneSelection';
 import DataTrack from '@/models/DataTrack';
 import SVGConstants from '@/utils/SVGConstants';
 import TooltipData from '@/models/TooltipData';
@@ -20,7 +20,6 @@ export interface VCMapState
   comparativeSpecies: Species[];
 
   selectedBackboneRegion: BackboneSelection;
-  zoom: number;
   displayStartPos: number; // the displayed start position of the backbone (changes due to zoom level)
   displayStopPos: number; // the displayed stop position of the backbone (changes due to zoom level)
 
@@ -34,6 +33,8 @@ export interface VCMapState
   configTab: number;
 
   tooltipData: TooltipData | null;
+
+  detailedBasePairRange: BasePairRange;
 }
 
 const vuexLocal = new VuexPersistence<VCMapState>({
@@ -51,7 +52,6 @@ export default createStore({
     comparativeSpecies: [],
 
     selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
-    zoom: 1,
     displayStartPos: 0,
     displayStopPos: 0,
 
@@ -65,6 +65,8 @@ export default createStore({
     configTab: 0,
 
     tooltipData: null,
+
+    detailedBasePairRange: { start: 0, stop: 0 },
   }),
 
   mutations: {
@@ -89,8 +91,8 @@ export default createStore({
     selectedBackboneRegion ( state: VCMapState, selection: BackboneSelection) {
       state.selectedBackboneRegion = selection;
     },
-    zoom (state: VCMapState, zoom: number) {
-      state.zoom = zoom;
+    detailedBasePairRange(state: VCMapState, range: BasePairRange) {
+      state.detailedBasePairRange = range;
     },
     displayStartPosition(state: VCMapState, start: number) {
       state.displayStartPos = start;
@@ -164,8 +166,8 @@ export default createStore({
     setSelectedBackboneRegion (context: ActionContext<VCMapState, VCMapState>, selection: BackboneSelection) {
       context.commit('selectedBackboneRegion', selection);
     },
-    setZoom (context: ActionContext<VCMapState, VCMapState>, zoom: number) {
-      context.commit('zoom', zoom);
+    setDetailedBasePairRange(context: ActionContext<VCMapState, VCMapState>, range: BasePairRange) {
+      context.commit('detailedBasePairRange', range);
     },
     setDisplayStartPosition(context: ActionContext<VCMapState, VCMapState>, start: number) {
       context.commit('displayStartPosition', start);
@@ -226,8 +228,8 @@ export default createStore({
     getSelectedBackboneRegion (state: VCMapState) {
       return state.selectedBackboneRegion;
     },
-    getZoom(state: VCMapState) {
-      return state.zoom;
+    getDetailedBasePairRange(state: VCMapState) {
+      return state.detailedBasePairRange;
     },
     getDisplayStartPosition(state: VCMapState) {
       return state.displayStartPos;

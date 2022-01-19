@@ -99,7 +99,7 @@ import Gene from '@/models/Gene';
 import { SyntenyRegionData } from '@/models/SyntenicRegion';
 import SpeciesApi from '@/api/SpeciesApi';
 import SVGConstants from '@/utils/SVGConstants';
-import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
+import BackboneSelection, { BasePairRange, SelectedRegion } from '@/models/BackboneSelection';
 import DataTrack from '@/models/DataTrack';
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import TooltipSVG from './TooltipSVG.vue';
@@ -147,12 +147,7 @@ onMounted(async () => {
   checkSyntenyResultsOnComparativeSpecies(comparativeTracks.value as Track[]);
 });
 
-watch(() => store.getters.getSelectedBackboneRegion, () => {
-  store.dispatch('setZoom', 1);
-  updateDetailsPanel();
-});
-
-watch(() => store.getters.getZoom, () => {
+watch(() => store.getters.getDetailedBasePairRange, () => {
   removeSelectionDataTracks();
   updateDetailsPanel();
 });
@@ -241,17 +236,19 @@ const updateOverviewPanel = async () => {
 
 const updateDetailsPanel = async () => {
 
+  console.log('update details panel')
   removeSelectionDataTracks();
 
   const originalSelectedBackboneRegion = store.getters.getSelectedBackboneRegion as BackboneSelection;
-  if (originalSelectedBackboneRegion.baseSelection.svgHeight === 0)
+  const detailedBasePairRange = store.getters.getDetailedBasePairRange as BasePairRange;
+  if (detailedBasePairRange.stop - detailedBasePairRange.start <= 0)
   {
     backboneSelectionTrack.value = null;
     comparativeSelectionTracks.value = [];
   }
   else
   {
-    const zoomedSelection = originalSelectedBackboneRegion.generateInnerSelection(store.getters.getZoom, store.getters.getOverviewBasePairToHeightRatio);
+    const zoomedSelection = originalSelectedBackboneRegion.generateInnerSelection(detailedBasePairRange.start, detailedBasePairRange.stop, store.getters.getOverviewBasePairToHeightRatio);
 
     store.dispatch('setDetailsResolution', zoomedSelection.basePairStop - zoomedSelection.basePairStart);
     backboneSelectionTrack.value = createBackboneTrack(zoomedSelection.basePairStart, zoomedSelection.basePairStop, store.getters.getDetailedBasePairToHeightRatio) ?? null;
