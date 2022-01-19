@@ -13,31 +13,31 @@
 
     <!-- Backbone panel SVGs ------------------------------------------->
     <!-- backbone species track -->
+    
     <text class="label medium bold" :x="SVGConstants.overviewTitleXPosition" :y="SVGConstants.panelTitleYPosition">Overview</text>
-    <text v-if="backboneSpecies" class="label small" :x="SVGConstants.backboneXPosition" :y="SVGConstants.trackLabelYPosition">{{backboneSpecies.name}} (backbone)</text>
-    <text v-if="backboneSpecies" class="label small" :x="SVGConstants.backboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{backboneSpecies.activeMap.name}}</text>
-    <BackboneTrackSVG v-if="backboneTrack" is-selectable :pos-x="SVGConstants.backboneXPosition" :track="backboneTrack as Track" />
+    <template v-for="(trackSet, index) in overviewTrackSets" :key="trackSet">
+      <template v-if="trackSet.dataTracks.length > 0">
+        <template v-for="dataTrack, index2 in trackSet.dataTracks" :key="dataTrack.name">
+          <TrackSVG v-if="dataTrack.isDisplayed"
+            show-data-on-hover 
+            show-chromosome
+            show-gene-label 
+            :pos-x="getBackbonePanelTrackXOffset(index, 'datatrack', index2) + SVGConstants.backboneXPosition" :pos-y="SVGConstants.trackYPosition" 
+            :width="SVGConstants.dataTrackWidth" :track="dataTrack.track as Track" />
+        </template>
+      </template>
 
-    <!-- backbone data tracks -->
-    <template v-for="(dataTrack, index) in drawnOverviewTracks" :key="dataTrack">
-      <text v-if="dataTrack.type === 'dataTrack' && !dataTrack.isComparative" class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + SVGConstants.backboneXPosition" :y="SVGConstants.trackLabelYPosition">{{dataTrack.trackType}}</text>
-      <TrackSVG v-if="dataTrack.type === 'dataTrack' && !dataTrack.isComparative" 
-        show-chromosome
-        show-gene-label 
-        :pos-x="getBackbonePanelTrackXOffset(index + 1) + SVGConstants.backboneXPosition"
-        :width="SVGConstants.trackWidth" :track="dataTrack.track as Track" />
+      <text class="label small" :x="getBackbonePanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition" :y="SVGConstants.trackLabelYPosition">{{trackSet.speciesTrack.name}}</text>
+      <text class="label small" :x="getBackbonePanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
+      <TrackSVG
+        :is-selectable="index == 0"
+        :show-data-on-hover="index != 0"
+        :show-chromosome="index != 0"
+        :show-gene-label ="index != 0"
+        :pos-x="getBackbonePanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition" :pos-y="SVGConstants.trackYPosition" 
+        :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
     </template>
 
-    <!-- Comparative species synteny tracks (overview) -->
-    <template v-for="(track, index) in drawnOverviewTracks" :key="track">
-      <text v-if="track.type === 'track'" class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + SVGConstants.backboneXPosition" :y="SVGConstants.trackLabelYPosition">{{track.name}}</text>
-      <text v-if="track.type === 'track'" class="label small" :x="getBackbonePanelTrackXOffset(index + 1) + SVGConstants.backboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{track.mapName}}</text>
-      <TrackSVG v-if="track.type === 'track'"
-        show-synteny-on-hover
-        show-chromosome 
-        :pos-x="getBackbonePanelTrackXOffset(index + 1) + SVGConstants.backboneXPosition"
-        :width="SVGConstants.trackWidth" :track="track.track as Track" />
-    </template>
 
     <!-- Comparative panel SVGs ----------------------------------------->
     <text class="label medium bold" :x="SVGConstants.selectedBackboneXPosition" :y="SVGConstants.panelTitleYPosition">Detailed</text>
@@ -97,6 +97,7 @@ import VCMapDialog from '@/components/VCMapDialog.vue';
 import TooltipSVG from './TooltipSVG.vue';
 import useDialog from '@/composables/useDialog';
 import BackboneTrackSVG from './BackboneTrackSVG.vue';
+import TrackSet from '@/models/TrackSet';
 
 const GENES_DATA_TRACK_THRESHOLD_MULTIPLIER = 4;
 const GAPS_THRESHOLD_MULTIPLIER = 10;
@@ -117,6 +118,9 @@ const comparativeSelectionTracks = ref<Track[]>([]);
 
 const drawnOverviewTracks = ref<(DataTrack|Track)[]>([]);
 const drawnDetailsTracks = ref<(DataTrack|Track)[]>([]);
+
+const overviewTrackSets = ref<TrackSet[]>([]);
+const detailTrackSets = ref<TrackSet[]>([]);
 
 /**
  * Once mounted, let's set our reactive data props and create the backbone and synteny tracks
@@ -175,8 +179,11 @@ watch(backboneDataTracks, (newVal) => {
 const updateOverviewPanel = async () => {
   let backboneStart = store.getters.getDisplayStartPosition;
   let backboneStop = store.getters.getDisplayStopPosition;
+
   if (backboneStop - backboneStart > 0)
   {
+    overviewTrackSets.value = [];
+    let backboneTrackSet;
     store.dispatch('setOverviewResolution', backboneStop - backboneStart);
     backboneTrack.value = createBackboneTrack(backboneStart, backboneStop, store.getters.getOverviewBasePairToHeightRatio, SVGConstants.overviewTrackYPosition) ?? null;
 
@@ -210,6 +217,9 @@ const updateOverviewPanel = async () => {
       {
         setBackboneDataTracks(tempBackboneTracks);
       }
+
+      backboneTrackSet = new TrackSet(backboneTrack.value, [tempBackboneTracks]);
+      overviewTrackSets.value.push(backboneTrackSet);
     }
     comparativeTracks.value = await createSyntenyTracks(
       backboneStart, 
@@ -218,6 +228,15 @@ const updateOverviewPanel = async () => {
       store.getters.getOverviewSyntenyThreshold,
       SVGConstants.overviewTrackYPosition
     );
+
+    for (let index = 0; index < comparativeTracks.value.length; index++)
+    {
+      let track = comparativeTracks.value[index];
+      //TODO: query for comparative species datatracks
+
+      let comparativeTrackSet = new TrackSet(track, []);
+      overviewTrackSets.value.push(comparativeTrackSet);
+    }
   }
   else
   {
@@ -242,6 +261,8 @@ const updateDetailsPanel = async () => {
   else
   {
     const zoomedSelection = originalSelectedBackboneRegion.generateInnerSelection(store.getters.getZoom, store.getters.getOverviewBasePairToHeightRatio);
+    detailTrackSets.value = [];
+    let detailBackboneTrackSet;
 
     store.dispatch('setDetailsResolution', zoomedSelection.basePairStop - zoomedSelection.basePairStart);
     backboneSelectionTrack.value = createBackboneTrack(zoomedSelection.basePairStart, zoomedSelection.basePairStop, store.getters.getComparativeBasePairToHeightRatio) ?? null;
@@ -271,18 +292,32 @@ const updateDetailsPanel = async () => {
         {
           setBackboneDataTracks(tempBackboneTracks);
         }
+
+        detailBackboneTrackSet = new TrackSet(backboneTrack.value, [tempBackboneTracks]);
+        detailTrackSets.value.push(detailBackboneTrackSet);
       }
-      else
+
+      comparativeSelectionTracks.value = await createSyntenyTracks(
+        zoomedSelection.basePairStart, 
+        zoomedSelection.basePairStop, 
+        store.getters.getComparativeBasePairToHeightRatio,
+        store.getters.getDetailsSyntenyThreshold
+      );
+
+      for (let index = 0; index < comparativeSelectionTracks.value.length; index++)
       {
-        setBackboneDataTracks(tempBackboneTracks);
+        let track = comparativeSelectionTracks.value[index];
+        //TODO: query for comparative species datatracks
+
+        let detailComparativeTrackSet = new TrackSet(track, []);
+        detailTrackSets.value.push(detailComparativeTrackSet);
       }
     }
-    comparativeSelectionTracks.value = await createSyntenyTracks(
-      zoomedSelection.basePairStart, 
-      zoomedSelection.basePairStop, 
-      store.getters.getComparativeBasePairToHeightRatio,
-      store.getters.getDetailsSyntenyThreshold
-    );
+    else
+    {
+      backboneSelectionTrack.value = null;
+      comparativeSelectionTracks.value = [];
+    }
   }
 
   setDisplayedObjects(true);
@@ -291,9 +326,23 @@ const updateDetailsPanel = async () => {
 /**
  * Gets the offset of the X position relative to the backbone species track
  */
-const getBackbonePanelTrackXOffset = (trackNumber: number) => {
+const getBackbonePanelTrackXOffset = (trackNumber: number, trackType: string, dataTrackNum: number) => {
   let totalTracks = trackNumber;
-  return (totalTracks * -70);
+  let offset = 0;
+  
+  //data tracks are drawn on the right side of the backbone track, and first
+  if (trackType == 'datatrack')
+  {
+    //every displayed datatrack will have a buffer of 30 between tracks - if last datatrack
+    offset = (totalTracks * -60) + (dataTrackNum * -30);
+  }
+  else
+  {
+    //the backbone track will have no calculable offset for its datatrack, so we set it to 30.  Later tracks will have a buffer of 30 added between them
+    totalTracks == 0 ? offset = -30 : offset = (totalTracks * -60) - 30;
+  }
+
+  return offset;
 };
 
 const getComparativePanelTrackXOffset = (trackNumber: number) => {

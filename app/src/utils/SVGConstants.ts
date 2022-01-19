@@ -8,6 +8,7 @@ export default {
   backboneXPosition: 230,
   viewboxHeight: 440,
   trackWidth: 20,
+  dataTrackWidth: 10,
   overviewTrackYPosition: 60,
   trackLabelYPosition: 25,
   trackMapLabelYPosition: 35,
