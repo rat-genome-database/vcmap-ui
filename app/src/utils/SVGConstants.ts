@@ -9,7 +9,7 @@ export default {
   viewboxHeight: 440,
   trackWidth: 20,
   dataTrackWidth: 10,
-  overviewTrackYPosition: 60,
+  overviewTrackYPosition: 70,
   trackLabelYPosition: 25,
   trackMapLabelYPosition: 35,
   selectedBackboneXPosition: 320,
