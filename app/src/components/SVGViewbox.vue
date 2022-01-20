@@ -28,7 +28,8 @@
       <text class="label small" :x="getBackbonePanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition" :y="SVGConstants.trackLabelYPosition">{{trackSet.speciesTrack.name}}</text>
       <text class="label small" :x="getBackbonePanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
       <TrackSVG v-if="index != 0"
-        :show-chromosome="index != 0"
+        show-chromosome
+        show-synteny-on-hover
         show-start-stop
         :pos-x="getBackbonePanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition"
         :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
@@ -46,7 +47,7 @@
       <text class="label small" :x="getComparativePanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackLabelYPosition">{{trackSet.speciesTrack.name}}</text>
       <text class="label small" :x="getComparativePanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
       <TrackSVG v-if="index != 0"
-        :show-chromosome="index != 0"
+        show-chromosome
         show-start-stop
         :pos-x="getComparativePanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" 
         :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
@@ -58,7 +59,6 @@
       <template v-if="trackSet.dataTracks.length > 0">
         <template v-for="dataTrack, index2 in trackSet.dataTracks" :key="dataTrack.name">
           <TrackSVG v-if="dataTrack.isDisplayed"
-            show-chromosome
             show-gene-label 
             :pos-x="getComparativePanelTrackXOffset(index, 'datatrack', index2) + SVGConstants.selectedBackboneXPosition"
             :width="SVGConstants.dataTrackWidth" :track="dataTrack.track as Track" />
@@ -108,7 +108,7 @@ import BackboneTrackSVG from './BackboneTrackSVG.vue';
 import TrackSet from '@/models/TrackSet';
 import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
 
-const GENES_DATA_TRACK_THRESHOLD_MULTIPLIER = 4;
+const GENES_DATA_TRACK_THRESHOLD_MULTIPLIER = 5;
 const GAPS_THRESHOLD_MULTIPLIER = 10;
 
 const store = useStore();
