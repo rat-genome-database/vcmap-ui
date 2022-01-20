@@ -58,6 +58,7 @@ const selectionRange = computed(() => {
 
 const clearSelection = () => {
   store.dispatch('setSelectedBackboneRegion', new BackboneSelection(new SelectedRegion(0,0,0,0)));
+  store.dispatch('setDetailedBasePairRange', { start: 0, stop: 0 });
 };
 </script>
 
