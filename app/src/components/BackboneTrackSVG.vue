@@ -214,6 +214,8 @@ const completeSelect = () => {
     selectedRegion.value.baseSelection.basePairStop = basePairStart + totalBasePairsSelected;
   }
 
+  // Store the selected backbone region and set the DetailedBasePairRange based off of its base selection
+  // NOTE: The DetailedBasePairRange triggers an update on the Detailed Panel
   store.dispatch('setSelectedBackboneRegion', selectedRegion.value);
   if (selectedRegion.value.baseSelection.svgHeight > 0)
   {

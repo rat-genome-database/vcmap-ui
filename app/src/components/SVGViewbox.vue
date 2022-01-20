@@ -132,6 +132,7 @@ onMounted(async () => {
   // Clear any prior selections
   store.dispatch('setTooltipData', null);
   store.dispatch('setSelectedBackboneRegion', new BackboneSelection(new SelectedRegion(0,0,0,0)));
+  store.dispatch('setDetailedBasePairRegion', { start: 0, stop: 0 });
   store.dispatch('resetBackboneDataTracks');
 
   backboneSpecies.value = store.getters.getSpecies;
