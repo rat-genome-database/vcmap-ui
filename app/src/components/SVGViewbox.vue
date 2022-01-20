@@ -59,7 +59,6 @@
       <template v-if="trackSet.dataTracks.length > 0">
         <template v-for="dataTrack, index2 in trackSet.dataTracks" :key="dataTrack.name">
           <TrackSVG v-if="dataTrack.isDisplayed"
-            show-chromosome
             show-gene-label 
             :pos-x="getComparativePanelTrackXOffset(index, 'datatrack', index2) + SVGConstants.selectedBackboneXPosition"
             :width="SVGConstants.dataTrackWidth" :track="dataTrack.track as Track" />
