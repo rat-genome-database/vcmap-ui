@@ -28,7 +28,8 @@
       <text class="label small" :x="getBackbonePanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition" :y="SVGConstants.trackLabelYPosition">{{trackSet.speciesTrack.name}}</text>
       <text class="label small" :x="getBackbonePanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
       <TrackSVG v-if="index != 0"
-        :show-chromosome="index != 0"
+        show-chromosome
+        show-synteny-on-hover
         show-start-stop
         :pos-x="getBackbonePanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition"
         :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
@@ -46,7 +47,7 @@
       <text class="label small" :x="getComparativePanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackLabelYPosition">{{trackSet.speciesTrack.name}}</text>
       <text class="label small" :x="getComparativePanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
       <TrackSVG v-if="index != 0"
-        :show-chromosome="index != 0"
+        show-chromosome
         show-start-stop
         :pos-x="getComparativePanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" 
         :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
