@@ -215,6 +215,10 @@ const completeSelect = () => {
   }
 
   store.dispatch('setSelectedBackboneRegion', selectedRegion.value);
+  if (selectedRegion.value.baseSelection.svgHeight > 0)
+  {
+    store.dispatch('setDetailedBasePairRange', { start: selectedRegion.value.baseSelection.basePairStart, stop: selectedRegion.value.baseSelection.basePairStop });
+  }
 };
 
 const onMouseEnter = (event: any, section: TrackSection) => {

@@ -24,7 +24,7 @@ const mockStore = createStore({
     displayStopPos: 0,
     overviewBasePairToHeightRatio: 1000,
     overviewSyntenyThreshold: 0,
-    comparativeBasePairToHeightRatio: 1000,
+    detailedBasePairToHeightRatio: 1000,
     detailsSyntenyThreshold: 0,
     backboneDataTracks: [],
     configTab: 0,

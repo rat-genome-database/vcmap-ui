@@ -3,7 +3,7 @@ import VuexPersistence from 'vuex-persist';
 import Species from '@/models/Species';
 import Chromosome from '@/models/Chromosome';
 import Gene from '@/models/Gene';
-import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
+import BackboneSelection, { BasePairRange, SelectedRegion } from '@/models/BackboneSelection';
 import DataTrack from '@/models/DataTrack';
 import SVGConstants from '@/utils/SVGConstants';
 import TooltipData from '@/models/TooltipData';
@@ -20,13 +20,12 @@ export interface VCMapState
   comparativeSpecies: Species[];
 
   selectedBackboneRegion: BackboneSelection;
-  zoom: number;
   displayStartPos: number; // the displayed start position of the backbone (changes due to zoom level)
   displayStopPos: number; // the displayed stop position of the backbone (changes due to zoom level)
 
   overviewBasePairToHeightRatio: number;
   overviewSyntenyThreshold: number;
-  comparativeBasePairToHeightRatio: number;
+  detailedBasePairToHeightRatio: number;
   detailsSyntenyThreshold: number;
 
   backboneDataTracks: DataTrack[];
@@ -34,6 +33,8 @@ export interface VCMapState
   configTab: number;
 
   tooltipData: TooltipData | null;
+
+  detailedBasePairRange: BasePairRange;
 }
 
 const vuexLocal = new VuexPersistence<VCMapState>({
@@ -51,13 +52,12 @@ export default createStore({
     comparativeSpecies: [],
 
     selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
-    zoom: 1,
     displayStartPos: 0,
     displayStopPos: 0,
 
     overviewBasePairToHeightRatio: 1000,
     overviewSyntenyThreshold: 0,
-    comparativeBasePairToHeightRatio: 1000,
+    detailedBasePairToHeightRatio: 1000,
     detailsSyntenyThreshold: 0,
 
     backboneDataTracks: [],
@@ -65,6 +65,8 @@ export default createStore({
     configTab: 0,
 
     tooltipData: null,
+
+    detailedBasePairRange: { start: 0, stop: 0 },
   }),
 
   mutations: {
@@ -89,8 +91,8 @@ export default createStore({
     selectedBackboneRegion ( state: VCMapState, selection: BackboneSelection) {
       state.selectedBackboneRegion = selection;
     },
-    zoom (state: VCMapState, zoom: number) {
-      state.zoom = zoom;
+    detailedBasePairRange(state: VCMapState, range: BasePairRange) {
+      state.detailedBasePairRange = range;
     },
     displayStartPosition(state: VCMapState, start: number) {
       state.displayStartPos = start;
@@ -106,9 +108,9 @@ export default createStore({
       console.debug(`Setting overview panel synteny threshold to ${threshold}bp`);
       state.overviewSyntenyThreshold = threshold;
     },
-    comparativeBasePairToHeightRatio(state: VCMapState, ratio: number) {
+    detailedBasePairToHeightRatio(state: VCMapState, ratio: number) {
       console.debug(`Setting details panel bp resolution to ${ratio} bp/unit`);
-      state.comparativeBasePairToHeightRatio = ratio;
+      state.detailedBasePairToHeightRatio = ratio;
     },
     detailsSyntenyThreshold(state: VCMapState, threshold: number) {
       console.debug(`Setting details panel synteny threshold to ${threshold}bp`);
@@ -164,8 +166,8 @@ export default createStore({
     setSelectedBackboneRegion (context: ActionContext<VCMapState, VCMapState>, selection: BackboneSelection) {
       context.commit('selectedBackboneRegion', selection);
     },
-    setZoom (context: ActionContext<VCMapState, VCMapState>, zoom: number) {
-      context.commit('zoom', zoom);
+    setDetailedBasePairRange(context: ActionContext<VCMapState, VCMapState>, range: BasePairRange) {
+      context.commit('detailedBasePairRange', range);
     },
     setDisplayStartPosition(context: ActionContext<VCMapState, VCMapState>, start: number) {
       context.commit('displayStartPosition', start);
@@ -183,7 +185,7 @@ export default createStore({
     setDetailsResolution(context: ActionContext<VCMapState, VCMapState>, backboneLength: number) {
       // The tracks in the detailed panel should have no top or bottom margins
       const detailedTrackHeight = SVGConstants.viewboxHeight - (SVGConstants.panelTitleHeight + SVGConstants.navigationButtonHeight);
-      context.commit('comparativeBasePairToHeightRatio', backboneLength / detailedTrackHeight);
+      context.commit('detailedBasePairToHeightRatio', backboneLength / detailedTrackHeight);
       // Note: Dividing by 8,000 is arbitary when calculating synteny threshold
       context.commit('detailsSyntenyThreshold', (backboneLength > 1000000) ? Math.floor((backboneLength) / 8000) : 0);
     },
@@ -226,8 +228,8 @@ export default createStore({
     getSelectedBackboneRegion (state: VCMapState) {
       return state.selectedBackboneRegion;
     },
-    getZoom(state: VCMapState) {
-      return state.zoom;
+    getDetailedBasePairRange(state: VCMapState) {
+      return state.detailedBasePairRange;
     },
     getDisplayStartPosition(state: VCMapState) {
       return state.displayStartPos;
@@ -241,8 +243,8 @@ export default createStore({
     getOverviewSyntenyThreshold(state: VCMapState) {
       return state.overviewSyntenyThreshold;
     },
-    getComparativeBasePairToHeightRatio(state: VCMapState) {
-      return state.comparativeBasePairToHeightRatio;
+    getDetailedBasePairToHeightRatio(state: VCMapState) {
+      return state.detailedBasePairToHeightRatio;
     },
     getDetailsSyntenyThreshold(state: VCMapState) {
       return state.detailsSyntenyThreshold;

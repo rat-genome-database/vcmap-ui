@@ -10,7 +10,7 @@
         <div class="col-5">Synteny Threshold:</div>
         <div class="col-7 bold">{{Formatter.addCommasToBasePair(store.getters.getDetailsSyntenyThreshold)}}bp</div>
         <div class="col-5">Zoom Level:</div>
-        <div class="col-7 bold"><Zoom :min="1" /></div>
+        <div class="col-7 bold"><Zoom /></div>
       </div>
     </div>
   </div>

@@ -6,7 +6,7 @@
     <rect class="panel" x="0" width="1000" :height="SVGConstants.viewboxHeight" />
     <!-- Inner panels -->
     <rect class="panel" x="0" :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.viewboxHeight" />
-    <rect class="panel" :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.viewboxHeight" />
+    <rect class="panel detailed" @mousedown="initZoomSelection" @mousemove="updateZoomSelection" @mouseup="completeZoomSelection" :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.viewboxHeight" />
     <!-- Title panels -->
     <rect class="panel" x="0" :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.panelTitleHeight" />
     <rect class="panel" :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.panelTitleHeight" />
@@ -21,7 +21,7 @@
             show-data-on-hover 
             show-chromosome
             show-gene-label 
-            :pos-x="getBackbonePanelTrackXOffset(index, 'datatrack', index2) + SVGConstants.backboneXPosition" :pos-y="SVGConstants.trackYPosition" 
+            :pos-x="getBackbonePanelTrackXOffset(index, 'datatrack', index2) + SVGConstants.backboneXPosition" :pos-y="SVGConstants.overviewTrackYPosition" 
             :width="SVGConstants.dataTrackWidth" :track="dataTrack.track as Track" />
         </template>
       </template>
@@ -32,7 +32,7 @@
         :show-data-on-hover="index != 0"
         :show-chromosome="index != 0"
         :show-gene-label ="index != 0"
-        :pos-x="getBackbonePanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition" :pos-y="SVGConstants.trackYPosition" 
+        :pos-x="getBackbonePanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition" :pos-y="SVGConstants.overviewTrackYPosition" 
         :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
 
       <BackboneTrackSVG v-else
@@ -51,7 +51,7 @@
         :show-data-on-hover="index != 0"
         :show-chromosome="index != 0"
         :show-gene-label ="index != 0"
-        :pos-x="getComparativePanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :pos-y="SVGConstants.trackYPosition" 
+        :pos-x="getComparativePanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :pos-y="SVGConstants.overviewTrackYPosition" 
         :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
 
       <BackboneTrackSVG v-else
@@ -64,7 +64,7 @@
             show-data-on-hover 
             show-chromosome
             show-gene-label 
-            :pos-x="getComparativePanelTrackXOffset(index, 'datatrack', index2) + SVGConstants.selectedBackboneXPosition" :pos-y="SVGConstants.trackYPosition" 
+            :pos-x="getComparativePanelTrackXOffset(index, 'datatrack', index2) + SVGConstants.selectedBackboneXPosition" :pos-y="SVGConstants.overviewTrackYPosition" 
             :width="SVGConstants.dataTrackWidth" :track="dataTrack.track as Track" />
         </template>
       </template>
@@ -77,6 +77,14 @@
     <rect class="navigation-btn" :class="{'disabled': isNavigationDisabled }" @click="navigateDown" :x="SVGConstants.overviewPanelWidth" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
 
     <TooltipSVG :tooltip-data="store.getters.getTooltipData" />
+
+    <rect v-if="startSelectionY && stopSelectionY" 
+      @mouseup="completeZoomSelection"
+      @mousemove="updateZoomSelection"
+      fill="lightgray"
+      fill-opacity="0.4"
+      :x="SVGConstants.overviewPanelWidth" :y="startSelectionY"
+      :width="SVGConstants.detailsPanelWidth" :height="stopSelectionY - startSelectionY" />
   </svg>
 
   <VCMapDialog v-model:show="showDialog" :header="dialogHeader" :message="dialogMessage" />
@@ -95,13 +103,14 @@ import Gene from '@/models/Gene';
 import { SyntenyRegionData } from '@/models/SyntenicRegion';
 import SpeciesApi from '@/api/SpeciesApi';
 import SVGConstants from '@/utils/SVGConstants';
-import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
+import BackboneSelection, { BasePairRange, SelectedRegion } from '@/models/BackboneSelection';
 import DataTrack from '@/models/DataTrack';
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import TooltipSVG from './TooltipSVG.vue';
 import useDialog from '@/composables/useDialog';
 import BackboneTrackSVG from './BackboneTrackSVG.vue';
 import TrackSet from '@/models/TrackSet';
+import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
 
 const GENES_DATA_TRACK_THRESHOLD_MULTIPLIER = 4;
 const GAPS_THRESHOLD_MULTIPLIER = 10;
@@ -109,6 +118,7 @@ const GAPS_THRESHOLD_MULTIPLIER = 10;
 const store = useStore();
 
 const { showDialog, dialogHeader, dialogMessage, onError, checkSyntenyResultsOnComparativeSpecies } = useDialog();
+const { startSelectionY, stopSelectionY, initZoomSelection, updateZoomSelection, completeZoomSelection } = useDetailedPanelZoom(store);
 
 // Reactive data props
 const backboneSpecies = ref<Species | null>(null);
@@ -142,12 +152,7 @@ onMounted(async () => {
   checkSyntenyResultsOnComparativeSpecies(comparativeTracks.value as Track[]);
 });
 
-watch(() => store.getters.getSelectedBackboneRegion, () => {
-  store.dispatch('setZoom', 1);
-  updateDetailsPanel();
-});
-
-watch(() => store.getters.getZoom, () => {
+watch(() => store.getters.getDetailedBasePairRange, () => {
   removeSelectionDataTracks();
   updateDetailsPanel();
 });
@@ -215,7 +220,7 @@ const updateOverviewPanel = async () => {
 
     for (let index = 0; index < comparativeTracks.value.length; index++)
     {
-      let track = comparativeTracks.value[index];
+      let track = comparativeTracks.value[index] as Track;
       //TODO: query for comparative species datatracks
 
       let comparativeTrackSet = new TrackSet(track, []);
@@ -235,21 +240,22 @@ const updateDetailsPanel = async () => {
   removeSelectionDataTracks();
 
   const originalSelectedBackboneRegion = store.getters.getSelectedBackboneRegion as BackboneSelection;
-  if (originalSelectedBackboneRegion.baseSelection.svgHeight === 0)
+  const detailedBasePairRange = store.getters.getDetailedBasePairRange as BasePairRange;
+  if (detailedBasePairRange.stop - detailedBasePairRange.start <= 0)
   {
     backboneSelectionTrack.value = null;
     comparativeSelectionTracks.value = [];
   }
   else
   {
-    const zoomedSelection = originalSelectedBackboneRegion.generateInnerSelection(store.getters.getZoom, store.getters.getOverviewBasePairToHeightRatio);
     detailTrackSets.value = [];
     let detailBackboneTrackSet;
+    const zoomedSelection = originalSelectedBackboneRegion.generateInnerSelection(detailedBasePairRange.start, detailedBasePairRange.stop, store.getters.getOverviewBasePairToHeightRatio);
 
     store.dispatch('setDetailsResolution', zoomedSelection.basePairStop - zoomedSelection.basePairStart);
-    backboneSelectionTrack.value = createBackboneTrack(zoomedSelection.basePairStart, zoomedSelection.basePairStop, store.getters.getComparativeBasePairToHeightRatio) ?? null;
+    backboneSelectionTrack.value = createBackboneTrack(zoomedSelection.basePairStart, zoomedSelection.basePairStop, store.getters.getDetailedBasePairToHeightRatio) ?? null;
 
-    let tempBackboneTracks = await createBackboneDataTracks(zoomedSelection.basePairStart, zoomedSelection.basePairStop, store.getters.getComparativeBasePairToHeightRatio, true) as DataTrack;
+    let tempBackboneTracks = await createBackboneDataTracks(zoomedSelection.basePairStart, zoomedSelection.basePairStop, store.getters.getDetailedBasePairToHeightRatio, true) as DataTrack;
     if (tempBackboneTracks != null)
     {
       if (store.getters.getBackboneDataTracks.length > 0)
@@ -282,13 +288,13 @@ const updateDetailsPanel = async () => {
       comparativeSelectionTracks.value = await createSyntenyTracks(
         zoomedSelection.basePairStart, 
         zoomedSelection.basePairStop, 
-        store.getters.getComparativeBasePairToHeightRatio,
+        store.getters.getDetailedBasePairToHeightRatio,
         store.getters.getDetailsSyntenyThreshold
       );
 
       for (let index = 0; index < comparativeSelectionTracks.value.length; index++)
       {
-        let track = comparativeSelectionTracks.value[index];
+        let track = comparativeSelectionTracks.value[index] as Track;
         //TODO: query for comparative species datatracks
 
         let detailComparativeTrackSet = new TrackSet(track, []);
@@ -306,12 +312,12 @@ const updateDetailsPanel = async () => {
 /**
  * Gets the offset of the X position relative to the backbone species track
  */
-const getBackbonePanelTrackXOffset = (trackNumber: number, trackType: string, dataTrackNum: number) => {
+const getBackbonePanelTrackXOffset = (trackNumber: number, trackType: string, dataTrackNum?: number) => {
   let totalTracks = trackNumber;
   let offset = 0;
   
   //data tracks are drawn on the right side of the backbone track, and first
-  if (trackType == 'datatrack')
+  if (trackType == 'datatrack' && dataTrackNum != null)
   {
     //every displayed datatrack will have a buffer of 30 between tracks - if last datatrack
     offset = (totalTracks * -60) + (dataTrackNum * -30);
@@ -325,12 +331,12 @@ const getBackbonePanelTrackXOffset = (trackNumber: number, trackType: string, da
   return offset;
 };
 
-const getComparativePanelTrackXOffset = (trackNumber: number, trackType: string, dataTrackNum: number) => {
+const getComparativePanelTrackXOffset = (trackNumber: number, trackType: string, dataTrackNum?: number) => {
   let totalTracks = trackNumber;
   let offset = 0;
   
   //data tracks are drawn on the right side of the backbone track, and first
-  if (trackType == 'datatrack')
+  if (trackType == 'datatrack' && dataTrackNum != null)
   {
     //every displayed datatrack will have a buffer of 30 between tracks - if last datatrack
     totalTracks == 0 ? offset = 30 : offset = (totalTracks * 120) + (dataTrackNum * 30);
@@ -737,6 +743,11 @@ rect.panel
   fill: white;
   stroke-width: 2;
   stroke: lightgray;
+
+  &.detailed
+  {
+    cursor: crosshair
+  }
 }
 
 .vcmap-loader.p-progressbar
