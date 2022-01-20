@@ -729,7 +729,8 @@ const navigateDown = () => {
 };
 
 const isNavigationDisabled = computed(() => {
-  return store.getters.getZoom <= 1;
+  const selectedRegion = store.getters.getSelectedBackboneRegion as BackboneSelection;
+  return selectedRegion.zoomLevel <= 1;
 });
 </script>
 
