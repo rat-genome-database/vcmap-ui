@@ -95,8 +95,8 @@ import { getMousePosSVG } from '@/utils/SVGHelpers';
 
 const INNER_SELECTION_EXTRA_WIDTH = 10;
 const TRANSPARENT_SELECTION_RECT_MARGIN = 10; // SVG height units that the transparent rect extends above and below the selectable backbone track
-const START_LABEL_Y_OFFSET = -2;
-const END_LABEL_Y_OFFSET = 6;
+const START_LABEL_Y_OFFSET = -3;
+const END_LABEL_Y_OFFSET = 7;
 const HIGHLIGHT_COLOR = 'bisque';
 
 const store = useStore();
