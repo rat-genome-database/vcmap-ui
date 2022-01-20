@@ -19,7 +19,7 @@ const mockStore = createStore({
       new Species({ typeKey: 3, name: 'Test Species 3', defaultMapKey: 3, maps: [new Map({ key: 3, primaryRefAssembly: true, description: '', notes: '', name: 'GRCh36'})] })
     ],
     selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
-    zoom: 1,
+    detailedBasePairRange: { start: 0, stop: 0 },
     displayStartPos: 0,
     displayStopPos: 0,
     overviewBasePairToHeightRatio: 1000,
