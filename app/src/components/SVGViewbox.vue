@@ -1,6 +1,6 @@
 <template>
   <ProgressBar class="vcmap-loader" :mode="(isLoading) ? 'indeterminate' : 'determinate'" :value="0" :showValue="false"/>
-  <svg :viewBox="'0 0 1000 ' + SVGConstants.viewboxHeight" xmlns="http://www.w3.org/2000/svg">
+  <svg :viewBox="'0 0 1000 ' + SVGConstants.viewboxHeight" xmlns="http://www.w3.org/2000/svg" id="svg-wrapper">
 
     <!-- Outside panel -->
     <rect class="panel" x="0" width="1000" :height="SVGConstants.viewboxHeight" />
@@ -734,6 +734,11 @@ const isNavigationDisabled = computed(() => {
 </script>
 
 <style lang="scss" scoped>
+#svg-wrapper
+{
+  user-select: none ;
+}
+
 rect.panel
 {
   fill: white;
