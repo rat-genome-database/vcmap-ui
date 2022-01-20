@@ -81,7 +81,7 @@ describe('BackboneTrackSVG', () => {
 
     // Test visibility and text of the base pair labels
     expect(bpLabels[0].isVisible()).toBe(true);
-    expect(bpLabels[0].text()).toEqual('0bp');
+    expect(bpLabels[0].text()).toEqual('0.00Mbp');
     expect(bpLabels[1].isVisible()).toBe(true);
     expect(bpLabels[1].text()).toEqual('10.00Mbp');
 

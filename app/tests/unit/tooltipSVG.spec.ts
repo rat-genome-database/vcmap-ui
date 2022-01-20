@@ -52,7 +52,7 @@ describe('TooltipSVG', () => {
     const startStopTextSVG = wrapper.get('[data-test="start-stop"]');
 
     expect(chromosomeTextSVG.text()).toEqual('Chromosome: 1');
-    expect(startStopTextSVG.text()).toEqual('Region: 0bp - 10.00Kbp');
+    expect(startStopTextSVG.text()).toEqual('Region: 0.00Mbp - 0.01Mbp');
   });
 
   it('expands its width if gene name is long', async () => {
