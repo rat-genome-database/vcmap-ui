@@ -23,7 +23,7 @@ describe('TrackSVG', () => {
     gene: null,
     comparativeSpecies: [],
     selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
-    zoom: 1,
+    detailedBasePairRange: { start: 0, stop: 0 },
     displayStartPos: 0,
     displayStopPos: 0,
     overviewBasePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO,

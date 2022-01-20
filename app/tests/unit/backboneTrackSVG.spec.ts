@@ -23,7 +23,7 @@ describe('BackboneTrackSVG', () => {
     gene: null,
     comparativeSpecies: [],
     selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
-    zoom: 1,
+    detailedBasePairRange: { start: 0, stop: 0 },
     displayStartPos: 0,
     displayStopPos: 0,
     overviewBasePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO,
@@ -81,9 +81,9 @@ describe('BackboneTrackSVG', () => {
 
     // Test visibility and text of the base pair labels
     expect(bpLabels[0].isVisible()).toBe(true);
-    expect(bpLabels[0].text()).toEqual('- 0bp');
+    expect(bpLabels[0].text()).toEqual('0bp');
     expect(bpLabels[1].isVisible()).toBe(true);
-    expect(bpLabels[1].text()).toEqual('- 10.00Mbp');
+    expect(bpLabels[1].text()).toEqual('10.00Mbp');
 
     // Test visibility of the backbone SVG track
     expect(allSVGs.length).toEqual(1);
