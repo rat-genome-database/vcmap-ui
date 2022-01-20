@@ -6,7 +6,7 @@
     class="p-button-info p-button-sm zoom-btn" 
     :disabled="isZoomOutDisabled || isDisabled"
     @click="decreaseZoom"/> -->
-    <span class="zoom-level">{{store.getters.getSelectedBackboneRegion?.zoomLevel}}x</span>
+    <span>{{store.getters.getSelectedBackboneRegion?.zoomLevel}}x</span>
   <!-- <Button 
     data-test="increase-zoom-btn"
     v-tooltip.right="'Zoom In'" 
@@ -90,10 +90,6 @@ const resetZoom = () => {
 {
   padding: 0.1rem;
   width: 1.5rem;
-}
-.zoom-level
-{
-  margin: 0 0.5rem;
 }
 
 .reset-zoom-btn

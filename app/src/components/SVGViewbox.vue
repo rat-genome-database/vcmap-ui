@@ -116,18 +116,14 @@ const store = useStore();
 const { showDialog, dialogHeader, dialogMessage, onError, checkSyntenyResultsOnComparativeSpecies } = useDialog();
 const { startSelectionY, stopSelectionY, initZoomSelection, updateZoomSelection, completeZoomSelection } = useDetailedPanelZoom(store);
 
-// Reactive data props
 const backboneSpecies = ref<Species | null>(null);
 const backboneChromosome = ref<Chromosome | null>(null);
-const backboneTrack = ref<Track | null>(null);
-const backboneDataTracks = ref<DataTrack[]>([]);
-const comparativeTracks = ref<Track[]>([]);
 const isLoading = ref(false);
-const backboneSelectionTrack = ref<Track | null>(null);
-const comparativeSelectionTracks = ref<Track[]>([]);
+const overviewTrackSets = ref<TrackSet[]>([]); // The currently displayed TrackSets in the Overview panel
+const detailTrackSets = ref<TrackSet[]>([]); // The currently displayed TrackSets in the Detailed panel
 
-const overviewTrackSets = ref<TrackSet[]>([]);
-const detailTrackSets = ref<TrackSet[]>([]);
+let comparativeOverviewTracks: Track[] = []; // Keeps track of current comparative tracks displayed in the overview panel
+let selectionTrackSets: TrackSet[] = []; // The TrackSets for the entire selected region
 
 /**
  * Once mounted, let's set our reactive data props and create the backbone and synteny tracks
@@ -142,24 +138,13 @@ onMounted(async () => {
   backboneChromosome.value = store.getters.getChromosome;
 
   await updateOverviewPanel();
-  // We shouldn't have to cast this variable as Track[] but Typescript is complaining if we don't.
-  // Might have something to do with initializing a typed ref to an empty array: ref<Track[]>([])
-  // Still looking into it...
-  checkSyntenyResultsOnComparativeSpecies(comparativeTracks.value as Track[]);
+  checkSyntenyResultsOnComparativeSpecies(comparativeOverviewTracks);
 });
 
 watch(() => store.getters.getDetailedBasePairRange, () => {
   removeSelectionDataTracks();
   updateDetailsPanel();
 });
-
-watch(() => store.getters.getBackboneDataTracks, (newVal) => {
-  backboneDataTracks.value = newVal;
-},
-{
-  deep: true
-});
-
 
 const updateOverviewPanel = async () => {
   let backboneStart = store.getters.getDisplayStartPosition;
@@ -168,12 +153,11 @@ const updateOverviewPanel = async () => {
   if (backboneStop - backboneStart > 0)
   {
     overviewTrackSets.value = [];
-    let backboneTrackSet;
     store.dispatch('setOverviewResolution', backboneStop - backboneStart);
-    backboneTrack.value = createBackboneTrack(backboneStart, backboneStop, store.getters.getOverviewBasePairToHeightRatio, SVGConstants.overviewTrackYPosition) ?? null;
+    let backboneTrack = createBackboneTrack(backboneStart, backboneStop, store.getters.getOverviewBasePairToHeightRatio, SVGConstants.overviewTrackYPosition) ?? null;
 
-    let tempBackboneTracks = await createBackboneDataTracks(backboneStart, backboneStop, store.getters.getOverviewBasePairToHeightRatio, false, SVGConstants.overviewTrackYPosition) as DataTrack;
-    if (tempBackboneTracks != null)
+    let tempBackboneTracks = await createBackboneDataTracks(backboneStart, backboneStop, store.getters.getOverviewBasePairToHeightRatio, false, SVGConstants.overviewTrackYPosition) ?? null;
+    if (backboneTrack != null && tempBackboneTracks != null)
     {
       if (store.getters.getBackboneDataTracks.length > 0)
       {
@@ -203,10 +187,11 @@ const updateOverviewPanel = async () => {
         setBackboneDataTracks(tempBackboneTracks);
       }
 
-      backboneTrackSet = new TrackSet(backboneTrack.value, [tempBackboneTracks]);
+      const backboneTrackSet = new TrackSet(backboneTrack, [tempBackboneTracks]);
       overviewTrackSets.value.push(backboneTrackSet);
     }
-    comparativeTracks.value = await createSyntenyTracks(
+
+    comparativeOverviewTracks = await createSyntenyTracks(
       backboneStart, 
       backboneStop, 
       store.getters.getOverviewBasePairToHeightRatio,
@@ -214,20 +199,19 @@ const updateOverviewPanel = async () => {
       SVGConstants.overviewTrackYPosition
     );
 
-    for (let index = 0; index < comparativeTracks.value.length; index++)
+    for (let index = 0; index < comparativeOverviewTracks.length; index++)
     {
-      let track = comparativeTracks.value[index] as Track;
+      const track = comparativeOverviewTracks[index];
       //TODO: query for comparative species datatracks
 
-      let comparativeTrackSet = new TrackSet(track, []);
+      const comparativeTrackSet = new TrackSet(track, []);
       overviewTrackSets.value.push(comparativeTrackSet);
     }
   }
   else
   {
-    backboneTrack.value = null;
-    comparativeTracks.value = [];
-    backboneDataTracks.value = [];
+    // Backbone region has no length -> clear all overview tracks
+    overviewTrackSets.value = [];
   }
 };
 
@@ -239,20 +223,25 @@ const updateDetailsPanel = async () => {
   const detailedBasePairRange = store.getters.getDetailedBasePairRange as BasePairRange;
   if (detailedBasePairRange.stop - detailedBasePairRange.start <= 0)
   {
-    backboneSelectionTrack.value = null;
-    comparativeSelectionTracks.value = [];
+    // Clear out our selection TrackSets
+    selectionTrackSets = [];
+    detailTrackSets.value = [];
   }
   else
   {
     detailTrackSets.value = [];
-    let detailBackboneTrackSet;
+
+    // Get the range of the inner section that will be shown in the Detailed panel
     const zoomedSelection = originalSelectedBackboneRegion.generateInnerSelection(detailedBasePairRange.start, detailedBasePairRange.stop, store.getters.getOverviewBasePairToHeightRatio);
-
+    // Update the Detailed panel rez to match that region length
     store.dispatch('setDetailsResolution', zoomedSelection.basePairStop - zoomedSelection.basePairStart);
-    backboneSelectionTrack.value = createBackboneTrack(zoomedSelection.basePairStart, zoomedSelection.basePairStop, store.getters.getDetailedBasePairToHeightRatio) ?? null;
 
-    let tempBackboneTracks = await createBackboneDataTracks(zoomedSelection.basePairStart, zoomedSelection.basePairStop, store.getters.getDetailedBasePairToHeightRatio, true) as DataTrack;
-    if (tempBackboneTracks != null)
+    // Create the backbone track for the entire base selection at the updated Detailed panel resolution
+    const backboneSelectionTrack = createBackboneTrack(originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, store.getters.getDetailedBasePairToHeightRatio) ?? null;
+
+    // Create the backbone data tracks for the entire selection at the updated Detailed panel resolution
+    let tempBackboneTracks = await createBackboneDataTracks(originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, store.getters.getDetailedBasePairToHeightRatio, true) ?? null;
+    if (backboneSelectionTrack != null && tempBackboneTracks != null)
     {
       if (store.getters.getBackboneDataTracks.length > 0)
       {
@@ -277,30 +266,35 @@ const updateDetailsPanel = async () => {
           setBackboneDataTracks(tempBackboneTracks);
         }
 
-        detailBackboneTrackSet = new TrackSet(backboneSelectionTrack.value, [tempBackboneTracks]);
-        detailTrackSets.value.push(detailBackboneTrackSet);
+        selectionTrackSets.push(new TrackSet(backboneSelectionTrack, [tempBackboneTracks]));
+        detailTrackSets.value.push(new TrackSet(backboneSelectionTrack, [tempBackboneTracks]));
       }
 
-      comparativeSelectionTracks.value = await createSyntenyTracks(
+      let comparativeSelectionTracks = await createSyntenyTracks(
         zoomedSelection.basePairStart, 
         zoomedSelection.basePairStop, 
         store.getters.getDetailedBasePairToHeightRatio,
         store.getters.getDetailsSyntenyThreshold
       );
 
-      for (let index = 0; index < comparativeSelectionTracks.value.length; index++)
+      for (let index = 0; index < comparativeSelectionTracks.length; index++)
       {
-        let track = comparativeSelectionTracks.value[index] as Track;
+        let track = comparativeSelectionTracks[index] as Track;
         //TODO: query for comparative species datatracks
 
         let detailComparativeTrackSet = new TrackSet(track, []);
+        selectionTrackSets.push(new TrackSet(track, []));
         detailTrackSets.value.push(detailComparativeTrackSet);
       }
+
+      // TODO: Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
+
     }
     else
     {
-      backboneSelectionTrack.value = null;
-      comparativeSelectionTracks.value = [];
+      // Could not create TrackSets for the backbone or its data tracks -> clear out all detailed panel TrackSets
+      selectionTrackSets = [];
+      detailTrackSets.value = [];
     }
   }
 };
