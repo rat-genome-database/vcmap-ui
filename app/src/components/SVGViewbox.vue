@@ -364,7 +364,7 @@ const createBackboneTrack = (startPos: number, stopPos: number, basePairToHeight
       basePairToHeightRatio: basePairToHeightRatio,
       shape: 'rect'
     });
-    return new Track({ speciesName: speciesName, sections: [trackSection], startingSVGY: startingSVGYPos });
+    return new Track({ speciesName: speciesName, sections: [trackSection], startingSVGY: startingSVGYPos, mapName: backboneSpecies.value?.activeMap.name });
   }
   else
   {
