@@ -236,7 +236,6 @@ const updateOverviewPanel = async () => {
 
 const updateDetailsPanel = async () => {
 
-  console.log('update details panel')
   removeSelectionDataTracks();
 
   const originalSelectedBackboneRegion = store.getters.getSelectedBackboneRegion as BackboneSelection;

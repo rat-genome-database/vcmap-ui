@@ -1,76 +1,88 @@
 <template>
-  <Button 
+  <!-- <Button 
     data-test="decrease-zoom-btn"
     v-tooltip.left="'Zoom Out'" 
     icon="pi pi-minus" 
     class="p-button-info p-button-sm zoom-btn" 
     :disabled="isZoomOutDisabled || isDisabled"
-    @click="decreaseZoom"/>
+    @click="decreaseZoom"/> -->
     <span class="zoom-level">{{store.getters.getSelectedBackboneRegion?.zoomLevel}}x</span>
-  <Button 
+  <!-- <Button 
     data-test="increase-zoom-btn"
     v-tooltip.right="'Zoom In'" 
     icon="pi pi-plus" 
     class="p-button-info p-button-sm zoom-btn" 
     :disabled="isDisabled"
-    @click="increaseZoom"/>
+    @click="increaseZoom"/> -->
+    <Button
+    data-test="reset-zoom"
+    v-tooltip.right="'Reset to 1x zoom'" 
+    icon="pi pi-refresh" 
+    class="p-button-warning p-button-sm zoom-btn reset-zoom-btn"
+    @click="resetZoom" />
 </template>
 
 <script lang="ts" setup>
 import { useStore } from 'vuex';
-import { computed } from 'vue';
+//@ts-nocheckimport { computed } from 'vue';
 import BackboneSelection from '@/models/BackboneSelection';
 
 const store = useStore();
 
-interface Props 
-{
-  min?: number;
-}
+// interface Props 
+// {
+//   min?: number;
+// }
 
-const props = defineProps<Props>();
+// const props = defineProps<Props>();
 
-const isDisabled = computed(() => {
-  return (store.getters.getDetailedBasePairRange.stop - store.getters.getDetailedBasePairRange.start <= 0) ? 'disabled' : undefined;
-});
+// const isDisabled = computed(() => {
+//   return 'disabled';
+//   //return (store.getters.getDetailedBasePairRange.stop - store.getters.getDetailedBasePairRange.start <= 0) ? 'disabled' : undefined;
+// });
 
-const isZoomOutDisabled = computed(() => {
+// const isZoomOutDisabled = computed(() => {
+//   const selectedRegion = store.getters.getSelectedBackboneRegion as BackboneSelection;
+//   return (selectedRegion.zoomLevel <= 1) ? 'disabled' : undefined;
+// });
+
+const resetZoom = () => {
   const selectedRegion = store.getters.getSelectedBackboneRegion as BackboneSelection;
-  return (selectedRegion.zoomLevel <= 1) ? 'disabled' : undefined;
-});
-
-const decreaseZoom = () => {
-  let newZoomLevel = 1;
-  if (store.getters.getZoom <= 1)
-  {
-    newZoomLevel = store.getters.getZoom / 2;
-  }
-  else
-  {
-    newZoomLevel = store.getters.getZoom - 1;
-  }
-
-  if (props.min != null && newZoomLevel < props.min)
-  {
-    return;
-  }
-
-  store.dispatch('setZoom', newZoomLevel);
+  store.dispatch('setDetailedBasePairRange', { start: selectedRegion.baseSelection.basePairStart, stop: selectedRegion.baseSelection.basePairStop });
 };
 
-const increaseZoom = () => {
-  let newZoomLevel = 1;
-  if (store.getters.getZoom <= 1)
-  {
-    newZoomLevel = store.getters.getZoom * 2;
-  }
-  else
-  {
-    newZoomLevel = store.getters.getZoom + 1;
-  }
+// const decreaseZoom = () => {
+//   let newZoomLevel = 1;
+//   if (store.getters.getZoom <= 1)
+//   {
+//     newZoomLevel = store.getters.getZoom / 2;
+//   }
+//   else
+//   {
+//     newZoomLevel = store.getters.getZoom - 1;
+//   }
 
-  store.dispatch('setZoom', newZoomLevel);
-};
+//   if (props.min != null && newZoomLevel < props.min)
+//   {
+//     return;
+//   }
+
+//   store.dispatch('setZoom', newZoomLevel);
+// };
+
+// const increaseZoom = () => {
+//   let newZoomLevel = 1;
+//   if (store.getters.getZoom <= 1)
+//   {
+//     newZoomLevel = store.getters.getZoom * 2;
+//   }
+//   else
+//   {
+//     newZoomLevel = store.getters.getZoom + 1;
+//   }
+
+//   store.dispatch('setZoom', newZoomLevel);
+// };
 </script>
 
 <style lang="scss" scoped>
@@ -82,5 +94,10 @@ const increaseZoom = () => {
 .zoom-level
 {
   margin: 0 0.5rem;
+}
+
+.reset-zoom-btn
+{
+  margin-left: 1rem;
 }
 </style>
