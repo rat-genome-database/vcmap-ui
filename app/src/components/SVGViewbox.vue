@@ -18,10 +18,9 @@
       <template v-if="trackSet.dataTracks.length > 0">
         <template v-for="dataTrack, index2 in trackSet.dataTracks" :key="dataTrack.name">
           <TrackSVG v-if="dataTrack.isDisplayed"
-            show-data-on-hover 
             show-chromosome
             show-gene-label 
-            :pos-x="getBackbonePanelTrackXOffset(index, 'datatrack', index2) + SVGConstants.backboneXPosition" :pos-y="SVGConstants.overviewTrackYPosition" 
+            :pos-x="getBackbonePanelTrackXOffset(index, 'datatrack', index2) + SVGConstants.backboneXPosition"
             :width="SVGConstants.dataTrackWidth" :track="dataTrack.track as Track" />
         </template>
       </template>
@@ -29,10 +28,9 @@
       <text class="label small" :x="getBackbonePanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition" :y="SVGConstants.trackLabelYPosition">{{trackSet.speciesTrack.name}}</text>
       <text class="label small" :x="getBackbonePanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
       <TrackSVG v-if="index != 0"
-        :show-data-on-hover="index != 0"
         :show-chromosome="index != 0"
-        :show-gene-label ="index != 0"
-        :pos-x="getBackbonePanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition" :pos-y="SVGConstants.overviewTrackYPosition" 
+        show-start-stop
+        :pos-x="getBackbonePanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition"
         :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
 
       <BackboneTrackSVG v-else
@@ -48,10 +46,9 @@
       <text class="label small" :x="getComparativePanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackLabelYPosition">{{trackSet.speciesTrack.name}}</text>
       <text class="label small" :x="getComparativePanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
       <TrackSVG v-if="index != 0"
-        :show-data-on-hover="index != 0"
         :show-chromosome="index != 0"
-        :show-gene-label ="index != 0"
-        :pos-x="getComparativePanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :pos-y="SVGConstants.overviewTrackYPosition" 
+        show-start-stop
+        :pos-x="getComparativePanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" 
         :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
 
       <BackboneTrackSVG v-else
@@ -61,10 +58,9 @@
       <template v-if="trackSet.dataTracks.length > 0">
         <template v-for="dataTrack, index2 in trackSet.dataTracks" :key="dataTrack.name">
           <TrackSVG v-if="dataTrack.isDisplayed"
-            show-data-on-hover 
             show-chromosome
             show-gene-label 
-            :pos-x="getComparativePanelTrackXOffset(index, 'datatrack', index2) + SVGConstants.selectedBackboneXPosition" :pos-y="SVGConstants.overviewTrackYPosition" 
+            :pos-x="getComparativePanelTrackXOffset(index, 'datatrack', index2) + SVGConstants.selectedBackboneXPosition"
             :width="SVGConstants.dataTrackWidth" :track="dataTrack.track as Track" />
         </template>
       </template>
@@ -320,12 +316,12 @@ const getBackbonePanelTrackXOffset = (trackNumber: number, trackType: string, da
   if (trackType == 'datatrack' && dataTrackNum != null)
   {
     //every displayed datatrack will have a buffer of 30 between tracks - if last datatrack
-    offset = (totalTracks * -60) + (dataTrackNum * -30);
+    offset = (totalTracks * -80) + (dataTrackNum * -30);
   }
   else
   {
     //the backbone track will have no calculable offset for its datatrack, so we set it to 30.  Later tracks will have a buffer of 30 added between them
-    totalTracks == 0 ? offset = -30 : offset = (totalTracks * -60) - 30;
+    totalTracks == 0 ? offset = -30 : offset = (totalTracks * -80) - 30;
   }
 
   return offset;
