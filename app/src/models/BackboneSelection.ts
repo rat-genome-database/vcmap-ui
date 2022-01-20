@@ -46,7 +46,7 @@ export default class BackboneSelection
   {
     const originalRegionLength = this.baseSelection.basePairStop - this.baseSelection.basePairStart;
     const detailedRegionLength = detailedStop - detailedStart;
-    this.zoomLevel = Math.ceil(1 / (detailedRegionLength / originalRegionLength));
+    this.zoomLevel = parseFloat((1 / (detailedRegionLength / originalRegionLength)).toFixed(2));
 
     detailedStart = (detailedStart < 0) ? 0 : Math.floor(detailedStart);
     detailedStop = (this.chromosome?.seqLength && detailedStop > this.chromosome.seqLength) ? this.chromosome.seqLength : Math.ceil(detailedStop);
