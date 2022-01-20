@@ -108,7 +108,7 @@ import BackboneTrackSVG from './BackboneTrackSVG.vue';
 import TrackSet from '@/models/TrackSet';
 import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
 
-const GENES_DATA_TRACK_THRESHOLD_MULTIPLIER = 4;
+const GENES_DATA_TRACK_THRESHOLD_MULTIPLIER = 5;
 const GAPS_THRESHOLD_MULTIPLIER = 10;
 
 const store = useStore();
