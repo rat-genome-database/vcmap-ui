@@ -229,7 +229,7 @@ const updateOverviewPanel = async () => {
     backboneStop, 
     store.state.overviewBasePairToHeightRatio,
     store.state.overviewSyntenyThreshold,
-    SVGConstants.overviewTrackYPosition
+    SVGConstants.overviewTrackYPosition // SVG positioning of the overview tracks will start just underneath the header panels with a bit of space in between
   );
 
   for (let index = 0; index < comparativeOverviewTracks.length; index++)
@@ -318,7 +318,8 @@ const updateDetailsPanel = async () => {
       originalSelectedBackboneRegion.baseSelection.basePairStart, 
       originalSelectedBackboneRegion.baseSelection.basePairStop, 
       store.state.detailedBasePairToHeightRatio,
-      store.state.detailsSyntenyThreshold
+      store.state.detailsSyntenyThreshold,
+      SVGConstants.panelTitleHeight // SVG positioning of detailed tracks will start immediately after the header panel
     );
 
     for (let index = 0; index < comparativeSelectionTracks.length; index++)

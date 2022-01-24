@@ -32,41 +32,25 @@ const GAPS_THRESHOLD_MULTIPLIER = 10;
 /**
  * Creates the synteny tracks for a particular set of comparative species
  */
-export async function createSyntenyTracks(comparativeSpecies: Species[], backboneChr: Chromosome, backboneStart: number, backboneStop: number, basePairToHeightRatio: number, syntenyThreshold: number, startingSVGYPos = SVGConstants.panelTitleHeight)
+export async function createSyntenyTracks(comparativeSpecies: Species[], backboneChr: Chromosome, backboneStart: number, backboneStop: number, basePairToHeightRatio: number, syntenyThreshold: number, startingSVGYPos: number)
 {
-  const comparativeSpeciesMaps = comparativeSpecies.map(s => s.activeMap);
+  const speciesSyntenyData = await SyntenyApi.getSyntenicRegions({
+    backboneChromosome: backboneChr,
+    start: backboneStart,
+    stop: backboneStop,
+    threshold: syntenyThreshold
+  }, comparativeSpecies);
 
-  // Loop for each comparative species selected
-  const syntenyCalls: Promise<SyntenyRegionData[]>[] = [];
-  comparativeSpeciesMaps.forEach(map => {
-    syntenyCalls.push(SyntenyApi.getSyntenicRegions({
-      backboneChromosome: backboneChr,
-      start: backboneStart,
-      stop: backboneStop,
-      comparativeSpeciesMap: map,
-      threshold: syntenyThreshold,
-    }));
-  });
-
-  const syntenyBlockResults = await Promise.allSettled(syntenyCalls);
   const tracks: Track[] = [];
-  syntenyBlockResults.forEach((result, index) => {
-    if (result.status === 'fulfilled')
-    {
-      const speciesName = comparativeSpecies[index].name;
-      const mapName = comparativeSpeciesMaps[index].name;
-      // Build synteny tracks for successful API calls
-      console.debug(`-- Building synteny track for species: ${speciesName} / ${mapName} --`);
-      const trackSections = splitLevel1And2RegionsIntoSections(result.value, backboneStart, backboneStop, basePairToHeightRatio, syntenyThreshold);
-      const track = new Track({ speciesName: speciesName, sections: trackSections, mapName: mapName, isSyntenyTrack: true, startingSVGY: startingSVGYPos });
-      tracks.push(track);
-    }
-    else
-    {
-      console.error(result.status, result.reason);
-    }
+  speciesSyntenyData.forEach(speciesSyntenyValue => {
+    // Build synteny tracks for successful API calls
+    console.debug(`-- Building synteny track for species: ${speciesSyntenyValue.speciesName} / ${speciesSyntenyValue.mapName} --`);
+    const trackSections = splitLevel1And2RegionsIntoSections(speciesSyntenyValue.regionData, backboneStart, backboneStop, basePairToHeightRatio, syntenyThreshold);
+    const track = new Track({ speciesName: speciesSyntenyValue.speciesName, sections: trackSections, mapName: speciesSyntenyValue.mapName, isSyntenyTrack: true, startingSVGY: startingSVGYPos });
+    tracks.push(track);
   });
 
+  console.log(tracks);
   return tracks;
 }
 
