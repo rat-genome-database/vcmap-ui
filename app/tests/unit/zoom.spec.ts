@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import Zoom from '@/components/Zoom.vue';
-import { VCMapState } from '@/store';
+import { key, VCMapState } from '@/store';
 import { ActionTree, createStore, Store } from 'vuex';
 import { ExternalComponentsHandler } from '@/utils/ExternalComponentsHandler';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
@@ -13,14 +13,12 @@ describe('Zoom', () => {
     species: null,
     chromosomeNum: null,
     chromosome: null,
-    startPos: null,
-    stopPos: null,
+    startPos: 0,
+    stopPos: 0,
     gene: null,
     comparativeSpecies: [],
     selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
     zoom: 1,
-    displayStartPos: 0,
-    displayStopPos: 0,
     overviewBasePairToHeightRatio: 1000,
     overviewSyntenyThreshold: 0,
     detailedBasePairToHeightRatio: 1000,
@@ -28,11 +26,7 @@ describe('Zoom', () => {
     backboneDataTracks: [],
     configTab: 0,
     tooltipData: null,
-  };
-  let getters = {
-    getZoom(state: VCMapState) {
-      return state.zoom;
-    }
+    detailedBasePairRange: { start: 0, stop: 0 }
   };
 
   beforeEach(() => {
@@ -42,9 +36,8 @@ describe('Zoom', () => {
 
     store = createStore({
       state,
-      getters,
       actions
-    })
+    });
   });
 
   it('increase button dispatches new zoom level to store', async () => {
@@ -54,7 +47,7 @@ describe('Zoom', () => {
         components: ExternalComponentsHandler.getComponents(),
         directives: ExternalComponentsHandler.getDirectives(),
         provide: {
-          store: store
+          [key as symbol]: store
         }
       },
     });
@@ -73,7 +66,7 @@ describe('Zoom', () => {
         components: ExternalComponentsHandler.getComponents(),
         directives: ExternalComponentsHandler.getDirectives(),
         provide: {
-          store: store
+          [key as symbol]: store
         }
       },
     });

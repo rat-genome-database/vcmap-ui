@@ -7,11 +7,11 @@ import 'primeflex/primeflex.min.css';
 import { createApp } from 'vue';
 import App from './App.vue';
 import router from './router';
-import store from './store';
+import store, { key } from './store';
 import { ExternalComponentsHandler } from './utils/ExternalComponentsHandler';
 
 const app = createApp(App)
-  .use(store)
+  .use(store, key)
   .use(router);
 
   ExternalComponentsHandler.registerAll(app);

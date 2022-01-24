@@ -4,11 +4,11 @@
       <h4>Details</h4>
       <div class="grid unpadded">
         <div class="col-5">Displaying:</div>
-        <div class="col-7 bold">{{store.getters.getSpecies?.name}} chr{{store.getters.getChromosome?.chromosome}}:{{displayedSpeciesRegionLabel}}</div>
+        <div class="col-7 bold">{{store.state.species?.name}} chr{{store.state.chromosome?.chromosome}}:{{displayedSpeciesRegionLabel}}</div>
         <div class="col-5">Comparative Species:</div>
         <div class="col-7 bold">{{comparativeSpeciesText}}</div>
         <div class="col-5">Synteny Threshold:</div>
-        <div class="col-7 bold">{{Formatter.addCommasToBasePair(store.getters.getDetailsSyntenyThreshold)}}bp</div>
+        <div class="col-7 bold">{{Formatter.addCommasToBasePair(store.state.detailsSyntenyThreshold)}}bp</div>
         <div class="col-5">Zoom Level:</div>
         <div class="col-7 bold"><Zoom /></div>
       </div>
@@ -22,12 +22,12 @@ import { computed } from 'vue';
 import { useStore } from 'vuex';
 import Zoom from '@/components/Zoom.vue';
 import { Formatter } from '@/utils/Formatter';
-import BackboneSelection from '@/models/BackboneSelection';
+import { key } from '@/store';
 
-const store = useStore();
+const store = useStore(key);
 
 const displayedSpeciesRegionLabel = computed(() => {
-  const selectedRegion = store.getters.getSelectedBackboneRegion as BackboneSelection;
+  const selectedRegion = store.state.selectedBackboneRegion;
   if (selectedRegion && selectedRegion.innerSelection && selectedRegion.innerSelection.svgHeight > 0)
   {
     return `${Formatter.addCommasToBasePair(selectedRegion.innerSelection.basePairStart)}-${Formatter.addCommasToBasePair(selectedRegion.innerSelection.basePairStop)}`;
@@ -38,7 +38,7 @@ const displayedSpeciesRegionLabel = computed(() => {
 
 const comparativeSpeciesText = computed(() => {
   let text = '';
-  store.getters.getComparativeSpecies.forEach((species: Species) => {
+  store.state.comparativeSpecies.forEach((species: Species) => {
     if (text.length > 0)
     {
       text += ', ';

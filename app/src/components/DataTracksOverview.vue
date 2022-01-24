@@ -1,9 +1,9 @@
 <template>
   <div class="grid unpadded col-2">
     <div class="col-12">
-      <h4>Data Tracks Loaded <span v-if="store.getters.getBackboneDataTracks">({{store.getters.getBackboneDataTracks?.length}})</span></h4>
+      <h4>Data Tracks Loaded <span v-if="store.state.backboneDataTracks">({{store.state.backboneDataTracks?.length}})</span></h4>
       <div class="grid unpadded">
-        <div v-for="dataTrack, index in store.getters.getBackboneDataTracks" class="col-12" :key="dataTrack.name">
+        <div v-for="dataTrack, index in store.state.backboneDataTracks" class="col-12" :key="dataTrack.name">
           <div v-if="!showComparativeTracks && !dataTrack.isComparativeView">
             <div class="p-field-checkbox data-track-checkbox">
               <Checkbox v-model="dataTrack.isDisplayed" :id="dataTrack.name" @input="updateVisibility($event, index)" :binary="true"/>
@@ -23,7 +23,7 @@
             </div> -->
           </div>   
         </div>
-        <div v-if="store.getters.getBackboneDataTracks == null || store.getters.getBackboneDataTracks.length === 0">
+        <div v-if="store.state.backboneDataTracks == null || store.state.backboneDataTracks.length === 0">
           <p>No Data Tracks Loaded</p>
         </div>
       </div>
@@ -33,15 +33,16 @@
 
 <script lang="ts" setup>
 import DataTrack from '@/models/DataTrack';
+import { key } from '@/store';
 import { ref, watch } from 'vue';
 import { useStore } from 'vuex';
 
-const store = useStore();
+const store = useStore(key);
 
 let showComparativeTracks = ref<boolean>(true);
 
-watch(() => store.getters.getSelectedBackboneRegion, (newVal) => {
-  if (newVal && store.getters.getBackboneDataTracks?.length)
+watch(() => store.state.selectedBackboneRegion, (newVal) => {
+  if (newVal && store.state.backboneDataTracks?.length)
   {
     showComparativeTracks.value = true;
   }
@@ -54,7 +55,7 @@ watch(() => store.getters.getSelectedBackboneRegion, (newVal) => {
 }; */
 
 const updateVisibility = (value: any, index: number) => {
-  let dataTrack = store.getters.getBackboneDataTracks[index] as DataTrack;
+  let dataTrack = store.state.backboneDataTracks[index] as DataTrack;
   dataTrack.isDisplayed = value;
 
   updateStoreDataTracks(dataTrack);

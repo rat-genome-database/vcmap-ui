@@ -1,18 +1,18 @@
 import { mount } from '@vue/test-utils';
 import HeaderPanel from '@/components/HeaderPanel.vue';
-import { VCMapState } from '@/store';
 import Species from '@/models/Species';
 import Map from '@/models/Map';
 import { createStore } from 'vuex';
 import { ExternalComponentsHandler } from '@/utils/ExternalComponentsHandler';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
+import { key } from '@/store';
 
 const mockStore = createStore({
   state: {
     species: new Species({ typeKey: 1, name: 'Test Species', defaultMapKey: 1, maps: [new Map({ key: 1, primaryRefAssembly: true, description: '', notes: '', name: 'GRCh38'})]}),
     chromosome: null,
-    startPos: null,
-    stopPos: null,
+    startPos: 0,
+    stopPos: 0,
     gene: null,
     comparativeSpecies: [
       new Species({ typeKey: 2, name: 'Test Species 2', defaultMapKey: 2, maps: [new Map({ key: 2, primaryRefAssembly: true, description: '', notes: '', name: 'GRCh37'})] }), 
@@ -20,8 +20,6 @@ const mockStore = createStore({
     ],
     selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
     detailedBasePairRange: { start: 0, stop: 0 },
-    displayStartPos: 0,
-    displayStopPos: 0,
     overviewBasePairToHeightRatio: 1000,
     overviewSyntenyThreshold: 0,
     detailedBasePairToHeightRatio: 1000,
@@ -30,17 +28,6 @@ const mockStore = createStore({
     configTab: 0,
     tooltipData: null,
   },
-  getters: {
-    getSpecies(state: VCMapState) {
-      return state.species;
-    },
-    getComparativeSpecies(state: VCMapState) {
-      return state.comparativeSpecies;
-    },
-    getSelectedBackboneRegion(state: VCMapState) {
-      return state.selectedBackboneRegion;
-    },
-  }
 });
 
 const mockPush = jest.fn();
@@ -60,7 +47,7 @@ describe('HeaderPanel', () => {
         components: ExternalComponentsHandler.getComponents(),
         directives: ExternalComponentsHandler.getDirectives(),
         provide: {
-          store: mockStore
+          [key as symbol]: mockStore
         }
       }
     });

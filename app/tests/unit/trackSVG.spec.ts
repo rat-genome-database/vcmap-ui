@@ -4,7 +4,7 @@ import TrackSection from '@/models/TrackSection';
 import Track from '@/models/Track';
 import Chromosome from '@/models/Chromosome';
 import { ActionTree, createStore, Store } from 'vuex';
-import { VCMapState } from '@/store';
+import { key, VCMapState } from '@/store';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 import SVGConstants from '@/utils/SVGConstants';
 
@@ -18,14 +18,12 @@ describe('TrackSVG', () => {
     species: null,
     chromosomeNum: null,
     chromosome: null,
-    startPos: null,
-    stopPos: null,
+    startPos: 0,
+    stopPos: 0,
     gene: null,
     comparativeSpecies: [],
     selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
     detailedBasePairRange: { start: 0, stop: 0 },
-    displayStartPos: 0,
-    displayStopPos: 0,
     overviewBasePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO,
     overviewSyntenyThreshold: 0,
     detailedBasePairToHeightRatio: 1000,
@@ -33,11 +31,6 @@ describe('TrackSVG', () => {
     backboneDataTracks: [],
     configTab: 0,
     tooltipData: null,
-  };
-  let getters = {
-    getSelectedBackboneRegion(state: VCMapState) {
-      return state.selectedBackboneRegion;
-    }
   };
 
   beforeEach(() => {
@@ -47,7 +40,6 @@ describe('TrackSVG', () => {
 
     store = createStore({
       state,
-      getters,
       actions
     })
   });
@@ -73,7 +65,7 @@ describe('TrackSVG', () => {
       },
       global: {
         provide: {
-          store: store
+          [key as symbol]: store
         }
       }
     });
@@ -144,7 +136,7 @@ describe('TrackSVG', () => {
       },
       global: {
         provide: {
-          store: store
+          [key as symbol]: store
         }
       }
     });
