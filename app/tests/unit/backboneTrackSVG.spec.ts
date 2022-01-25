@@ -55,7 +55,7 @@ describe('BackboneTrackSVG', () => {
       basePairToHeightRatio: 1000,
       shape: 'rect'
     });
-    const backboneTrack = new Track({ speciesName: 'Human', sections: [backboneTrackSection], startingSVGY: SVGConstants.panelTitleHeight });
+    const backboneTrack = new Track({ speciesName: 'Human', sections: [backboneTrackSection], startingSVGY: SVGConstants.panelTitleHeight, type: 'backbone' });
     const wrapper = shallowMount(BackboneTrackSVG, {
       props: {
         posX: 100,
@@ -101,7 +101,7 @@ describe('BackboneTrackSVG', () => {
       basePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO,
       shape: 'rect'
     });
-    const backboneTrack = new Track({ speciesName: 'Human', sections: [backboneTrackSection], startingSVGY: SVGConstants.panelTitleHeight });
+    const backboneTrack = new Track({ speciesName: 'Human', sections: [backboneTrackSection], startingSVGY: SVGConstants.panelTitleHeight, type: 'backbone' });
     const wrapper = shallowMount(BackboneTrackSVG, {
       props: {
         posX: 100,

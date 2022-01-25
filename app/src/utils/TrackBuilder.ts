@@ -1,11 +1,15 @@
+import SpeciesApi from "@/api/SpeciesApi";
 import SyntenyApi from "@/api/SyntenyApi";
 import Chromosome from "@/models/Chromosome";
+import DataTrack from "@/models/DataTrack";
+import Gene from "@/models/Gene";
 import Species from "@/models/Species";
-import { SyntenyRegionData } from "@/models/SyntenicRegion";
+import { SpeciesSyntenyData, SyntenyRegionData } from "@/models/SyntenicRegion";
 import Track from "@/models/Track";
 import TrackSection from "@/models/TrackSection";
 import SVGConstants from "./SVGConstants";
 
+const GENES_DATA_TRACK_THRESHOLD_MULTIPLIER = 5;
 const GAPS_THRESHOLD_MULTIPLIER = 10;
 
 /**
@@ -25,7 +29,7 @@ const GAPS_THRESHOLD_MULTIPLIER = 10;
     basePairToHeightRatio: basePairToHeightRatio,
     shape: 'rect'
   });
-  return new Track({ speciesName: speciesName, sections: [trackSection], startingSVGY: startingSVGYPos, mapName: species.activeMap.name });
+  return new Track({ speciesName: speciesName, sections: [trackSection], startingSVGY: startingSVGYPos, mapName: species.activeMap.name, type: 'backbone' });
 }
 
 
@@ -34,7 +38,7 @@ const GAPS_THRESHOLD_MULTIPLIER = 10;
  */
 export async function createSyntenyTracks(comparativeSpecies: Species[], backboneChr: Chromosome, backboneStart: number, backboneStop: number, basePairToHeightRatio: number, syntenyThreshold: number, startingSVGYPos: number)
 {
-  const speciesSyntenyData = await SyntenyApi.getSyntenicRegions({
+  const speciesSyntenyDataArray = await SyntenyApi.getSyntenicRegions({
     backboneChromosome: backboneChr,
     start: backboneStart,
     stop: backboneStop,
@@ -42,16 +46,108 @@ export async function createSyntenyTracks(comparativeSpecies: Species[], backbon
   }, comparativeSpecies);
 
   const tracks: Track[] = [];
-  speciesSyntenyData.forEach(speciesSyntenyValue => {
-    // Build synteny tracks for successful API calls
-    console.debug(`-- Building synteny track for species: ${speciesSyntenyValue.speciesName} / ${speciesSyntenyValue.mapName} --`);
-    const trackSections = splitLevel1And2RegionsIntoSections(speciesSyntenyValue.regionData, backboneStart, backboneStop, basePairToHeightRatio, syntenyThreshold);
-    const track = new Track({ speciesName: speciesSyntenyValue.speciesName, sections: trackSections, mapName: speciesSyntenyValue.mapName, isSyntenyTrack: true, startingSVGY: startingSVGYPos });
+  speciesSyntenyDataArray.forEach(speciesSyntenyData => {
+    const track = createSyntenyTrackFromSpeciesSyntenyData(speciesSyntenyData, backboneStart, backboneStop, basePairToHeightRatio, syntenyThreshold, startingSVGYPos);
     tracks.push(track);
   });
 
   console.log(tracks);
   return tracks;
+}
+
+export function createSyntenyTrackFromSpeciesSyntenyData(speciesSyntenyData: SpeciesSyntenyData, backboneStart: number, backboneStop: number, basePairToHeightRatio: number, syntenyThreshold: number, startingSVGYPos: number)
+{
+  console.debug(`-- Building synteny track for species: ${speciesSyntenyData.speciesName} / ${speciesSyntenyData.mapName} --`);
+  const trackSections = splitLevel1And2RegionsIntoSections(speciesSyntenyData.regionData, backboneStart, backboneStop, basePairToHeightRatio, syntenyThreshold);
+  return new Track({ speciesName: speciesSyntenyData.speciesName, sections: trackSections, mapName: speciesSyntenyData.mapName, isSyntenyTrack: true, startingSVGY: startingSVGYPos, rawSyntenyData: speciesSyntenyData, type: 'comparative' });
+}
+
+/**
+ * Creates the backbone data tracks (currently just genes)
+ */
+export async function createBackboneDataTracks(species: Species, chromosome: Chromosome, startPos: number, stopPos: number, basePairToHeightRatio: number, isComparative: boolean, syntenyThreshold: number, startingSVGYPos: number)
+{
+  const genes = await SpeciesApi.getGenesByRegion(chromosome.chromosome, startPos, stopPos, species.defaultMapKey);
+  return createGeneTrackFromGenesData(genes, species.name, startPos, stopPos, basePairToHeightRatio, isComparative, syntenyThreshold, startingSVGYPos);
+}
+
+export function createGeneTrackFromGenesData(genes: Gene[], speciesName: string, startPos: number, stopPos: number, basePairToHeightRatio: number, isComparative: boolean, syntenyThreshold: number, startingSVGYPos: number)
+{
+  const sections: TrackSection[] = [];
+  let hiddenSections: TrackSection[] = [];
+  let previousBlockBackboneStop = startPos;
+
+  const threshold = syntenyThreshold * GENES_DATA_TRACK_THRESHOLD_MULTIPLIER;
+  for (const gene of genes)
+  {
+    if (gene.stop <= startPos || gene.start >= stopPos)
+    {
+      continue;
+    }
+    
+    const geneSize = gene.stop - gene.start;
+    if ( geneSize < threshold)
+    {
+      const hiddenTrackSection = new TrackSection({
+        start: gene.start,
+        stop: gene.stop,
+        backboneStart: gene.start, 
+        backboneStop: gene.stop, 
+        chromosome: gene.chromosome, 
+        cutoff: stopPos, 
+        offsetCount: gene.start - previousBlockBackboneStop,
+        basePairToHeightRatio: basePairToHeightRatio,
+        shape: 'rect',
+        gene: gene
+      });
+
+      hiddenSections.push(hiddenTrackSection);
+    }
+    else
+    {
+      if (gene.start < previousBlockBackboneStop && previousBlockBackboneStop !== startPos)
+      {
+        continue;
+      }
+      else
+      {
+        const trackSection = new TrackSection({
+          start: gene.start,
+          stop: gene.stop,
+          backboneStart: gene.start, 
+          backboneStop: gene.stop, 
+          chromosome: gene.chromosome, 
+          cutoff: stopPos, 
+          offsetCount: gene.start - previousBlockBackboneStop,
+          basePairToHeightRatio: basePairToHeightRatio,
+          shape: 'rect',
+          gene: gene,
+          hiddenGenes: hiddenSections.length > 0 ? hiddenSections : []
+        });
+
+        hiddenSections =  [];
+        sections.push(trackSection);
+        previousBlockBackboneStop = gene.stop;
+      }
+    }
+  }
+
+  let geneDataTrack;
+  const geneTrack = new Track({ speciesName: speciesName, sections: sections, startingSVGY: startingSVGYPos, rawGeneData: genes, type: 'gene' });
+
+  if (isComparative)
+  { 
+    geneDataTrack = new DataTrack('Genes', speciesName + ' Detailed Genes', geneTrack, 'red');
+    geneDataTrack.setIsComparativeView(true);
+    geneDataTrack.isDisplayed = true;
+  }
+  else
+  {
+    geneDataTrack = new DataTrack('Genes', speciesName + ' Overview Genes', geneTrack, 'red');
+    geneDataTrack.isDisplayed = true;
+  }
+
+  return geneDataTrack;
 }
 
 function splitLevel1And2RegionsIntoSections(regions: SyntenyRegionData[], backboneStart: number, backboneStop: number, basePairToHeightRatio: number, threshold: number)
@@ -81,10 +177,27 @@ function splitBlocksAndGapsIntoSections(regions: SyntenyRegionData[], backboneSt
   const trackSections: TrackSection[] = [];
   let previousBlockBackboneStop = backboneStart;
 
-  console.debug(`Filtering out gaps with threshold: ${threshold * GAPS_THRESHOLD_MULTIPLIER}`);
-  regions.forEach(region => {
+  const filteredRegions = regions.filter(r => {
+    // Filter out blocks that are not at least partially in the selected/zoomed-in backbone region
+    return r.block.backboneStop > backboneStart && r.block.backboneStart < backboneStop
+  });
+  
+  filteredRegions.forEach(region => {
     const block = region.block;
-    const gaps = region.gaps.filter(g => { return g.length >= threshold * GAPS_THRESHOLD_MULTIPLIER && g.chainLevel === block.chainLevel; });
+
+    if (block.backboneStop <= backboneStart || block.backboneStart >= backboneStop)
+    {
+      return;
+    }
+
+    console.debug(`Filtering out gaps with threshold: ${threshold * GAPS_THRESHOLD_MULTIPLIER}`);
+    const gaps = region.gaps.filter(g => { 
+      // Filter out:
+      // + gaps that are too small
+      // + gaps that are a different chain level than the block
+      // + gaps that are not at least partially in the selected/zoomed-in backbone region
+      return g.length >= threshold * GAPS_THRESHOLD_MULTIPLIER && g.chainLevel === block.chainLevel && g.backboneStop > backboneStart && g.backboneStart < backboneStop; 
+    });
 
     if (gaps.length === 0)
     {

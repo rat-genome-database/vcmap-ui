@@ -1,4 +1,6 @@
 import SVGConstants from "@/utils/SVGConstants";
+import Gene from "./Gene";
+import { SpeciesSyntenyData } from "./SyntenicRegion";
 import TrackSection from "./TrackSection";
 
 interface TrackParams
@@ -8,6 +10,9 @@ interface TrackParams
   mapName?: string;
   isSyntenyTrack?: boolean;
   startingSVGY: number;
+  type: 'backbone' | 'comparative' | 'gene';
+  rawGeneData?: Gene[];
+  rawSyntenyData?: SpeciesSyntenyData;
 }
 
 export interface Label
@@ -24,6 +29,9 @@ export default class Track
   mapName?: string;
   labels: Label[] = [];
   startingSVGY: number = 0;
+  type = 'backbone';
+  rawGeneData?: Gene[]; // Tracks made from genes will populate this with the raw gene data it used from the API
+  rawSyntenyData?: SpeciesSyntenyData; // Tracks made from synteny will populate this with the raw syntenic region data it used from the API
 
   constructor(params: TrackParams)
   {
@@ -31,6 +39,9 @@ export default class Track
     this.sections = params.sections;
     this.mapName = params.mapName;
     this.startingSVGY = params.startingSVGY;
+    this.type = params.type;
+    this.rawGeneData = params.rawGeneData;
+    this.rawSyntenyData = params.rawSyntenyData;
     this.setSectionSVGPositions(this.sections, params.isSyntenyTrack);
     this.buildAndSortLabelObjects(this.sections);
   }

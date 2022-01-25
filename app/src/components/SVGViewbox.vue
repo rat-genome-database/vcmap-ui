@@ -87,15 +87,10 @@
 </template>
 
 <script setup lang="ts" >
-import Species from '@/models/Species';
-import TrackSection from '@/models/TrackSection';
 import Track from '@/models/Track';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import TrackSVG from './TrackSVG.vue';
-import Chromosome from '@/models/Chromosome';
-import Gene from '@/models/Gene';
-import SpeciesApi from '@/api/SpeciesApi';
 import SVGConstants from '@/utils/SVGConstants';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 import DataTrack from '@/models/DataTrack';
@@ -107,9 +102,7 @@ import TrackSet from '@/models/TrackSet';
 import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
 import { key } from '@/store';
 import { backboneDetailedError, backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError } from '@/utils/VCMapErrors';
-import { createBackboneTrack, createSyntenyTracks } from '@/utils/TrackBuilder';
-
-const GENES_DATA_TRACK_THRESHOLD_MULTIPLIER = 5;
+import { createBackboneDataTracks, createBackboneTrack, createSyntenyTracks } from '@/utils/TrackBuilder';
 
 const store = useStore(key);
 
@@ -121,7 +114,7 @@ const overviewTrackSets = ref<TrackSet[]>([]); // The currently displayed TrackS
 const detailTrackSets = ref<TrackSet[]>([]); // The currently displayed TrackSets in the Detailed panel
 
 let comparativeOverviewTracks: Track[] = []; // Keeps track of current comparative tracks displayed in the overview panel
-let selectionTrackSets: TrackSet[] = []; // The TrackSets for the entire selected region
+let selectionTrackSets: TrackSet[] = []; // The track sets for the entire selected region
 
 
 async function attachToProgressLoader(func: () => Promise<any>)
@@ -181,7 +174,7 @@ const updateOverviewPanel = async () => {
   store.dispatch('setOverviewResolution', backboneStop - backboneStart);
   let backboneTrack = createBackboneTrack(backboneSpecies, backboneChromosome, backboneStart, backboneStop, store.state.overviewBasePairToHeightRatio, SVGConstants.overviewTrackYPosition);
 
-  let tempBackboneTracks = await createBackboneDataTracks(backboneSpecies, backboneChromosome, backboneStart, backboneStop, store.state.overviewBasePairToHeightRatio, false, SVGConstants.overviewTrackYPosition) ?? null;
+  let tempBackboneTracks = await createBackboneDataTracks(backboneSpecies, backboneChromosome, backboneStart, backboneStop, store.state.overviewBasePairToHeightRatio, false, store.state.overviewSyntenyThreshold, SVGConstants.overviewTrackYPosition) ?? null;
   if (backboneTrack != null && tempBackboneTracks != null)
   {
     if (store.state.backboneDataTracks.length > 0)
@@ -267,6 +260,7 @@ const updateDetailsPanel = async () => {
   }
 
   detailTrackSets.value = [];
+  selectionTrackSets = [];
   // Get the range of the inner section that will be shown in the Detailed panel
   const zoomedSelection = originalSelectedBackboneRegion.generateInnerSelection(detailedBasePairRange.start, detailedBasePairRange.stop, store.state.overviewBasePairToHeightRatio);
   // Update the Detailed panel rez to match that region length
@@ -276,7 +270,7 @@ const updateDetailsPanel = async () => {
   const backboneSelectionTrack = createBackboneTrack(backboneSpecies, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, store.state.detailedBasePairToHeightRatio);
 
   // Create the backbone data tracks for the entire selection at the updated Detailed panel resolution
-  let tempBackboneTracks = await createBackboneDataTracks(backboneSpecies, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, store.state.detailedBasePairToHeightRatio, true) ?? null;
+  let tempBackboneTracks = await createBackboneDataTracks(backboneSpecies, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, store.state.detailedBasePairToHeightRatio, true, store.state.detailsSyntenyThreshold, SVGConstants.panelTitleHeight) ?? null;
   if (backboneSelectionTrack != null && tempBackboneTracks != null)
   {
     if (store.state.backboneDataTracks.length > 0)
@@ -303,7 +297,6 @@ const updateDetailsPanel = async () => {
       }
 
       selectionTrackSets.push(new TrackSet(backboneSelectionTrack, [tempBackboneTracks]));
-      detailTrackSets.value.push(new TrackSet(backboneSelectionTrack, [tempBackboneTracks]));
     }
 
     if (store.state.comparativeSpecies.length === 0)
@@ -327,14 +320,18 @@ const updateDetailsPanel = async () => {
       let track = comparativeSelectionTracks[index] as Track;
       //TODO: query for comparative species datatracks
 
-      let detailComparativeTrackSet = new TrackSet(track, []);
       selectionTrackSets.push(new TrackSet(track, []));
-      detailTrackSets.value.push(detailComparativeTrackSet);
     }
 
-    // TODO: Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
-    console.log(selectionTrackSets);
+    // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
     console.log('Trimming selection TrackSets to be between ', zoomedSelection.basePairStart, zoomedSelection.basePairStop);
+    selectionTrackSets.forEach(trackSet => {
+      const smallerTrackSet = trackSet.getSmallerRegion(zoomedSelection.basePairStart, zoomedSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold);
+      if (smallerTrackSet)
+      {
+        detailTrackSets.value.push(smallerTrackSet);
+      }
+    });
   }
   else
   {
@@ -383,90 +380,6 @@ const getComparativePanelTrackXOffset = (trackNumber: number, trackType: string,
   }
 
   return offset;
-};
-
-const createBackboneDataTracks =  async (species: Species, chromosome: Chromosome, startPos: number, stopPos: number, basePairToHeightRatio: number, isComparative: boolean, startingSVGYPos = SVGConstants.panelTitleHeight) => {
-  let tempGeneTracks: Gene[] = [];
-
-  try
-  {
-    tempGeneTracks = await SpeciesApi.getGenesByRegion(chromosome.chromosome, startPos, stopPos, species.defaultMapKey);
-    
-    const sections: TrackSection[] = [];
-    let hiddenSections: TrackSection[] = [];
-    let previousBlockBackboneStop = startPos;
-  
-    for (let gene of tempGeneTracks)
-    {
-      let threshold = (isComparative) ? (store.state.detailsSyntenyThreshold * GENES_DATA_TRACK_THRESHOLD_MULTIPLIER) : store.state.overviewSyntenyThreshold * GENES_DATA_TRACK_THRESHOLD_MULTIPLIER;
-      let geneSize = gene.stop - gene.start;
-      if ( geneSize < threshold)
-      {
-        const hiddenTrackSection = new TrackSection({
-          start: gene.start,
-          stop: gene.stop,
-          backboneStart: gene.start, 
-          backboneStop: gene.stop, 
-          chromosome: gene.chromosome, 
-          cutoff: stopPos, 
-          offsetCount: gene.start - previousBlockBackboneStop,
-          basePairToHeightRatio: basePairToHeightRatio,
-          shape: 'rect',
-          gene: gene
-        });
-
-        hiddenSections.push(hiddenTrackSection);
-      }
-      else
-      {
-        if (gene.start < previousBlockBackboneStop && previousBlockBackboneStop !== startPos)
-        {
-          continue;
-        }
-        else
-        {
-          const trackSection = new TrackSection({
-            start: gene.start,
-            stop: gene.stop,
-            backboneStart: gene.start, 
-            backboneStop: gene.stop, 
-            chromosome: gene.chromosome, 
-            cutoff: stopPos, 
-            offsetCount: gene.start - previousBlockBackboneStop,
-            basePairToHeightRatio: basePairToHeightRatio,
-            shape: 'rect',
-            gene: gene,
-            hiddenGenes: hiddenSections.length > 0 ? hiddenSections : []
-          });
-
-          hiddenSections =  [];
-          sections.push(trackSection);
-          previousBlockBackboneStop = gene.stop;
-        }
-      }
-    }
-    let geneDataTrack;
-    let geneTrack = new Track({ speciesName: species.name, sections: sections, startingSVGY: startingSVGYPos });
-
-    if (isComparative)
-    { 
-      geneDataTrack = new DataTrack('Genes', species.name + ' Detailed Genes', geneTrack, 'red');
-      geneDataTrack.setIsComparativeView(true);
-      geneDataTrack.isDisplayed = true;
-
-    }
-    else
-    {
-      geneDataTrack = new DataTrack('Genes', species.name + ' Overview Genes', geneTrack, 'red');
-      geneDataTrack.isDisplayed = true;
-    }
-
-    return geneDataTrack;
-  }
-  catch (err)
-  {
-    onError(err, 'An error occurred while attempting to load the genes data track for the backbone species');
-  }
 };
 
 const setBackboneDataTracks = (dataTrack: DataTrack) => {

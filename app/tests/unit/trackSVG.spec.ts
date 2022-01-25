@@ -55,7 +55,7 @@ describe('TrackSVG', () => {
       basePairToHeightRatio: 1000,
       shape: 'rect'
     });
-    const track = new Track({ speciesName: 'Human', sections: [trackSection], startingSVGY: SVGConstants.panelTitleHeight });
+    const track = new Track({ speciesName: 'Human', sections: [trackSection], startingSVGY: SVGConstants.panelTitleHeight, type: 'comparative' });
     const wrapper = shallowMount(TrackSVG, {
       props: {
         showStartStop: true,
@@ -126,7 +126,7 @@ describe('TrackSVG', () => {
       basePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO,
       shape: 'rect'
     });
-    const track = new Track({ speciesName: 'Rat', sections: [trackSection1, trackSection2, trackSection3], startingSVGY: SVGConstants.panelTitleHeight });
+    const track = new Track({ speciesName: 'Rat', sections: [trackSection1, trackSection2, trackSection3], startingSVGY: SVGConstants.panelTitleHeight, type: 'comparative' });
 
     const wrapper = shallowMount(TrackSVG, {
       props: {
