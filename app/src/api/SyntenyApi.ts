@@ -52,6 +52,7 @@ export default class SyntenyApi
       speciesSyntenyData.push({
         speciesName: comparativeSpecies[index].name,
         mapName: comparativeSpeciesMaps[index].name,
+        mapKey: comparativeSpeciesMaps[index].key,
         regionData: regions
       });
       console.debug(`Syntenic regions found for mapKey '${comparativeSpeciesMaps[index].key}', threshold: '${params.threshold}': ${regions.length}`);

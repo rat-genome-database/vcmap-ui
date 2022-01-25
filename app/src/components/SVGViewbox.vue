@@ -50,7 +50,7 @@
         <template v-for="dataTrack, index2 in trackSet.dataTracks" :key="dataTrack.name">
           <TrackSVG v-if="dataTrack.isDisplayed"
             show-gene-label 
-            :pos-x="getComparativePanelTrackXOffset(index, 'datatrack', index2) + SVGConstants.selectedBackboneXPosition"
+            :pos-x="getComparativePanelTrackXOffset(index, 'datatrack', index2 + 1) + SVGConstants.selectedBackboneXPosition"
             :width="SVGConstants.dataTrackWidth" :track="dataTrack.track as Track" />
         </template>
       </template>
@@ -92,7 +92,7 @@ import TrackSet from '@/models/TrackSet';
 import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
 import { key } from '@/store';
 import { backboneDetailedError, backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError } from '@/utils/VCMapErrors';
-import { createBackboneDataTracks, createBackboneTrack, createSyntenyTracks } from '@/utils/TrackBuilder';
+import { createBackboneDataTracks, createComparativeDataTracks, createBackboneTrack, createSyntenyTracks } from '@/utils/TrackBuilder';
 
 const store = useStore(key);
 
@@ -186,8 +186,6 @@ const updateOverviewPanel = async () => {
   for (let index = 0; index < comparativeOverviewTracks.length; index++)
   {
     const track = comparativeOverviewTracks[index];
-    //TODO: query for comparative species datatracks
-
     const comparativeTrackSet = new TrackSet(track, []);
     overviewTrackSets.value.push(comparativeTrackSet);
   }
@@ -275,10 +273,10 @@ const updateDetailsPanel = async () => {
 
     for (let index = 0; index < comparativeSelectionTracks.length; index++)
     {
-      let track = comparativeSelectionTracks[index] as Track;
-      //TODO: query for comparative species datatracks
-
-      selectionTrackSets.push(new TrackSet(track, []));
+      let track = comparativeSelectionTracks[index];
+      let tempComparativeTracks = await createComparativeDataTracks(track, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, store.state.detailedBasePairToHeightRatio, true, store.state.detailsSyntenyThreshold, SVGConstants.panelTitleHeight);
+      
+      selectionTrackSets.push(new TrackSet(track, [tempComparativeTracks]));
     }
 
     // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
@@ -318,7 +316,7 @@ const getComparativePanelTrackXOffset = (trackNumber: number, trackType: string,
   if (trackType == 'datatrack' && dataTrackNum != null)
   {
     //every displayed datatrack will have a buffer of 30 between tracks - if last datatrack
-    totalTracks == 0 ? offset = 30 : offset = (totalTracks * 120) + (dataTrackNum * 30);
+    totalTracks == 0 ? offset = 30 : offset = (totalTracks * 120) + (dataTrackNum * 50);
   }
   else
   {

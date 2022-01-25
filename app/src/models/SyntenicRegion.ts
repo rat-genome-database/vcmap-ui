@@ -2,6 +2,7 @@ export interface SpeciesSyntenyData
 {
   speciesName: string;
   mapName: string;
+  mapKey: number;
   regionData: SyntenyRegionData[]
 }
 
