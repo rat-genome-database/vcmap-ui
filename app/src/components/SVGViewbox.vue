@@ -15,28 +15,18 @@
     
     <text class="label medium bold" :x="SVGConstants.overviewTitleXPosition" :y="SVGConstants.panelTitleYPosition">Overview</text>
     <template v-for="(trackSet, index) in overviewTrackSets" :key="trackSet">
-      <template v-if="trackSet.dataTracks.length > 0">
-        <template v-for="dataTrack, index2 in trackSet.dataTracks" :key="dataTrack.name">
-          <TrackSVG v-if="dataTrack.isDisplayed"
-            show-chromosome
-            show-gene-label 
-            :pos-x="getBackbonePanelTrackXOffset(index, 'datatrack', index2) + SVGConstants.backboneXPosition"
-            :width="SVGConstants.dataTrackWidth" :track="dataTrack.track as Track" />
-        </template>
-      </template>
-
-      <text class="label small" :x="getBackbonePanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition" :y="SVGConstants.trackLabelYPosition">{{trackSet.speciesTrack.name}}</text>
-      <text class="label small" :x="getBackbonePanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
+      <text class="label small" :x="getOverviewPanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition" :y="SVGConstants.trackLabelYPosition">{{trackSet.speciesTrack.name}}</text>
+      <text class="label small" :x="getOverviewPanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
       <TrackSVG v-if="index != 0"
         show-chromosome
         show-synteny-on-hover
         show-start-stop
-        :pos-x="getBackbonePanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition"
+        :pos-x="getOverviewPanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition"
         :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
 
       <BackboneTrackSVG v-else
         is-selectable 
-        :pos-x="getBackbonePanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition" :track="trackSet.speciesTrack as Track" />
+        :pos-x="getOverviewPanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition" :track="trackSet.speciesTrack as Track" />
     </template>
 
 
@@ -311,21 +301,11 @@ const updateDetailsPanel = async () => {
 /**
  * Gets the offset of the X position relative to the backbone species track
  */
-const getBackbonePanelTrackXOffset = (trackNumber: number, trackType: string, dataTrackNum?: number) => {
+const getOverviewPanelTrackXOffset = (trackNumber: number, trackType: string, dataTrackNum?: number) => {
   let totalTracks = trackNumber;
   let offset = 0;
-  
-  //data tracks are drawn on the right side of the backbone track, and first
-  if (trackType == 'datatrack' && dataTrackNum != null)
-  {
-    //every displayed datatrack will have a buffer of 30 between tracks - if last datatrack
-    offset = (totalTracks * -80) + (dataTrackNum * -30);
-  }
-  else
-  {
-    //the backbone track will have no calculable offset for its datatrack, so we set it to 30.  Later tracks will have a buffer of 30 added between them
-    totalTracks == 0 ? offset = -30 : offset = (totalTracks * -80) - 30;
-  }
+
+  totalTracks == 0 ? offset = 0 : offset = (totalTracks * -80);
 
   return offset;
 };
