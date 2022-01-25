@@ -4,7 +4,7 @@ import TrackSection from '@/models/TrackSection';
 import Track from '@/models/Track';
 import Chromosome from '@/models/Chromosome';
 import { ActionTree, createStore, Store } from 'vuex';
-import { VCMapState } from '@/store';
+import { key, VCMapState } from '@/store';
 import SVGConstants from '@/utils/SVGConstants';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 
@@ -18,14 +18,12 @@ describe('BackboneTrackSVG', () => {
     species: null,
     chromosomeNum: null,
     chromosome: null,
-    startPos: null,
-    stopPos: null,
+    startPos: 0,
+    stopPos: 0,
     gene: null,
     comparativeSpecies: [],
     selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
     detailedBasePairRange: { start: 0, stop: 0 },
-    displayStartPos: 0,
-    displayStopPos: 0,
     overviewBasePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO,
     overviewSyntenyThreshold: 0,
     detailedBasePairToHeightRatio: 1000,
@@ -33,11 +31,6 @@ describe('BackboneTrackSVG', () => {
     backboneDataTracks: [],
     configTab: 0,
     tooltipData: null,
-  };
-  let getters = {
-    getSelectedBackboneRegion(state: VCMapState) {
-      return state.selectedBackboneRegion;
-    }
   };
 
   beforeEach(() => {
@@ -47,7 +40,6 @@ describe('BackboneTrackSVG', () => {
 
     store = createStore({
       state,
-      getters,
       actions
     })
   });
@@ -63,7 +55,7 @@ describe('BackboneTrackSVG', () => {
       basePairToHeightRatio: 1000,
       shape: 'rect'
     });
-    const backboneTrack = new Track({ speciesName: 'Human', sections: [backboneTrackSection], startingSVGY: SVGConstants.panelTitleHeight });
+    const backboneTrack = new Track({ speciesName: 'Human', sections: [backboneTrackSection], startingSVGY: SVGConstants.panelTitleHeight, type: 'backbone' });
     const wrapper = shallowMount(BackboneTrackSVG, {
       props: {
         posX: 100,
@@ -71,7 +63,7 @@ describe('BackboneTrackSVG', () => {
       },
       global: {
         provide: {
-          store: store
+          [key as symbol]: store
         }
       }
     });
@@ -109,7 +101,7 @@ describe('BackboneTrackSVG', () => {
       basePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO,
       shape: 'rect'
     });
-    const backboneTrack = new Track({ speciesName: 'Human', sections: [backboneTrackSection], startingSVGY: SVGConstants.panelTitleHeight });
+    const backboneTrack = new Track({ speciesName: 'Human', sections: [backboneTrackSection], startingSVGY: SVGConstants.panelTitleHeight, type: 'backbone' });
     const wrapper = shallowMount(BackboneTrackSVG, {
       props: {
         posX: 100,
@@ -118,7 +110,7 @@ describe('BackboneTrackSVG', () => {
       },
       global: {
         provide: {
-          store: store
+          [key as symbol]: store
         }
       }
     });

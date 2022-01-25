@@ -96,12 +96,13 @@ import { toRefs } from '@vue/reactivity';
 import { useStore } from 'vuex';
 import SVGConstants from '@/utils/SVGConstants';
 import { getMousePosSVG } from '@/utils/SVGHelpers';
+import { key } from '@/store';
 
 const LEVEL_2_WIDTH_MULTIPLIER = 0.75;
 const LABEL_Y_OFFSET = 3;
 const HIGHLIGHT_COLOR = 'bisque';
 
-const store = useStore();
+const store = useStore(key);
 const svg = document.querySelector('svg');
 
 interface Props 

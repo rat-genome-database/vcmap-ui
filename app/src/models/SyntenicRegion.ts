@@ -1,3 +1,10 @@
+export interface SpeciesSyntenyData
+{
+  speciesName: string;
+  mapName: string;
+  regionData: SyntenyRegionData[]
+}
+
 export interface SyntenyRegionData
 {
   block: SyntenicRegion,

@@ -4,13 +4,13 @@
       <h4>Overview</h4>
       <div class="grid unpadded">
         <div class="col-5">Displaying:</div>
-        <div class="col-7 bold" data-test="backbone-overview-display">{{store.getters.getSpecies?.name}} chr{{store.getters.getChromosome?.chromosome}}:{{displayBackboneStart}}-{{displayBackboneStop}}</div>
+        <div class="col-7 bold" data-test="backbone-overview-display">{{store.state.species?.name}} chr{{store.state.chromosome?.chromosome}}:{{formattedBackboneStart}}-{{formattedBackboneStop}}</div>
         <div class="col-5">Assembly:</div>
-        <div class="col-7 bold">{{store.getters.getSpecies?.activeMap.name}}</div>
+        <div class="col-7 bold">{{store.state.species?.activeMap.name}}</div>
         <div class="col-5">Length:</div>
-        <div class="col-7 bold">{{displayBackboneLength}}bp</div>
+        <div class="col-7 bold">{{backboneLength}}bp</div>
         <div class="col-5">Synteny Threshold:</div>
-        <div class="col-7 bold">{{Formatter.addCommasToBasePair(store.getters.getOverviewSyntenyThreshold)}}bp</div>
+        <div class="col-7 bold">{{Formatter.addCommasToBasePair(store.state.overviewSyntenyThreshold)}}bp</div>
         <div class="col-5">Selection:</div>
         <div class="col-7 bold">
           <span>{{selectionRange}}</span>
@@ -31,23 +31,29 @@ import { Formatter } from '@/utils/Formatter';
 import { computed } from 'vue';
 import { useStore } from 'vuex';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
+import { key } from '@/store';
 
-const store = useStore();
+const store = useStore(key);
 
-const displayBackboneStart = computed(() => {
-  return Formatter.addCommasToBasePair(store.getters.getDisplayStartPosition);
+const formattedBackboneStart = computed(() => {
+  return Formatter.addCommasToBasePair(store.state.startPos);
 });
 
-const displayBackboneStop = computed(() => {
-  return Formatter.addCommasToBasePair(store.getters.getDisplayStopPosition);
+const formattedBackboneStop = computed(() => {
+  return Formatter.addCommasToBasePair(store.state.stopPos);
 });
 
-const displayBackboneLength = computed(() => {
-  return Formatter.addCommasToBasePair(store.getters.getDisplayStopPosition - store.getters.getDisplayStartPosition);
+const backboneLength = computed(() => {
+  if (store.state.stopPos == null || store.state.startPos == null)
+  {
+    return '-';
+  }
+
+  return Formatter.addCommasToBasePair(store.state.stopPos - store.state.startPos);
 });
 
 const selectionRange = computed(() => {
-  let selectedRegion = store.getters.getSelectedBackboneRegion as BackboneSelection;
+  let selectedRegion = store.state.selectedBackboneRegion;
   if (selectedRegion == null || (selectedRegion.baseSelection.basePairStop - selectedRegion.baseSelection.basePairStart <= 0))
   {
     return '-';

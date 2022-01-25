@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils';
 import OverviewControls from '@/components/OverviewControls.vue';
 import Species from '@/models/Species';
 import Map from '@/models/Map';
-import { VCMapState } from '@/store';
+import { key, VCMapState } from '@/store';
 import { ActionTree, createStore, Store } from 'vuex';
 import Chromosome from '@/models/Chromosome';
 import { ExternalComponentsHandler } from '@/utils/ExternalComponentsHandler';
@@ -21,8 +21,6 @@ describe('OverviewControls', () => {
     comparativeSpecies: [],
     selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
     detailedBasePairRange: { start: 0, stop: 0 },
-    displayStartPos: 1,
-    displayStopPos: 10000,
     overviewBasePairToHeightRatio: 1000,
     overviewSyntenyThreshold: 0,
     detailedBasePairToHeightRatio: 1000,
@@ -30,26 +28,6 @@ describe('OverviewControls', () => {
     backboneDataTracks: [],
     configTab: 0,
     tooltipData: null,
-  };
-  let getters = {
-    getSpecies(state: VCMapState) {
-      return state.species;
-    },
-    getChromosome(state: VCMapState) {
-      return state.chromosome;
-    },
-    getStartPosition(state: VCMapState) {
-      return state.startPos;
-    },
-    getStopPosition(state: VCMapState) {
-      return state.stopPos;
-    },
-    getDisplayStartPosition(state: VCMapState) {
-      return state.displayStartPos;
-    },
-    getDisplayStopPosition(state: VCMapState) {
-      return state.displayStopPos;
-    },
   };
 
   beforeEach(() => {
@@ -60,7 +38,6 @@ describe('OverviewControls', () => {
 
     store = createStore({
       state,
-      getters,
       actions
     })
   });
@@ -72,7 +49,7 @@ describe('OverviewControls', () => {
         components: ExternalComponentsHandler.getComponents(),
         directives: ExternalComponentsHandler.getDirectives(),
         provide: {
-          store: store
+          [key as symbol]: store
         }
       },
     });
@@ -88,7 +65,7 @@ describe('OverviewControls', () => {
         components: ExternalComponentsHandler.getComponents(),
         directives: ExternalComponentsHandler.getDirectives(),
         provide: {
-          store: store
+          [key as symbol]: store
         }
       },
     });

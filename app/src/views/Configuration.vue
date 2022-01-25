@@ -278,6 +278,7 @@ import { useStore } from 'vuex';
 import { VERSION } from '@/version';
 import { Formatter } from '@/utils/Formatter';
 import VCMapDialog from '@/components/VCMapDialog.vue';
+import { key } from '@/store';
 
 interface ComparativeSpeciesSelection
 {
@@ -287,7 +288,7 @@ interface ComparativeSpeciesSelection
 }
 
 const router = useRouter();
-const store = useStore();
+const store = useStore(key);
 
 const TABS = {
   POSITION: 0,
@@ -468,7 +469,7 @@ async function setGeneChromosomeAndDefaultStartAndStopPositions(gene: Gene | nul
 
 async function prepopulateConfigOptions()
 {
-  activeTab.value = store.getters.getConfigTab;
+  activeTab.value = store.state.configTab;
   isLoadingSpecies.value = true;
   try
   {
@@ -483,13 +484,13 @@ async function prepopulateConfigOptions()
     isLoadingSpecies.value = false;
   }
 
-  if (speciesOptions.value.length === 0 || store.getters.getSpecies == null)
+  if (speciesOptions.value.length === 0 || store.state.species == null)
   {
     return;
   }
   
   // Avoiding setting the exact object from the store to our ref variable so that it doesn't get mutated on accident
-  const prevSpecies = (store.getters.getSpecies as Species);
+  const prevSpecies = store.state.species;
   backboneSpecies.value = speciesOptions.value.filter(s => s.typeKey === prevSpecies.typeKey)[0] ?? null;
   
   // If no species selected by default, keep all other fields blank and bail
@@ -532,27 +533,27 @@ async function prepopulateConfigOptions()
     return;
   }
 
-  if (store.getters.getChromosome)
+  if (store.state.chromosome)
   {
     // Avoiding setting the exact object from the store to our ref variable so that it doesn't get mutated on accident
-    const prevChromosome = store.getters.getChromosome as Chromosome;
+    const prevChromosome = store.state.chromosome;
     backboneChromosome.value = chromosomeOptions.value.filter(c => c.chromosome === prevChromosome.chromosome)[0] ?? null;
 
     if (backboneChromosome.value != null)
     {
       maxPosition.value = prevChromosome.seqLength;
-      startPosition.value = store.getters.getStartPosition ?? 0;
-      stopPosition.value = store.getters.getStopPosition ?? 0;
+      startPosition.value = store.state.startPos ?? 0;
+      stopPosition.value = store.state.stopPos ?? 0;
     }
   }
 
-  if (store.getters.getGene)
+  if (store.state.gene)
   {
-    const prevGene = store.getters.getGene as Gene;
+    const prevGene = store.state.gene;
     backboneGene.value = prevGene;
-    geneOptionStartPosition.value = store.getters.getStartPosition ?? 0;
-    geneOptionStopPosition.value = store.getters.getStopPosition ?? 0;
-    if (!store.getters.getChromosome && backboneSpecies.value != null)
+    geneOptionStartPosition.value = store.state.startPos ?? 0;
+    geneOptionStopPosition.value = store.state.stopPos ?? 0;
+    if (!store.state.chromosome && backboneSpecies.value != null)
     {
       // If chromosome not present in the store, set it based on the gene
       const chromosome = await SpeciesApi.getChromosomeInfo(prevGene.chromosome, backboneAssembly.value.key);
@@ -562,9 +563,9 @@ async function prepopulateConfigOptions()
   }
   
   // Pre-populate previously selected comparative species
-  if (store.getters.getComparativeSpecies)
+  if (store.state.comparativeSpecies)
   {
-    const prevComparativeSpecies = store.getters.getComparativeSpecies as Species[];
+    const prevComparativeSpecies = store.state.comparativeSpecies;
     const selections: ComparativeSpeciesSelection[] = [];
     prevComparativeSpecies.forEach(s => {
       selections.push({
