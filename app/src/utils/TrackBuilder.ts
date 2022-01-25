@@ -50,8 +50,6 @@ export async function createSyntenyTracks(comparativeSpecies: Species[], backbon
     const track = createSyntenyTrackFromSpeciesSyntenyData(speciesSyntenyData, backboneStart, backboneStop, basePairToHeightRatio, syntenyThreshold, startingSVGYPos);
     tracks.push(track);
   });
-
-  console.log(tracks);
   return tracks;
 }
 
@@ -59,7 +57,7 @@ export function createSyntenyTrackFromSpeciesSyntenyData(speciesSyntenyData: Spe
 {
   console.debug(`-- Building synteny track for species: ${speciesSyntenyData.speciesName} / ${speciesSyntenyData.mapName} --`);
   const trackSections = splitLevel1And2RegionsIntoSections(speciesSyntenyData.regionData, backboneStart, backboneStop, basePairToHeightRatio, syntenyThreshold);
-  return new Track({ speciesName: speciesSyntenyData.speciesName, sections: trackSections, mapName: speciesSyntenyData.mapName, isSyntenyTrack: true, startingSVGY: startingSVGYPos, rawSyntenyData: speciesSyntenyData, type: 'comparative' });
+  return new Track({ speciesName: speciesSyntenyData.speciesName, speciesMap: speciesSyntenyData.mapKey, sections: trackSections, mapName: speciesSyntenyData.mapName, isSyntenyTrack: true, startingSVGY: startingSVGYPos, rawSyntenyData: speciesSyntenyData, type: 'comparative' });
 }
 
 /**
@@ -67,7 +65,17 @@ export function createSyntenyTrackFromSpeciesSyntenyData(speciesSyntenyData: Spe
  */
 export async function createBackboneDataTracks(species: Species, chromosome: Chromosome, startPos: number, stopPos: number, basePairToHeightRatio: number, isComparative: boolean, syntenyThreshold: number, startingSVGYPos: number)
 {
+  
   const genes = await SpeciesApi.getGenesByRegion(chromosome.chromosome, startPos, stopPos, species.defaultMapKey);
+  return createGeneTrackFromGenesData(genes, species.name, startPos, stopPos, basePairToHeightRatio, isComparative, syntenyThreshold, startingSVGYPos);
+}
+
+/**
+ * Creates the comparative data tracks (currently just genes)
+ */
+export async function createComparativeDataTracks(species: Track, chromosome: Chromosome, startPos: number, stopPos: number, basePairToHeightRatio: number, isComparative: boolean, syntenyThreshold: number, startingSVGYPos: number)
+{
+  const genes = await SpeciesApi.getGenesByRegion(chromosome.chromosome, startPos, stopPos, species.speciesMap ?? 0);
   return createGeneTrackFromGenesData(genes, species.name, startPos, stopPos, basePairToHeightRatio, isComparative, syntenyThreshold, startingSVGYPos);
 }
 
@@ -120,6 +128,7 @@ export function createGeneTrackFromGenesData(genes: Gene[], speciesName: string,
           cutoff: stopPos, 
           offsetCount: gene.start - previousBlockBackboneStop,
           basePairToHeightRatio: basePairToHeightRatio,
+          color: '#000000',
           shape: 'rect',
           gene: gene,
           hiddenGenes: hiddenSections.length > 0 ? hiddenSections : []

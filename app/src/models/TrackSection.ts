@@ -12,6 +12,7 @@ interface TrackSectionParams
   cutoff: number; // last base pair that is displayed for the backbone
   offsetCount?: number; // number of base pairs before this section should begin, useful for knowing when to begin drawing the section
   basePairToHeightRatio: number; // number of base pairs per unit of height in the SVG, use the Resolution module to get the correct ratio
+  color?: string; // explicitly defined color of the section
   shape: 'rect' | 'line';
   gene?: Gene; // optional - the gene that this section represents
   hiddenGenes?: TrackSection[]; // optional - list of gene track sections that are hidden due to threshold or contained by this section
@@ -27,6 +28,7 @@ export default class TrackSection
   chromosome: string = '';
   chainLevel?: number;
   gene?: Gene;
+  trackColor: string = '';
   isHovered: boolean = false;
   hiddenGenes?: TrackSection[] = [];
   shape: 'rect' | 'line' = 'rect';
@@ -45,6 +47,7 @@ export default class TrackSection
     this.backboneStop = params.backboneStop;
     this.chromosome = params.chromosome;
     this.gene = params.gene;
+    this.trackColor = params.color ?? '';
     this.hiddenGenes = params.hiddenGenes;
     this.shape = params.shape;
     this._backboneCutoff = params.cutoff;
@@ -58,7 +61,10 @@ export default class TrackSection
 
   public get color()
   {
-    return Chromosome.getColor(this.chromosome);
+    let color;
+    color = Chromosome.getColor(this.chromosome);
+    this.trackColor == '' ? color : color = this.trackColor;
+    return color;
   }
 
   public get startBPLabel()

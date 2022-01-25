@@ -8,6 +8,7 @@ interface TrackParams
   speciesName: string;
   sections: TrackSection[];
   mapName?: string;
+  speciesMap?: number;
   isSyntenyTrack?: boolean;
   startingSVGY: number;
   type: 'backbone' | 'comparative' | 'gene';
@@ -27,6 +28,7 @@ export default class Track
   sections: TrackSection[] = [];
   name: string;
   mapName?: string;
+  speciesMap?: Number;
   labels: Label[] = [];
   startingSVGY: number = 0;
   type = 'backbone';
@@ -38,6 +40,7 @@ export default class Track
     this.name = params.speciesName;
     this.sections = params.sections;
     this.mapName = params.mapName;
+    this.speciesMap = params.speciesMap;
     this.startingSVGY = params.startingSVGY;
     this.type = params.type;
     this.rawGeneData = params.rawGeneData;
