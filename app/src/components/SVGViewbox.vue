@@ -68,9 +68,9 @@
 
      <!-- Navigation buttons -->
     <image href="../../node_modules/primeicons/raw-svg/chevron-up.svg" :x="SVGConstants.overviewPanelWidth + (SVGConstants.detailsPanelWidth / 2)" :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
-    <rect class="navigation-btn" :class="{'disabled': isNavigationDisabled }" @click="navigateUp" :x="SVGConstants.overviewPanelWidth" :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
+    <rect class="navigation-btn" :class="{'disabled': isNavigationUpDisabled }" @click="navigateUp" :x="SVGConstants.overviewPanelWidth" :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
     <image href="../../node_modules/primeicons/raw-svg/chevron-down.svg" :x="SVGConstants.overviewPanelWidth + (SVGConstants.detailsPanelWidth / 2)" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
-    <rect class="navigation-btn" :class="{'disabled': isNavigationDisabled }" @click="navigateDown" :x="SVGConstants.overviewPanelWidth" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
+    <rect class="navigation-btn" :class="{'disabled': isNavigationDownDisabled }" @click="navigateDown" :x="SVGConstants.overviewPanelWidth" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
 
     <TooltipSVG :tooltip-data="store.state.tooltipData" />
 
@@ -292,12 +292,11 @@ const updateDetailsPanel = async () => {
     }
 
     // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
-    console.log(selectionTrackSets);
     selectionTrackSets.forEach(trackSet => {
-      const smallerTrackSet = trackSet.getSmallerRegion(zoomedSelection.basePairStart, zoomedSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold);
-      if (smallerTrackSet)
+      const visibleTrackSet = trackSet.getVisibleRegion(zoomedSelection.basePairStart, zoomedSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold);
+      if (visibleTrackSet)
       {
-        detailTrackSets.value.push(smallerTrackSet);
+        detailTrackSets.value.push(visibleTrackSet);
       }
     });
   }
@@ -369,20 +368,75 @@ function removeSelectionDataTracks()
 }
 
 const navigateUp = () => {
-  if (isNavigationDisabled.value) return;
+  if (isNavigationUpDisabled.value) return;
 
-  console.log('Navigate Up placeholder');
+  const selectedRegion = store.state.selectedBackboneRegion;
+  // Adjust the inner selection on the selected region
+  selectedRegion.moveInnerSelectionUp(store.state.overviewBasePairToHeightRatio);
+  store.dispatch('setSelectedBackboneRegion', selectedRegion);
+
+  // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
+  detailTrackSets.value = [];
+  selectionTrackSets.forEach(trackSet => {
+    if (!selectedRegion.innerSelection) return;
+
+    const visibleTrackSet = trackSet.getVisibleRegion(selectedRegion.innerSelection.basePairStart, selectedRegion.innerSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold);
+    if (visibleTrackSet)
+    {
+      detailTrackSets.value.push(visibleTrackSet);
+    }
+  });
 };
 
 const navigateDown = () => {
-  if (isNavigationDisabled.value) return;
+  if (isNavigationDownDisabled.value) return;
 
-  console.log('Navigate Down placeholder');
+  const selectedRegion = store.state.selectedBackboneRegion;
+  // Adjust the inner selection on the selected region
+  selectedRegion.moveInnerSelectionDown(store.state.overviewBasePairToHeightRatio);
+  store.dispatch('setSelectedBackboneRegion', selectedRegion);
+
+  // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
+  detailTrackSets.value = [];
+  selectionTrackSets.forEach(trackSet => {
+    if (!selectedRegion.innerSelection) return;
+
+    const visibleTrackSet = trackSet.getVisibleRegion(selectedRegion.innerSelection.basePairStart, selectedRegion.innerSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold);
+    if (visibleTrackSet)
+    {
+      detailTrackSets.value.push(visibleTrackSet);
+    }
+  });
 };
 
-const isNavigationDisabled = computed(() => {
+const isNavigationUpDisabled = computed(() => {
   const selectedRegion = store.state.selectedBackboneRegion;
-  return selectedRegion.zoomLevel <= 1;
+  if (selectedRegion.zoomLevel <= 1)
+  {
+    return true;
+  }
+
+  if (selectedRegion.innerSelection)
+  {
+    return selectedRegion.baseSelection.basePairStart >= selectedRegion.innerSelection.basePairStart;
+  }
+
+  return false;
+});
+
+const isNavigationDownDisabled = computed(() => {
+  const selectedRegion = store.state.selectedBackboneRegion;
+  if (selectedRegion.zoomLevel <= 1)
+  {
+    return true;
+  }
+
+  if (selectedRegion.innerSelection)
+  {
+    return selectedRegion.baseSelection.basePairStop <= selectedRegion.innerSelection.basePairStop;
+  }
+
+  return false;
 });
 </script>
 
@@ -400,7 +454,7 @@ rect.panel
 
   &.detailed
   {
-    cursor: crosshair
+    cursor: crosshair;
   }
 }
 
