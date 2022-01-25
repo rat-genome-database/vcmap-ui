@@ -53,7 +53,7 @@
         :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
 
       <BackboneTrackSVG v-else
-        is-selectable 
+        is-selectable is-detailed
         :pos-x="getComparativePanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :track="trackSet.speciesTrack as Track" />
 
       <template v-if="trackSet.dataTracks.length > 0">
