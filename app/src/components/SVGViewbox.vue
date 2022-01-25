@@ -15,18 +15,18 @@
     
     <text class="label medium bold" :x="SVGConstants.overviewTitleXPosition" :y="SVGConstants.panelTitleYPosition">Overview</text>
     <template v-for="(trackSet, index) in overviewTrackSets" :key="trackSet">
-      <text class="label small" :x="getOverviewPanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition" :y="SVGConstants.trackLabelYPosition">{{trackSet.speciesTrack.name}}</text>
-      <text class="label small" :x="getOverviewPanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
+      <text class="label small" :x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :y="SVGConstants.trackLabelYPosition">{{trackSet.speciesTrack.name}}</text>
+      <text class="label small" :x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
       <TrackSVG v-if="index != 0"
         show-chromosome
         show-synteny-on-hover
         show-start-stop
-        :pos-x="getOverviewPanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition"
+        :pos-x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition"
         :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
 
-      <BackboneTrackSVG v-else
+      <BackboneTrackSVG v-else 
         is-selectable 
-        :pos-x="getOverviewPanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition" :track="trackSet.speciesTrack as Track" />
+        :pos-x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :track="trackSet.speciesTrack as Track" />
     </template>
 
 
@@ -76,7 +76,7 @@
   <VCMapDialog v-model:show="showDialog" :header="dialogHeader" :message="dialogMessage" />
 </template>
 
-<script setup lang="ts" >
+<script setup lang="ts">
 import Track from '@/models/Track';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useStore } from 'vuex';
@@ -141,6 +141,8 @@ watch(() => store.state.detailedBasePairRange, () => {
 });
 
 const updateOverviewPanel = async () => {
+  const overviewUpdateStart = Date.now();
+
   const backboneSpecies = store.state.species;
   const backboneChromosome = store.state.chromosome;
   const backboneStart = store.state.startPos;
@@ -191,9 +193,13 @@ const updateOverviewPanel = async () => {
     const comparativeTrackSet = new TrackSet(track, []);
     overviewTrackSets.value.push(comparativeTrackSet);
   }
+
+  console.log(`Update overview time: ${(Date.now() - overviewUpdateStart)} ms`);
 };
 
 const updateDetailsPanel = async () => {
+
+  const detailedUpdateStart = Date.now();
 
   removeSelectionDataTracks();
 
@@ -296,12 +302,14 @@ const updateDetailsPanel = async () => {
     selectionTrackSets = [];
     detailTrackSets.value = [];
   }
+
+  console.log(`Update detailed time: ${(Date.now() - detailedUpdateStart)} ms`);
 };
 
 /**
  * Gets the offset of the X position relative to the backbone species track
  */
-const getOverviewPanelTrackXOffset = (trackNumber: number, trackType: string, dataTrackNum?: number) => {
+const getOverviewPanelTrackXOffset = (trackNumber: number) => {
   let totalTracks = trackNumber;
   let offset = 0;
 

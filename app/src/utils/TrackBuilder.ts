@@ -51,7 +51,6 @@ export async function createSyntenyTracks(comparativeSpecies: Species[], backbon
     tracks.push(track);
   });
 
-  console.log(tracks);
   return tracks;
 }
 

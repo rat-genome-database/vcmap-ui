@@ -18,6 +18,7 @@ import ColorPicker from 'primevue/colorpicker';
 import Message from 'primevue/message';
 import InlineMessage from 'primevue/inlinemessage';
 import Dialog from 'primevue/dialog';
+import Slider from 'primevue/slider';
 
 /**
  * Add any plugins/configs that you want to be globally registered:
@@ -45,6 +46,7 @@ const COMPONENTS: {[key: string]: Component} = {
   'Message': Message,
   'InlineMessage': InlineMessage,
   'Dialog': Dialog,
+  'Slider': Slider,
 };
 
 /**
