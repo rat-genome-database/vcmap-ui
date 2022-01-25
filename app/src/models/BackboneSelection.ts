@@ -29,6 +29,9 @@ export default class BackboneSelection
   innerSelection?: SelectedRegion;
   zoomLevel: number = 1;
 
+
+  private shiftPercent: number = 0.2; // TODO: configurable?
+
   constructor(baseSelection: SelectedRegion, chromosome?: Chromosome)
   {
     this.baseSelection = baseSelection;
@@ -73,8 +76,8 @@ export default class BackboneSelection
 
     const innerSelectionLength = this.innerSelection.basePairStop - this.innerSelection.basePairStart;
 
-    let newStart = this.innerSelection.basePairStart - innerSelectionLength;
-    let newStop = this.innerSelection.basePairStop - innerSelectionLength;
+    let newStart = this.innerSelection.basePairStart - innerSelectionLength * this.shiftPercent;
+    let newStop = this.innerSelection.basePairStop - innerSelectionLength * this.shiftPercent;
     if (newStart < this.baseSelection.basePairStart)
     {
       newStart = this.baseSelection.basePairStart;
@@ -93,8 +96,8 @@ export default class BackboneSelection
 
     const innerSelectionLength = this.innerSelection.basePairStop - this.innerSelection.basePairStart;
 
-    let newStart = this.innerSelection.basePairStart + innerSelectionLength;
-    let newStop = this.innerSelection.basePairStop + innerSelectionLength;
+    let newStart = this.innerSelection.basePairStart + innerSelectionLength * this.shiftPercent;
+    let newStop = this.innerSelection.basePairStop + innerSelectionLength * this.shiftPercent;
     if (newStop > this.baseSelection.basePairStop)
     {
       newStart = this.baseSelection.basePairStop - innerSelectionLength;
