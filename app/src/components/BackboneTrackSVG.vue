@@ -10,16 +10,6 @@
     </linearGradient>
   </defs>
 
-  <template v-for="(label, index) in track.labels" :key="index">
-    <text v-if="label.isVisible" 
-      data-test="bp-label"
-      class="label small" 
-      :x="posX - (SVGConstants.trackWidth/2)" 
-      :y="index > 0 ? label.svgY + END_LABEL_Y_OFFSET : label.svgY + START_LABEL_Y_OFFSET">
-      {{label.text}}
-    </text>
-  </template>
-
   <template v-for="(section, index) in track.sections" :key="index">
 
     <!-- Track SVG -->
@@ -47,6 +37,17 @@
       text-anchor="middle">
       {{section.chromosome}}
     </text>
+
+    <!-- BP labels -->
+    <template v-for="(label, index) in track.labels" :key="index">
+      <text v-if="label.isVisible" 
+        data-test="bp-label"
+        class="label small" 
+        :x="posX - (SVGConstants.trackWidth/2)" 
+        :y="getAdjustedLabelY(label, index)">
+        {{label.text}}
+      </text>
+    </template>
 
     <!-- Selected Region on Track -->
     <rect v-if="isSelectable && selectedRegion.baseSelection.svgHeight > 0"
@@ -80,12 +81,13 @@
     @mousemove="updateSelectionHeight"
     @mouseup="completeSelect"
     @mouseleave="completeSelect" />
+
 </template>
 
 <script lang="ts" setup>
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 import TooltipData from '@/models/TooltipData';
-import Track from '@/models/Track';
+import Track, { Label } from '@/models/Track';
 import TrackSection from '@/models/TrackSection';
 import { toRefs } from '@vue/reactivity';
 import { ref, watch } from 'vue';
@@ -115,6 +117,7 @@ interface Props
   showDataOnHover?: boolean;
   posX: number;
   track: Track;
+  isDetailed?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -123,24 +126,6 @@ const props = defineProps<Props>();
 toRefs(props);
 const selectedRegion = ref(new BackboneSelection(new SelectedRegion(0,0,0,0), store.state.chromosome ?? undefined));
 
-// watch(() => props.track, () => {
-//   if (props.isSelectable && store.state.selectedBackboneRegion)
-//   {
-//     // There was an existing selection on this track so let's recreate it
-//     const selection = store.state.selectedBackboneRegion;
-//     const baseSelection = selection.baseSelection;
-//     const startingYPos = SVGConstants.overviewTrackYPosition;
-
-//     const selectionStart = (baseSelection.basePairStart < store.state.startPos) ? store.state.startPos : baseSelection.basePairStart;
-//     const selectionStop = (baseSelection.basePairStop > store.state.stopPos) ? store.state.stopPos : baseSelection.basePairStop;
-    
-//     baseSelection.svgHeight = (selectionStop - selectionStart) / store.state.overviewBasePairToHeightRatio;
-//     baseSelection.svgYPoint = ((selectionStart - store.state.startPos) / store.state.overviewBasePairToHeightRatio) + startingYPos;
-//     selectedRegion.value = selection;
-//     store.dispatch('setSelectedBackboneRegion', selectedRegion.value);
-//   }
-// });
-
 watch(() => store.state.selectedBackboneRegion, (newVal: BackboneSelection, oldVal: BackboneSelection) => {
   // Watch for possible clear out of the selected backbone region
   if (props.isSelectable && oldVal.baseSelection.svgHeight > 0 && newVal.baseSelection.svgHeight === 0)
@@ -148,6 +133,22 @@ watch(() => store.state.selectedBackboneRegion, (newVal: BackboneSelection, oldV
     selectedRegion.value = new BackboneSelection(new SelectedRegion(0,0,0,0), store.state.chromosome ?? undefined);
   }
 });
+
+const getAdjustedLabelY = (label: Label, index: number) => {
+  if (props.isDetailed)
+  {
+    if (label.svgY - SVGConstants.panelTitleHeight < 10)
+    {
+      return label.svgY + 3;
+    }
+    else if (label.svgY - (SVGConstants.panelTitleHeight + (SVGConstants.viewboxHeight -  SVGConstants.navigationButtonHeight)) < 10)
+    {
+      return label.svgY;
+    }
+  }
+
+  return index > 0 ? label.svgY + END_LABEL_Y_OFFSET : label.svgY + START_LABEL_Y_OFFSET;
+};
 
 const initSelectStart = (event: any, section: TrackSection, sectionIndex: number) => {
   if (!props.isSelectable) return;

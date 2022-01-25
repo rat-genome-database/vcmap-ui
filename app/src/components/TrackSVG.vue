@@ -27,7 +27,7 @@
       @mouseenter="onMouseEnter($event, section, true)"
       @mouseleave="onMouseLeave(section)"
       :x="posX + width" 
-      :y="section.svgY + LABEL_Y_OFFSET">
+      :y="getGeneLabelY(section, index)">
       - {{section.geneLabel}}
     </text>
 
@@ -120,6 +120,11 @@ const props = defineProps<Props>();
 
 //Converts each property in this object to its own reactive prop
 toRefs(props);
+
+const getGeneLabelY = (section: TrackSection, index: number) => {
+  // If first gene label is too close to the top of the detailed panel, add some extra top margin
+  return (index === 0 && section.svgY - SVGConstants.panelTitleHeight < 10) ? section.svgY + 7 : section.svgY + LABEL_Y_OFFSET;
+};
 
 const onMouseEnter = (event: any, section: TrackSection, isGeneLabel: boolean) => {
   section.isHovered = true;

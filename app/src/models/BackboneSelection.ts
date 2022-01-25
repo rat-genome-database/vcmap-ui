@@ -63,4 +63,44 @@ export default class BackboneSelection
     this.innerSelection = new SelectedRegion(innerSVGYPoint, innerSVGHeight, detailedStart, detailedStop);
     return this.innerSelection;
   }
+
+  public moveInnerSelectionUp(overviewBasePairToHeightRatio: number)
+  {
+    if (!this.innerSelection)
+    {
+      return;
+    }
+
+    const innerSelectionLength = this.innerSelection.basePairStop - this.innerSelection.basePairStart;
+
+    let newStart = this.innerSelection.basePairStart - innerSelectionLength;
+    let newStop = this.innerSelection.basePairStop - innerSelectionLength;
+    if (newStart < this.baseSelection.basePairStart)
+    {
+      newStart = this.baseSelection.basePairStart;
+      newStop = this.baseSelection.basePairStart + innerSelectionLength;
+    }
+
+    return this.generateInnerSelection(newStart, newStop, overviewBasePairToHeightRatio);
+  }
+
+  public moveInnerSelectionDown(overviewBasePairToHeightRatio: number)
+  {
+    if (!this.innerSelection)
+    {
+      return;
+    }
+
+    const innerSelectionLength = this.innerSelection.basePairStop - this.innerSelection.basePairStart;
+
+    let newStart = this.innerSelection.basePairStart + innerSelectionLength;
+    let newStop = this.innerSelection.basePairStop + innerSelectionLength;
+    if (newStop > this.baseSelection.basePairStop)
+    {
+      newStart = this.baseSelection.basePairStop - innerSelectionLength;
+      newStop = this.baseSelection.basePairStop;
+    }
+
+    return this.generateInnerSelection(newStart, newStop, overviewBasePairToHeightRatio);
+  }
 }

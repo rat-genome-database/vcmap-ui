@@ -17,7 +17,7 @@ export default class TrackSet
     this.dataTracks = dataTracks;
   }
 
-  public getSmallerRegion(start: number, stop: number, basePairToHeightRatio: number, syntenyThreshold: number)
+  public getVisibleRegion(start: number, stop: number, basePairToHeightRatio: number, syntenyThreshold: number)
   {
     let convertedSpeciesTrack: Track | undefined;
     if (this.speciesTrack.type === 'backbone')

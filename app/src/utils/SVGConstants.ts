@@ -5,7 +5,7 @@ export default {
   detailsTitleXPosition: 310,
   panelTitleYPosition: 15,
   panelTitleHeight: 55,
-  backboneXPosition: 240,
+  backboneXPosition: 260,
   viewboxHeight: 440,
   trackWidth: 20,
   dataTrackWidth: 10,

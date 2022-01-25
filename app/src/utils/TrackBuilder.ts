@@ -179,7 +179,7 @@ function splitBlocksAndGapsIntoSections(regions: SyntenyRegionData[], backboneSt
 
   const filteredRegions = regions.filter(r => {
     // Filter out blocks that are not at least partially in the selected/zoomed-in backbone region
-    return r.block.backboneStop > backboneStart && r.block.backboneStart < backboneStop
+    return r.block.backboneStop > backboneStart && r.block.backboneStart < backboneStop;
   });
   
   filteredRegions.forEach(region => {
