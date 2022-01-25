@@ -174,40 +174,8 @@ const updateOverviewPanel = async () => {
   store.dispatch('setOverviewResolution', backboneStop - backboneStart);
   let backboneTrack = createBackboneTrack(backboneSpecies, backboneChromosome, backboneStart, backboneStop, store.state.overviewBasePairToHeightRatio, SVGConstants.overviewTrackYPosition);
 
-  let tempBackboneTracks = await createBackboneDataTracks(backboneSpecies, backboneChromosome, backboneStart, backboneStop, store.state.overviewBasePairToHeightRatio, false, store.state.overviewSyntenyThreshold, SVGConstants.overviewTrackYPosition) ?? null;
-  if (backboneTrack != null && tempBackboneTracks != null)
-  {
-    if (store.state.backboneDataTracks.length > 0)
-    {
-      let backboneDataTracks = store.state.backboneDataTracks;
-      let overviewTrackPresent = false;
-      for (let index = 0; index < backboneDataTracks.length; index++)
-      {
-        let dataTrack = backboneDataTracks[index];
-        if (dataTrack.name == tempBackboneTracks.name)
-        {
-          overviewTrackPresent = true;
-          break;
-        }
-      }
-
-      if (overviewTrackPresent)
-      {
-        store.commit('changeBackboneDataTrack', tempBackboneTracks);
-      }
-      else
-      {
-        setBackboneDataTracks(tempBackboneTracks);
-      }
-    }
-    else
-    {
-      setBackboneDataTracks(tempBackboneTracks);
-    }
-
-    const backboneTrackSet = new TrackSet(backboneTrack, [tempBackboneTracks]);
-    overviewTrackSets.value.push(backboneTrackSet);
-  }
+  const backboneTrackSet = new TrackSet(backboneTrack, []);
+  overviewTrackSets.value.push(backboneTrackSet);
 
   if (store.state.comparativeSpecies.length === 0)
   {
@@ -295,9 +263,9 @@ const updateDetailsPanel = async () => {
       {
         setBackboneDataTracks(tempBackboneTracks);
       }
-
-      selectionTrackSets.push(new TrackSet(backboneSelectionTrack, [tempBackboneTracks]));
     }
+
+    selectionTrackSets.push(new TrackSet(backboneSelectionTrack, [tempBackboneTracks]));
 
     if (store.state.comparativeSpecies.length === 0)
     {
@@ -324,7 +292,7 @@ const updateDetailsPanel = async () => {
     }
 
     // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
-    console.log('Trimming selection TrackSets to be between ', zoomedSelection.basePairStart, zoomedSelection.basePairStop);
+    console.log(selectionTrackSets);
     selectionTrackSets.forEach(trackSet => {
       const smallerTrackSet = trackSet.getSmallerRegion(zoomedSelection.basePairStart, zoomedSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold);
       if (smallerTrackSet)
