@@ -26,7 +26,9 @@ describe('Zoom', () => {
     backboneDataTracks: [],
     configTab: 0,
     tooltipData: null,
-    detailedBasePairRange: { start: 0, stop: 0 }
+    detailedBasePairRange: { start: 0, stop: 0 },
+    isDetailedPanelUpdating: false,
+    isOverviewPanelUpdating: false,
   };
 
   beforeEach(() => {
