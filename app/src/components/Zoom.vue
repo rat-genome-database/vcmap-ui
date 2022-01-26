@@ -1,6 +1,6 @@
 <template>
-  <span>{{zoomLevel}}x</span>
-  <Slider class="zoom-slider" v-model="zoomLevel" :step="1" :min="1" :max="100" @slideend="onZoomSlideEnd" />
+  <span data-test="zoom-level-label">{{zoomLevel}}x</span>
+  <Slider class="zoom-slider" data-test="zoom-slider" v-model="zoomLevel" :step="1" :min="1" :max="100" @slideend="onZoomSlideEnd" />
 </template>
 
 <script lang="ts" setup>
