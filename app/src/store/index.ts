@@ -35,6 +35,9 @@ export interface VCMapState
   tooltipData: TooltipData | null;
 
   detailedBasePairRange: BasePairRange;
+
+  isDetailedPanelUpdating: boolean;
+  isOverviewPanelUpdating: boolean;
 }
 
 const vuexLocal = new VuexPersistence<VCMapState>({
@@ -65,6 +68,9 @@ export default createStore({
     tooltipData: null,
 
     detailedBasePairRange: { start: 0, stop: 0 },
+
+    isDetailedPanelUpdating: false,
+    isOverviewPanelUpdating: false,
   }),
 
   mutations: {
@@ -135,6 +141,12 @@ export default createStore({
     tooltipData(state: VCMapState, tooltip: TooltipData) {
       state.tooltipData = tooltip;
     },
+    isDetailedPanelUpdating(state: VCMapState, isUpdating: boolean) {
+      state.isDetailedPanelUpdating = isUpdating;
+    },
+    isOverviewPanelUpdating(state: VCMapState, isUpdating: boolean) {
+      state.isOverviewPanelUpdating = isUpdating;
+    },
   },
 
   actions: {
@@ -184,6 +196,12 @@ export default createStore({
     },
     setComparativeSpecies(context: ActionContext<VCMapState, VCMapState>, species: Species[]) {
       context.commit('comparativeSpecies', species);
+    },
+    setIsDetailedPanelUpdating(context: ActionContext<VCMapState, VCMapState>, isUpdating: boolean) {
+      context.commit('isDetailedPanelUpdating', isUpdating);
+    },
+    setIsOverviewPanelUpdating(context: ActionContext<VCMapState, VCMapState>, isUpdating: boolean) {
+      context.commit('isOverviewPanelUpdating', isUpdating);
     },
   },
 

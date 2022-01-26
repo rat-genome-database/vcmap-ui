@@ -1,5 +1,5 @@
 <template>
-  <ProgressBar class="vcmap-loader" :mode="(isLoading) ? 'indeterminate' : 'determinate'" :value="0" :showValue="false"/>
+  <ProgressBar class="vcmap-loader" :mode="(isOverviewLoading || store.state.isDetailedPanelUpdating) ? 'indeterminate' : 'determinate'" :value="0" :showValue="false"/>
   <svg :viewBox="'0 0 1000 ' + SVGConstants.viewboxHeight" xmlns="http://www.w3.org/2000/svg" id="svg-wrapper">
 
     <!-- Outside panel -->
@@ -15,18 +15,18 @@
     
     <text class="label medium bold" :x="SVGConstants.overviewTitleXPosition" :y="SVGConstants.panelTitleYPosition">Overview</text>
     <template v-for="(trackSet, index) in overviewTrackSets" :key="trackSet">
-      <text class="label small" :x="getOverviewPanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition" :y="SVGConstants.trackLabelYPosition">{{trackSet.speciesTrack.name}}</text>
-      <text class="label small" :x="getOverviewPanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
+      <text class="label small" :x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :y="SVGConstants.trackLabelYPosition">{{trackSet.speciesTrack.name}}</text>
+      <text class="label small" :x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
       <TrackSVG v-if="index != 0"
         show-chromosome
         show-synteny-on-hover
         show-start-stop
-        :pos-x="getOverviewPanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition"
+        :pos-x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition"
         :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
 
-      <BackboneTrackSVG v-else
+      <BackboneTrackSVG v-else 
         is-selectable 
-        :pos-x="getOverviewPanelTrackXOffset(index, 'track') + SVGConstants.backboneXPosition" :track="trackSet.speciesTrack as Track" />
+        :pos-x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :track="trackSet.speciesTrack as Track" />
     </template>
 
 
@@ -43,7 +43,7 @@
         :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
 
       <BackboneTrackSVG v-else
-        is-selectable is-detailed
+        is-detailed
         :pos-x="getComparativePanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :track="trackSet.speciesTrack as Track" />
 
       <template v-if="trackSet.dataTracks.length > 0">
@@ -76,7 +76,7 @@
   <VCMapDialog v-model:show="showDialog" :header="dialogHeader" :message="dialogMessage" />
 </template>
 
-<script setup lang="ts" >
+<script setup lang="ts">
 import Track from '@/models/Track';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useStore } from 'vuex';
@@ -99,7 +99,7 @@ const store = useStore(key);
 const { showDialog, dialogHeader, dialogMessage, onError, checkSyntenyResultsOnComparativeSpecies } = useDialog();
 const { startSelectionY, stopSelectionY, initZoomSelection, updateZoomSelection, completeZoomSelection } = useDetailedPanelZoom(store);
 
-const isLoading = ref(false);
+const isOverviewLoading = ref(false);
 const overviewTrackSets = ref<TrackSet[]>([]); // The currently displayed TrackSets in the Overview panel
 const detailTrackSets = ref<TrackSet[]>([]); // The currently displayed TrackSets in the Detailed panel
 
@@ -107,11 +107,11 @@ let comparativeOverviewTracks: Track[] = []; // Keeps track of current comparati
 let selectionTrackSets: TrackSet[] = []; // The track sets for the entire selected region
 
 
-async function attachToProgressLoader(func: () => Promise<any>)
+async function attachToProgressLoader(storeLoadingActionName: string, func: () => Promise<any>)
 {
   try
   {
-    isLoading.value = true;
+    store.dispatch(storeLoadingActionName, true);
     await func();
   }
   catch (err)
@@ -120,7 +120,7 @@ async function attachToProgressLoader(func: () => Promise<any>)
   }
   finally
   {
-    isLoading.value = false;
+    store.dispatch(storeLoadingActionName, false);
   }
 }
 
@@ -131,16 +131,18 @@ onMounted(async () => {
   store.dispatch('setDetailedBasePairRange', { start: 0, stop: 0 });
   store.dispatch('resetBackboneDataTracks');
 
-  await attachToProgressLoader(updateOverviewPanel);
+  await attachToProgressLoader('setIsOverviewPanelUpdating', updateOverviewPanel);
   checkSyntenyResultsOnComparativeSpecies(comparativeOverviewTracks);
 });
 
 watch(() => store.state.detailedBasePairRange, () => {
   removeSelectionDataTracks();
-  attachToProgressLoader(updateDetailsPanel);
+  attachToProgressLoader('setIsDetailedPanelUpdating', updateDetailsPanel);
 });
 
 const updateOverviewPanel = async () => {
+  const overviewUpdateStart = Date.now();
+
   const backboneSpecies = store.state.species;
   const backboneChromosome = store.state.chromosome;
   const backboneStart = store.state.startPos;
@@ -189,9 +191,13 @@ const updateOverviewPanel = async () => {
     const comparativeTrackSet = new TrackSet(track, []);
     overviewTrackSets.value.push(comparativeTrackSet);
   }
+
+  console.log(`Update overview time: ${(Date.now() - overviewUpdateStart)} ms`);
 };
 
 const updateDetailsPanel = async () => {
+  const detailedUpdateStart = Date.now();
+  store.dispatch('setIsDetailedPanelUpdating', true);
 
   removeSelectionDataTracks();
 
@@ -294,12 +300,15 @@ const updateDetailsPanel = async () => {
     selectionTrackSets = [];
     detailTrackSets.value = [];
   }
+
+  store.dispatch('setIsDetailedPanelUpdating', false);
+  console.log(`Update detailed time: ${(Date.now() - detailedUpdateStart)} ms`);
 };
 
 /**
  * Gets the offset of the X position relative to the backbone species track
  */
-const getOverviewPanelTrackXOffset = (trackNumber: number, trackType: string, dataTrackNum?: number) => {
+const getOverviewPanelTrackXOffset = (trackNumber: number) => {
   let totalTracks = trackNumber;
   let offset = 0;
 

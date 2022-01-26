@@ -50,6 +50,7 @@ export async function createSyntenyTracks(comparativeSpecies: Species[], backbon
     const track = createSyntenyTrackFromSpeciesSyntenyData(speciesSyntenyData, backboneStart, backboneStop, basePairToHeightRatio, syntenyThreshold, startingSVGYPos);
     tracks.push(track);
   });
+
   return tracks;
 }
 

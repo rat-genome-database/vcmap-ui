@@ -26,21 +26,25 @@ describe('Zoom', () => {
     backboneDataTracks: [],
     configTab: 0,
     tooltipData: null,
-    detailedBasePairRange: { start: 0, stop: 0 }
+    detailedBasePairRange: { start: 0, stop: 0 },
+    isDetailedPanelUpdating: false,
+    isOverviewPanelUpdating: false,
   };
 
   beforeEach(() => {
     actions = {
-      setZoom: jest.fn()
+      setDetailedBasePairRange: jest.fn()
     };
 
+    state.selectedBackboneRegion = new BackboneSelection(new SelectedRegion(0, 0, 0, 100));
+    state.selectedBackboneRegion.generateInnerSelection(0, 100, 1);
     store = createStore({
       state,
       actions
     });
   });
 
-  it('increase button dispatches new zoom level to store', async () => {
+  it('slider updates when zoom level changes due to manual zoom selection', async () => {
     const wrapper = mount(Zoom, {
       global: {
         plugins: ExternalComponentsHandler.getPlugins(),
@@ -52,29 +56,13 @@ describe('Zoom', () => {
       },
     });
 
-    const increaseZoomBtn = wrapper.get('[data-test="increase-zoom-btn"]');
+    const zoomLevelLabel = wrapper.get('[data-test="zoom-level-label"]');
+    expect(zoomLevelLabel.text()).toEqual('1x');
 
-    await increaseZoomBtn.trigger('click');
-    expect(actions.setZoom).toBeCalledTimes(1);
-    expect(actions.setZoom).toBeCalledWith(expect.anything(), 2);
+    store.state.selectedBackboneRegion.zoomLevel = 2;
+    await wrapper.vm.$nextTick();
+    expect(zoomLevelLabel.text()).toEqual('2x');
   });
 
-  it('increase button dispatches new zoom level to store', async () => {
-    const wrapper = mount(Zoom, {
-      global: {
-        plugins: ExternalComponentsHandler.getPlugins(),
-        components: ExternalComponentsHandler.getComponents(),
-        directives: ExternalComponentsHandler.getDirectives(),
-        provide: {
-          [key as symbol]: store
-        }
-      },
-    });
-
-    const decreaseZoomBtn = wrapper.get('[data-test="decrease-zoom-btn"]');
-
-    await decreaseZoomBtn.trigger('click');
-    expect(actions.setZoom).toBeCalledTimes(1);
-    expect(actions.setZoom).toBeCalledWith(expect.anything(), 0.5);
-  });
+  // TODO... need to trigger moving the zoom slider in the DOM and testing the params of the setDetailedBasePairRange action
 });

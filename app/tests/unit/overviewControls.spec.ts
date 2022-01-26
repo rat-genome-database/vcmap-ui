@@ -28,6 +28,8 @@ describe('OverviewControls', () => {
     backboneDataTracks: [],
     configTab: 0,
     tooltipData: null,
+    isDetailedPanelUpdating: false,
+    isOverviewPanelUpdating: false,
   };
 
   beforeEach(() => {
