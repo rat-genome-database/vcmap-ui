@@ -38,7 +38,7 @@
       <text class="label small" :x="getComparativePanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
       <TrackSVG v-if="index != 0"
         show-chromosome
-        show-start-stop
+        
         :pos-x="getComparativePanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" 
         :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
 
