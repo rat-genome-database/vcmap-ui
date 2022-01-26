@@ -1,5 +1,5 @@
 <template>
-  <ProgressBar class="vcmap-loader" :mode="(isLoading) ? 'indeterminate' : 'determinate'" :value="0" :showValue="false"/>
+  <ProgressBar class="vcmap-loader" :mode="(isOverviewLoading || store.state.isDetailedPanelUpdating) ? 'indeterminate' : 'determinate'" :value="0" :showValue="false"/>
   <svg :viewBox="'0 0 1000 ' + SVGConstants.viewboxHeight" xmlns="http://www.w3.org/2000/svg" id="svg-wrapper">
 
     <!-- Outside panel -->
@@ -99,7 +99,7 @@ const store = useStore(key);
 const { showDialog, dialogHeader, dialogMessage, onError, checkSyntenyResultsOnComparativeSpecies } = useDialog();
 const { startSelectionY, stopSelectionY, initZoomSelection, updateZoomSelection, completeZoomSelection } = useDetailedPanelZoom(store);
 
-const isLoading = ref(false);
+const isOverviewLoading = ref(false);
 const overviewTrackSets = ref<TrackSet[]>([]); // The currently displayed TrackSets in the Overview panel
 const detailTrackSets = ref<TrackSet[]>([]); // The currently displayed TrackSets in the Detailed panel
 
@@ -107,11 +107,11 @@ let comparativeOverviewTracks: Track[] = []; // Keeps track of current comparati
 let selectionTrackSets: TrackSet[] = []; // The track sets for the entire selected region
 
 
-async function attachToProgressLoader(func: () => Promise<any>)
+async function attachToProgressLoader(storeLoadingActionName: string, func: () => Promise<any>)
 {
   try
   {
-    isLoading.value = true;
+    store.dispatch(storeLoadingActionName, true);
     await func();
   }
   catch (err)
@@ -120,7 +120,7 @@ async function attachToProgressLoader(func: () => Promise<any>)
   }
   finally
   {
-    isLoading.value = false;
+    store.dispatch(storeLoadingActionName, false);
   }
 }
 
@@ -131,13 +131,13 @@ onMounted(async () => {
   store.dispatch('setDetailedBasePairRange', { start: 0, stop: 0 });
   store.dispatch('resetBackboneDataTracks');
 
-  await attachToProgressLoader(updateOverviewPanel);
+  await attachToProgressLoader('setIsOverviewPanelUpdating', updateOverviewPanel);
   checkSyntenyResultsOnComparativeSpecies(comparativeOverviewTracks);
 });
 
 watch(() => store.state.detailedBasePairRange, () => {
   removeSelectionDataTracks();
-  attachToProgressLoader(updateDetailsPanel);
+  attachToProgressLoader('setIsDetailedPanelUpdating', updateDetailsPanel);
 });
 
 const updateOverviewPanel = async () => {
@@ -198,8 +198,8 @@ const updateOverviewPanel = async () => {
 };
 
 const updateDetailsPanel = async () => {
-
   const detailedUpdateStart = Date.now();
+  store.dispatch('setIsDetailedPanelUpdating', true);
 
   removeSelectionDataTracks();
 
@@ -303,6 +303,7 @@ const updateDetailsPanel = async () => {
     detailTrackSets.value = [];
   }
 
+  store.dispatch('setIsDetailedPanelUpdating', false);
   console.log(`Update detailed time: ${(Date.now() - detailedUpdateStart)} ms`);
 };
 
