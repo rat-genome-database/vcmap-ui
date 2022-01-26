@@ -54,13 +54,13 @@ const onZoomSlideEnd = (event: { value: number; }) => {
     {
       zoomedStart = selectedRegion.baseSelection.basePairStart;
       // Apply the rest of the region length to the end along with a sanity check to make sure the stop doesn't extend past the base selection
-      zoomedStop = (zoomedStart - lengthDiff > selectedRegion.baseSelection.basePairStop) ? selectedRegion.baseSelection.basePairStop : zoomedStart - lengthDiff;
+      zoomedStop = (zoomedStart - lengthDiff > selectedRegion.baseSelection.basePairStop) ? selectedRegion.baseSelection.basePairStop : zoomedStart + newRegionLength;
     }
     else if (zoomedStop > selectedRegion.baseSelection.basePairStop)
     {
       zoomedStop = selectedRegion.baseSelection.basePairStop;
       // Apply the rest of the region length to the start along with a sanity check to make the start doesn't extend above the base selection
-      zoomedStart = (zoomedStop + lengthDiff < selectedRegion.baseSelection.basePairStart) ? selectedRegion.baseSelection.basePairStart : zoomedStop + lengthDiff;
+      zoomedStart = (zoomedStop + lengthDiff < selectedRegion.baseSelection.basePairStart) ? selectedRegion.baseSelection.basePairStart : zoomedStop - newRegionLength;
     }
   }
 
