@@ -1,4 +1,5 @@
 import { Formatter } from '@/utils/Formatter';
+import BackboneSelection, { SelectedRegion } from './BackboneSelection';
 import Chromosome from './Chromosome';
 import Gene from './Gene';
 
@@ -126,6 +127,23 @@ export default class TrackSection
   {
     // offset height cannot be negative (happens if synteny block starts before start of the backbone region)
     return (this._offsetCount >= 0) ? (this._offsetCount / this._BPToHeightRatio) : 0;
+  }
+
+  /**
+   * Creates a BackboneSelection object based on a desired selected region
+   * @param start starting basepair
+   * @param stop stopping basepair
+   * @param basePairToHeightRatio the ratio of bp/svg height units (depends on what panel the track section is rendered in)
+   * @returns a BackboneSelection object containing an inner selection of the same region
+   */
+  public generateBackboneSelection(start: number, stop: number, basePairToHeightRatio: number)
+  {
+    const startingSVGY = this.svgY + (start - this.sectionStart) / basePairToHeightRatio;
+    const svgHeight = (stop - start) / basePairToHeightRatio;
+
+    const selection = new BackboneSelection(new SelectedRegion(startingSVGY, svgHeight, start, stop));
+    selection.generateInnerSelection(start, stop, basePairToHeightRatio);
+    return selection;
   }
 
   private calculateDisplayedBPRegionRelativeToBackbone()

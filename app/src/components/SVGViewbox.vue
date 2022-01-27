@@ -194,6 +194,15 @@ const updateOverviewPanel = async () => {
     overviewTrackSets.value.push(comparativeTrackSet);
   }
 
+  // Set the backbone selection to the start and stop positions selected on the config screen - the backbone should have just 1 section
+  if (backboneTrack.sections.length > 0)
+  {
+    const selection = backboneTrack.sections[0].generateBackboneSelection(backboneStart, backboneStop, store.state.overviewBasePairToHeightRatio);
+    store.dispatch('setSelectedBackboneRegion', selection);
+    // Trigger an update in the detailed panel
+    store.dispatch('setDetailedBasePairRange', { start: selection.innerSelection?.basePairStart, stop: selection.innerSelection?.basePairStop });
+  }
+
   console.log(`Update overview time: ${(Date.now() - overviewUpdateStart)} ms`);
 };
 
