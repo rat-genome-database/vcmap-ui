@@ -79,11 +79,11 @@
       <line v-if="section.isHovered"
       class="section connection-line"
       :x1="posX + width" :x2="SVGConstants.backboneXPosition" 
-      :y1="section.svgY" :y2="section.svgY" />
+      :y1="section.svgY" :y2="(section.isInverted) ? section.svgY2 : section.svgY" />
     <line v-if="section.isHovered"
       class="section connection-line"
       :x1="posX + width" :x2="SVGConstants.backboneXPosition" 
-      :y1="section.svgY2" :y2="section.svgY2" />
+      :y1="section.svgY2" :y2="(section.isInverted) ? section.svgY : section.svgY2" />
     </template>
   </template>
 </template>

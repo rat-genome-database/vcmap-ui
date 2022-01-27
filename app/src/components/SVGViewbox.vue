@@ -34,23 +34,23 @@
     <text class="label medium bold" :x="SVGConstants.selectedBackboneXPosition" :y="SVGConstants.panelTitleYPosition">Detailed</text>
 
     <template v-for="(trackSet, index) in detailTrackSets" :key="trackSet">
-      <text class="label small" :x="getComparativePanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackLabelYPosition">{{trackSet.speciesTrack.name}}</text>
-      <text class="label small" :x="getComparativePanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
+      <text class="label small" :x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackLabelYPosition">{{trackSet.speciesTrack.name}}</text>
+      <text class="label small" :x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
       <TrackSVG v-if="index != 0"
         show-chromosome
         
-        :pos-x="getComparativePanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" 
+        :pos-x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" 
         :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
 
       <BackboneTrackSVG v-else
         is-detailed
-        :pos-x="getComparativePanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :track="trackSet.speciesTrack as Track" />
+        :pos-x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :track="trackSet.speciesTrack as Track" />
 
       <template v-if="trackSet.dataTracks.length > 0">
         <template v-for="dataTrack, index2 in trackSet.dataTracks" :key="dataTrack.name">
           <TrackSVG v-if="dataTrack.isDisplayed"
             show-gene-label 
-            :pos-x="getComparativePanelTrackXOffset(index, 'datatrack', index2 + 1) + SVGConstants.selectedBackboneXPosition"
+            :pos-x="getDetailedPanelTrackXOffset(index, 'datatrack', index2 + 1) + SVGConstants.selectedBackboneXPosition"
             :width="SVGConstants.dataTrackWidth" :track="dataTrack.track as Track" />
         </template>
       </template>
@@ -328,7 +328,7 @@ const getOverviewPanelTrackXOffset = (trackNumber: number) => {
   return offset;
 };
 
-const getComparativePanelTrackXOffset = (trackNumber: number, trackType: string, dataTrackNum?: number) => {
+const getDetailedPanelTrackXOffset = (trackNumber: number, trackType: string, dataTrackNum?: number) => {
   let totalTracks = trackNumber;
   let offset = 0;
   
@@ -336,7 +336,7 @@ const getComparativePanelTrackXOffset = (trackNumber: number, trackType: string,
   if (trackType == 'datatrack' && dataTrackNum != null)
   {
     //every displayed datatrack will have a buffer of 30 between tracks - if last datatrack
-    totalTracks == 0 ? offset = 30 : offset = (totalTracks * 120) + (dataTrackNum * 50);
+    totalTracks == 0 ? offset = 30 : offset = (totalTracks * 120) + (dataTrackNum * 30);
   }
   else
   {
