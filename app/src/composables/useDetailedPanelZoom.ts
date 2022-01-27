@@ -7,8 +7,8 @@ import SVGConstants from "@/utils/SVGConstants";
 export default function useDetailedPanelZoom(store: Store<VCMapState>) {
   let inSelectMode = false;
   let startingPoint: DOMPoint | { y: number, x: number };
-  const startSelectionY = ref<number>();
-  const stopSelectionY = ref<number>();
+  const startDetailedSelectionY = ref<number>();
+  const stopDetailedSelectionY = ref<number>();
   let svg: SVGSVGElement | null;
 
   onMounted(() => {
@@ -25,7 +25,7 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
 
     inSelectMode = true;
     startingPoint = getMousePosSVG(svg, event);
-    startSelectionY.value = startingPoint.y;
+    startDetailedSelectionY.value = startingPoint.y;
   };
 
   const updateZoomSelection = (event: any) => {
@@ -36,13 +36,13 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
     if (currentSVGPoint.y < startingPoint.y)
     {
       // We are moving above the starting point
-      startSelectionY.value = currentSVGPoint.y;
-      stopSelectionY.value = startingPoint.y;
+      startDetailedSelectionY.value = currentSVGPoint.y;
+      stopDetailedSelectionY.value = startingPoint.y;
     }
     else
     {
       // We are moving below the starting point
-      stopSelectionY.value = currentSVGPoint.y;
+      stopDetailedSelectionY.value = currentSVGPoint.y;
     }
   };
 
@@ -52,26 +52,26 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
     inSelectMode = false;
 
     const selection = store.state.selectedBackboneRegion;
-    if (startSelectionY.value != null && stopSelectionY.value != null && selection.innerSelection != null)
+    if (startDetailedSelectionY.value != null && stopDetailedSelectionY.value != null && selection.innerSelection != null)
     {
       // Calculate start/stop base pairs based on bp to height ratio in the detailed panel
-      const basePairsFromInnerSelection1 = Math.floor((startSelectionY.value - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
+      const basePairsFromInnerSelection1 = Math.floor((startDetailedSelectionY.value - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
       const basePairStart = basePairsFromInnerSelection1 + selection.innerSelection.basePairStart;
 
-      const basePairsFromInnerSelection2 = Math.floor((stopSelectionY.value - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
+      const basePairsFromInnerSelection2 = Math.floor((stopDetailedSelectionY.value - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
       const basePairStop = basePairsFromInnerSelection2 + selection.innerSelection.basePairStart;
 
       store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: basePairStop });
     }
 
     // Clear selection box
-    startSelectionY.value = undefined;
-    stopSelectionY.value = undefined;
+    startDetailedSelectionY.value = undefined;
+    stopDetailedSelectionY.value = undefined;
   };
 
   return {
-    startSelectionY,
-    stopSelectionY,
+    startDetailedSelectionY,
+    stopDetailedSelectionY,
     initZoomSelection,
     updateZoomSelection,
     completeZoomSelection
