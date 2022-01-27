@@ -36,20 +36,20 @@ import { key } from '@/store';
 const store = useStore(key);
 
 const formattedBackboneStart = computed(() => {
-  return Formatter.addCommasToBasePair(store.state.startPos);
+  return Formatter.addCommasToBasePair(0);
 });
 
 const formattedBackboneStop = computed(() => {
-  return Formatter.addCommasToBasePair(store.state.stopPos);
+  return (store.state.chromosome) ? Formatter.addCommasToBasePair(store.state.chromosome.seqLength) : '-';
 });
 
 const backboneLength = computed(() => {
-  if (store.state.stopPos == null || store.state.startPos == null)
+  if (store.state.chromosome == null)
   {
     return '-';
   }
 
-  return Formatter.addCommasToBasePair(store.state.stopPos - store.state.startPos);
+  return Formatter.addCommasToBasePair(store.state.chromosome.seqLength);
 });
 
 const selectionRange = computed(() => {

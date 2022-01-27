@@ -131,6 +131,7 @@ onMounted(async () => {
   store.dispatch('setDetailedBasePairRange', { start: 0, stop: 0 });
   store.dispatch('resetBackboneDataTracks');
 
+
   await attachToProgressLoader('setIsOverviewPanelUpdating', updateOverviewPanel);
   checkSyntenyResultsOnComparativeSpecies(comparativeOverviewTracks);
 });
@@ -163,8 +164,9 @@ const updateOverviewPanel = async () => {
   }
 
   overviewTrackSets.value = [];
-  store.dispatch('setOverviewResolution', backboneStop - backboneStart);
-  let backboneTrack = createBackboneTrack(backboneSpecies, backboneChromosome, backboneStart, backboneStop, store.state.overviewBasePairToHeightRatio, SVGConstants.overviewTrackYPosition);
+  // The backbone is the entire chromosome
+  store.dispatch('setOverviewResolution', backboneChromosome.seqLength);
+  let backboneTrack = createBackboneTrack(backboneSpecies, backboneChromosome, 0, backboneChromosome.seqLength, store.state.overviewBasePairToHeightRatio, SVGConstants.overviewTrackYPosition);
 
   const backboneTrackSet = new TrackSet(backboneTrack, []);
   overviewTrackSets.value.push(backboneTrackSet);
@@ -178,8 +180,8 @@ const updateOverviewPanel = async () => {
   comparativeOverviewTracks = await createSyntenyTracks(
     store.state.comparativeSpecies,
     backboneChromosome,
-    backboneStart, 
-    backboneStop, 
+    0, 
+    backboneChromosome.seqLength, 
     store.state.overviewBasePairToHeightRatio,
     store.state.overviewSyntenyThreshold,
     SVGConstants.overviewTrackYPosition // SVG positioning of the overview tracks will start just underneath the header panels with a bit of space in between
@@ -190,6 +192,15 @@ const updateOverviewPanel = async () => {
     const track = comparativeOverviewTracks[index];
     const comparativeTrackSet = new TrackSet(track, []);
     overviewTrackSets.value.push(comparativeTrackSet);
+  }
+
+  // Set the backbone selection to the start and stop positions selected on the config screen - the backbone should have just 1 section
+  if (backboneTrack.sections.length > 0)
+  {
+    const selection = backboneTrack.sections[0].generateBackboneSelection(backboneStart, backboneStop, store.state.overviewBasePairToHeightRatio);
+    store.dispatch('setSelectedBackboneRegion', selection);
+    // Trigger an update in the detailed panel
+    store.dispatch('setDetailedBasePairRange', { start: selection.innerSelection?.basePairStart, stop: selection.innerSelection?.basePairStop });
   }
 
   console.log(`Update overview time: ${(Date.now() - overviewUpdateStart)} ms`);

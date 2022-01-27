@@ -132,6 +132,10 @@ watch(() => store.state.selectedBackboneRegion, (newVal: BackboneSelection, oldV
   {
     selectedRegion.value = new BackboneSelection(new SelectedRegion(0,0,0,0), store.state.chromosome ?? undefined);
   }
+  else if (props.isSelectable && newVal.baseSelection.svgHeight > 0)
+  {
+    selectedRegion.value = newVal;
+  }
 });
 
 const getAdjustedLabelY = (label: Label, index: number) => {
