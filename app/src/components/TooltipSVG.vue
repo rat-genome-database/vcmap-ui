@@ -12,7 +12,8 @@
     <text v-if="props.tooltipData.genomicSection.gene" data-test="gene-name" class="label small" :x="xPos + 2" :y="props.tooltipData.y + 20">Name: {{props.tooltipData.genomicSection.gene.name}}</text>
     <text data-test="chromosome-name" class="label small" :x="xPos + 2" :y="chromosomeDataStartingPosition">Chromosome: {{props.tooltipData.genomicSection.chromosome}}</text>
     <text data-test="start-stop" class="label small" :x="xPos + 2" :y="chromosomeDataStartingPosition + 10">Region: {{props.tooltipData.genomicSection.startBPLabel}} - {{props.tooltipData.genomicSection.stopBPLabel}}</text>
-    <text v-if="props.tooltipData.genomicSection.chainLevel != null" data-test="level" class="label small" :x="xPos + 2" :y="chromosomeDataStartingPosition + 20">Level: {{props.tooltipData.genomicSection.chainLevel}}</text>
+    <text class="label small" :x="xPos + 2" :y="chromosomeDataStartingPosition + 20">Orientation: {{props.tooltipData.genomicSection.isInverted ? '-' : '+'}}</text>
+    <text v-if="props.tooltipData.genomicSection.chainLevel != null" data-test="level" class="label small" :x="xPos + 2" :y="chromosomeDataStartingPosition + 30">Level: {{props.tooltipData.genomicSection.chainLevel}}</text>
   </template>
   <template v-else-if="props.tooltipData?.genomicSection && props.tooltipData?.isGeneLabel">
     <text class="label small" :x="xPos + 2" :y="props.tooltipData.y + 10">

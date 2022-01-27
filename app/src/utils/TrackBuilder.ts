@@ -223,6 +223,7 @@ function splitBlocksAndGapsIntoSections(regions: SyntenyRegionData[], backboneSt
         basePairToHeightRatio: basePairToHeightRatio,
         shape: 'rect',
         chainLevel: block.chainLevel,
+        isInverted: block.orientation === '-',
       }));
       previousBlockBackboneStop = block.backboneStop;
       return;
@@ -245,6 +246,7 @@ function splitBlocksAndGapsIntoSections(regions: SyntenyRegionData[], backboneSt
           basePairToHeightRatio: basePairToHeightRatio,
           shape: 'line',
           chainLevel: block.chainLevel,
+          isInverted: block.orientation === '-',
         }));
       }
       else if (index === 0)
@@ -261,6 +263,7 @@ function splitBlocksAndGapsIntoSections(regions: SyntenyRegionData[], backboneSt
           basePairToHeightRatio: basePairToHeightRatio,
           shape: 'rect',
           chainLevel: block.chainLevel,
+          isInverted: block.orientation === '-',
         }));
 
         trackSections.push(new TrackSection({
@@ -273,6 +276,7 @@ function splitBlocksAndGapsIntoSections(regions: SyntenyRegionData[], backboneSt
           basePairToHeightRatio: basePairToHeightRatio,
           shape: 'line',
           chainLevel: block.chainLevel,
+          isInverted: block.orientation === '-',
         }));
       }
       else
@@ -289,6 +293,7 @@ function splitBlocksAndGapsIntoSections(regions: SyntenyRegionData[], backboneSt
           basePairToHeightRatio: basePairToHeightRatio,
           shape: 'rect',
           chainLevel: block.chainLevel,
+          isInverted: block.orientation === '-',
         }));
 
         trackSections.push(new TrackSection({
@@ -301,6 +306,7 @@ function splitBlocksAndGapsIntoSections(regions: SyntenyRegionData[], backboneSt
           basePairToHeightRatio: basePairToHeightRatio,
           shape: 'line',
           chainLevel: block.chainLevel,
+          isInverted: block.orientation === '-',
         }));
       }
     });
@@ -319,6 +325,7 @@ function splitBlocksAndGapsIntoSections(regions: SyntenyRegionData[], backboneSt
         basePairToHeightRatio: basePairToHeightRatio,
         shape: 'rect',
         chainLevel: block.chainLevel,
+        isInverted: block.orientation === '-',
       }));
     }
     else
