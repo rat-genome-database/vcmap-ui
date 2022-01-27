@@ -18,20 +18,20 @@
       class="section"
       @mouseenter="onMouseEnter($event, section)"
       @mouseleave="onMouseLeave(section)"
-      :fill="section.isHovered && showDataOnHover ? HIGHLIGHT_COLOR : section.color" 
-      :x="posX" :y="section.svgY" 
-      :width="SVGConstants.trackWidth" 
+      :fill="section.isHovered && showDataOnHover ? HIGHLIGHT_COLOR : section.color"
+      :x="posX" :y="section.svgY"
+      :width="SVGConstants.trackWidth"
       :height="section.height" />
     <line v-else
       data-test="track-section-svg"
       class="section gap"
-      :x1="posX + (SVGConstants.trackWidth / 2)" :x2="posX + (SVGConstants.trackWidth / 2)" 
+      :x1="posX + (SVGConstants.trackWidth / 2)" :x2="posX + (SVGConstants.trackWidth / 2)"
       :y1="section.svgY" :y2="section.svgY + section.height" />
 
     <!-- Chromosome Label -->
-    <text v-if="section.shape !== 'line'" 
-      class="chromosome-label" 
-      :x="posX + (SVGConstants.trackWidth / 2)" 
+    <text v-if="section.shape !== 'line'"
+      class="chromosome-label"
+      :x="posX + (SVGConstants.trackWidth / 2)"
       :y="section.svgY + (section.height / 2)"
       dominant-baseline="middle"
       text-anchor="middle">
@@ -40,10 +40,10 @@
 
     <!-- BP labels -->
     <template v-for="(label, index) in track.labels" :key="index">
-      <text v-if="label.isVisible" 
+      <text v-if="label.isVisible"
         data-test="bp-label"
-        class="label small" 
-        :x="posX - (SVGConstants.trackWidth/2)" 
+        class="label small"
+        :x="posX - (SVGConstants.trackWidth/2)"
         :y="getAdjustedLabelY(label, index)">
         {{label.text}}
       </text>
@@ -53,30 +53,32 @@
     <rect v-if="isSelectable && selectedRegion.baseSelection.svgHeight > 0"
       data-test="selected-region"
       class="selected-region"
-      fill="url(#selectedStripes)"
-      stroke="black"
+      fill="#000"
+      fill-opacity="0.3"
+      stroke="#333"
+      stroke-width="1"
       :x="posX" :y="selectedRegion.baseSelection.svgYPoint"
-      rx="2" ry="2"
       :width="SVGConstants.trackWidth"
       :height="selectedRegion.baseSelection.svgHeight" />
 
     <!-- Inner selection that changes depending on Detailed panel zoom -->
     <rect v-if="isSelectable && selectedRegion.innerSelection && selectedRegion.innerSelection.svgHeight > 0"
       stroke="green"
-      fill="none"
-      :x="posX - 5" :y="selectedRegion.innerSelection.svgYPoint"
+      fill="green"
+      fill-opacity="0.5"
+      :x="posX - 2" :y="selectedRegion.innerSelection.svgYPoint"
       :width="SVGConstants.trackWidth + INNER_SELECTION_EXTRA_WIDTH"
       :height="selectedRegion.innerSelection.svgHeight" />
   </template>
 
   <!-- Transparent rect for selection -->
-  <rect v-if="isSelectable && track.sections.length > 0" 
+  <rect v-if="isSelectable && track.sections.length > 0"
     data-test="selectable-svg"
     class="selectable"
     pointer-events="visible"
     fill="none"
     :x="posX" :y="track.svgY - TRANSPARENT_SELECTION_RECT_MARGIN"
-    :width="SVGConstants.trackWidth" :height="track.height + (TRANSPARENT_SELECTION_RECT_MARGIN * 2)" 
+    :width="SVGConstants.trackWidth" :height="track.height + (TRANSPARENT_SELECTION_RECT_MARGIN * 2)"
     @mousedown="initSelectStart($event, track.sections[0], 0)"
     @mousemove="updateSelectionHeight"
     @mouseup="completeSelect"
@@ -96,7 +98,7 @@ import SVGConstants from '@/utils/SVGConstants';
 import { getMousePosSVG } from '@/utils/SVGHelpers';
 import { key } from '@/store';
 
-const INNER_SELECTION_EXTRA_WIDTH = 10;
+const INNER_SELECTION_EXTRA_WIDTH = 4;
 const TRANSPARENT_SELECTION_RECT_MARGIN = 10; // SVG height units that the transparent rect extends above and below the selectable backbone track
 const START_LABEL_Y_OFFSET = -3;
 const END_LABEL_Y_OFFSET = 7;
@@ -111,7 +113,7 @@ let selectedTrackSection: TrackSection;
 let selectedTrackIndex: number;
 let startingPoint: DOMPoint | { y: number, x: number };
 
-interface Props 
+interface Props
 {
   isSelectable?: boolean;
   showDataOnHover?: boolean;
