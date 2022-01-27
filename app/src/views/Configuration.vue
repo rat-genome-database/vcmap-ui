@@ -177,11 +177,25 @@
             </div>
             <div class="grid">
               <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
-                <p class="label-description">Chromosome: {{geneChromosome?.chromosome}} <span v-if="geneChromosome">(Length: {{Formatter.addCommasToBasePair(maxPosition)}}bp)</span></p>
+                <p class="label-description">Chromosome: {{geneChromosome?.chromosome}} <span v-if="geneChromosome">(Length: {{Formatter.addCommasToBasePair(geneChromosome.seqLength)}}bp)</span></p>
               </div>
             </div>
             <div class="p-fluid grid">
-              <div class="lg:col-3 lg:col-offset-3 md:col-4 md:col-offset-1 sm:col-5 sm:col-offset-1">
+              <div class="lg:col-2 lg:col-offset-3 md:col-2 md:col-offset-2 sm:col-2 sm:col-offset-1">
+                <h4 :class="{'config-label': backboneGene}">Upstream/Downstream</h4>
+                <p v-if="backboneGene" class="label-description">+/- bp range</p>
+                <InputNumber
+                  showButtons
+                  v-model="geneOptionPlusMinus"
+                  @input="onPlusMinusInput"
+                  :disabled="!geneChromosome"
+                  required
+                  suffix="bp"
+                  :step="500"
+                  :min="0"
+                />
+              </div>
+              <div class="lg:col-2 md:col-3 sm:col-4">
                 <h4 :class="{'config-label': backboneGene}">Upstream Length</h4>
                 <p v-if="backboneGene" class="label-description">Gene Start: {{Formatter.addCommasToBasePair(backboneGene.start)}}bp</p>
                 <InputNumber
@@ -195,7 +209,7 @@
                   :min="0"
                 />
               </div>
-              <div class="lg:col-3 md:col-3 sm:col-5">
+              <div class="lg:col-2 md:col-3 sm:col-4">
                 <h4 :class="{'config-label': backboneGene}">Downstream Length</h4>
                 <p v-if="backboneGene" class="label-description">Gene Stop: {{Formatter.addCommasToBasePair(backboneGene.stop)}}bp</p>
                 <InputNumber
@@ -307,6 +321,7 @@ const geneSuggestions = ref<Gene[]>([]);
 const backboneGene = ref<Gene | null>(null);
 const geneChromosome = ref<Chromosome | null>(null);
 const isLoadingGene = ref(false);
+const geneOptionPlusMinus = ref(0);
 const geneOptionStartPosition = ref<number | null>(0);
 const geneOptionStopPosition = ref<number | null>(0);
 
@@ -353,6 +368,18 @@ const isValidConfig = computed(() => {
 const comparativeSpeciesLimitReached = computed(() => {
   return (comparativeSpeciesSelections.value.length >= 5);
 });
+
+function onPlusMinusInput(event: { value: number })
+{
+  if (backboneGene.value == null || geneChromosome.value == null)
+  {
+    return;
+  }
+
+  const plusMinus = event.value;
+  geneOptionStartPosition.value = (backboneGene.value.start - plusMinus > 0) ? backboneGene.value.start - plusMinus : 0;
+  geneOptionStopPosition.value = (backboneGene.value.stop + plusMinus < geneChromosome.value.seqLength) ? backboneGene.value.stop + plusMinus : geneChromosome.value.seqLength;
+}
 
 async function searchGene(event: {query: string})
 {
