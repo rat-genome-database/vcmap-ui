@@ -14,9 +14,12 @@ const store = useStore(key);
 const zoomLevel = ref(1);
 let zoomProcessTimeoutId: number | undefined;
 
-watch(() => store.state.selectedBackboneRegion.zoomLevel, (newZoomLevel) => {
-  zoomLevel.value = newZoomLevel;
-}, { immediate: true });
+watch(() => store.state.isDetailedPanelUpdating, (isUpdating) => {
+  if (!isUpdating)
+  {
+    zoomLevel.value = store.state.selectedBackboneRegion.zoomLevel;
+  }
+})
 
 const isZoomDisabled = computed(() => {
   return store.state.selectedBackboneRegion.innerSelection == null;
@@ -29,6 +32,11 @@ const onZoomChange = (zoomLevel: number) => {
   if (zoomProcessTimeoutId != undefined)
   {
     clearTimeout(zoomProcessTimeoutId);
+  }
+
+  if (store.state.isDetailedPanelUpdating)
+  {
+    return;
   }
 
   zoomProcessTimeoutId = setTimeout(() => {
