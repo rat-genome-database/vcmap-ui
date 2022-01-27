@@ -91,38 +91,4 @@ describe('BackboneTrackSVG', () => {
     expect(backboneAttributes.width).toEqual(SVGConstants.trackWidth.toString());
     expect(backboneAttributes.height).toEqual((10000000 / BACKBONE_BASEPAIR_TO_HEIGHT_RATIO).toString());
   });
-
-  it('emits selected region', async () => {
-    const backboneTrackSection = new TrackSection({
-      start: 0,
-      stop: 10000000,
-      backboneStart: 0,
-      backboneStop: 10000000,
-      chromosome: '1',
-      cutoff: 120000000,
-      basePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO,
-      shape: 'rect'
-    });
-    const backboneTrack = new Track({ speciesName: 'Human', sections: [backboneTrackSection], startingSVGY: SVGConstants.panelTitleHeight, type: 'backbone' });
-    const wrapper = shallowMount(BackboneTrackSVG, {
-      props: {
-        posX: 100,
-        track: backboneTrack,
-        isSelectable: true
-      },
-      global: {
-        provide: {
-          [key as symbol]: store
-        }
-      }
-    });
-
-    // Select a region
-    const section = wrapper.get('[data-test="selectable-svg"]');
-    await section.trigger('mousedown');
-    await section.trigger('mousemove');
-    await section.trigger('mouseup');
-
-    expect(actions.setSelectedBackboneRegion).toBeCalledTimes(1);
-  });
 });

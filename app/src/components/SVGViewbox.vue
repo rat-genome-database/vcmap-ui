@@ -17,7 +17,7 @@
       <text class="label small" :x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :y="SVGConstants.trackLabelYPosition">{{trackSet.speciesTrack.name}}</text>
       <text class="label small" :x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
       <TrackSVG v-if="index != 0" show-chromosome show-synteny-on-hover show-start-stop :pos-x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
-      <BackboneTrackSVG v-else is-selectable :pos-x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :track="trackSet.speciesTrack as Track" />
+      <BackboneTrackSVG v-else show-data-on-hover :pos-x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :track="trackSet.speciesTrack as Track" />
     </template>
 
 
@@ -28,7 +28,7 @@
       <text class="label small" :x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackLabelYPosition">{{trackSet.speciesTrack.name}}</text>
       <text class="label small" :x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
       <TrackSVG v-if="index != 0" show-chromosome :pos-x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
-      <BackboneTrackSVG v-else is-detailed :pos-x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :track="trackSet.speciesTrack as Track" />
+      <BackboneTrackSVG v-else is-detailed show-data-on-hover :pos-x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :track="trackSet.speciesTrack as Track" />
 
       <template v-if="trackSet.dataTracks.length > 0">
         <template v-for="dataTrack, index2 in trackSet.dataTracks" :key="dataTrack.name">
