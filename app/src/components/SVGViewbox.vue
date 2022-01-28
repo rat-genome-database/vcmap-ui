@@ -1,12 +1,12 @@
 <template>
-  <ProgressBar class="vcmap-loader" :mode="(isOverviewLoading || store.state.isDetailedPanelUpdating) ? 'indeterminate' : 'determinate'" :value="0" :showValue="false"/>
+  <ProgressBar class="vcmap-loader" :mode="arePanelsLoading ? 'indeterminate' : 'determinate'" :value="0" :showValue="false"/>
   <svg :viewBox="'0 0 1000 ' + SVGConstants.viewboxHeight" xmlns="http://www.w3.org/2000/svg" id="svg-wrapper">
 
     <!-- Outside panel -->
     <rect class="panel" x="0" width="1000" :height="SVGConstants.viewboxHeight" />
     <!-- Inner panels -->
-    <rect class="panel selectable" x="0" @mousedown.left="initOverviewSelection" @mousemove="updateOverviewSelection" @mouseup.left="completeOverviewSelection(overviewTrackSets as TrackSet[])" :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.viewboxHeight" />
-    <rect class="panel selectable" @mousedown.left="initZoomSelection" @mousemove="updateZoomSelection" @mouseup.left="completeZoomSelection" :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.viewboxHeight" />
+    <rect class="panel selectable" :class="{'is-loading': arePanelsLoading}" x="0" @mousedown.left="initOverviewSelection" @mousemove="updateOverviewSelection" @mouseup.left="completeOverviewSelection(overviewTrackSets as TrackSet[])" :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.viewboxHeight" />
+    <rect class="panel selectable" :class="{'is-loading': arePanelsLoading}" @mousedown.left="initZoomSelection" @mousemove="updateZoomSelection" @mouseup.left="completeZoomSelection" :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.viewboxHeight" />
     <!-- Title panels -->
     <rect class="panel" x="0" :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.panelTitleHeight" />
     <rect class="panel" :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.panelTitleHeight" />
@@ -92,7 +92,6 @@ const { showDialog, dialogHeader, dialogMessage, onError, checkSyntenyResultsOnC
 const { startDetailedSelectionY, stopDetailedSelectionY, initZoomSelection, updateZoomSelection, completeZoomSelection } = useDetailedPanelZoom(store);
 const { startOverviewSelectionY, stopOverviewSelectionY, initOverviewSelection, updateOverviewSelection, completeOverviewSelection } = useOverviewPanelSelection(store);
 
-const isOverviewLoading = ref(false);
 const overviewTrackSets = ref<TrackSet[]>([]); // The currently displayed TrackSets in the Overview panel
 const detailTrackSets = ref<TrackSet[]>([]); // The currently displayed TrackSets in the Detailed panel
 
@@ -132,6 +131,10 @@ onMounted(async () => {
 watch(() => store.state.detailedBasePairRange, () => {
   removeSelectionDataTracks();
   attachToProgressLoader('setIsDetailedPanelUpdating', updateDetailsPanel);
+});
+
+const arePanelsLoading = computed(() => {
+  return store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating;
 });
 
 const updateOverviewPanel = async () => {
@@ -443,9 +446,14 @@ rect.panel
   stroke-width: 2;
   stroke: lightgray;
 
-  &.selectable
+  &.selectable:not(.is-loading)
   {
     cursor: crosshair;
+  }
+
+  &.is-loading
+  {
+    cursor: wait;
   }
 }
 

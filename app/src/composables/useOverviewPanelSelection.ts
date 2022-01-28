@@ -17,6 +17,12 @@ export default function useOverviewPanelSelection(store: Store<VCMapState>) {
   });
 
   const initOverviewSelection = (event: any) => {
+    if (store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating)
+    {
+      // Don't allow a selection until both panels are done updating
+      return;
+    }
+
     inSelectMode = true;
     startingPoint = getMousePosSVG(svg, event);
     startOverviewSelectionY.value = startingPoint.y;

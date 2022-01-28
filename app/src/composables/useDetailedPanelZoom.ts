@@ -16,6 +16,12 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
   });
 
   const initZoomSelection = (event: any) => {
+    if (store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating)
+    {
+      // Don't allow zoom until both panels are done updating
+      return;
+    }
+
     const selectedRegion = store.state.selectedBackboneRegion;
     if (!selectedRegion.innerSelection)
     {
