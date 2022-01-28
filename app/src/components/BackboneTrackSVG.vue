@@ -1,15 +1,4 @@
 <template>
-  <!-- SVG definitions -->
-  <defs>
-    <linearGradient id="selectedStripes" gradientUnits="userSpaceOnUse"
-      x2="5" spreadMethod="repeat" gradientTransform="rotate(-45)">
-      <stop offset="0" stop-color="gray"/>
-      <stop offset="0.40" stop-color="gray"/>
-      <stop offset="0.40" stop-color="lightgray"/>
-      <stop offset="1.0" stop-color="lightgray"/>
-    </linearGradient>
-  </defs>
-
   <template v-for="(section, index) in track.sections" :key="index">
 
     <!-- Track SVG -->
@@ -50,7 +39,7 @@
     </template>
 
     <!-- Selected Region on Track -->
-    <rect v-if="isSelectable && selectedRegion.baseSelection.svgHeight > 0"
+    <rect v-if="!isDetailed && selectedRegion.baseSelection.svgHeight > 0"
       data-test="selected-region"
       class="selected-region"
       fill="#000"
@@ -62,7 +51,7 @@
       :height="selectedRegion.baseSelection.svgHeight" />
 
     <!-- Inner selection that changes depending on Detailed panel zoom -->
-    <rect v-if="isSelectable && selectedRegion.innerSelection && selectedRegion.innerSelection.svgHeight > 0"
+    <rect v-if="!isDetailed && selectedRegion.innerSelection && selectedRegion.innerSelection.svgHeight > 0"
       stroke="green"
       fill="green"
       fill-opacity="0.5"
@@ -70,19 +59,6 @@
       :width="SVGConstants.trackWidth + INNER_SELECTION_EXTRA_WIDTH"
       :height="selectedRegion.innerSelection.svgHeight" />
   </template>
-
-  <!-- Transparent rect for selection -->
-  <rect v-if="isSelectable && track.sections.length > 0"
-    data-test="selectable-svg"
-    class="selectable"
-    pointer-events="visible"
-    fill="none"
-    :x="posX" :y="track.svgY - TRANSPARENT_SELECTION_RECT_MARGIN"
-    :width="SVGConstants.trackWidth" :height="track.height + (TRANSPARENT_SELECTION_RECT_MARGIN * 2)"
-    @mousedown="initSelectStart($event, track.sections[0], 0)"
-    @mousemove="updateSelectionHeight"
-    @mouseup="completeSelect"
-    @mouseleave="completeSelect" />
 
 </template>
 
@@ -99,7 +75,6 @@ import { getMousePosSVG } from '@/utils/SVGHelpers';
 import { key } from '@/store';
 
 const INNER_SELECTION_EXTRA_WIDTH = 4;
-const TRANSPARENT_SELECTION_RECT_MARGIN = 10; // SVG height units that the transparent rect extends above and below the selectable backbone track
 const START_LABEL_Y_OFFSET = -3;
 const END_LABEL_Y_OFFSET = 7;
 const HIGHLIGHT_COLOR = 'bisque';
@@ -107,15 +82,8 @@ const HIGHLIGHT_COLOR = 'bisque';
 const store = useStore(key);
 const svg = document.querySelector('svg');
 
-// Flag to indicate whether or not the user is currently selecting a region on this track
-let inSelectMode = false;
-let selectedTrackSection: TrackSection;
-let selectedTrackIndex: number;
-let startingPoint: DOMPoint | { y: number, x: number };
-
 interface Props
 {
-  isSelectable?: boolean;
   showDataOnHover?: boolean;
   posX: number;
   track: Track;
@@ -130,11 +98,11 @@ const selectedRegion = ref(new BackboneSelection(new SelectedRegion(0,0,0,0), st
 
 watch(() => store.state.selectedBackboneRegion, (newVal: BackboneSelection, oldVal: BackboneSelection) => {
   // Watch for possible clear out of the selected backbone region
-  if (props.isSelectable && oldVal.baseSelection.svgHeight > 0 && newVal.baseSelection.svgHeight === 0)
+  if (!props.isDetailed && oldVal.baseSelection.svgHeight > 0 && newVal.baseSelection.svgHeight === 0)
   {
     selectedRegion.value = new BackboneSelection(new SelectedRegion(0,0,0,0), store.state.chromosome ?? undefined);
   }
-  else if (props.isSelectable && newVal.baseSelection.svgHeight > 0)
+  else if (!props.isDetailed && newVal.baseSelection.svgHeight > 0)
   {
     selectedRegion.value = newVal;
   }
@@ -154,81 +122,6 @@ const getAdjustedLabelY = (label: Label, index: number) => {
   }
 
   return index > 0 ? label.svgY + END_LABEL_Y_OFFSET : label.svgY + START_LABEL_Y_OFFSET;
-};
-
-const initSelectStart = (event: any, section: TrackSection, sectionIndex: number) => {
-  if (!props.isSelectable) return;
-
-  // Begin selection mode
-  inSelectMode = true;
-  selectedTrackSection = section;
-  selectedTrackIndex = sectionIndex;
-  selectedRegion.value = new BackboneSelection(new SelectedRegion(0,0,0,0), store.state.chromosome ?? undefined);
-
-  let currentSVGPoint = getMousePosSVG(svg, event);
-  startingPoint = currentSVGPoint;
-  selectedRegion.value.baseSelection.svgYPoint = currentSVGPoint.y;
-  selectedRegion.value.baseSelection.svgHeight = 0;
-};
-
-const updateSelectionHeight = (event: any) => {
-  if (!props.isSelectable || !inSelectMode) return;
-
-  let currentSVGPoint = getMousePosSVG(svg, event);
-
-  if (currentSVGPoint.y < startingPoint.y)
-  {
-    // We are moving above the starting point, calculate height with the starting point as the largest y value
-    selectedRegion.value.baseSelection.svgYPoint = currentSVGPoint.y;
-    selectedRegion.value.baseSelection.svgHeight =  startingPoint.y - selectedRegion.value.baseSelection.svgYPoint;
-  }
-  else
-  {
-    // We are moving below the starting point, calculate height with the current point as the largest y value
-    selectedRegion.value.baseSelection.svgHeight = currentSVGPoint.y - selectedRegion.value.baseSelection.svgYPoint;
-  }
-};
-
-const completeSelect = () => {
-  if (!props.isSelectable || !inSelectMode) return;
-
-  inSelectMode = false;
-
-  if (selectedRegion.value.baseSelection.svgHeight > 0 && selectedTrackSection)
-  {
-    // Adjust svgYPoint and svgHeight of the selected region if they extend past the backbone start/stop
-    if (selectedRegion.value.baseSelection.svgYPoint < selectedTrackSection.svgY)
-    {
-      selectedRegion.value.baseSelection.svgYPoint = selectedTrackSection.svgY;
-    }
-
-    if (selectedRegion.value.baseSelection.svgYPoint + selectedRegion.value.baseSelection.svgHeight > selectedTrackSection.svgY2)
-    {
-      if (selectedRegion.value.baseSelection.svgYPoint > selectedTrackSection.svgY2)
-      {
-        selectedRegion.value.baseSelection.svgYPoint = selectedTrackSection.svgY2 - selectedRegion.value.baseSelection.svgHeight;
-      }
-      else
-      {
-        selectedRegion.value.baseSelection.svgHeight = selectedTrackSection.svgY2 - selectedRegion.value.baseSelection.svgYPoint;
-      }
-    }
-
-    // Calculate the selected range in base pairs
-    const totalBasePairsSelected = Math.ceil(selectedRegion.value.baseSelection.svgHeight * store.state.overviewBasePairToHeightRatio);
-    const basePairsUpToStart = Math.floor((selectedRegion.value.baseSelection.svgYPoint - props.track.sections[selectedTrackIndex].svgY) * store.state.overviewBasePairToHeightRatio);
-    const basePairStart = selectedTrackSection.backboneStart + basePairsUpToStart;
-    selectedRegion.value.baseSelection.basePairStart = basePairStart;
-    selectedRegion.value.baseSelection.basePairStop = basePairStart + totalBasePairsSelected;
-  }
-
-  // Store the selected backbone region and set the DetailedBasePairRange based off of its base selection
-  // NOTE: The DetailedBasePairRange triggers an update on the Detailed Panel
-  store.dispatch('setSelectedBackboneRegion', selectedRegion.value);
-  if (selectedRegion.value.baseSelection.svgHeight > 0)
-  {
-    store.dispatch('setDetailedBasePairRange', { start: selectedRegion.value.baseSelection.basePairStart, stop: selectedRegion.value.baseSelection.basePairStop });
-  }
 };
 
 const onMouseEnter = (event: any, section: TrackSection) => {
@@ -271,14 +164,8 @@ const onMouseLeave = (section: TrackSection) => {
   }
 }
 
-rect.selectable
-{
-  cursor: crosshair;
-}
-
 .selected-region
 {
   stroke-width: 1;
-  cursor: crosshair;
 }
 </style>

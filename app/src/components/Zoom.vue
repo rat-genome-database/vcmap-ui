@@ -19,7 +19,7 @@ watch(() => store.state.isDetailedPanelUpdating, (isUpdating) => {
   {
     zoomLevel.value = store.state.selectedBackboneRegion.zoomLevel;
   }
-})
+});
 
 const isZoomDisabled = computed(() => {
   return store.state.selectedBackboneRegion.innerSelection == null;

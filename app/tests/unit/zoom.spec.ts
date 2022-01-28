@@ -59,7 +59,10 @@ describe('Zoom', () => {
     const zoomLevelLabel = wrapper.get('[data-test="zoom-level-label"]');
     expect(zoomLevelLabel.text()).toEqual('1x');
 
+    store.state.isDetailedPanelUpdating = true;
+    await wrapper.vm.$nextTick();
     store.state.selectedBackboneRegion.zoomLevel = 2;
+    store.state.isDetailedPanelUpdating = false;
     await wrapper.vm.$nextTick();
     expect(zoomLevelLabel.text()).toEqual('2x');
   });

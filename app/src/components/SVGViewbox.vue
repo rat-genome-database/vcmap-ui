@@ -1,32 +1,23 @@
 <template>
-  <ProgressBar class="vcmap-loader" :mode="(isOverviewLoading || store.state.isDetailedPanelUpdating) ? 'indeterminate' : 'determinate'" :value="0" :showValue="false"/>
+  <ProgressBar class="vcmap-loader" :mode="arePanelsLoading ? 'indeterminate' : 'determinate'" :value="0" :showValue="false"/>
   <svg :viewBox="'0 0 1000 ' + SVGConstants.viewboxHeight" xmlns="http://www.w3.org/2000/svg" id="svg-wrapper">
 
     <!-- Outside panel -->
     <rect class="panel" x="0" width="1000" :height="SVGConstants.viewboxHeight" />
     <!-- Inner panels -->
-    <rect class="panel" x="0" :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.viewboxHeight" />
-    <rect class="panel detailed" @mousedown="initZoomSelection" @mousemove="updateZoomSelection" @mouseup="completeZoomSelection" :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.viewboxHeight" />
+    <rect class="panel selectable" :class="{'is-loading': arePanelsLoading}" x="0" @mousedown.left="initOverviewSelection" @mousemove="updateOverviewSelection" @mouseup.left="completeOverviewSelection(overviewTrackSets as TrackSet[])" :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.viewboxHeight" />
+    <rect class="panel selectable" :class="{'is-loading': arePanelsLoading}" @mousedown.left="initZoomSelection" @mousemove="updateZoomSelection" @mouseup.left="completeZoomSelection" :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.viewboxHeight" />
     <!-- Title panels -->
     <rect class="panel" x="0" :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.panelTitleHeight" />
     <rect class="panel" :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.panelTitleHeight" />
 
     <!-- Overview panel SVGs ------------------------------------------->
-    
     <text class="label medium bold" :x="SVGConstants.overviewTitleXPosition" :y="SVGConstants.panelTitleYPosition">Overview</text>
     <template v-for="(trackSet, index) in overviewTrackSets" :key="trackSet">
       <text class="label small" :x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :y="SVGConstants.trackLabelYPosition">{{trackSet.speciesTrack.name}}</text>
       <text class="label small" :x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
-      <TrackSVG v-if="index != 0"
-        show-chromosome
-        show-synteny-on-hover
-        show-start-stop
-        :pos-x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition"
-        :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
-
-      <BackboneTrackSVG v-else 
-        is-selectable 
-        :pos-x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :track="trackSet.speciesTrack as Track" />
+      <TrackSVG v-if="index != 0" show-chromosome show-synteny-on-hover show-start-stop :pos-x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
+      <BackboneTrackSVG v-else show-data-on-hover :pos-x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :track="trackSet.speciesTrack as Track" />
     </template>
 
 
@@ -36,22 +27,12 @@
     <template v-for="(trackSet, index) in detailTrackSets" :key="trackSet">
       <text class="label small" :x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackLabelYPosition">{{trackSet.speciesTrack.name}}</text>
       <text class="label small" :x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
-      <TrackSVG v-if="index != 0"
-        show-chromosome
-        
-        :pos-x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" 
-        :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
-
-      <BackboneTrackSVG v-else
-        is-detailed
-        :pos-x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :track="trackSet.speciesTrack as Track" />
+      <TrackSVG v-if="index != 0" show-chromosome :pos-x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
+      <BackboneTrackSVG v-else is-detailed show-data-on-hover :pos-x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :track="trackSet.speciesTrack as Track" />
 
       <template v-if="trackSet.dataTracks.length > 0">
         <template v-for="dataTrack, index2 in trackSet.dataTracks" :key="dataTrack.name">
-          <TrackSVG v-if="dataTrack.isDisplayed"
-            show-gene-label 
-            :pos-x="getDetailedPanelTrackXOffset(index, 'datatrack', index2 + 1) + SVGConstants.selectedBackboneXPosition"
-            :width="SVGConstants.dataTrackWidth" :track="dataTrack.track as Track" />
+          <TrackSVG v-if="dataTrack.isDisplayed" show-gene-label :pos-x="getDetailedPanelTrackXOffset(index, 'datatrack', index2 + 1) + SVGConstants.selectedBackboneXPosition" :width="SVGConstants.dataTrackWidth" :track="dataTrack.track as Track" />
         </template>
       </template>
     </template>
@@ -64,13 +45,23 @@
 
     <TooltipSVG :tooltip-data="store.state.tooltipData" />
 
-    <rect v-if="startSelectionY && stopSelectionY" 
-      @mouseup="completeZoomSelection"
+    <!-- Detailed panel selection svg for zoom -->
+    <rect v-if="startDetailedSelectionY && stopDetailedSelectionY" 
+      @mouseup.left="completeZoomSelection"
       @mousemove="updateZoomSelection"
       fill="lightgray"
       fill-opacity="0.4"
-      :x="SVGConstants.overviewPanelWidth" :y="startSelectionY"
-      :width="SVGConstants.detailsPanelWidth" :height="stopSelectionY - startSelectionY" />
+      :x="SVGConstants.overviewPanelWidth" :y="startDetailedSelectionY"
+      :width="SVGConstants.detailsPanelWidth" :height="stopDetailedSelectionY - startDetailedSelectionY" />
+
+    <!-- Overview panel selection svg for backbone -->
+    <rect v-if="startOverviewSelectionY && stopOverviewSelectionY" 
+      @mouseup.left="completeOverviewSelection(overviewTrackSets as TrackSet[])"
+      @mousemove="updateOverviewSelection"
+      fill="lightgray"
+      fill-opacity="0.4"
+      :x="0" :y="startOverviewSelectionY"
+      :width="SVGConstants.overviewPanelWidth" :height="stopOverviewSelectionY - startOverviewSelectionY" />
   </svg>
 
   <VCMapDialog v-model:show="showDialog" :header="dialogHeader" :message="dialogMessage" />
@@ -93,13 +84,14 @@ import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
 import { key } from '@/store';
 import { backboneDetailedError, backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError } from '@/utils/VCMapErrors';
 import { createBackboneDataTracks, createComparativeDataTracks, createBackboneTrack, createSyntenyTracks } from '@/utils/TrackBuilder';
+import useOverviewPanelSelection from '@/composables/useOverviewPanelSelection';
 
 const store = useStore(key);
 
 const { showDialog, dialogHeader, dialogMessage, onError, checkSyntenyResultsOnComparativeSpecies } = useDialog();
-const { startSelectionY, stopSelectionY, initZoomSelection, updateZoomSelection, completeZoomSelection } = useDetailedPanelZoom(store);
+const { startDetailedSelectionY, stopDetailedSelectionY, initZoomSelection, updateZoomSelection, completeZoomSelection } = useDetailedPanelZoom(store);
+const { startOverviewSelectionY, stopOverviewSelectionY, initOverviewSelection, updateOverviewSelection, completeOverviewSelection } = useOverviewPanelSelection(store);
 
-const isOverviewLoading = ref(false);
 const overviewTrackSets = ref<TrackSet[]>([]); // The currently displayed TrackSets in the Overview panel
 const detailTrackSets = ref<TrackSet[]>([]); // The currently displayed TrackSets in the Detailed panel
 
@@ -139,6 +131,10 @@ onMounted(async () => {
 watch(() => store.state.detailedBasePairRange, () => {
   removeSelectionDataTracks();
   attachToProgressLoader('setIsDetailedPanelUpdating', updateDetailsPanel);
+});
+
+const arePanelsLoading = computed(() => {
+  return store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating;
 });
 
 const updateOverviewPanel = async () => {
@@ -408,6 +404,11 @@ const navigateDown = () => {
 };
 
 const isNavigationUpDisabled = computed(() => {
+  if (arePanelsLoading.value)
+  {
+    return true;
+  }
+
   const selectedRegion = store.state.selectedBackboneRegion;
   if (selectedRegion.zoomLevel <= 1)
   {
@@ -423,6 +424,11 @@ const isNavigationUpDisabled = computed(() => {
 });
 
 const isNavigationDownDisabled = computed(() => {
+  if (arePanelsLoading.value)
+  {
+    return true;
+  }
+  
   const selectedRegion = store.state.selectedBackboneRegion;
   if (selectedRegion.zoomLevel <= 1)
   {
@@ -450,9 +456,14 @@ rect.panel
   stroke-width: 2;
   stroke: lightgray;
 
-  &.detailed
+  &.selectable:not(.is-loading)
   {
     cursor: crosshair;
+  }
+
+  &.is-loading
+  {
+    cursor: wait;
   }
 }
 
