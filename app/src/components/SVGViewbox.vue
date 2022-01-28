@@ -404,6 +404,11 @@ const navigateDown = () => {
 };
 
 const isNavigationUpDisabled = computed(() => {
+  if (arePanelsLoading.value)
+  {
+    return true;
+  }
+
   const selectedRegion = store.state.selectedBackboneRegion;
   if (selectedRegion.zoomLevel <= 1)
   {
@@ -419,6 +424,11 @@ const isNavigationUpDisabled = computed(() => {
 });
 
 const isNavigationDownDisabled = computed(() => {
+  if (arePanelsLoading.value)
+  {
+    return true;
+  }
+  
   const selectedRegion = store.state.selectedBackboneRegion;
   if (selectedRegion.zoomLevel <= 1)
   {
