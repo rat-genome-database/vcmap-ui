@@ -1,5 +1,5 @@
 <template>
-  <div class="grid unpadded col-5">
+  <div class="grid unpadded col-4">
     <div class="col-12">
       <h4>Overview</h4>
       <div class="grid unpadded">
