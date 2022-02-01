@@ -37,7 +37,8 @@
       class="section"
       @mouseenter="onMouseEnter($event, section, false)"
       @mouseleave="onMouseLeave(section)"
-      :fill="section.isHovered ? HIGHLIGHT_COLOR : section.color" 
+      :fill="section.isHovered ? HIGHLIGHT_COLOR : section.color"
+      :fill-opacity="geneDataTrack ? .5 : 1" 
       :x="posX" :y="section.svgY" 
       :width="width" 
       :height="section.height" />
@@ -53,7 +54,8 @@
       class="section level-2"
       @mouseenter="onMouseEnter($event, section, false)"
       @mouseleave="onMouseLeave(section)"
-      :fill="section.isHovered ? HIGHLIGHT_COLOR : section.color" 
+      :fill="section.isHovered ? HIGHLIGHT_COLOR : section.color"
+      :fill-opacity="geneDataTrack ? .5 : 1" 
       :x="posX + ((width * (1 - LEVEL_2_WIDTH_MULTIPLIER)) / 2)" :y="section.svgY" 
       :width="width * LEVEL_2_WIDTH_MULTIPLIER" 
       :height="section.height" />
@@ -111,6 +113,7 @@ interface Props
   showStartStop?: boolean;
   showChromosome?: boolean;
   showGeneLabel?: boolean;
+  geneDataTrack?: boolean;
   posX: number;
   width: number;
   track: Track;

@@ -15,8 +15,8 @@ const GAPS_THRESHOLD_MULTIPLIER = 10;
 /**
  * Creates the backbone track model and sets the viewbox height based on the size of the backbone track
  */
- export function createBackboneTrack(species: Species, chromosome: Chromosome, startPos: number, stopPos: number, basePairToHeightRatio: number, startingSVGYPos = SVGConstants.panelTitleHeight)
- {
+export function createBackboneTrack(species: Species, chromosome: Chromosome, startPos: number, stopPos: number, basePairToHeightRatio: number, startingSVGYPos = SVGConstants.panelTitleHeight)
+{
   const speciesName = species.name;
   const backboneChromosomeString = chromosome.chromosome;
   const trackSection = new TrackSection({
@@ -66,7 +66,6 @@ export function createSyntenyTrackFromSpeciesSyntenyData(speciesSyntenyData: Spe
  */
 export async function createBackboneDataTracks(species: Species, chromosome: Chromosome, startPos: number, stopPos: number, basePairToHeightRatio: number, isComparative: boolean, syntenyThreshold: number, startingSVGYPos: number)
 {
-  
   const genes = await SpeciesApi.getGenesByRegion(chromosome.chromosome, startPos, stopPos, species.defaultMapKey);
   return createGeneTrackFromGenesData(genes, species.name, startPos, stopPos, basePairToHeightRatio, isComparative, syntenyThreshold, startingSVGYPos);
 }
@@ -87,8 +86,9 @@ export function createGeneTrackFromGenesData(genes: Gene[], speciesName: string,
   let previousBlockBackboneStop = startPos;
 
   const threshold = syntenyThreshold * GENES_DATA_TRACK_THRESHOLD_MULTIPLIER;
-  for (const gene of genes)
+  for (let index = 0; index < genes.length; index++)
   {
+    const gene = genes[index];
     if (gene.stop <= startPos || gene.start >= stopPos)
     {
       continue;
@@ -112,15 +112,74 @@ export function createGeneTrackFromGenesData(genes: Gene[], speciesName: string,
 
       hiddenSections.push(hiddenTrackSection);
     }
+    
     else
     {
-      if (gene.start < previousBlockBackboneStop && previousBlockBackboneStop !== startPos)
+      const trackSection = new TrackSection({
+        start: gene.start,
+        stop: gene.stop,
+        backboneStart: gene.start, 
+        backboneStop: gene.stop, 
+        chromosome: gene.chromosome, 
+        cutoff: stopPos, 
+        offsetCount: gene.start - previousBlockBackboneStop > 0 ? gene.start - previousBlockBackboneStop : 0,
+        basePairToHeightRatio: basePairToHeightRatio,
+        color: '#00000',
+        shape: 'rect',
+        gene: gene,
+        hiddenGenes: hiddenSections.length > 0 ? hiddenSections : []
+      });
+
+      hiddenSections =  [];
+      sections.push(trackSection);
+      previousBlockBackboneStop = gene.stop;
+    }
+  }
+
+  //WIP: this is the current attempt at processing and displaying genes with labels truncated to include all genes in the space the label takes up
+  /* let totalOffset = 0;
+    let lastProcessedIndex = 0;
+
+    let longestGene = gene;
+    let labelOffsetIndex = 0;
+    //check ahead for genes
+    while (totalOffset <= 10)
+    {
+      const lastGeneStop = labelOffsetIndex > 0 ? genes[index + labelOffsetIndex - 1].stop : previousBlockBackboneStop;
+      const currGene = genes[index + labelOffsetIndex];
+      const currDrawnOffset = ((currGene.start - lastGeneStop) / (basePairToHeightRatio));
+      
+      //the longest gene will contain labels for hidden and visible genes
+      if ((longestGene.stop - longestGene.start) < (currGene.stop - currGene.start))
       {
-        continue;
+        longestGene = currGene;
+      }
+      
+      if ((currGene.stop - currGene.start) > threshold)
+      {
+        totalOffset += currDrawnOffset > 0 ? currDrawnOffset : 0;
+
+        const trackSection = new TrackSection({
+          start: currGene.start,
+          stop: currGene.stop,
+          backboneStart: gene.start, 
+          backboneStop: gene.stop, 
+          chromosome: currGene.chromosome, 
+          cutoff: stopPos, 
+          offsetCount: currGene.start - lastGeneStop,
+          basePairToHeightRatio: basePairToHeightRatio,
+          color: '#000000',
+          shape: 'rect',
+          gene: gene,
+          hiddenGenes: []
+        });
+
+        sections.push(trackSection);
+        previousBlockBackboneStop = currGene.stop;
       }
       else
       {
-        const trackSection = new TrackSection({
+        const hiddenTrackSection = new TrackSection({
           start: gene.start,
           stop: gene.stop,
           backboneStart: gene.start, 
@@ -129,18 +188,32 @@ export function createGeneTrackFromGenesData(genes: Gene[], speciesName: string,
           cutoff: stopPos, 
           offsetCount: gene.start - previousBlockBackboneStop,
           basePairToHeightRatio: basePairToHeightRatio,
-          color: '#000000',
           shape: 'rect',
-          gene: gene,
-          hiddenGenes: hiddenSections.length > 0 ? hiddenSections : []
+          gene: gene
         });
-
-        hiddenSections =  [];
-        sections.push(trackSection);
-        previousBlockBackboneStop = gene.stop;
+  
+        hiddenSections.push(hiddenTrackSection);
       }
+      
+      lastProcessedIndex = index + labelOffsetIndex;
+      labelOffsetIndex++;
+
     }
-  }
+
+    if (hiddenSections.length)
+    {
+      for (let hiddenIndex = 0; hiddenIndex < sections.length; hiddenIndex++)
+      {
+        const section = sections[hiddenIndex];
+
+        if (section.gene?.name === longestGene.name)
+        {
+          section.hiddenGenes = hiddenSections;
+          hiddenSections = [];
+          break;
+        }
+      }
+    } */
 
   let geneDataTrack;
   const geneTrack = new Track({ speciesName: speciesName, sections: sections, startingSVGY: startingSVGYPos, rawGeneData: genes, type: 'gene' });
