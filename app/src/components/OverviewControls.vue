@@ -11,7 +11,7 @@
         <div class="col-7 bold">{{backboneLength}}bp</div>
         <div class="col-5">Synteny Threshold:</div>
         <div class="col-7 bold">{{Formatter.addCommasToBasePair(store.state.overviewSyntenyThreshold)}}bp</div>
-        <div class="col-5">Selection:</div>
+        <div class="col-5">Base Selection:</div>
         <div class="col-7 bold"><span>{{selectionRange}}</span></div>
         <div class="col-7 col-offset-5 selection-btn-row">
           <Button
@@ -19,25 +19,25 @@
             v-tooltip.left="'Shrink Selection by 20%'" 
             icon="pi pi-fast-backward" 
             class="p-button-success p-button-sm selection-btn" 
-            @click="shrinkSelection(20)" />
+            @click="changeSelectionByPercentage(-20)" />
           <Button
             :disabled="areSelectionButtonsDisabled"
             v-tooltip.left="'Shrink Selection by 10%'" 
             icon="pi pi-step-backward" 
             class="p-button-success p-button-sm selection-btn" 
-            @click="shrinkSelection(10)" />
+            @click="changeSelectionByPercentage(-10)" />
           <Button
             :disabled="areSelectionButtonsDisabled"
             v-tooltip.left="'Expand Selection by 10%'" 
             icon="pi pi-step-forward" 
             class="p-button-success p-button-sm selection-btn" 
-            @click="expandSelection(10)" />
+            @click="changeSelectionByPercentage(10)" />
           <Button
             :disabled="areSelectionButtonsDisabled"
             v-tooltip.left="'Expand Selection by 20%'" 
             icon="pi pi-fast-forward" 
             class="p-button-success p-button-sm selection-btn" 
-            @click="expandSelection(20)" />
+            @click="changeSelectionByPercentage(20)" />
           <Button 
             data-test="clear-selection-btn"
             :disabled="areSelectionButtonsDisabled"
@@ -61,7 +61,7 @@ import { key } from '@/store';
 const store = useStore(key);
 
 const areSelectionButtonsDisabled = computed(() => {
-  return store.state.selectedBackboneRegion.baseSelection.svgHeight <= 0;
+  return store.state.selectedBackboneRegion.baseSelection.svgHeight <= 0 || store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating;
 });
 
 const formattedBackboneStart = computed(() => {
@@ -96,12 +96,22 @@ const clearSelection = () => {
   store.dispatch('setDetailedBasePairRange', { start: 0, stop: 0 });
 };
 
-const expandSelection = (expansionPercentage: number) => {
-  console.log(expansionPercentage);
-};
+const changeSelectionByPercentage = (percent: number) => {
+  if (store.state.chromosome == null)
+  {
+    console.error('Chromosome seq length required when adjusting backbone base selection');
+    return;
+  }
 
-const shrinkSelection = (shrinkPercentage: number) => {
-  console.log(shrinkPercentage);
+  const selectedBackboneRegion = store.state.selectedBackboneRegion;
+  selectedBackboneRegion.adjustBaseSelectionByPercentage(percent, store.state.chromosome.seqLength, store.state.overviewBasePairToHeightRatio);
+  if (selectedBackboneRegion.innerSelection == null)
+  {
+    console.error('Cannot trigger detailed panel update if selected backbone region does not have an inner selection');
+  }
+
+  store.dispatch('setSelectedBackboneRegion', selectedBackboneRegion);
+  store.dispatch('setDetailedBasePairRange', { start: selectedBackboneRegion.innerSelection?.basePairStart, stop: selectedBackboneRegion.innerSelection?.basePairStop });
 };
 </script>
 

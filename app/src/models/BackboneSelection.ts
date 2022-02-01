@@ -1,3 +1,4 @@
+import SVGConstants from "@/utils/SVGConstants";
 import Chromosome from "./Chromosome";
 
 export interface BasePairRange
@@ -20,6 +21,11 @@ export class SelectedRegion
     this.basePairStart = basePairStart;
     this.basePairStop = basePairStop;
   }
+
+  public get length()
+  {
+    return this.basePairStop - this.basePairStart;
+  }
 }
 
 export default class BackboneSelection
@@ -36,6 +42,68 @@ export default class BackboneSelection
   {
     this.baseSelection = baseSelection;
     this.chromosome = chromosome;
+  }
+
+  /**
+   * Adjusts the bp start/stop of the base selection (and inner selection if necessary) according to a given percentage
+   * @param percent percent to grow/shrink the selection by. Expects a whole number (e.g. 10 for 10% or -20 for -20%).
+   * @param backboneBasePairStop the cutoff base pair on the backbone (will likely be the end of the backbone chromosome)
+   * @param overviewBasePairToHeightRatio the bp/height ratio of the overview panel
+   */
+  public adjustBaseSelectionByPercentage(percent: number, backboneBasePairStop: number, overviewBasePairToHeightRatio: number)
+  {
+    const lengthAdjustment = Math.ceil(((percent / 100) * this.baseSelection.length) / 2);
+
+    let newStartBasePair = this.baseSelection.basePairStart - lengthAdjustment;
+    let newStopBasePair = this.baseSelection.basePairStop + lengthAdjustment;
+
+    if (newStartBasePair < 0 && newStopBasePair > backboneBasePairStop)
+    {
+      newStartBasePair = 0;
+      newStopBasePair = backboneBasePairStop;
+    }
+    else if (newStartBasePair < 0)
+    {
+      // Add the extra length onto the end of the new stop base pair
+      newStopBasePair = (newStopBasePair - newStartBasePair > backboneBasePairStop) ? backboneBasePairStop : newStopBasePair - newStartBasePair;
+      newStartBasePair = 0;
+    }
+    else if (newStopBasePair > backboneBasePairStop)
+    {
+      // Subtract the extra length from the new start base pair
+      newStartBasePair = (newStartBasePair - (newStopBasePair - backboneBasePairStop) < 0) ? 0 : newStartBasePair - (newStopBasePair - backboneBasePairStop);
+      newStopBasePair = backboneBasePairStop;
+    }
+
+    // Calculate the new SVG starting Y position and height using new base pairs and the bp/height ratio
+    const svgHeightFromTopOfBackboneToStart = newStartBasePair / overviewBasePairToHeightRatio;
+    const svgY = svgHeightFromTopOfBackboneToStart + SVGConstants.overviewTrackYPosition;
+    const svgHeightOfNewBaseSelection = (newStopBasePair - newStartBasePair) / overviewBasePairToHeightRatio;
+
+    this.baseSelection = new SelectedRegion(svgY, svgHeightOfNewBaseSelection, newStartBasePair, newStopBasePair);
+    // Adjust inner selection if it is outside the bounds of the base selection
+    if (this.innerSelection)
+    {
+      let innerStart = this.innerSelection.basePairStart;
+      let innerStop = this.innerSelection.basePairStop;
+      let innerSelectionChanged = false;
+      if (this.innerSelection.basePairStart < this.baseSelection.basePairStart)
+      {
+        innerStart = this.baseSelection.basePairStart;
+        innerSelectionChanged = true;
+      }
+
+      if (this.innerSelection.basePairStop > this.baseSelection.basePairStop)
+      {
+        innerStop = this.baseSelection.basePairStop;
+        innerSelectionChanged = true;
+      }
+      
+      if (innerSelectionChanged)
+      {
+        this.generateInnerSelection(innerStart, innerStop, overviewBasePairToHeightRatio);
+      }
+    }
   }
 
   /**
