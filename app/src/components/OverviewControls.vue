@@ -61,7 +61,10 @@ import { key } from '@/store';
 const store = useStore(key);
 
 const areSelectionButtonsDisabled = computed(() => {
-  return store.state.selectedBackboneRegion.baseSelection.svgHeight <= 0 || store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating;
+  return store.state.selectedBackboneRegion.baseSelection.svgHeight <= 0 
+    || store.state.chromosome == null
+    || store.state.isOverviewPanelUpdating 
+    || store.state.isDetailedPanelUpdating;
 });
 
 const formattedBackboneStart = computed(() => {
@@ -107,7 +110,7 @@ const changeSelectionByPercentage = (percent: number) => {
   selectedBackboneRegion.adjustBaseSelectionByPercentage(percent, store.state.chromosome.seqLength, store.state.overviewBasePairToHeightRatio);
   if (selectedBackboneRegion.innerSelection == null)
   {
-    console.error('Cannot trigger detailed panel update if selected backbone region does not have an inner selection');
+    selectedBackboneRegion.generateInnerSelection(selectedBackboneRegion.baseSelection.basePairStart, selectedBackboneRegion.baseSelection.basePairStop, store.state.overviewBasePairToHeightRatio);
   }
 
   store.dispatch('setSelectedBackboneRegion', selectedBackboneRegion);
