@@ -19,7 +19,7 @@ describe('OverviewControls', () => {
     stopPos: 10000,
     gene: null,
     comparativeSpecies: [],
-    selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
+    selectedBackboneRegion: new BackboneSelection(new SelectedRegion(50,100,100,10000)),
     detailedBasePairRange: { start: 0, stop: 0 },
     overviewBasePairToHeightRatio: 1000,
     overviewSyntenyThreshold: 0,
