@@ -12,14 +12,39 @@
         <div class="col-5">Synteny Threshold:</div>
         <div class="col-7 bold">{{Formatter.addCommasToBasePair(store.state.overviewSyntenyThreshold)}}bp</div>
         <div class="col-5">Selection:</div>
-        <div class="col-7 bold">
-          <span>{{selectionRange}}</span>
+        <div class="col-7 bold"><span>{{selectionRange}}</span></div>
+        <div class="col-7 col-offset-5 selection-btn-row">
+          <Button
+            :disabled="areSelectionButtonsDisabled"
+            v-tooltip.left="'Shrink Selection by 20%'" 
+            icon="pi pi-fast-backward" 
+            class="p-button-success p-button-sm selection-btn" 
+            @click="shrinkSelection(20)" />
+          <Button
+            :disabled="areSelectionButtonsDisabled"
+            v-tooltip.left="'Shrink Selection by 10%'" 
+            icon="pi pi-step-backward" 
+            class="p-button-success p-button-sm selection-btn" 
+            @click="shrinkSelection(10)" />
+          <Button
+            :disabled="areSelectionButtonsDisabled"
+            v-tooltip.left="'Expand Selection by 10%'" 
+            icon="pi pi-step-forward" 
+            class="p-button-success p-button-sm selection-btn" 
+            @click="expandSelection(10)" />
+          <Button
+            :disabled="areSelectionButtonsDisabled"
+            v-tooltip.left="'Expand Selection by 20%'" 
+            icon="pi pi-fast-forward" 
+            class="p-button-success p-button-sm selection-btn" 
+            @click="expandSelection(20)" />
           <Button 
             data-test="clear-selection-btn"
-            v-tooltip.right="'Clear Selection'" 
-            icon="pi pi-trash" 
-            class="p-button-danger p-button-sm clear-btn" 
-            @click="clearSelection"/>
+            :disabled="areSelectionButtonsDisabled"
+            v-tooltip.left="'Clear Selection'" 
+            icon="pi pi-ban" 
+            class="p-button-danger p-button-sm selection-btn" 
+            @click="clearSelection" />
         </div>
       </div>
     </div>
@@ -34,6 +59,10 @@ import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 import { key } from '@/store';
 
 const store = useStore(key);
+
+const areSelectionButtonsDisabled = computed(() => {
+  return store.state.selectedBackboneRegion.baseSelection.svgHeight <= 0;
+});
 
 const formattedBackboneStart = computed(() => {
   return Formatter.addCommasToBasePair(0);
@@ -66,12 +95,20 @@ const clearSelection = () => {
   store.dispatch('setSelectedBackboneRegion', new BackboneSelection(new SelectedRegion(0,0,0,0)));
   store.dispatch('setDetailedBasePairRange', { start: 0, stop: 0 });
 };
+
+const expandSelection = (expansionPercentage: number) => {
+  console.log(expansionPercentage);
+};
+
+const shrinkSelection = (shrinkPercentage: number) => {
+  console.log(shrinkPercentage);
+};
 </script>
 
 <style lang="scss" scoped>
-.p-button.p-button-sm.clear-btn
+.p-button.p-button-sm.selection-btn
 {
-  margin-left: 0.5rem;
+  margin-right: 0.5rem;
   padding: 0.1rem;
   width: 1.5rem;
 }
@@ -79,5 +116,10 @@ const clearSelection = () => {
 .gaps-label
 {
   margin-right: 1rem;
+}
+
+.selection-btn-row
+{
+  margin-top: 0.5rem;
 }
 </style>
