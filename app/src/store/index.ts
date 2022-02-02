@@ -4,7 +4,6 @@ import Species from '@/models/Species';
 import Chromosome from '@/models/Chromosome';
 import Gene from '@/models/Gene';
 import BackboneSelection, { BasePairRange, SelectedRegion } from '@/models/BackboneSelection';
-import DataTrack from '@/models/DataTrack';
 import SVGConstants from '@/utils/SVGConstants';
 import TooltipData from '@/models/TooltipData';
 import { InjectionKey } from 'vue';
@@ -27,8 +26,6 @@ export interface VCMapState
   overviewSyntenyThreshold: number;
   detailedBasePairToHeightRatio: number;
   detailsSyntenyThreshold: number;
-
-  backboneDataTracks: DataTrack[];
 
   configTab: number;
 
@@ -60,8 +57,6 @@ export default createStore({
     overviewSyntenyThreshold: 0,
     detailedBasePairToHeightRatio: 1000,
     detailsSyntenyThreshold: 0,
-
-    backboneDataTracks: [],
 
     configTab: 0,
 
@@ -114,27 +109,6 @@ export default createStore({
       console.debug(`Setting details panel synteny threshold to ${threshold}bp`);
       state.detailsSyntenyThreshold = threshold;
     },
-    backboneDataTracks(state: VCMapState, tracks: DataTrack[]) {
-      state.backboneDataTracks = tracks;
-    },
-    addBackboneDataTrack(state: VCMapState, track: DataTrack ) {
-      if (state.backboneDataTracks.indexOf(track) == -1) 
-      {
-        state.backboneDataTracks.push(track);
-      }
-    },
-    removeBackboneDataTrack(state: VCMapState, index: number) {
-      state.backboneDataTracks.splice(index, 1);
-    },
-    changeBackboneDataTrack(state: VCMapState, track: DataTrack ) {
-      for (let index = 0; index < state.backboneDataTracks.length; index++)
-      {
-        if (state.backboneDataTracks[index].name === track.name)
-        {
-          state.backboneDataTracks[index] = track;
-        }
-      }
-    },
     configTab(state: VCMapState, tab: number) {
       state.configTab = tab;
     },
@@ -150,10 +124,10 @@ export default createStore({
   },
 
   actions: {
-    setSpecies (context: ActionContext<VCMapState, VCMapState>, species: Species) {
+    setSpecies(context: ActionContext<VCMapState, VCMapState>, species: Species) {
       context.commit('species', species);
     },
-    setChromosome (context: ActionContext<VCMapState, VCMapState>, chromosome: Chromosome) {
+    setChromosome(context: ActionContext<VCMapState, VCMapState>, chromosome: Chromosome) {
       context.commit('chromosome', chromosome);
     },
     setStartPosition(context: ActionContext<VCMapState, VCMapState>, startPos: number) {
@@ -164,12 +138,6 @@ export default createStore({
     },
     setGene(context: ActionContext<VCMapState, VCMapState>, gene: Gene) {
       context.commit('gene', gene);
-    },
-    setSelectedBackboneRegion (context: ActionContext<VCMapState, VCMapState>, selection: BackboneSelection) {
-      context.commit('selectedBackboneRegion', selection);
-    },
-    setDetailedBasePairRange(context: ActionContext<VCMapState, VCMapState>, range: BasePairRange) {
-      context.commit('detailedBasePairRange', range);
     },
     setOverviewResolution(context: ActionContext<VCMapState, VCMapState>, backboneLength: number) {
       // The height of the tracks in the overview should have a little buffer on the top and bottom margins
@@ -185,9 +153,6 @@ export default createStore({
       // Note: Dividing by 8,000 is arbitary when calculating synteny threshold
       context.commit('detailsSyntenyThreshold', (backboneLength > 250000) ? Math.floor((backboneLength) / 8000) : 0);
     },
-    resetBackboneDataTracks(context: ActionContext<VCMapState, VCMapState>) {
-      context.commit('backboneDataTracks', []);
-    },
     setConfigTab(context: ActionContext<VCMapState, VCMapState>, tab: number) {
       context.commit('configTab', tab);
     },
@@ -202,6 +167,35 @@ export default createStore({
     },
     setIsOverviewPanelUpdating(context: ActionContext<VCMapState, VCMapState>, isUpdating: boolean) {
       context.commit('isOverviewPanelUpdating', isUpdating);
+    },
+    clearConfiguration(context: ActionContext<VCMapState, VCMapState>) {
+      context.commit('species', null);
+      context.commit('gene', null);
+      context.commit('chromosome', null);
+      context.commit('startPosition', null);
+      context.commit('stopPosition', null);
+      context.commit('comparativeSpecies', []);
+      context.commit('selectedBackboneRegion', new BackboneSelection(new SelectedRegion(0,0,0,0)));
+      context.commit('detailedBasePairRange', { start: 0, stop: 0 });
+    },
+    clearBackboneSelection(context: ActionContext<VCMapState, VCMapState>) {
+      context.commit('selectedBackboneRegion', new BackboneSelection(new SelectedRegion(0,0,0,0)));
+      context.commit('detailedBasePairRange', { start: 0, stop: 0 });
+    },
+    setBackboneSelection(context: ActionContext<VCMapState, VCMapState>, selection: BackboneSelection) {
+      if (selection.innerSelection == null)
+      {
+        selection.generateInnerSelection(selection.baseSelection.basePairStart, selection.baseSelection.basePairStop, context.state.overviewBasePairToHeightRatio);
+      }
+      context.commit('startPosition', selection.baseSelection.basePairStart);
+      context.commit('stopPosition', selection.baseSelection.basePairStop);
+      context.commit('selectedBackboneRegion', selection);
+      // Note: Committing a change to detailedBasePairRange will trigger an update on the Detailed panel
+      context.commit('detailedBasePairRange', { start: selection.innerSelection?.basePairStart, stop: selection.innerSelection?.basePairStop });
+    },
+    setDetailedBasePairRange(context: ActionContext<VCMapState, VCMapState>, range: BasePairRange) {
+      // Note: Committing a change to detailedBasePairRange will trigger an update on the Detailed panel
+      context.commit('detailedBasePairRange', range);
     },
   },
 

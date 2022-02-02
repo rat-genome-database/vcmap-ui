@@ -34,8 +34,7 @@ describe('OverviewControls', () => {
 
   beforeEach(() => {
     actions = {
-      setSelectedBackboneRegion: jest.fn(),
-      setDetailedBasePairRange: jest.fn(),
+      clearBackboneSelection: jest.fn(),
     };
 
     store = createStore({
@@ -75,9 +74,6 @@ describe('OverviewControls', () => {
     const clearBtn = wrapper.get('[data-test="clear-selection-btn"]');
     await clearBtn.trigger('click');
 
-    expect(actions.setSelectedBackboneRegion).toBeCalledTimes(1);
-    expect(actions.setSelectedBackboneRegion).toBeCalledWith(expect.anything(), new BackboneSelection(new SelectedRegion(0,0,0,0)));
-    expect(actions.setDetailedBasePairRange).toBeCalledTimes(1);
-    expect(actions.setDetailedBasePairRange).toBeCalledWith(expect.anything(), { start: 0, stop: 0 });
+    expect(actions.clearBackboneSelection).toBeCalledTimes(1);
   });
 });

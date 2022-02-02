@@ -74,7 +74,6 @@ import { useStore } from 'vuex';
 import TrackSVG from './TrackSVG.vue';
 import SVGConstants from '@/utils/SVGConstants';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
-import DataTrack from '@/models/DataTrack';
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import TooltipSVG from './TooltipSVG.vue';
 import useDialog from '@/composables/useDialog';
@@ -119,17 +118,12 @@ async function attachToProgressLoader(storeLoadingActionName: string, func: () =
 onMounted(async () => {
   // Clear any prior selections
   store.dispatch('setTooltipData', null);
-  store.dispatch('setSelectedBackboneRegion', new BackboneSelection(new SelectedRegion(0,0,0,0)));
-  store.dispatch('setDetailedBasePairRange', { start: 0, stop: 0 });
-  store.dispatch('resetBackboneDataTracks');
-
 
   await attachToProgressLoader('setIsOverviewPanelUpdating', updateOverviewPanel);
   checkSyntenyResultsOnComparativeSpecies(comparativeOverviewTracks);
 });
 
 watch(() => store.state.detailedBasePairRange, () => {
-  removeSelectionDataTracks();
   attachToProgressLoader('setIsDetailedPanelUpdating', updateDetailsPanel);
 });
 
@@ -190,13 +184,31 @@ const updateOverviewPanel = async () => {
     overviewTrackSets.value.push(comparativeTrackSet);
   }
 
-  // Set the backbone selection to the start and stop positions selected on the config screen - the backbone should have just 1 section
-  if (backboneTrack.sections.length > 0)
+  // Set the backbone selection to the start and stop positions selected on the config screen if a selection doesn't already exist
+  // (the backbone should have just 1 section)
+  const prevBackboneSelection = store.state.selectedBackboneRegion;
+  if (backboneTrack.sections.length > 0 && prevBackboneSelection.baseSelection.svgHeight === 0)
   {
-    const selection = backboneTrack.sections[0].generateBackboneSelection(backboneStart, backboneStop, store.state.overviewBasePairToHeightRatio);
-    store.dispatch('setSelectedBackboneRegion', selection);
-    // Trigger an update in the detailed panel
-    store.dispatch('setDetailedBasePairRange', { start: selection.innerSelection?.basePairStart, stop: selection.innerSelection?.basePairStop });
+    const selection = backboneTrack.sections[0].generateBackboneSelection(backboneStart, backboneStop, store.state.overviewBasePairToHeightRatio, backboneChromosome);
+    store.dispatch('setBackboneSelection', selection);
+  }
+  else
+  {
+    // Recreate the BackboneSelection model b/c the model loses its functions after page refresh (vuex-persist plugin does not preserve functions on objects)
+    const recreatedSelection = new BackboneSelection(
+      new SelectedRegion(prevBackboneSelection.baseSelection.svgYPoint, prevBackboneSelection.baseSelection.svgHeight, prevBackboneSelection.baseSelection.basePairStart, prevBackboneSelection.baseSelection.basePairStop), 
+      prevBackboneSelection.chromosome
+    );
+    if (prevBackboneSelection.innerSelection)
+    {
+      recreatedSelection.generateInnerSelection(prevBackboneSelection.innerSelection.basePairStart, prevBackboneSelection.innerSelection.basePairStop, store.state.overviewBasePairToHeightRatio);
+    }
+    else
+    {
+      recreatedSelection.generateInnerSelection(prevBackboneSelection.baseSelection.basePairStart, prevBackboneSelection.baseSelection.basePairStop, store.state.overviewBasePairToHeightRatio);
+    }
+    
+    store.dispatch('setBackboneSelection', recreatedSelection);
   }
 
   console.log(`Update overview time: ${(Date.now() - overviewUpdateStart)} ms`);
@@ -205,8 +217,6 @@ const updateOverviewPanel = async () => {
 const updateDetailsPanel = async () => {
   const detailedUpdateStart = Date.now();
   store.dispatch('setIsDetailedPanelUpdating', true);
-
-  removeSelectionDataTracks();
 
   const backboneSpecies = store.state.species;
   const backboneChromosome = store.state.chromosome;
@@ -242,30 +252,6 @@ const updateDetailsPanel = async () => {
   let tempBackboneTracks = await createBackboneDataTracks(backboneSpecies, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, store.state.detailedBasePairToHeightRatio, true, store.state.detailsSyntenyThreshold, SVGConstants.panelTitleHeight) ?? null;
   if (backboneSelectionTrack != null && tempBackboneTracks != null)
   {
-    if (store.state.backboneDataTracks.length > 0)
-    {
-      let detailTrackPresent = false;
-      let backboneDataTracks = store.state.backboneDataTracks;
-      for (let index = 0; index < backboneDataTracks.length; index++)
-      {
-        let dataTrack = backboneDataTracks[index];
-        if (dataTrack.name == tempBackboneTracks.name)
-        {
-          detailTrackPresent = true;
-          break;
-        }
-      }
-
-      if (detailTrackPresent)
-      {
-        store.commit('changeBackboneDataTrack', tempBackboneTracks);
-      }
-      else
-      {
-        setBackboneDataTracks(tempBackboneTracks);
-      }
-    }
-
     selectionTrackSets.push(new TrackSet(backboneSelectionTrack, [tempBackboneTracks]));
 
     if (store.state.comparativeSpecies.length === 0)
@@ -343,31 +329,12 @@ const getDetailedPanelTrackXOffset = (trackNumber: number, trackType: string, da
   return offset;
 };
 
-const setBackboneDataTracks = (dataTrack: DataTrack) => {
-  store.commit('addBackboneDataTrack', dataTrack);
-};
-
-function removeSelectionDataTracks()
-{
-  let dataTracks = store.state.backboneDataTracks;
-  for (let index = 0; index < dataTracks.length; index++)
-  {
-    let currentDataTrack = dataTracks[index];
-    if (currentDataTrack.isComparativeView)
-    {
-      store.commit('removeBackboneDataTrack', index);
-      index--;
-    }
-  }
-}
-
 const navigateUp = () => {
   if (isNavigationUpDisabled.value) return;
 
   const selectedRegion = store.state.selectedBackboneRegion;
   // Adjust the inner selection on the selected region
   selectedRegion.moveInnerSelectionUp(store.state.overviewBasePairToHeightRatio);
-  store.dispatch('setSelectedBackboneRegion', selectedRegion);
 
   // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
   detailTrackSets.value = [];
@@ -388,7 +355,6 @@ const navigateDown = () => {
   const selectedRegion = store.state.selectedBackboneRegion;
   // Adjust the inner selection on the selected region
   selectedRegion.moveInnerSelectionDown(store.state.overviewBasePairToHeightRatio);
-  store.dispatch('setSelectedBackboneRegion', selectedRegion);
 
   // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
   detailTrackSets.value = [];

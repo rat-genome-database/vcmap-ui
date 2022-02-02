@@ -106,7 +106,7 @@ watch(() => store.state.selectedBackboneRegion, (newVal: BackboneSelection, oldV
   {
     selectedRegion.value = newVal;
   }
-});
+}, { deep: true });
 
 const getAdjustedLabelY = (label: Label, index: number) => {
   if (props.isDetailed)

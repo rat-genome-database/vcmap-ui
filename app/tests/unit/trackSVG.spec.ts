@@ -13,7 +13,6 @@ const BACKBONE_BASEPAIR_TO_HEIGHT_RATIO = 1000;
 describe('TrackSVG', () => {
 
   let store: Store<VCMapState>;
-  let actions: ActionTree<VCMapState, VCMapState>;
   let state = {
     species: null,
     chromosomeNum: null,
@@ -36,13 +35,8 @@ describe('TrackSVG', () => {
   };
 
   beforeEach(() => {
-    actions = {
-      setSelectedBackboneRegion: jest.fn()
-    };
-
     store = createStore({
-      state,
-      actions
+      state
     })
   });
 

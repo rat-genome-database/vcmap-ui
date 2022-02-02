@@ -196,7 +196,7 @@
                 />
               </div>
               <div class="lg:col-2 md:col-3 sm:col-4">
-                <h4 :class="{'config-label': backboneGene}">Upstream Length</h4>
+                <h4 :class="{'config-label': backboneGene}">Start Position</h4>
                 <p v-if="backboneGene" class="label-description">Gene Start: {{Formatter.addCommasToBasePair(backboneGene.start)}}bp</p>
                 <InputNumber
                   showButtons
@@ -210,7 +210,7 @@
                 />
               </div>
               <div class="lg:col-2 md:col-3 sm:col-4">
-                <h4 :class="{'config-label': backboneGene}">Downstream Length</h4>
+                <h4 :class="{'config-label': backboneGene}">Stop Position</h4>
                 <p v-if="backboneGene" class="label-description">Gene Stop: {{Formatter.addCommasToBasePair(backboneGene.stop)}}bp</p>
                 <InputNumber
                   showButtons
@@ -613,6 +613,17 @@ function saveConfigToStoreAndGoToMainScreen()
   {
     backboneSpecies.value.activeMap = backboneAssembly.value;
   }
+
+  // If backbone species, assembly, chromosome, or start/stop position is different -- clear the previous selected region
+  if (store.state.species?.typeKey !== backboneSpecies.value?.typeKey 
+    || store.state.species?.activeMap.key !== backboneSpecies.value?.activeMap.key 
+    || store.state.chromosome?.chromosome !== backboneChromosome.value?.chromosome
+    || store.state.startPos !== startPosition.value
+    || store.state.stopPos !== stopPosition.value)
+  {
+    store.dispatch('clearBackboneSelection');
+  }
+
   store.dispatch('setSpecies', backboneSpecies.value);
   if (activeTab.value === TABS.GENE)
   {
@@ -754,13 +765,7 @@ function clearConfigSelections()
   maxPosition.value = null;
   comparativeSpeciesSelections.value = [];
 
-  // Clear the store
-  store.dispatch('setSpecies', null);
-  store.dispatch('setGene', null);
-  store.dispatch('setChromosome', null);
-  store.dispatch('setStartPosition', null);
-  store.dispatch('setStopPosition', null);
-  store.dispatch('setComparativeSpecies', []);
+  store.dispatch('clearConfiguration');
 }
 </script>
 
