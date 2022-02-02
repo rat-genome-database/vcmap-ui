@@ -192,7 +192,7 @@ const updateOverviewPanel = async () => {
   const prevBackboneSelection = store.state.selectedBackboneRegion;
   if (backboneTrack.sections.length > 0 && prevBackboneSelection.baseSelection.svgHeight === 0)
   {
-    const selection = backboneTrack.sections[0].generateBackboneSelection(backboneStart, backboneStop, store.state.overviewBasePairToHeightRatio);
+    const selection = backboneTrack.sections[0].generateBackboneSelection(backboneStart, backboneStop, store.state.overviewBasePairToHeightRatio, backboneChromosome);
     store.dispatch('setBackboneSelection', selection);
   }
   else

@@ -137,15 +137,15 @@ export default class TrackSection
    * @param start starting basepair
    * @param stop stopping basepair
    * @param basePairToHeightRatio the ratio of bp/svg height units (depends on what panel the track section is rendered in)
+   * @param chromosome backbone chromosome model
    * @returns a BackboneSelection object containing an inner selection of the same region
    */
-  public generateBackboneSelection(start: number, stop: number, basePairToHeightRatio: number)
+  public generateBackboneSelection(start: number, stop: number, basePairToHeightRatio: number, chromosome: Chromosome)
   {
     const startingSVGY = this.svgY + (start - this.sectionStart) / basePairToHeightRatio;
     const svgHeight = (stop - start) / basePairToHeightRatio;
 
-    // FIXME: This should have a chromosome defined
-    const selection = new BackboneSelection(new SelectedRegion(startingSVGY, svgHeight, start, stop));
+    const selection = new BackboneSelection(new SelectedRegion(startingSVGY, svgHeight, start, stop), chromosome);
     selection.generateInnerSelection(start, stop, basePairToHeightRatio);
     return selection;
   }
