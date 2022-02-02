@@ -17,6 +17,7 @@ interface TrackSectionParams
   shape: 'rect' | 'line';
   gene?: Gene; // optional - the gene that this section represents
   hiddenGenes?: TrackSection[]; // optional - list of gene track sections that are hidden due to threshold or contained by this section
+  combinedGenes?: TrackSection[]; // optional - list of gene track sections that are combined into this section label
   chainLevel?: number;
   isInverted?: boolean;
 }
@@ -33,6 +34,7 @@ export default class TrackSection
   trackColor: string = '';
   isHovered: boolean = false;
   hiddenGenes?: TrackSection[] = [];
+  combinedGenes?: TrackSection[] = [];
   shape: 'rect' | 'line' = 'rect';
   svgY: number = 0;
   isInverted: boolean = false;
@@ -52,6 +54,7 @@ export default class TrackSection
     this.gene = params.gene;
     this.trackColor = params.color ?? '';
     this.hiddenGenes = params.hiddenGenes;
+    this.combinedGenes = params.hiddenGenes;
     this.shape = params.shape;
     this._backboneCutoff = params.cutoff;
     this._offsetCount = params.offsetCount ?? 0;
