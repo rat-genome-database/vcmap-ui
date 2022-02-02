@@ -73,7 +73,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import TrackSVG from './TrackSVG.vue';
 import SVGConstants from '@/utils/SVGConstants';
-import BackboneSelection from '@/models/BackboneSelection';
+import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import TooltipSVG from './TooltipSVG.vue';
 import useDialog from '@/composables/useDialog';
@@ -195,7 +195,10 @@ const updateOverviewPanel = async () => {
   else
   {
     // Recreate the BackboneSelection model b/c the model loses its functions after page refresh (vuex-persist plugin does not preserve functions on objects)
-    const recreatedSelection = new BackboneSelection(prevBackboneSelection.baseSelection, prevBackboneSelection.chromosome);
+    const recreatedSelection = new BackboneSelection(
+      new SelectedRegion(prevBackboneSelection.baseSelection.svgYPoint, prevBackboneSelection.baseSelection.svgHeight, prevBackboneSelection.baseSelection.basePairStart, prevBackboneSelection.baseSelection.basePairStop), 
+      prevBackboneSelection.chromosome
+    );
     if (prevBackboneSelection.innerSelection)
     {
       recreatedSelection.generateInnerSelection(prevBackboneSelection.innerSelection.basePairStart, prevBackboneSelection.innerSelection.basePairStop, store.state.overviewBasePairToHeightRatio);
