@@ -21,6 +21,7 @@ export interface Label
   svgY: number;
   text: string;
   isVisible: boolean;
+  symbol?: string;
 }
 
 export default class Track
@@ -30,6 +31,7 @@ export default class Track
   mapName?: string;
   speciesMap?: Number;
   labels: Label[] = [];
+  geneLabels: Label[] = [];
   startingSVGY: number = 0;
   type = 'backbone';
   rawGeneData?: Gene[]; // Tracks made from genes will populate this with the raw gene data it used from the API
@@ -47,6 +49,7 @@ export default class Track
     this.rawSyntenyData = params.rawSyntenyData;
     this.setSectionSVGPositions(this.sections, params.isSyntenyTrack);
     this.buildAndSortLabelObjects(this.sections);
+    this.createCombinedGeneLabels(this.sections);
   }
 
   public get height()
@@ -156,5 +159,85 @@ export default class Track
       }
     });
     this.labels = labels;
+  }
+
+  private createCombinedGeneLabels(drawnSections: TrackSection[])
+  {
+    //sort genes by longest to shortest
+    drawnSections.sort((a, b) => b.height - a.height);
+    
+    //create labels for each gene, track section with labels using map
+    const geneLabelsMap = new Map<string, any>();
+    let labels: Label[] = [];
+
+    drawnSections.forEach(s => {
+      const labelObject = {svgY: s.svgY - SVGConstants.panelTitleHeight <= 3 ? (s.svgY + 5): s.svgY + (s.height/2), text: s.geneLabel ?? '', isVisible: false };
+      labels.push(labelObject);
+      geneLabelsMap.set(Math.trunc(labelObject.svgY).toString(), {'labelShown': false, 'labelCombined': false, 'labelY': labelObject.svgY, 'trackSection': s});
+    });
+
+    //labels are sorted in order of longest gene to shortest
+    for (let index = 0; index < labels.length; index++)
+    {
+      const label = labels[index];
+      const labelSection = geneLabelsMap.get(Math.trunc(label.svgY).toString());
+      
+      if (labelSection)
+      {
+        if (labelSection.labelCombined)
+        {
+          labelSection.labelShown = false;
+          continue;
+        }
+
+        //check for labels above and below the current label that would overlap
+        for (let keyDiff = 1; keyDiff < 10; keyDiff++)
+        {
+          const aboveKey = (Math.trunc(label.svgY) - keyDiff).toString();
+          const belowKey = (Math.trunc(label.svgY) + keyDiff).toString();
+
+          const aboveKeyCheck = geneLabelsMap.has(aboveKey);
+          const belowKeyCheck = geneLabelsMap.has(belowKey);
+
+          if (aboveKeyCheck)
+          {
+            const sectionAbove = geneLabelsMap.get(aboveKey);
+            //gene has already been combined into a label
+            if (sectionAbove.labelCombined)
+            {
+              sectionAbove.labelShown = false;
+            }
+            else
+            {
+              labelSection.trackSection.combinedGenes ? labelSection.trackSection.combinedGenes.push(sectionAbove.trackSection) : labelSection.trackSection.combinedGenes = [sectionAbove.trackSection];
+              sectionAbove.labelCombined = true;
+            }
+          }
+          if (belowKeyCheck)
+          {
+            const sectionBelow = geneLabelsMap.get(belowKey);
+            if (sectionBelow.labelCombined)
+            {
+              sectionBelow.labelShown = false;
+            }
+            else
+            {
+              labelSection.trackSection.combinedGenes ? labelSection.trackSection.combinedGenes.push(sectionBelow.trackSection) : labelSection.trackSection.combinedGenes = [sectionBelow.trackSection];
+              sectionBelow.labelCombined = true;
+            }
+          }
+
+          labelSection.labelShown = true;
+        }
+      }
+    }
+
+    labels = [];
+    geneLabelsMap.forEach((value) => {
+      const labelObject = {svgY: value.labelY, text: value.trackSection.geneLabel, isVisible: value.labelShown};
+      labels.push(labelObject);
+    });
+
+    this.geneLabels = labels;
   }
 }

@@ -20,17 +20,17 @@
     </text>
   </template>
 
-  <template v-for="(section, index) in track.sections" :key="index">
-    <!-- Gene Labels: only shown with ample offset-->
-    <text v-if="showGeneLabel && (section.offsetHeight > 6 || index === 0)" 
+  <!-- Gene Labels: only shown with ample offset-->
+  <template v-for="(label, index) in track.geneLabels" :key="index">
+    <text v-if="showGeneLabel && label.isVisible" 
       class="label small" 
-      @mouseenter="onMouseEnter($event, section, true)"
-      @mouseleave="onMouseLeave(section)"
       :x="posX + width" 
-      :y="getGeneLabelY(section, index)">
-      - {{section.geneLabel}}
+      :y="label.svgY + LABEL_Y_OFFSET">
+      - {{label.text}}
     </text>
+  </template>
 
+  <template v-for="(section, index) in track.sections" :key="index">
     <!-- Level 1 or unleveled section -->
     <rect v-if="section.shape !== 'line' && section.chainLevel !== 2"
       data-test="track-section-svg"
@@ -38,7 +38,7 @@
       @mouseenter="onMouseEnter($event, section, false)"
       @mouseleave="onMouseLeave(section)"
       :fill="section.isHovered ? HIGHLIGHT_COLOR : section.color"
-      :fill-opacity="geneDataTrack ? .5 : 1" 
+      :fill-opacity="geneDataTrack ? .6 : 1" 
       :x="posX" :y="section.svgY" 
       :width="width" 
       :height="section.height" />
@@ -55,7 +55,6 @@
       @mouseenter="onMouseEnter($event, section, false)"
       @mouseleave="onMouseLeave(section)"
       :fill="section.isHovered ? HIGHLIGHT_COLOR : section.color"
-      :fill-opacity="geneDataTrack ? .5 : 1" 
       :x="posX + ((width * (1 - LEVEL_2_WIDTH_MULTIPLIER)) / 2)" :y="section.svgY" 
       :width="width * LEVEL_2_WIDTH_MULTIPLIER" 
       :height="section.height" />
