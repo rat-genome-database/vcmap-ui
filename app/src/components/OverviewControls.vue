@@ -148,8 +148,7 @@ const selectionRange = computed(() => {
 });
 
 const clearSelection = () => {
-  store.dispatch('setSelectedBackboneRegion', new BackboneSelection(new SelectedRegion(0,0,0,0)));
-  store.dispatch('setDetailedBasePairRange', { start: 0, stop: 0 });
+  store.dispatch('clearBackboneSelection');
 };
 
 const changeSelectionByPercentage = (percent: number) => {
@@ -161,7 +160,7 @@ const changeSelectionByPercentage = (percent: number) => {
 
   const selectedBackboneRegion = store.state.selectedBackboneRegion;
   selectedBackboneRegion.adjustBaseSelectionByPercentage(percent, store.state.chromosome.seqLength, store.state.overviewBasePairToHeightRatio);
-  dispatchSelectionChanges(selectedBackboneRegion);
+  store.dispatch('setBackboneSelection', selectedBackboneRegion);
 };
 
 const openSelectionEditModal = () => {
@@ -185,19 +184,9 @@ const saveSelectionChange = () => {
   {
     const selectedBackboneRegion = store.state.selectedBackboneRegion;
     selectedBackboneRegion.adjustBaseSelectionByPosition(startPosition.value, stopPosition.value, store.state.chromosome?.seqLength, store.state.overviewBasePairToHeightRatio);
-    dispatchSelectionChanges(selectedBackboneRegion);
+    store.dispatch('setBackboneSelection', selectedBackboneRegion);
   }
   showEditModal.value = false;
-};
-
-const dispatchSelectionChanges = (selectedBackboneRegion: BackboneSelection) => {
-  if (selectedBackboneRegion.innerSelection == null)
-  {
-    selectedBackboneRegion.generateInnerSelection(selectedBackboneRegion.baseSelection.basePairStart, selectedBackboneRegion.baseSelection.basePairStop, store.state.overviewBasePairToHeightRatio);
-  }
-
-  store.dispatch('setSelectedBackboneRegion', selectedBackboneRegion);
-  store.dispatch('setDetailedBasePairRange', { start: selectedBackboneRegion.innerSelection?.basePairStart, stop: selectedBackboneRegion.innerSelection?.basePairStop });
 };
 </script>
 

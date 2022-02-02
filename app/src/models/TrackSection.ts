@@ -144,6 +144,7 @@ export default class TrackSection
     const startingSVGY = this.svgY + (start - this.sectionStart) / basePairToHeightRatio;
     const svgHeight = (stop - start) / basePairToHeightRatio;
 
+    // FIXME: This should have a chromosome defined
     const selection = new BackboneSelection(new SelectedRegion(startingSVGY, svgHeight, start, stop));
     selection.generateInnerSelection(start, stop, basePairToHeightRatio);
     return selection;

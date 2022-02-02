@@ -150,10 +150,10 @@ export default createStore({
   },
 
   actions: {
-    setSpecies (context: ActionContext<VCMapState, VCMapState>, species: Species) {
+    setSpecies(context: ActionContext<VCMapState, VCMapState>, species: Species) {
       context.commit('species', species);
     },
-    setChromosome (context: ActionContext<VCMapState, VCMapState>, chromosome: Chromosome) {
+    setChromosome(context: ActionContext<VCMapState, VCMapState>, chromosome: Chromosome) {
       context.commit('chromosome', chromosome);
     },
     setStartPosition(context: ActionContext<VCMapState, VCMapState>, startPos: number) {
@@ -164,12 +164,6 @@ export default createStore({
     },
     setGene(context: ActionContext<VCMapState, VCMapState>, gene: Gene) {
       context.commit('gene', gene);
-    },
-    setSelectedBackboneRegion (context: ActionContext<VCMapState, VCMapState>, selection: BackboneSelection) {
-      context.commit('selectedBackboneRegion', selection);
-    },
-    setDetailedBasePairRange(context: ActionContext<VCMapState, VCMapState>, range: BasePairRange) {
-      context.commit('detailedBasePairRange', range);
     },
     setOverviewResolution(context: ActionContext<VCMapState, VCMapState>, backboneLength: number) {
       // The height of the tracks in the overview should have a little buffer on the top and bottom margins
@@ -202,6 +196,35 @@ export default createStore({
     },
     setIsOverviewPanelUpdating(context: ActionContext<VCMapState, VCMapState>, isUpdating: boolean) {
       context.commit('isOverviewPanelUpdating', isUpdating);
+    },
+    clearConfiguration(context: ActionContext<VCMapState, VCMapState>) {
+      context.commit('species', null);
+      context.commit('gene', null);
+      context.commit('chromosome', null);
+      context.commit('startPosition', null);
+      context.commit('stopPosition', null);
+      context.commit('comparativeSpecies', []);
+      context.commit('selectedBackboneRegion', new BackboneSelection(new SelectedRegion(0,0,0,0)));
+      context.commit('detailedBasePairRange', { start: 0, stop: 0 });
+    },
+    clearBackboneSelection(context: ActionContext<VCMapState, VCMapState>) {
+      context.commit('selectedBackboneRegion', new BackboneSelection(new SelectedRegion(0,0,0,0)));
+      context.commit('detailedBasePairRange', { start: 0, stop: 0 });
+    },
+    setBackboneSelection(context: ActionContext<VCMapState, VCMapState>, selection: BackboneSelection) {
+      if (selection.innerSelection == null)
+      {
+        selection.generateInnerSelection(selection.baseSelection.basePairStart, selection.baseSelection.basePairStop, context.state.overviewBasePairToHeightRatio);
+      }
+      context.commit('startPosition', selection.baseSelection.basePairStart);
+      context.commit('stopPosition', selection.baseSelection.basePairStop);
+      context.commit('selectedBackboneRegion', selection);
+      // Note: Committing a change to detailedBasePairRange will trigger an update on the Detailed panel
+      context.commit('detailedBasePairRange', { start: selection.innerSelection?.basePairStart, stop: selection.innerSelection?.basePairStop });
+    },
+    setDetailedBasePairRange(context: ActionContext<VCMapState, VCMapState>, range: BasePairRange) {
+      // Note: Committing a change to detailedBasePairRange will trigger an update on the Detailed panel
+      context.commit('detailedBasePairRange', range);
     },
   },
 
