@@ -61,7 +61,7 @@ export default function useOverviewPanelSelection(store: Store<VCMapState>) {
     const backboneOverviewTrackSection = backboneTracks[0].speciesTrack.sections[0] ?? null;
     if (startOverviewSelectionY.value != null && stopOverviewSelectionY.value != null && backboneOverviewTrackSection != null)
     {
-      // Calculate start/stop base pairs based on bp to height ratio in the detailed panel
+      // Calculate start/stop base pairs based on bp to height ratio in the overview panel
       const startingBasePairCountFromStartOfBackbone = Math.floor((startOverviewSelectionY.value - backboneOverviewTrackSection.svgY) * store.state.overviewBasePairToHeightRatio);
       let basePairStart = startingBasePairCountFromStartOfBackbone + backboneOverviewTrackSection.sectionStart;
 

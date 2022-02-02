@@ -1,16 +1,16 @@
 <template>
-  <div class="grid unpadded col-4">
+  <div class="grid unpadded col-7">
     <div class="col-12">
       <h4>Details</h4>
       <div class="grid unpadded">
-        <div class="col-5">Displaying:</div>
-        <div class="col-7 bold">{{store.state.species?.name}} chr{{store.state.chromosome?.chromosome}}:{{displayedSpeciesRegionLabel}}</div>
-        <div class="col-5">Comparative Species:</div>
-        <div class="col-7 bold">{{comparativeSpeciesText}}</div>
-        <div class="col-5">Synteny Threshold:</div>
-        <div class="col-7 bold">{{Formatter.addCommasToBasePair(store.state.detailsSyntenyThreshold)}}bp</div>
-        <div class="col-5">Zoom Level:</div>
-        <div class="col-7 bold"><Zoom /></div>
+        <div class="col-3">Displaying:</div>
+        <div class="col-9 bold">{{store.state.species?.name}} chr{{store.state.chromosome?.chromosome}}:{{displayedSpeciesRegionLabel}}</div>
+        <div class="col-3">Comparative Species:</div>
+        <div class="col-9 bold">{{comparativeSpeciesText}}</div>
+        <div class="col-3">Synteny Threshold:</div>
+        <div class="col-9 bold">{{Formatter.addCommasToBasePair(store.state.detailsSyntenyThreshold)}}bp</div>
+        <div class="col-3">Zoom Level:</div>
+        <div class="col-9 bold"><Zoom /></div>
       </div>
     </div>
   </div>
