@@ -8,8 +8,13 @@
     :closable="false"
     :modal="true">
     <p>{{props.message}}</p>
+    <slot name="content">
+      <p>{{props.message}}</p>
+    </slot>
     <template #footer>
-      <Button label="Ok" :class="{'p-button-danger': (props.theme === 'error')}" @click="close" autofocus />
+      <slot name="footer">
+        <Button label="Ok" :class="{'p-button-danger': (props.theme === 'error')}" @click="close" autofocus />
+      </slot>
     </template>
   </Dialog>
 </template>
@@ -23,7 +28,7 @@ import { computed } from 'vue';
 interface Props 
 {
   header: string;
-  message: string;
+  message?: string;
   show: boolean;
   theme?: 'error' | 'normal'
 }

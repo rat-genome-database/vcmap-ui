@@ -54,9 +54,21 @@ export default class BackboneSelection
   {
     const lengthAdjustment = Math.ceil(((percent / 100) * this.baseSelection.length) / 2);
 
-    let newStartBasePair = this.baseSelection.basePairStart - lengthAdjustment;
-    let newStopBasePair = this.baseSelection.basePairStop + lengthAdjustment;
+    const newStartBasePair = this.baseSelection.basePairStart - lengthAdjustment;
+    const newStopBasePair = this.baseSelection.basePairStop + lengthAdjustment;
 
+    this.adjustBaseSelectionByPosition(newStartBasePair, newStopBasePair, backboneBasePairStop, overviewBasePairToHeightRatio);
+  }
+
+  /**
+   * Adjusts the bp start/stop of the base selection (and inner selection if necessary) according to new start/stop positions
+   * @param newStartBasePair new start bp
+   * @param newStopBasePair new stop bp
+   * @param backboneBasePairStop the cutoff base pair on the backbone (will likely be the end of the backbone chromosome)
+   * @param overviewBasePairToHeightRatio the bp/height ratio of the overview panel
+   */
+  public adjustBaseSelectionByPosition(newStartBasePair: number, newStopBasePair: number, backboneBasePairStop: number, overviewBasePairToHeightRatio: number)
+  {
     if (newStartBasePair < 0 && newStopBasePair > backboneBasePairStop)
     {
       newStartBasePair = 0;
