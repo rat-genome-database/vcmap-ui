@@ -95,7 +95,6 @@
 import { Formatter } from '@/utils/Formatter';
 import { computed, ref } from 'vue';
 import { useStore } from 'vuex';
-import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 import { key } from '@/store';
 import VCMapDialog from './VCMapDialog.vue';
 

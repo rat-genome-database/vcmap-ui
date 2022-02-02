@@ -293,7 +293,6 @@ import { VERSION } from '@/version';
 import { Formatter } from '@/utils/Formatter';
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import { key } from '@/store';
-import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 
 interface ComparativeSpeciesSelection
 {

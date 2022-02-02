@@ -74,7 +74,6 @@ import { useStore } from 'vuex';
 import TrackSVG from './TrackSVG.vue';
 import SVGConstants from '@/utils/SVGConstants';
 import BackboneSelection from '@/models/BackboneSelection';
-import DataTrack from '@/models/DataTrack';
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import TooltipSVG from './TooltipSVG.vue';
 import useDialog from '@/composables/useDialog';
@@ -119,14 +118,12 @@ async function attachToProgressLoader(storeLoadingActionName: string, func: () =
 onMounted(async () => {
   // Clear any prior selections
   store.dispatch('setTooltipData', null);
-  store.dispatch('resetBackboneDataTracks');
 
   await attachToProgressLoader('setIsOverviewPanelUpdating', updateOverviewPanel);
   checkSyntenyResultsOnComparativeSpecies(comparativeOverviewTracks);
 });
 
 watch(() => store.state.detailedBasePairRange, () => {
-  removeSelectionDataTracks();
   attachToProgressLoader('setIsDetailedPanelUpdating', updateDetailsPanel);
 });
 
@@ -218,8 +215,6 @@ const updateDetailsPanel = async () => {
   const detailedUpdateStart = Date.now();
   store.dispatch('setIsDetailedPanelUpdating', true);
 
-  removeSelectionDataTracks();
-
   const backboneSpecies = store.state.species;
   const backboneChromosome = store.state.chromosome;
   const originalSelectedBackboneRegion = store.state.selectedBackboneRegion;
@@ -254,30 +249,6 @@ const updateDetailsPanel = async () => {
   let tempBackboneTracks = await createBackboneDataTracks(backboneSpecies, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, store.state.detailedBasePairToHeightRatio, true, store.state.detailsSyntenyThreshold, SVGConstants.panelTitleHeight) ?? null;
   if (backboneSelectionTrack != null && tempBackboneTracks != null)
   {
-    if (store.state.backboneDataTracks.length > 0)
-    {
-      let detailTrackPresent = false;
-      let backboneDataTracks = store.state.backboneDataTracks;
-      for (let index = 0; index < backboneDataTracks.length; index++)
-      {
-        let dataTrack = backboneDataTracks[index];
-        if (dataTrack.name == tempBackboneTracks.name)
-        {
-          detailTrackPresent = true;
-          break;
-        }
-      }
-
-      if (detailTrackPresent)
-      {
-        store.commit('changeBackboneDataTrack', tempBackboneTracks);
-      }
-      else
-      {
-        setBackboneDataTracks(tempBackboneTracks);
-      }
-    }
-
     selectionTrackSets.push(new TrackSet(backboneSelectionTrack, [tempBackboneTracks]));
 
     if (store.state.comparativeSpecies.length === 0)
@@ -354,24 +325,6 @@ const getDetailedPanelTrackXOffset = (trackNumber: number, trackType: string, da
 
   return offset;
 };
-
-const setBackboneDataTracks = (dataTrack: DataTrack) => {
-  store.commit('addBackboneDataTrack', dataTrack);
-};
-
-function removeSelectionDataTracks()
-{
-  let dataTracks = store.state.backboneDataTracks;
-  for (let index = 0; index < dataTracks.length; index++)
-  {
-    let currentDataTrack = dataTracks[index];
-    if (currentDataTrack.isComparativeView)
-    {
-      store.commit('removeBackboneDataTrack', index);
-      index--;
-    }
-  }
-}
 
 const navigateUp = () => {
   if (isNavigationUpDisabled.value) return;
