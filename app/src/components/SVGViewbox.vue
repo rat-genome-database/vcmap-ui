@@ -32,7 +32,7 @@
 
       <template v-if="trackSet.dataTracks.length > 0">
         <template v-for="dataTrack, index2 in trackSet.dataTracks" :key="dataTrack.name">
-          <TrackSVG v-if="dataTrack.isDisplayed" gene-data-track show-gene-label :pos-x="getDetailedPanelTrackXOffset(index, 'datatrack', index2 + 1) + SVGConstants.selectedBackboneXPosition" :width="SVGConstants.dataTrackWidth" :track="dataTrack.track as Track" />
+          <TrackSVG v-if="dataTrack.isDisplayed" gene-data-track show-gene-label :pos-x="getDetailedPanelTrackXOffset(index, 'datatrack', index2 + 1) + SVGConstants.selectedBackboneXPosition" :width="SVGConstants.dataTrackWidth" :lines="dataTrack.orthologLines as OrthologLine[] ?? []" :track="dataTrack.track as Track" />
         </template>
       </template>
     </template>
@@ -79,11 +79,13 @@ import TooltipSVG from './TooltipSVG.vue';
 import useDialog from '@/composables/useDialog';
 import BackboneTrackSVG from './BackboneTrackSVG.vue';
 import TrackSet from '@/models/TrackSet';
+import OrthologLine from '@/models/OrthologLine';
 import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
 import { key } from '@/store';
 import { backboneDetailedError, backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError } from '@/utils/VCMapErrors';
 import { createBackboneDataTracks, createComparativeDataTracks, createBackboneTrack, createSyntenyTracks } from '@/utils/TrackBuilder';
 import useOverviewPanelSelection from '@/composables/useOverviewPanelSelection';
+import SpeciesApi from '@/api/SpeciesApi';
 
 const store = useStore(key);
 
@@ -270,13 +272,20 @@ const updateDetailsPanel = async () => {
       SVGConstants.panelTitleHeight // SVG positioning of detailed tracks will start immediately after the header panel
     );
 
+    const compSpeciesMaps: Number[] = [];
+
     for (let index = 0; index < comparativeSelectionTracks.length; index++)
     {
       let track = comparativeSelectionTracks[index];
       let tempComparativeTracks = await createComparativeDataTracks(track, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, store.state.detailedBasePairToHeightRatio, true, store.state.detailsSyntenyThreshold, SVGConstants.panelTitleHeight);
-      
+      if (track.speciesMap)
+      {
+        compSpeciesMaps.push(track.speciesMap);
+      }
       selectionTrackSets.push(new TrackSet(track, [tempComparativeTracks]));
     }
+
+    const backboneGeneOrthologs = await SpeciesApi.getGeneOrthologs(backboneSpecies.defaultMapKey, backboneChromosome.chromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, compSpeciesMaps);
 
     // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
     selectionTrackSets.forEach(trackSet => {
@@ -286,6 +295,8 @@ const updateDetailsPanel = async () => {
         detailTrackSets.value.push(visibleTrackSet);
       }
     });
+
+    generateOrthologLines(backboneGeneOrthologs, compSpeciesMaps);
   }
   else
   {
@@ -297,6 +308,92 @@ const updateDetailsPanel = async () => {
   store.dispatch('setIsDetailedPanelUpdating', false);
   console.log(`Update detailed time: ${(Date.now() - detailedUpdateStart)} ms`);
 };
+
+const generateOrthologLines = (orthologData: any, comparativeMaps: Number[]) => {
+  let orthologLines: OrthologLine[] = [];
+  let possibleOrthologs = [];
+  let backboneGenes = detailTrackSets.value[0].dataTracks[0].track.sections;
+  
+
+  backboneGenes.forEach(backboneGene => {
+    //check ortholog data for currently visible backbone genes that have orthologs
+    let orthologInfo = orthologData.get(backboneGene.gene.symbol);
+    if (orthologInfo)
+    {
+      possibleOrthologs.push({'backboneGene': backboneGene, 'orthologs': orthologInfo});
+    }
+  });
+  console.log('possible', possibleOrthologs.length);
+  console.log('data', orthologData.size);
+
+  //gather the genes for each comparative species
+  let comparativeGenes = {};
+  comparativeMaps.forEach(comparativeMap => {
+    //create a key for each comparative species
+    comparativeGenes[comparativeMap] = [];
+  });
+
+  //gather the genes for each comparative species from the currently visible data tracks
+  detailTrackSets.value.forEach((trackSet, index) => {
+    const speciesMap = trackSet.speciesTrack.speciesMap;
+    if (speciesMap)
+    {
+      if (comparativeGenes[speciesMap])
+      {
+        const sections = trackSet.dataTracks[0].track.sections;
+        const sectionMap = new Map<string, any>();
+        const xPos = getDetailedPanelTrackXOffset(index, 'datatrack', 1) + SVGConstants.selectedBackboneXPosition;
+        sections.forEach(section => {
+          sectionMap.set(section.gene.symbol, {'section': section, 'xPos': xPos});
+        });
+        comparativeGenes[speciesMap] = sectionMap;
+      }
+    }
+  });
+
+  //find correlating orthologs on comparative species and create orhtolog lines
+  console.log('comp', comparativeGenes[372]);
+  possibleOrthologs.forEach(possibleOrtholog => {
+    const compSpeciesOrthologs = possibleOrtholog.orthologs;
+    const backboneGene = possibleOrtholog.backboneGene;
+
+    Object.entries(compSpeciesOrthologs).forEach(speciesMap =>{
+      const compOrthologInfo = speciesMap[1];
+      const speciesMapKey = speciesMap[0];
+      
+      if (compOrthologInfo.length > 1)
+      {
+        compOrthologInfo.forEach(gene => {
+          const geneSymbol = gene.geneSymbol;
+          const comparativeGene = comparativeGenes[speciesMapKey].get(geneSymbol);
+          if (comparativeGene)
+          {
+            const orthologLine = createOrthologLine(backboneGene, comparativeGene);
+            orthologLines.push(orthologLine);
+          }
+        });
+      }
+      else
+      {
+        const geneSymbol = compOrthologInfo[0].geneSymbol;
+        const comparativeGene = comparativeGenes[speciesMapKey].get(geneSymbol);
+        if (comparativeGene)
+        {
+          const orthologLine = createOrthologLine(backboneGene, comparativeGene);
+          orthologLines.push(orthologLine);
+        }
+      }
+    });
+  });
+
+  detailTrackSets.value[0].dataTracks[0].setOrthologLines(orthologLines);
+};
+
+const createOrthologLine = (backboneGeneSection: any, comparativeGeneSection: any) => {
+  let orthologLine = new OrthologLine({backboneY: backboneGeneSection.svgY, comparativeY: comparativeGeneSection.section.svgY + (comparativeGeneSection.section.height/2), comparativeX: comparativeGeneSection.xPos});
+  return orthologLine;
+};
+
 
 /**
  * Gets the offset of the X position relative to the backbone species track

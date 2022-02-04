@@ -30,6 +30,15 @@
     </text>
   </template>
 
+  <template v-if="lines">
+    <template v-for="(line, index) in lines" :key="index">
+      <line
+        class="ortholog-line"
+        :x1="posX + width" :x2="line.comparativeGeneX" 
+        :y1="line.backboneGeneY" :y2="line.comparativeGeneY" />
+    </template>
+  </template>
+
   <template v-for="(section, index) in track.sections" :key="index">
     <!-- Level 1 or unleveled section -->
     <rect v-if="section.shape !== 'line' && section.chainLevel !== 2"
@@ -92,6 +101,7 @@
 <script lang="ts" setup>
 import TooltipData from '@/models/TooltipData';
 import Track from '@/models/Track';
+import OrthologLine from '@/models/OrthologLine';
 import TrackSection from '@/models/TrackSection';
 import { toRefs } from '@vue/reactivity';
 import { useStore } from 'vuex';
@@ -116,17 +126,13 @@ interface Props
   posX: number;
   width: number;
   track: Track;
+  lines?: OrthologLine[] | undefined;
 }
 
 const props = defineProps<Props>();
 
 //Converts each property in this object to its own reactive prop
 toRefs(props);
-
-const getGeneLabelY = (section: TrackSection, index: number) => {
-  // If first gene label is too close to the top of the detailed panel, add some extra top margin
-  return (index === 0 && section.svgY - SVGConstants.panelTitleHeight < 10) ? section.svgY + 7 : section.svgY + LABEL_Y_OFFSET;
-};
 
 const onMouseEnter = (event: any, section: TrackSection, isGeneLabel: boolean) => {
   section.isHovered = true;
@@ -162,6 +168,12 @@ const onMouseLeave = (section: TrackSection) => {
   font: normal 12px sans-serif;
   fill: #4c4b4b;
 }
+
+.ortholog-line
+  {
+    stroke-width: 1;
+    stroke: grey;
+  }
 
 .section
 {
