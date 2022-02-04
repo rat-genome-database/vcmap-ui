@@ -323,8 +323,6 @@ const generateOrthologLines = (orthologData: any, comparativeMaps: Number[]) => 
       possibleOrthologs.push({'backboneGene': backboneGene, 'orthologs': orthologInfo});
     }
   });
-  console.log('possible', possibleOrthologs.length);
-  console.log('data', orthologData.size);
 
   //gather the genes for each comparative species
   let comparativeGenes = {};
@@ -352,7 +350,6 @@ const generateOrthologLines = (orthologData: any, comparativeMaps: Number[]) => 
   });
 
   //find correlating orthologs on comparative species and create orhtolog lines
-  console.log('comp', comparativeGenes[372]);
   possibleOrthologs.forEach(possibleOrtholog => {
     const compSpeciesOrthologs = possibleOrtholog.orthologs;
     const backboneGene = possibleOrtholog.backboneGene;
