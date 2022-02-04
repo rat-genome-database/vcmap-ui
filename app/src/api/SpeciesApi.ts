@@ -1,6 +1,6 @@
 import httpInstance from '@/api/httpInstance';
 import Species from '@/models/Species';
-import Map from '@/models/Map';
+import MapType from '@/models/Map';
 import Chromosome from '@/models/Chromosome';
 import Gene from '@/models/Gene';
 
@@ -12,7 +12,7 @@ export default class SpeciesApi
     const speciesList: Species[] = [];
     for (const species of speciesRes.data)
     {
-      const mapsList: Map[] = [];
+      const mapsList: MapType[] = [];
       let defaultMapKey = null;
       for (const map of species.maps)
       {
@@ -20,7 +20,7 @@ export default class SpeciesApi
         {
           defaultMapKey = map.key;
         }
-        mapsList.push(new Map({ key: map.key, name: map.name, description: map.description, notes: map.notes, primaryRefAssembly: map.primaryRefAssembly }));
+        mapsList.push(new MapType({ key: map.key, name: map.name, description: map.description, notes: map.notes, primaryRefAssembly: map.primaryRefAssembly }));
       }
 
       speciesList.push(new Species({ typeKey: species.speciesTypeKey, name: species.name, defaultMapKey: defaultMapKey ?? species.maps[0].key, maps: mapsList }));
@@ -28,15 +28,15 @@ export default class SpeciesApi
     return speciesList;
   }
 
-  static async getMaps(speciesTypeKey: Number):  Promise<Map[]>
+  static async getMaps(speciesTypeKey: Number):  Promise<MapType[]>
   {
     const res = await httpInstance.get(`/lookup/maps/${speciesTypeKey}`);
-    const mapsList: Map[] = [];
+    const mapsList: MapType[] = [];
 
     for (const map in res.data)
     {
       const mapInfo = res.data[map];
-      mapsList.push(new Map({ key: mapInfo.key, name: mapInfo.name, description: mapInfo.description, notes: mapInfo.notes, primaryRefAssembly: mapInfo.primaryRefAssembly }));
+      mapsList.push(new MapType({ key: mapInfo.key, name: mapInfo.name, description: mapInfo.description, notes: mapInfo.notes, primaryRefAssembly: mapInfo.primaryRefAssembly }));
     }
 
     return mapsList;
@@ -94,5 +94,25 @@ export default class SpeciesApi
     }
 
     return geneList;
+  }
+
+  static async getGeneOrthologs(mapKey: Number, chromosome: String, start: Number, stop: Number, compMapKeys: Number[]):  Promise<any>
+  {
+    let mapKeyString = '';
+    for (let index = 0; index < compMapKeys.length; index++)
+    {
+      const key = compMapKeys[index];
+      index == compMapKeys.length -1 ? mapKeyString += key : mapKeyString += key + ',';
+    }
+    const res = await httpInstance.get(`/vcmap/genes/orthologs/${mapKey}/${chromosome}/${start}/${stop}}?mapKeys=${mapKeyString.toString()}`);
+    
+    const orthologList = new Map<string, any>();
+    for (const gene in res.data)
+    {
+      const geneInfo = res.data[gene];
+
+      orthologList.set(geneInfo.gene.geneSymbol, geneInfo.orthologs)
+    }
+    return orthologList;
   }
 }
