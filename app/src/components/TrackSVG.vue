@@ -34,6 +34,8 @@
     <template v-for="(line, index) in lines" :key="index">
       <line
         class="ortholog-line"
+        @mouseenter="onMouseEnter($event, line, false)"
+        @mouseleave="onMouseLeave(line)"
         :x1="posX + width" :x2="line.comparativeGeneX" 
         :y1="line.backboneGeneY" :y2="line.comparativeGeneY" />
     </template>
@@ -134,11 +136,11 @@ const props = defineProps<Props>();
 //Converts each property in this object to its own reactive prop
 toRefs(props);
 
-const onMouseEnter = (event: any, section: TrackSection, isGeneLabel: boolean) => {
+const onMouseEnter = (event: any, section: TrackSection, type: string) => {
   section.isHovered = true;
 
   // If is a gene label but has no hidden genes, show nothing 
-  if (isGeneLabel)
+  if (type === 'geneLabel')
   {
     if (!section.hiddenGenes || section.hiddenGenes.length <= 0)
     {
@@ -147,7 +149,7 @@ const onMouseEnter = (event: any, section: TrackSection, isGeneLabel: boolean) =
   }
 
   let currentSVGPoint = getMousePosSVG(svg, event);
-  const tooltipData = new TooltipData(props.posX, currentSVGPoint.y, section, isGeneLabel);
+  const tooltipData = new TooltipData(props.posX, currentSVGPoint.y, section, type);
   store.dispatch('setTooltipData', tooltipData);
 };
 
@@ -170,10 +172,10 @@ const onMouseLeave = (section: TrackSection) => {
 }
 
 .ortholog-line
-  {
-    stroke-width: 1;
-    stroke: grey;
-  }
+{
+  stroke-width: 1;
+  stroke: grey;
+}
 
 .section
 {

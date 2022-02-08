@@ -296,7 +296,11 @@ const updateDetailsPanel = async () => {
       }
     });
 
-    generateOrthologLines(backboneGeneOrthologs, compSpeciesMaps);
+    if (backboneGeneOrthologs)
+    {
+      store.dispatch('setBackboneOrthologData', backboneGeneOrthologs);
+      generateOrthologLines(backboneGeneOrthologs, compSpeciesMaps);
+    }
   }
   else
   {
@@ -323,14 +327,14 @@ const generateOrthologLines = (orthologData: any, comparativeMaps: Number[]) => 
       possibleOrthologs.push({'backboneGene': backboneGene, 'orthologs': orthologInfo});
     }
   });
-
+  
   //gather the genes for each comparative species
   let comparativeGenes = {};
   comparativeMaps.forEach(comparativeMap => {
     //create a key for each comparative species
     comparativeGenes[comparativeMap] = [];
   });
-
+  
   //gather the genes for each comparative species from the currently visible data tracks
   detailTrackSets.value.forEach((trackSet, index) => {
     const speciesMap = trackSet.speciesTrack.speciesMap;
@@ -383,11 +387,19 @@ const generateOrthologLines = (orthologData: any, comparativeMaps: Number[]) => 
     });
   });
 
-  detailTrackSets.value[0].dataTracks[0].setOrthologLines(orthologLines);
+  if (detailTrackSets.value[0].dataTracks[0].orthologLines.length > 0)
+  {
+    detailTrackSets.value[0].dataTracks[0].orthologLines = [];
+    detailTrackSets.value[0].dataTracks[0].setOrthologLines(orthologLines);
+  }
+  else
+  {
+    detailTrackSets.value[0].dataTracks[0].setOrthologLines(orthologLines);
+  }
 };
 
 const createOrthologLine = (backboneGeneSection: any, comparativeGeneSection: any) => {
-  let orthologLine = new OrthologLine({backboneY: backboneGeneSection.svgY, comparativeY: comparativeGeneSection.section.svgY + (comparativeGeneSection.section.height/2), comparativeX: comparativeGeneSection.xPos});
+  let orthologLine = new OrthologLine({backboneY: backboneGeneSection.svgY + (backboneGeneSection.height/2), backboneGene:backboneGeneSection, comparativeY: comparativeGeneSection.section.svgY + (comparativeGeneSection.section.height/2), comparativeX: comparativeGeneSection.xPos, comparativeGene: comparativeGeneSection.section});
   return orthologLine;
 };
 
@@ -441,6 +453,14 @@ const navigateUp = () => {
       detailTrackSets.value.push(visibleTrackSet);
     }
   });
+
+  if (selectedRegion.orthologData)
+  {
+    const comparativeSpecies = store.state.comparativeSpecies;
+    const comparativeSpeciesMaps = [];
+    comparativeSpecies.forEach(species => {comparativeSpeciesMaps.push(species.defaultMapKey);});
+    generateOrthologLines(selectedRegion.orthologData, comparativeSpeciesMaps);
+  }
 };
 
 const navigateDown = () => {
@@ -461,6 +481,14 @@ const navigateDown = () => {
       detailTrackSets.value.push(visibleTrackSet);
     }
   });
+
+  if (selectedRegion.orthologData)
+  {
+    const comparativeSpecies = store.state.comparativeSpecies;
+    const comparativeSpeciesMaps = [];
+    comparativeSpecies.forEach(species => {comparativeSpeciesMaps.push(species.defaultMapKey);});
+    generateOrthologLines(selectedRegion.orthologData, comparativeSpeciesMaps);
+  }
 };
 
 const isNavigationUpDisabled = computed(() => {

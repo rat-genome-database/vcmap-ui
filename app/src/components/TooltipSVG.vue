@@ -15,6 +15,7 @@
     <text class="label small" :x="xPos + 2" :y="chromosomeDataStartingPosition + 20">Orientation: {{props.tooltipData.genomicSection.isInverted ? '-' : '+'}}</text>
     <text v-if="props.tooltipData.genomicSection.chainLevel != null" data-test="level" class="label small" :x="xPos + 2" :y="chromosomeDataStartingPosition + 30">Level: {{props.tooltipData.genomicSection.chainLevel}}</text>
   </template>
+  
   <template v-else-if="props.tooltipData?.genomicSection && props.tooltipData?.isGeneLabel">
     <text class="label small" :x="xPos + 2" :y="props.tooltipData.y + 10">
       Displayed Gene: {{props.tooltipData.genomicSection.gene?.symbol}}

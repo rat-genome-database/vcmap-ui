@@ -121,6 +121,9 @@ export default createStore({
     isOverviewPanelUpdating(state: VCMapState, isUpdating: boolean) {
       state.isOverviewPanelUpdating = isUpdating;
     },
+    backboneOrthologs(state: VCMapState, orthologs: any) {
+      state.selectedBackboneRegion.orthologData = orthologs;
+    },
   },
 
   actions: {
@@ -197,6 +200,9 @@ export default createStore({
       // Note: Committing a change to detailedBasePairRange will trigger an update on the Detailed panel
       context.commit('detailedBasePairRange', range);
     },
+    setBackboneOrthologData(context: ActionContext<VCMapState, VCMapState>, orthologs: any) {
+      context.commit('backboneOrthologs', orthologs);
+    }
   },
 
   plugins: [

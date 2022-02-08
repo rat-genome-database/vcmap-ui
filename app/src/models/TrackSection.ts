@@ -99,18 +99,27 @@ export default class TrackSection
     if (this.gene)
     {
       let geneName = this.gene.symbol;
-      const truncatedGenes = this.hiddenGenes && this.hiddenGenes.length > 0 ? `...(${this.hiddenGenes.length})` : '';
+      let truncatedGenes = '';
+
+      if (this.combinedGenes)
+      {
+        truncatedGenes = this.hiddenGenes ? `...(${this.combinedGenes.length + this.hiddenGenes.length})` : `...(${this.combinedGenes.length})`;
+      }
+      else if (this.hiddenGenes)
+      {
+        truncatedGenes = `...(${this.hiddenGenes.length})`;
+      }
       
       if (truncatedGenes.length > 0)
       {
-        truncatedGenes.length > 9 ? geneName = geneName.substring(0, 2) : geneName = geneName.substring(0, 3);
+        truncatedGenes.length > 9 ? geneName = geneName.substring(0, 4) : geneName = geneName.substring(0, 5);
         geneName += truncatedGenes;
       }
       else
       {
         if (geneName.length > 9)
         {
-          geneName = geneName.substring(0, 8) + '...';
+          geneName = geneName.substring(0, 10) + '...';
         }
       }
       return geneName;
