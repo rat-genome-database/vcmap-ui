@@ -75,7 +75,7 @@ export default class SpeciesApi
     for (const gene in res.data)
     {
       const geneInfo = res.data[gene];
-      geneList.push(new Gene({ symbol: geneInfo.gene.symbol, name: geneInfo.gene.name, type: geneInfo.gene.type, key: geneInfo.gene.key, rgdId: geneInfo.gene.rgdId, chromosome: geneInfo.chromosome, start: geneInfo.start, stop: geneInfo.stop, speciesTypeKey: geneInfo.gene.speciesTypeKey, }));
+      geneList.push(new Gene({ symbol: geneInfo.gene.symbol, name: geneInfo.gene.name, type: geneInfo.gene.type, key: geneInfo.gene.key, rgdId: geneInfo.gene.rgdId, chromosome: geneInfo.chromosome, start: geneInfo.start, stop: geneInfo.stop, speciesTypeKey: geneInfo.gene.speciesTypeKey, blockInfo: null }));
     }
 
     return geneList;
@@ -90,7 +90,7 @@ export default class SpeciesApi
     for (const gene in res.data)
     {
       const geneInfo = res.data[gene];
-      geneList.push(new Gene({ symbol: geneInfo.gene.symbol, name: geneInfo.gene.name, type: geneInfo.gene.type, key: geneInfo.gene.key, rgdId: geneInfo.gene.rgdId, chromosome: geneInfo.chromosome, start: geneInfo.start, stop: geneInfo.stop, speciesTypeKey: geneInfo.gene.speciesTypeKey, }));
+      geneList.push(new Gene({ symbol: geneInfo.gene.symbol, name: geneInfo.gene.name, type: geneInfo.gene.type, key: geneInfo.gene.key, rgdId: geneInfo.gene.rgdId, chromosome: geneInfo.chromosome, start: geneInfo.start, stop: geneInfo.stop, speciesTypeKey: geneInfo.gene.speciesTypeKey, blockInfo: null }));
     }
 
     return geneList;

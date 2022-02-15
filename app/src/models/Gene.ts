@@ -1,4 +1,19 @@
-export class GeneDTO
+
+interface geneParams
+{
+  symbol: string;
+  name: string;
+  type: string;
+  key: number;
+  rgdId: number;
+  chromosome: string;
+  start: number;
+  stop: number;
+  speciesTypeKey: number;
+  blockInfo: any;
+}
+
+export default class Gene
 {
   symbol: string = '';
   name: string = '';
@@ -9,13 +24,21 @@ export class GeneDTO
   start: number = 0;
   stop: number = 0;
   speciesTypeKey: number = 0;
-}
+  blockInfo: any | null = {};
 
-export default class Gene extends GeneDTO
-{
-  constructor(dto: GeneDTO)
+  constructor(params: geneParams)
   {
-    super();
-    Object.assign(this, dto);
+    this.symbol = params.symbol;
+    this.name = params.name;
+    this.type = params.type;
+    this.key = params.key;
+    this.rgdId = params.rgdId;
+    this.chromosome = params.chromosome;
+    this.start = params.start;
+    this.stop = params.stop;
+    this.speciesTypeKey = params.speciesTypeKey;
+
+    this.blockInfo = params.blockInfo;
   }
 }
+

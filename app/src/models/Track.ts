@@ -235,7 +235,7 @@ export default class Track
 
     labels = [];
     geneLabelsMap.forEach((value) => {
-      const labelObject = {svgY: value.labelY, text: value.trackSection.geneLabel, isVisible: value.labelShown, section: value.trackSection };
+      const labelObject = {svgY: value.labelY, text: value.trackSection.geneLabel, isVisible: value.labelShown, section: value.trackSection};
       labels.push(labelObject);
     });
 
