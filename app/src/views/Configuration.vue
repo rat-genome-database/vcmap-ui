@@ -1,6 +1,6 @@
 <template>
   <div class="configuration-header">
-    <img alt="VCMap Logo" class="logo" src="../assets/images/vcmap_logo_v2.jpg">
+    <img alt="VCMap Logo" class="logo" src="../assets/images/vcmap_logo_v2.png">
     <h3 class="header">VCMap</h3><span class="version-label">v{{VERSION}}</span>
   </div>
   <div>

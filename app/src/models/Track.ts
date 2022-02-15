@@ -22,6 +22,7 @@ export interface Label
   text: string;
   isVisible: boolean;
   symbol?: string;
+  section?: TrackSection;
 }
 
 export default class Track
@@ -171,7 +172,7 @@ export default class Track
     let labels: Label[] = [];
 
     drawnSections.forEach(s => {
-      const labelObject = {svgY: s.svgY - SVGConstants.panelTitleHeight <= 3 ? (s.svgY + 5): s.svgY + (s.height/2), text: s.geneLabel ?? '', isVisible: false };
+      const labelObject = {svgY: s.svgY - SVGConstants.panelTitleHeight <= 3 ? (s.svgY + 5): s.svgY + (s.height/2), text: s.geneLabel ?? '', isVisible: false, };
       labels.push(labelObject);
       geneLabelsMap.set(Math.trunc(labelObject.svgY).toString(), {'labelShown': false, 'labelCombined': false, 'labelY': labelObject.svgY, 'trackSection': s});
     });
@@ -234,7 +235,7 @@ export default class Track
 
     labels = [];
     geneLabelsMap.forEach((value) => {
-      const labelObject = {svgY: value.labelY, text: value.trackSection.geneLabel, isVisible: value.labelShown};
+      const labelObject = {svgY: value.labelY, text: value.trackSection.geneLabel, isVisible: value.labelShown, section: value.trackSection };
       labels.push(labelObject);
     });
 

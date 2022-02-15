@@ -34,6 +34,7 @@ export default class BackboneSelection
   baseSelection: SelectedRegion;
   innerSelection?: SelectedRegion;
   zoomLevel: number = 1;
+  orthologData?: any;
 
 
   private shiftPercent: number = 0.2; // TODO: configurable?

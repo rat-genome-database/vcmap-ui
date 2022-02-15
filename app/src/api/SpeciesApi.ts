@@ -111,7 +111,7 @@ export default class SpeciesApi
     {
       const geneInfo = res.data[gene];
 
-      orthologList.set(geneInfo.gene.geneSymbol, geneInfo.orthologs)
+      orthologList.set(geneInfo.gene.geneSymbol, geneInfo.orthologs);
     }
     return orthologList;
   }

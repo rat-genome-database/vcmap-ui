@@ -1,24 +1,30 @@
+import TrackSection from './TrackSection';
+
 interface OrthologLineParams
 {
-  //backboneX: number;
   backboneY: number;
   comparativeX: number;
   comparativeY: number;
+
+  backboneGene: TrackSection;
+  comparativeGene: TrackSection;
 }
 
 export default class OrthologLine
 {
-  //backboneGeneX: number;
   backboneGeneY: number;
   comparativeGeneX: number;
   comparativeGeneY: number;
+  backboneGene: TrackSection;
+  comparativeGene: TrackSection;
 
   constructor(params: OrthologLineParams)
   {
-    //this.backboneGeneX = params.backboneX;
     this.backboneGeneY = params.backboneY;
     this.comparativeGeneX = params.comparativeX;
     this.comparativeGeneY = params.comparativeY;
+    this.backboneGene = params.backboneGene;
+    this.comparativeGene = params.comparativeGene;
   }
 }
 
