@@ -177,7 +177,7 @@ const updateOverviewPanel = async () => {
     store.state.overviewBasePairToHeightRatio,
     store.state.overviewSyntenyThreshold,
     SVGConstants.overviewTrackYPosition, // SVG positioning of the overview tracks will start just underneath the header panels with a bit of space in between
-    false
+    false,
  );
 
   for (let index = 0; index < comparativeOverviewTracks.length; index++)

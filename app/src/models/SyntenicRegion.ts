@@ -5,13 +5,13 @@ export interface SpeciesSyntenyData
   mapName: string;
   mapKey: number;
   regionData: SyntenyRegionData[];
-  genes: Gene[];
 }
 
 export interface SyntenyRegionData
 {
   block: SyntenicRegion;
   gaps: SyntenicRegion[];
+  genes: Gene[];
 }
 
 export class SyntenicRegionDTO

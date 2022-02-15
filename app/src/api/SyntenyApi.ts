@@ -42,8 +42,8 @@ export default class SyntenyApi
 
     const syntenyResults = await Promise.allSettled(syntenyApiCalls);
     const speciesSyntenyData: SpeciesSyntenyData[] = [];
-    const speciesGenes: Gene[] = [];
     syntenyResults.forEach((result, index) => {
+      const speciesGenes: Gene[] = [];
       const regions: SyntenyRegionData[] = [];
       if (result.status === 'fulfilled')
       {
@@ -66,6 +66,7 @@ export default class SyntenyApi
           regions.push({
             block: block,
             gaps: gaps ?? [],
+            genes: speciesGenes ?? [],
           });
         });
       }
@@ -79,12 +80,10 @@ export default class SyntenyApi
         mapName: comparativeSpeciesMaps[index].name,
         mapKey: comparativeSpeciesMaps[index].key,
         regionData: regions,
-        genes: speciesGenes
       });
       console.debug(`Syntenic regions found for mapKey '${comparativeSpeciesMaps[index].key}', threshold: '${params.threshold}': ${regions.length}`);
     });
 
-    console.log(speciesGenes);
     return speciesSyntenyData;
   }
 }
