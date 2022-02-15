@@ -23,6 +23,8 @@
   <!-- Gene Labels: only shown with ample offset-->
   <template v-for="(label, index) in track.geneLabels" :key="index">
     <text v-if="showGeneLabel && label.isVisible" 
+      @mouseenter="onMouseEnter($event, label.section, 'geneLabel')"
+      @mouseleave="onMouseLeave(label.section)"
       class="label small" 
       :x="posX + width" 
       :y="label.svgY + LABEL_Y_OFFSET">
@@ -34,7 +36,7 @@
     <template v-for="(line, index) in lines" :key="index">
       <line
         class="ortholog-line"
-        @mouseenter="onMouseEnter($event, line, false)"
+        @mouseenter="onMouseEnter($event, line, 'orthologLine')"
         @mouseleave="onMouseLeave(line)"
         :x1="posX + width" :x2="line.comparativeGeneX" 
         :y1="line.backboneGeneY" :y2="line.comparativeGeneY" />
@@ -46,7 +48,7 @@
     <rect v-if="section.shape !== 'line' && section.chainLevel !== 2"
       data-test="track-section-svg"
       class="section"
-      @mouseenter="onMouseEnter($event, section, false)"
+      @mouseenter="onMouseEnter($event, section, 'trackSection')"
       @mouseleave="onMouseLeave(section)"
       :fill="section.isHovered ? HIGHLIGHT_COLOR : section.color"
       :fill-opacity="geneDataTrack ? .6 : 1" 
@@ -63,7 +65,7 @@
     <rect v-else-if="section.shape !== 'line'"
       data-test="track-section-svg"
       class="section level-2"
-      @mouseenter="onMouseEnter($event, section, false)"
+      @mouseenter="onMouseEnter($event, section, 'trackSection')"
       @mouseleave="onMouseLeave(section)"
       :fill="section.isHovered ? HIGHLIGHT_COLOR : section.color"
       :x="posX + ((width * (1 - LEVEL_2_WIDTH_MULTIPLIER)) / 2)" :y="section.svgY" 
@@ -137,7 +139,7 @@ const props = defineProps<Props>();
 toRefs(props);
 
 const onMouseEnter = (event: any, section: TrackSection, type: string) => {
-  section.isHovered = true;
+  //section.isHovered = true;
 
   // If is a gene label but has no hidden genes, show nothing 
   if (type === 'geneLabel')
@@ -156,6 +158,12 @@ const onMouseEnter = (event: any, section: TrackSection, type: string) => {
 const onMouseLeave = (section: TrackSection) => {
   section.isHovered = false;
   store.dispatch('setTooltipData', null);
+};
+
+const tooltipClick = (event: any, section: TrackSection, type: string) => {
+  let currentSVGPoint = getMousePosSVG(svg, event);
+  const tooltipData = new TooltipData(props.posX, currentSVGPoint.y, section, type);
+  store.dispatch('setTooltipData', tooltipData);
 };
 </script>
 
