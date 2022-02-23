@@ -28,6 +28,7 @@ export default class TrackSection
   sectionStop: number = 0;
   backboneStart: number = 0;
   backboneStop: number = 0;
+  //blockBackboneOffset?: number
   chromosome: string = '';
   chainLevel?: number;
   gene?: Gene;
@@ -38,11 +39,11 @@ export default class TrackSection
   shape: 'rect' | 'line' = 'rect';
   svgY: number = 0;
   isInverted: boolean = false;
-  private _offsetCount: number = 0;
+  _offsetCount: number = 0;
   private _backboneCutoff: number = 0;
   private _BPToHeightRatio: number = 0;
-  private _displayBackboneStart: number = 0; // the displayed starting base pair position on the backbone that this section lines up with
-  private _displayBackboneStop: number = 0; // the displayed ending base pair position on the backbone that this section lines up with
+   _displayBackboneStart: number = 0; // the displayed starting base pair position on the backbone that this section lines up with
+   _displayBackboneStop: number = 0; // the displayed ending base pair position on the backbone that this section lines up with
 
   constructor(params: TrackSectionParams)
   {
@@ -129,7 +130,10 @@ export default class TrackSection
   // Getter for the height of this section in SVG units
   public get height()
   {
-    return (this._displayBackboneStop - this._displayBackboneStart) / this._BPToHeightRatio;
+    
+    const height = (this._displayBackboneStop - this._displayBackboneStart) / this._BPToHeightRatio;
+    
+    return height > 0 ? height : 0;
   }
 
   // Getter for the ending SVG Y point

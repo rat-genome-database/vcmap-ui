@@ -764,6 +764,7 @@ function clearConfigSelections()
   stopPosition.value = null;
   maxPosition.value = null;
   comparativeSpeciesSelections.value = [];
+  chromosomeOptions.calue = [];
 
   store.dispatch('clearConfiguration');
 }

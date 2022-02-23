@@ -176,13 +176,13 @@ const updateOverviewPanel = async () => {
     backboneChromosome.seqLength, 
     store.state.overviewBasePairToHeightRatio,
     store.state.overviewSyntenyThreshold,
-    SVGConstants.overviewTrackYPosition // SVG positioning of the overview tracks will start just underneath the header panels with a bit of space in between
-  );
+    SVGConstants.overviewTrackYPosition, // SVG positioning of the overview tracks will start just underneath the header panels with a bit of space in between
+    false,
+ );
 
   for (let index = 0; index < comparativeOverviewTracks.length; index++)
   {
-    const track = comparativeOverviewTracks[index];
-    const comparativeTrackSet = new TrackSet(track, []);
+    const comparativeTrackSet = comparativeOverviewTracks[index];
     overviewTrackSets.value.push(comparativeTrackSet);
   }
 
@@ -269,20 +269,19 @@ const updateDetailsPanel = async () => {
       originalSelectedBackboneRegion.baseSelection.basePairStop, 
       store.state.detailedBasePairToHeightRatio,
       store.state.detailsSyntenyThreshold,
-      SVGConstants.panelTitleHeight // SVG positioning of detailed tracks will start immediately after the header panel
+      SVGConstants.panelTitleHeight, // SVG positioning of detailed tracks will start immediately after the header panel
+      true
     );
 
     const compSpeciesMaps: Number[] = [];
-
     for (let index = 0; index < comparativeSelectionTracks.length; index++)
     {
       let track = comparativeSelectionTracks[index];
-      let tempComparativeTracks = await createComparativeDataTracks(track, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, store.state.detailedBasePairToHeightRatio, true, store.state.detailsSyntenyThreshold, SVGConstants.panelTitleHeight);
-      if (track.speciesMap)
+      selectionTrackSets.push(track);
+      if (track.speciesTrack.speciesMap)
       {
-        compSpeciesMaps.push(track.speciesMap);
+        compSpeciesMaps.push(track.speciesTrack.speciesMap);
       }
-      selectionTrackSets.push(new TrackSet(track, [tempComparativeTracks]));
     }
 
     const backboneGeneOrthologs = await SpeciesApi.getGeneOrthologs(backboneSpecies.defaultMapKey, backboneChromosome.chromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, compSpeciesMaps);

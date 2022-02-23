@@ -20,6 +20,7 @@ export default class TrackSet
   public getVisibleRegion(start: number, stop: number, basePairToHeightRatio: number, syntenyThreshold: number)
   {
     let convertedSpeciesTrack: Track | undefined;
+    const convertedDataTracks: DataTrack[] = [];
     if (this.speciesTrack.type === 'backbone')
     {
       // Recreate the singular backbone section using the new basepair start/stops
@@ -35,10 +36,29 @@ export default class TrackSet
       });
 
       convertedSpeciesTrack = new Track({ speciesName: this.speciesTrack.name, sections: [trackSection], startingSVGY: this.svgY, mapName: this.speciesTrack.mapName, type: 'backbone' });
+
+      if (this.dataTracks.length)
+      {
+        this.dataTracks.forEach(dataTrack => {
+          if (dataTrack.track.rawGeneData)
+          {
+            convertedDataTracks.push(createGeneTrackFromGenesData(
+              dataTrack.track.rawGeneData,
+              dataTrack.track.name,
+              start,
+              stop,
+              basePairToHeightRatio,
+              true, // this will always be used on the detailed panel
+              syntenyThreshold,
+              this.svgY
+            ));
+          }
+        });
+      }
     }
     else if (this.speciesTrack.type === 'comparative' && this.speciesTrack.rawSyntenyData)
     {
-      convertedSpeciesTrack = createSyntenyTrackFromSpeciesSyntenyData(
+      const speciesTracks = createSyntenyTrackFromSpeciesSyntenyData(
         this.speciesTrack.rawSyntenyData,
         start,
         stop,
@@ -46,6 +66,17 @@ export default class TrackSet
         syntenyThreshold,
         this.svgY
       );
+      convertedSpeciesTrack = speciesTracks[0];
+
+      if (this.dataTracks.length)
+      {
+        const geneTrack = speciesTracks[1];
+        const geneDataTrack = new DataTrack('Genes', geneTrack.name + ' Detailed Genes', geneTrack, 'red');
+        geneDataTrack.setIsComparativeView(true);
+        geneDataTrack.isDisplayed = true;
+
+        convertedDataTracks.push(geneDataTrack);
+      }
     }
     
     if (!convertedSpeciesTrack)
@@ -54,26 +85,7 @@ export default class TrackSet
       return;
     }
 
-    const convertedDataTracks: DataTrack[] = [];
-    if (this.dataTracks.length)
-    {
-      this.dataTracks.forEach(dataTrack => {
-        if (dataTrack.track.rawGeneData)
-        {
-          convertedDataTracks.push(createGeneTrackFromGenesData(
-            dataTrack.track.rawGeneData,
-            dataTrack.track.name,
-            start,
-            stop,
-            basePairToHeightRatio,
-            true, // this will always be used on the detailed panel
-            syntenyThreshold,
-            this.svgY
-          ));
-        }
-      });
-    }
-
-    return new TrackSet(convertedSpeciesTrack, convertedDataTracks);
+    const visibleRegionTrackSet = new TrackSet(convertedSpeciesTrack, convertedDataTracks);
+    return visibleRegionTrackSet;
   }
 }

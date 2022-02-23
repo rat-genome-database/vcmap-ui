@@ -1,4 +1,5 @@
 import Track from '@/models/Track';
+import TrackSet from '@/models/TrackSet';
 import { ref } from 'vue';
 
 /**
@@ -22,22 +23,22 @@ export default function useDialog() {
     showDialog.value = true;
   };
   
-  const showPartialResultsDialog = (emptyTracks: Track[]) => {
+  const showPartialResultsDialog = (emptyTracks: TrackSet[]) => {
     dialogHeader.value = 'Missing Results';
-    dialogMessage.value = `We did not find syntenic regions for the following species: ${emptyTracks.map(t => `${t.name} (${t.mapName})`).join(', ')}`;
+    dialogMessage.value = `We did not find syntenic regions for the following species: ${emptyTracks.map(t => `${t.speciesTrack.name} (${t.speciesTrack.mapName})`).join(', ')}`;
     showDialog.value = true;
   };
   
-  const checkSyntenyResultsOnComparativeSpecies = (comparativeTracks: Track[]) => {
-    const resultsFound = comparativeTracks.some(track => track.sections.length > 0);
+  const checkSyntenyResultsOnComparativeSpecies = (comparativeTracks: TrackSet[]) => {
+    const resultsFound = comparativeTracks.some(trackSet => trackSet.speciesTrack.sections.length > 0);
       if (!resultsFound)
       {
         showNoResultsDialog();
       }
-      else if (comparativeTracks.some(track => track.sections.length === 0))
+      else if (comparativeTracks.some(trackSet => trackSet.speciesTrack.sections.length === 0))
       {
         // If only some results were found -- notify user about which ones produced no results
-        const emptyTracks = comparativeTracks.filter(track => track.sections.length === 0);
+        const emptyTracks = comparativeTracks.filter(trackSet => trackSet.speciesTrack.sections.length === 0);
         showPartialResultsDialog(emptyTracks);
       }
   };

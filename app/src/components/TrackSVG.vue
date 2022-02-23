@@ -51,7 +51,7 @@
       @mouseenter="onMouseEnter($event, section, 'trackSection')"
       @mouseleave="onMouseLeave(section)"
       :fill="section.isHovered ? HIGHLIGHT_COLOR : section.color"
-      :fill-opacity="geneDataTrack ? .6 : 1" 
+      :fill-opacity="geneDataTrack ? .7 : 1"
       :x="posX" :y="section.svgY" 
       :width="width" 
       :height="section.height" />
@@ -139,16 +139,7 @@ const props = defineProps<Props>();
 toRefs(props);
 
 const onMouseEnter = (event: any, section: TrackSection, type: string) => {
-  //section.isHovered = true;
-
-  // If is a gene label but has no hidden genes, show nothing 
-  if (type === 'geneLabel')
-  {
-    if (!section.hiddenGenes || section.hiddenGenes.length <= 0)
-    {
-      return;
-    } 
-  }
+  section.isHovered = true;
 
   let currentSVGPoint = getMousePosSVG(svg, event);
   const tooltipData = new TooltipData(props.posX, currentSVGPoint.y, section, type);

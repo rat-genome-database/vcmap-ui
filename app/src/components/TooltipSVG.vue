@@ -20,10 +20,12 @@
   <text v-if="labelModal" class="label small" :x="((xPos - width) + width/4) + 10" :y="390">View More +</text>
 
   <template v-if="props.tooltipData?.type === 'trackSection'">
-    <text data-test="chromosome-name" class="label small" :x="xPos + 2" :y="SVGConstants.overviewTrackYPosition + 10">Chromosome: {{props.tooltipData.genomicSection.chromosome}}</text>
-    <text data-test="start-stop" class="label small" :x="xPos + 2" :y="SVGConstants.overviewTrackYPosition + 20">Region: {{props.tooltipData.genomicSection.startBPLabel}} - {{props.tooltipData.genomicSection.stopBPLabel}}</text>
-    <text class="label small" :x="xPos + 2" :y="SVGConstants.overviewTrackYPosition + 30">Orientation: {{props.tooltipData.genomicSection.isInverted ? '-' : '+'}}</text>
-    <text v-if="props.tooltipData.genomicSection.chainLevel != null" data-test="level" class="label small" :x="xPos + 2" :y="SVGConstants.overviewTrackYPosition + 40">Level: {{props.tooltipData.genomicSection.chainLevel}}</text>
+    <text v-if="props.tooltipData.genomicSection.gene" data-test="gene-symbol" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 10">Symbol: {{props.tooltipData.genomicSection.gene.symbol}}</text>
+    <text v-if="props.tooltipData.genomicSection.gene" data-test="gene-name" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 20" :textLength="width - 5" lengthAdjust="spacingAndGlyphs">Name: {{props.tooltipData.genomicSection.gene.name ?? 'N/A'}}</text>
+    <text data-test="chromosome-name" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 30">Chromosome: {{props.tooltipData.genomicSection.chromosome}}</text>
+    <text data-test="start-stop" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 40">Region: {{props.tooltipData.genomicSection.startBPLabel}} - {{props.tooltipData.genomicSection.stopBPLabel}}</text>
+    <text class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 50">Orientation: {{props.tooltipData.genomicSection.isInverted ? '-' : '+'}}</text>
+    <text v-if="props.tooltipData.genomicSection.chainLevel != null" data-test="level" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 40">Level: {{props.tooltipData.genomicSection.chainLevel}}</text>
   </template>
   
   <template v-else-if="props.tooltipData?.type === 'geneLabel'">
@@ -38,7 +40,7 @@
         <text data-test="gene-symbol" class="label small" :x="xPos + 2 - width" :y="labelYPosition(index, 1)">Symbol: {{gene.gene.symbol}}</text>
         <text data-test="gene-name" class="label small" :x="xPos + 2 - width" :y="labelYPosition(index, 2)" :textLength="width - 5" lengthAdjust="spacingAndGlyphs">Name: {{gene.gene.name ?? 'N/A'}}</text>
         <text data-test="chromosome-name" class="label small" :x="xPos + 2 - width" :y="labelYPosition(index, 3)">Chromosome: {{gene.chromosome}}</text>
-        <text data-test="start-stop" class="label small" :x="xPos + 2 - width" :y="labelYPosition(index, 4)">Region: {{gene.startBPLabel}} - {{gene.stopBPLabel}}</text>
+        <text data-test="start-stop" class="label small" :x="xPos + 2 - width" :y="labelYPosition(index, 4)">Region: {{gene.gene.start}} - {{gene.gene.stop}}</text>
         <text data-test="start-stop" class="label small" :x="xPos + 2 - width" :y="labelYPosition(index, 5)"></text>
       </template>
     </template>
@@ -47,14 +49,14 @@
       <text data-test="gene-symbol" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 10">Symbol: {{props.tooltipData.genomicSection.gene.symbol}}</text>
       <text data-test="gene-name" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 20" :textLength="width - 5" lengthAdjust="spacingAndGlyphs">Name: {{props.tooltipData.genomicSection.gene.name ?? 'N/A'}}</text>
       <text data-test="chromosome-name" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 30">Chromosome: {{props.tooltipData.genomicSection.chromosome}}</text>
-      <text data-test="start-stop" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 40">Region: {{props.tooltipData.genomicSection.startBPLabel}} - {{props.tooltipData.genomicSection.stopBPLabel}}</text>
+      <text data-test="start-stop" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 40">Region: {{props.tooltipData.genomicSection.start}} - {{props.tooltipData.genomicSection.stop}}</text>
       <text data-test="start-stop" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 50"></text>
 
       <template v-for="gene, index in props.tooltipData.genomicSection?.combinedGenes" :key="gene">
         <text v-if="index < 4" data-test="gene-symbol" class="label small" :x="xPos + 2 - width" :y="labelYPosition(index, 1)">Symbol: {{gene.gene.symbol}}</text>
         <text v-if="index < 4" data-test="gene-name" class="label small" :x="xPos + 2 - width" :y="labelYPosition(index, 2)" :textLength="width - 5" lengthAdjust="spacingAndGlyphs"> Name: {{gene.gene.name ?? 'N/A'}}</text>
         <text v-if="index < 4" data-test="chromosome-name" class="label small" :x="xPos + 2 - width" :y="labelYPosition(index, 3)">Chromosome: {{gene.chromosome}}</text>
-        <text v-if="index < 4" data-test="start-stop" class="label small" :x="xPos + 2 - width" :y="labelYPosition(index, 4)">Region: {{gene.startBPLabel}} - {{gene.stopBPLabel}}</text>
+        <text v-if="index < 4" data-test="start-stop" class="label small" :x="xPos + 2 - width" :y="labelYPosition(index, 4)">Region: {{gene.start}} - {{gene.stop}}</text>
         <text v-if="index < 4" class="label small" :x="xPos + 2 - width" :y="labelYPosition(index, 5)"></text>
       </template>
 
