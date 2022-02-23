@@ -1,16 +1,14 @@
 
 interface geneParams
 {
-  symbol: string;
-  name: string;
-  type: string;
+  geneSymbol: string;
+  geneName: string;
+  geneType: string;
   key: number;
-  rgdId: number;
-  chromosome: string;
-  start: number;
-  stop: number;
-  speciesTypeKey: number;
-  blockInfo: any;
+  geneRgdId: number;
+  chr: string;
+  startPos: number;
+  stopPos: number;
 }
 
 export default class Gene
@@ -23,22 +21,17 @@ export default class Gene
   chromosome: string = '';
   start: number = 0;
   stop: number = 0;
-  speciesTypeKey: number = 0;
-  blockInfo: any | null = {};
 
   constructor(params: geneParams)
   {
-    this.symbol = params.symbol;
-    this.name = params.name;
-    this.type = params.type;
+    this.symbol = params.geneSymbol;
+    this.name = params.geneName;
+    this.type = params.geneType;
     this.key = params.key;
-    this.rgdId = params.rgdId;
-    this.chromosome = params.chromosome;
-    this.start = params.start;
-    this.stop = params.stop;
-    this.speciesTypeKey = params.speciesTypeKey;
-
-    this.blockInfo = params.blockInfo;
+    this.rgdId = params.geneRgdId;
+    this.chromosome = params.chr;
+    this.start = params.startPos;
+    this.stop = params.stopPos;
   }
 }
 
