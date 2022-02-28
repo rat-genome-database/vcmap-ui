@@ -37,7 +37,6 @@
       <line
         class="ortholog-line"
         @mouseenter="onMouseEnter($event, line, 'orthologLine')"
-        @mouseleave="onMouseLeave(line)"
         :x1="posX + width" :x2="line.comparativeGeneX" 
         :y1="line.backboneGeneY" :y2="line.comparativeGeneY" />
     </template>
@@ -139,8 +138,11 @@ const props = defineProps<Props>();
 toRefs(props);
 
 const onMouseEnter = (event: any, section: TrackSection, type: string) => {
-  section.isHovered = true;
-
+  
+  if (type === 'trackSection' || type === 'geneLabel') 
+  {
+    section.isHovered = true;
+  }
   let currentSVGPoint = getMousePosSVG(svg, event);
   const tooltipData = new TooltipData(props.posX, currentSVGPoint.y, section, type);
   store.dispatch('setTooltipData', tooltipData);

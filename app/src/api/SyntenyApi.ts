@@ -53,9 +53,10 @@ export default class SyntenyApi
             const gaps = regionData.gaps?.map((g: any) => new SyntenicRegion(g as SyntenicRegionDTO));
             const genes: Gene[] = [];
             regionData.genes?.forEach((gene: any) => {
-              genes.push(new Gene(gene));
+              const currGene = new Gene(gene);
+              currGene.speciesName = comparativeSpecies[index].name;
+              genes.push(currGene);
             });
-            
             
             regions.push({
               block: block,
@@ -78,6 +79,7 @@ export default class SyntenyApi
         console.debug(`Syntenic regions found for mapKey '${comparativeSpeciesMaps[index].key}', threshold: '${params.threshold}': ${regions.length}`);
       });
 
+      console.log(speciesSyntenyData);
       return speciesSyntenyData;
     }
     catch (error)
