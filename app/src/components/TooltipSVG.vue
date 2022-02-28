@@ -80,10 +80,11 @@
     <text data-test="start-stop" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 140">Region: {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.comparativeGene.gene.start)}} - {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.comparativeGene.gene.stop)}}</text>
   </template>
 
-  <!-- <line" v-if="props.tooltipData.x && props.tooltipData.y"
-    :x1="xPos + 2 - width" :x2="props.tooltipData?.x" 
+  <line v-if="props.tooltipData"
+    class="tooltip-line"
+    :x1="xPos + 2 - width" :x2="props.tooltipData.type === 'trackSection' ? props.tooltipData.x + 5 : props.tooltipData.type === 'orthologLine' ? props.tooltipData.mouseX : props.tooltipData.x + 50" 
     :y1="SVGConstants.overviewTrackYPosition" :y2="props.tooltipData?.y" 
-  /> -->
+  />
 </template>
 
 <script setup lang="ts">
@@ -98,7 +99,7 @@ const store = useStore(key);
 
 const TOOLTIP_GAP = 5; // gap between the tooltip window and the starting x position given
 const DEFAULT_WIDTH = 130;
-const DEFAULT_HEIGHT = 45;
+const DEFAULT_HEIGHT = 55;
 const MAX_HEIGHT = 350;
 
 interface Props
@@ -210,3 +211,11 @@ const labelYPosition = (index: number, textLine: number) => {
   return yPos;
 };
 </script>
+
+<style lang="scss" scoped>
+.tooltip-line
+{
+  stroke-width: 1;
+  stroke: red;
+}
+</style>

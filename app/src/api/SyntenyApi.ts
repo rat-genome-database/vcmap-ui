@@ -79,7 +79,6 @@ export default class SyntenyApi
         console.debug(`Syntenic regions found for mapKey '${comparativeSpeciesMaps[index].key}', threshold: '${params.threshold}': ${regions.length}`);
       });
 
-      console.log(speciesSyntenyData);
       return speciesSyntenyData;
     }
     catch (error)
