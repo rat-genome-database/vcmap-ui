@@ -5,126 +5,6 @@
   </div>
   <div>
     <TabView v-model:activeIndex="activeTab">
-      <TabPanel header="Load by Position" >
-        <div class="grid">
-          <div class="col-12 text-center">
-            <h2>Backbone Configuration</h2>
-          </div>
-          <div class="col-12 text-center">
-            <Button @click="clearConfigSelections" label="Clear All" class="p-button-sm p-button-secondary" style="margin-right: .5em"/>
-          </div>
-          <div class="col-12">
-            <div class="grid">
-              <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
-                <h4>Species</h4>
-                <Dropdown 
-                  v-model="backboneSpecies" 
-                  :options="speciesOptions" 
-                  :loading="isLoadingSpecies"
-                  @change="setAssemblyOptions($event.value)"
-                  optionLabel="name"
-                  placeholder="Backbone Species" />
-              </div>
-            </div>
-
-            <div class="grid">
-              <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
-                <h4>Assembly</h4>
-                <Dropdown 
-                  v-model="backboneAssembly" 
-                  :options="backboneAssemblies" 
-                  :disabled="!backboneSpecies"
-                  @change="setChromosomeOptions($event.value)"
-                  :optionLabel="(assembly: Map) => assembly.primaryRefAssembly ? `${assembly.name} (primary)` : assembly.name" 
-                  placeholder="Backbone Assembly" />
-              </div>
-            </div>
-            
-            <div class="grid">
-              <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
-                <h4>Chromosome</h4>
-                <Dropdown 
-                  @change="setDefaultStartAndStopPositions($event.value)" 
-                  v-model="backboneChromosome"
-                  :disabled = "!chromosomeOptions.length"
-                  :options="chromosomeOptions"
-                  :loading="isLoadingChromosome"
-                  optionLabel="chromosome"
-                  />
-              </div>
-            </div>
-            <div class="p-fluid grid">
-              <div class="lg:col-3 lg:col-offset-3 md:col-4 md:col-offset-1 sm:col-5 sm:col-offset-1">
-                <h4 :class="{'config-label': backboneChromosome}">Start Position</h4>
-                <p v-if="backboneChromosome" class="label-description">Min: 0bp</p>
-                <InputNumber
-                  showButtons
-                  v-model="startPosition"
-                  :disabled="!backboneChromosome"
-                  suffix="bp"
-                  :step="500"
-                  :max="(maxPosition != null) ? maxPosition - 1 : 1"
-                  :min="0"
-                />
-              </div>
-              <div class="lg:col-3 md:col-3 sm:col-5">
-                <div>
-                  <h4 :class="{'config-label': backboneChromosome}">Stop Position</h4>
-                  <p v-if="maxPosition" class="label-description">Max: {{Formatter.addCommasToBasePair(maxPosition)}}bp</p>
-                  <InputNumber
-                    showButtons
-                    v-model="stopPosition"
-                    :disabled="!backboneChromosome"
-                    suffix="bp"
-                    :step="500"
-                    :max="maxPosition"
-                    :min="1"
-                  />
-                </div>
-              </div>
-            </div>
-            <div class="col-12 text-center">
-              <h2>Comparative Species</h2>
-            </div>
-            <div class="col-12 text-center">
-              <Button @click="addTempComparativeSpecies" :label="(comparativeSpeciesLimitReached) ? 'Limit Reached' : 'Add Species'" :disabled="comparativeSpeciesLimitReached" icon="pi pi-plus-circle" class="p-button" style="margin-right: .5em"/>
-            </div>
-            <div class="col-6 col-offset-3">
-              <Message severity="warn" closeable v-if="comparativeSpeciesSelections.length >= 4">Selecting 4 or more species might cause display errors</Message>
-            </div>
-            <div class="grid" v-for="(species, index) in comparativeSpeciesSelections" :key="index">
-              <div class="lg:col-3 lg:col-offset-3 md:col-3 md:col-offset-2 sm:col-4 sm:col-offset-1">
-                <Dropdown 
-                  v-model="comparativeSpeciesSelections[index].typeKey" 
-                  :loading="isLoadingSpecies"
-                  :options="speciesOptions"
-                  @change="setPrimaryAssembly(index)"
-                  optionValue="typeKey"
-                  optionLabel="name" 
-                  placeholder="Comparative Species"
-                  />
-              </div>
-              <div class="lg:col-2 md:col-3 sm:col-4">
-                <Dropdown 
-                  v-model="comparativeSpeciesSelections[index].mapKey"
-                  :disabled="comparativeSpeciesSelections[index].typeKey === 0"
-                  :options="getAssemblyOptionsForSpecies(index)"
-                  :optionLabel="getAssemblyOptionLabel"
-                  @change="checkAgainstBackboneSpeciesAndAssembly(comparativeSpeciesSelections[index])"
-                  optionValue="key"
-                  placeholder="Comparative Assembly"
-                  :class="{'border-warning': comparativeSpeciesSelections[index].showWarning}"
-                  />
-                <small v-if="comparativeSpeciesSelections[index].showWarning" class="warning-text">Warning: Selected same species and assembly as the backbone</small>
-              </div>
-              <div class="lg:col-1 md:col-2 sm:col-2">
-                <Button @click="removeTempComparativeSpecies(index)" label="Remove" icon="pi pi-minus-circle" class="p-button-sm p-button-danger" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </TabPanel>
-
       <TabPanel header="Load by Gene">
         <div class="grid">
           <div class="col-12 text-center">
@@ -222,6 +102,126 @@
                   :max="maxPosition"
                   :min="1"
                 />
+              </div>
+            </div>
+            <div class="col-12 text-center">
+              <h2>Comparative Species</h2>
+            </div>
+            <div class="col-12 text-center">
+              <Button @click="addTempComparativeSpecies" :label="(comparativeSpeciesLimitReached) ? 'Limit Reached' : 'Add Species'" :disabled="comparativeSpeciesLimitReached" icon="pi pi-plus-circle" class="p-button" style="margin-right: .5em"/>
+            </div>
+            <div class="col-6 col-offset-3">
+              <Message severity="warn" closeable v-if="comparativeSpeciesSelections.length >= 4">Selecting 4 or more species might cause display errors</Message>
+            </div>
+            <div class="grid" v-for="(species, index) in comparativeSpeciesSelections" :key="index">
+              <div class="lg:col-3 lg:col-offset-3 md:col-3 md:col-offset-2 sm:col-4 sm:col-offset-1">
+                <Dropdown 
+                  v-model="comparativeSpeciesSelections[index].typeKey" 
+                  :loading="isLoadingSpecies"
+                  :options="speciesOptions"
+                  @change="setPrimaryAssembly(index)"
+                  optionValue="typeKey"
+                  optionLabel="name" 
+                  placeholder="Comparative Species"
+                  />
+              </div>
+              <div class="lg:col-2 md:col-3 sm:col-4">
+                <Dropdown 
+                  v-model="comparativeSpeciesSelections[index].mapKey"
+                  :disabled="comparativeSpeciesSelections[index].typeKey === 0"
+                  :options="getAssemblyOptionsForSpecies(index)"
+                  :optionLabel="getAssemblyOptionLabel"
+                  @change="checkAgainstBackboneSpeciesAndAssembly(comparativeSpeciesSelections[index])"
+                  optionValue="key"
+                  placeholder="Comparative Assembly"
+                  :class="{'border-warning': comparativeSpeciesSelections[index].showWarning}"
+                  />
+                <small v-if="comparativeSpeciesSelections[index].showWarning" class="warning-text">Warning: Selected same species and assembly as the backbone</small>
+              </div>
+              <div class="lg:col-1 md:col-2 sm:col-2">
+                <Button @click="removeTempComparativeSpecies(index)" label="Remove" icon="pi pi-minus-circle" class="p-button-sm p-button-danger" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </TabPanel>
+
+      <TabPanel header="Load by Position" >
+        <div class="grid">
+          <div class="col-12 text-center">
+            <h2>Backbone Configuration</h2>
+          </div>
+          <div class="col-12 text-center">
+            <Button @click="clearConfigSelections" label="Clear All" class="p-button-sm p-button-secondary" style="margin-right: .5em"/>
+          </div>
+          <div class="col-12">
+            <div class="grid">
+              <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
+                <h4>Species</h4>
+                <Dropdown 
+                  v-model="backboneSpecies" 
+                  :options="speciesOptions" 
+                  :loading="isLoadingSpecies"
+                  @change="setAssemblyOptions($event.value)"
+                  optionLabel="name"
+                  placeholder="Backbone Species" />
+              </div>
+            </div>
+
+            <div class="grid">
+              <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
+                <h4>Assembly</h4>
+                <Dropdown 
+                  v-model="backboneAssembly" 
+                  :options="backboneAssemblies" 
+                  :disabled="!backboneSpecies"
+                  @change="setChromosomeOptions($event.value)"
+                  :optionLabel="(assembly: Map) => assembly.primaryRefAssembly ? `${assembly.name} (primary)` : assembly.name" 
+                  placeholder="Backbone Assembly" />
+              </div>
+            </div>
+            
+            <div class="grid">
+              <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
+                <h4>Chromosome</h4>
+                <Dropdown 
+                  @change="setDefaultStartAndStopPositions($event.value)" 
+                  v-model="backboneChromosome"
+                  :disabled = "!chromosomeOptions.length"
+                  :options="chromosomeOptions"
+                  :loading="isLoadingChromosome"
+                  optionLabel="chromosome"
+                  />
+              </div>
+            </div>
+            <div class="p-fluid grid">
+              <div class="lg:col-3 lg:col-offset-3 md:col-4 md:col-offset-1 sm:col-5 sm:col-offset-1">
+                <h4 :class="{'config-label': backboneChromosome}">Start Position</h4>
+                <p v-if="backboneChromosome" class="label-description">Min: 0bp</p>
+                <InputNumber
+                  showButtons
+                  v-model="startPosition"
+                  :disabled="!backboneChromosome"
+                  suffix="bp"
+                  :step="500"
+                  :max="(maxPosition != null) ? maxPosition - 1 : 1"
+                  :min="0"
+                />
+              </div>
+              <div class="lg:col-3 md:col-3 sm:col-5">
+                <div>
+                  <h4 :class="{'config-label': backboneChromosome}">Stop Position</h4>
+                  <p v-if="maxPosition" class="label-description">Max: {{Formatter.addCommasToBasePair(maxPosition)}}bp</p>
+                  <InputNumber
+                    showButtons
+                    v-model="stopPosition"
+                    :disabled="!backboneChromosome"
+                    suffix="bp"
+                    :step="500"
+                    :max="maxPosition"
+                    :min="1"
+                  />
+                </div>
               </div>
             </div>
             <div class="col-12 text-center">
