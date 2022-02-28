@@ -305,11 +305,11 @@ const router = useRouter();
 const store = useStore(key);
 
 const TABS = {
-  POSITION: 0,
-  GENE: 1
+  GENE: 0,
+  POSITION: 1
 };
 
-const activeTab = ref(TABS.POSITION);
+const activeTab = ref(TABS.GENE);
 
 const speciesOptions = ref<Species[]>([]);
 const backboneSpecies = ref<Species | null>(null);
