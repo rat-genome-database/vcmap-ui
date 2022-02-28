@@ -22,10 +22,10 @@
   <template v-if="props.tooltipData?.type === 'trackSection'">
     <text v-if="props.tooltipData.genomicSection.gene" data-test="gene-symbol" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 10">Symbol: {{props.tooltipData.genomicSection.gene.symbol}}</text>
     <text v-if="props.tooltipData.genomicSection.gene" data-test="gene-name" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 20" :textLength="width - 5" lengthAdjust="spacingAndGlyphs">Name: {{props.tooltipData.genomicSection.gene.name ?? 'N/A'}}</text>
-    <text data-test="chromosome-name" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 30">Chromosome: {{props.tooltipData.genomicSection.chromosome}}</text>
-    <text data-test="start-stop" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 40">Region: {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.gene.start)}} - {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.gene.stop)}}</text>
-    <text class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 50">Orientation: {{props.tooltipData.genomicSection.isInverted ? '-' : '+'}}</text>
-    <text v-if="props.tooltipData.genomicSection.chainLevel != null" data-test="level" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 40">Level: {{props.tooltipData.genomicSection.chainLevel}}</text>
+    <text data-test="chromosome-name" class="label small" :x="xPos + 2 - width" :y="props.tooltipData.genomicSection.gene ? SVGConstants.overviewTrackYPosition + 30 : SVGConstants.overviewTrackYPosition + 10">Chromosome: {{props.tooltipData.genomicSection.chromosome}}</text>
+    <text data-test="start-stop" class="label small" :x="xPos + 2 - width" :y="props.tooltipData.genomicSection.gene ? SVGConstants.overviewTrackYPosition + 40 : SVGConstants.overviewTrackYPosition + 20">Region: {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.sectionStart)}} - {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.sectionStop)}}</text>
+    <text class="label small" :x="xPos + 2 - width" :y="props.tooltipData.genomicSection.gene ? SVGConstants.overviewTrackYPosition + 50 : SVGConstants.overviewTrackYPosition + 30">Orientation: {{props.tooltipData.genomicSection.isInverted ? '-' : '+'}}</text>
+    <text v-if="props.tooltipData.genomicSection.chainLevel != null" data-test="level" class="label small" :x="xPos + 2 - width" :y="props.tooltipData.genomicSection.gene ? SVGConstants.overviewTrackYPosition + 60 : SVGConstants.overviewTrackYPosition + 40">Level: {{props.tooltipData.genomicSection.chainLevel}}</text>
   </template>
   
   <template v-else-if="props.tooltipData?.type === 'geneLabel'">
@@ -39,7 +39,7 @@
       <template v-for="gene, index in props.tooltipData.genomicSection?.combinedGenes" :key="gene">
         <text data-test="gene-symbol" class="label small" :x="xPos + 2 - width" :y="labelYPosition(index, 1)">Symbol: {{gene.gene.symbol}}</text>
         <text data-test="gene-name" class="label small" :x="xPos + 2 - width" :y="labelYPosition(index, 2)" :textLength="width - 5" lengthAdjust="spacingAndGlyphs">Name: {{gene.gene.name ?? 'N/A'}}</text>
-        <text data-test="chromosome-name" class="label small" :x="xPos + 2 - width" :y="labelYPosition(index, 3)">Chromosome: {{gene.chromosome}}</text>
+        <text data-test="chromosome-name" class="label small" :x="xPos + 2 - width" :y="labelYPosition(index, 3)">Chromosome: {{gene.gene.chromosome}}</text>
         <text data-test="start-stop" class="label small" :x="xPos + 2 - width" :y="labelYPosition(index, 4)">Region: {{Formatter.addCommasToBasePair(gene.gene.start)}} - {{Formatter.addCommasToBasePair(gene.gene.stop)}}</text>
         <text data-test="start-stop" class="label small" :x="xPos + 2 - width" :y="labelYPosition(index, 5)"></text>
       </template>
@@ -55,18 +55,36 @@
       <template v-for="gene, index in props.tooltipData.genomicSection?.combinedGenes" :key="gene">
         <text v-if="index < 4" data-test="gene-symbol" class="label small" :x="xPos + 2 - width" :y="labelYPosition(index, 1)">Symbol: {{gene.gene.symbol}}</text>
         <text v-if="index < 4" data-test="gene-name" class="label small" :x="xPos + 2 - width" :y="labelYPosition(index, 2)" :textLength="width - 5" lengthAdjust="spacingAndGlyphs"> Name: {{gene.gene.name ?? 'N/A'}}</text>
-        <text v-if="index < 4" data-test="chromosome-name" class="label small" :x="xPos + 2 - width" :y="labelYPosition(index, 3)">Chromosome: {{gene.chromosome}}</text>
+        <text v-if="index < 4" data-test="chromosome-name" class="label small" :x="xPos + 2 - width" :y="labelYPosition(index, 3)">Chromosome: {{gene.gene.chromosome}}</text>
         <text v-if="index < 4" data-test="start-stop" class="label small" :x="xPos + 2 - width" :y="labelYPosition(index, 4)">Region: {{Formatter.addCommasToBasePair(gene.gene.start)}} - {{Formatter.addCommasToBasePair(gene.gene.stop)}}</text>
         <text v-if="index < 4" class="label small" :x="xPos + 2 - width" :y="labelYPosition(index, 5)"></text>
       </template>
-
     </template>
 
   </template>
 
   <template v-else-if="props.tooltipData?.type === 'orthologLine'">
-    
+    <text data-test="start-stop" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 10">BACKBONE GENE:</text>
+    <text data-test="gene-symbol" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 20">Symbol: {{props.tooltipData.genomicSection.backboneGene.gene.symbol}}</text>
+    <text data-test="gene-name" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 30" :textLength="width - 5" lengthAdjust="spacingAndGlyphs">Name:{{props.tooltipData.genomicSection.backboneGene.gene.name ?? 'N/A'}}</text>
+    <text data-test="chromosome-name" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 40">Chromosome: {{props.tooltipData.genomicSection.backboneGene.gene.chromosome}}</text>
+    <text data-test="start-stop" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 50">Region: {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.backboneGene.gene.start)}} - {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.backboneGene.gene.stop)}}</text>
+
+    <text data-test="start-stop" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 70">&lt;---------------------------------------&gt;</text>
+
+    <text data-test="start-stop" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 90">COMPARATIVE GENE HOMOLOG:</text>
+    <text data-test="gene-symbol" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 100">Species: {{props.tooltipData.genomicSection.comparativeGene.gene.speciesName}}</text>
+    <text data-test="gene-symbol" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 110">Symbol: {{props.tooltipData.genomicSection.comparativeGene.gene.symbol}}</text>
+    <text data-test="gene-name" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 120" :textLength="width - 5" lengthAdjust="spacingAndGlyphs">Name:{{props.tooltipData.genomicSection.comparativeGene.gene.name ?? 'N/A'}}</text>
+    <text data-test="chromosome-name" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 130">Chromosome: {{props.tooltipData.genomicSection.comparativeGene.gene.chromosome}}</text>
+    <text data-test="start-stop" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 140">Region: {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.comparativeGene.gene.start)}} - {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.comparativeGene.gene.stop)}}</text>
   </template>
+
+  <line v-if="props.tooltipData"
+    class="tooltip-line"
+    :x1="xPos + 2 - width" :x2="props.tooltipData.type === 'trackSection' ? props.tooltipData.x + 5 : props.tooltipData.type === 'orthologLine' ? props.tooltipData.mouseX : props.tooltipData.x + 50" 
+    :y1="SVGConstants.overviewTrackYPosition" :y2="props.tooltipData?.y" 
+  />
 </template>
 
 <script setup lang="ts">
@@ -74,13 +92,15 @@ import TooltipData from '@/models/TooltipData';
 import SVGConstants from '@/utils/SVGConstants';
 import { Formatter } from '@/utils/Formatter';
 import { ref, computed, onMounted, } from 'vue';
+import { useStore } from 'vuex';
+import { key } from '@/store';
+const store = useStore(key);
+
 
 const TOOLTIP_GAP = 5; // gap between the tooltip window and the starting x position given
-const DEFAULT_WIDTH = 120;
-const DEFAULT_HEIGHT = 45;
+const DEFAULT_WIDTH = 130;
+const DEFAULT_HEIGHT = 55;
 const MAX_HEIGHT = 350;
-
-
 
 interface Props
 {
@@ -136,9 +156,14 @@ const width = computed(() => {
 });
 
 const height = computed(() => {
-  if (props.tooltipData == null || props.tooltipData.genomicSection.gene == null || props.tooltipData.genomicSection?.hiddenGenes == null)
+  if (props.tooltipData == null || props.tooltipData?.type == 'trackSection')
   {
     return DEFAULT_HEIGHT;
+  }
+
+  if (props.tooltipData?.type == 'orthologLine')
+  {
+    return 200;
   }
 
   const combinedGenes = props.tooltipData.genomicSection.combinedGenes;
@@ -186,3 +211,11 @@ const labelYPosition = (index: number, textLine: number) => {
   return yPos;
 };
 </script>
+
+<style lang="scss" scoped>
+.tooltip-line
+{
+  stroke-width: 1;
+  stroke: red;
+}
+</style>

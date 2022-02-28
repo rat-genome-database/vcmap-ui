@@ -1,6 +1,7 @@
 
 interface geneParams
 {
+  speciesName?: string;
   geneSymbol: string;
   geneName: string;
   geneType: string;
@@ -13,6 +14,7 @@ interface geneParams
 
 export default class Gene
 {
+  speciesName?: string;
   symbol: string = '';
   name: string = '';
   type: string = '';
@@ -24,6 +26,7 @@ export default class Gene
 
   constructor(params: geneParams)
   {
+    this.speciesName = params.speciesName;
     this.symbol = params.geneSymbol;
     this.name = params.geneName;
     this.type = params.geneType;
