@@ -80,7 +80,7 @@
     <text data-test="start-stop" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 140">Region: {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.comparativeGene.gene.start)}} - {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.comparativeGene.gene.stop)}}</text>
   </template>
 
-  <line v-if="props.tooltipData"
+  <line v-if="props.tooltipData !== null && props.tooltipData.type !== null"
     class="tooltip-line"
     :x1="xPos + 2 - width" :x2="props.tooltipData.type === 'trackSection' ? props.tooltipData.x + 5 : props.tooltipData.type === 'orthologLine' ? props.tooltipData.mouseX : props.tooltipData.x + 50" 
     :y1="SVGConstants.overviewTrackYPosition" :y2="props.tooltipData?.y" 

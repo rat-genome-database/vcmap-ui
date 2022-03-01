@@ -5,8 +5,8 @@
     <rect v-if="section.shape !== 'line'"
       data-test="track-section-svg"
       class="section"
-      @mouseenter="onMouseEnter($event, section)"
-      @mouseleave="onMouseLeave(section)"
+      @mouseenter="onMouseEnter($event, section, 'trackSection')"
+      @mouseleave="onMouseLeave(section, 'trackSection')"
       :fill="section.isHovered && showDataOnHover ? HIGHLIGHT_COLOR : section.color"
       :x="posX" :y="section.svgY"
       :width="SVGConstants.trackWidth"
@@ -124,20 +124,28 @@ const getAdjustedLabelY = (label: Label, index: number) => {
   return index > 0 ? label.svgY + END_LABEL_Y_OFFSET : label.svgY + START_LABEL_Y_OFFSET;
 };
 
-const onMouseEnter = (event: any, section: TrackSection) => {
-  section.isHovered = true;
-
-  // Show data tooltip on hover
-  if (props.showDataOnHover)
+const onMouseEnter = (event: any, section: TrackSection, type: string) => {
+  
+  if (type === 'trackSection' || type === 'geneLabel') 
   {
-    let currentSVGPoint = getMousePosSVG(svg, event);
-    const tooltipData = new TooltipData(props.posX, currentSVGPoint.y, section, false);
-    store.dispatch('setTooltipData', tooltipData);
+    if (section)
+    {
+      section.isHovered = true;
+    }
   }
+  let currentSVGPoint = getMousePosSVG(svg, event);
+  const tooltipData = new TooltipData(props.posX, currentSVGPoint.x, currentSVGPoint.y, section, type);
+  store.dispatch('setTooltipData', tooltipData);
 };
 
-const onMouseLeave = (section: TrackSection) => {
-  section.isHovered = false;
+const onMouseLeave = (section: TrackSection, type: string) => {
+  if (type === 'trackSection' || type === 'geneLabel') 
+  {
+    if (section && section.isHovered == true)
+    {
+      section.isHovered = false;
+    }
+  }
   store.dispatch('setTooltipData', null);
 };
 </script>

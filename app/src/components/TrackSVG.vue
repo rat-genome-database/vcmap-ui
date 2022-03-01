@@ -142,7 +142,10 @@ const onMouseEnter = (event: any, section: TrackSection, type: string) => {
   
   if (type === 'trackSection' || type === 'geneLabel') 
   {
-    section.isHovered = true;
+    if (section)
+    {
+      section.isHovered = true;
+    }
   }
   let currentSVGPoint = getMousePosSVG(svg, event);
   const tooltipData = new TooltipData(props.posX, currentSVGPoint.x, currentSVGPoint.y, section, type);
@@ -152,16 +155,19 @@ const onMouseEnter = (event: any, section: TrackSection, type: string) => {
 const onMouseLeave = (section: TrackSection, type: string) => {
   if (type === 'trackSection' || type === 'geneLabel') 
   {
-    section.isHovered = false;
+    if (section && section.isHovered == true)
+    {
+      section.isHovered = false;
+    }
   }
   store.dispatch('setTooltipData', null);
 };
 
-const tooltipClick = (event: any, section: TrackSection, type: string) => {
+/* const tooltipClick = (event: any, section: TrackSection, type: string) => {
   let currentSVGPoint = getMousePosSVG(svg, event);
   const tooltipData = new TooltipData(props.posX, currentSVGPoint.y, section, type);
   store.dispatch('setTooltipData', tooltipData);
-};
+}; */
 </script>
 
 <style lang="scss" scoped>
