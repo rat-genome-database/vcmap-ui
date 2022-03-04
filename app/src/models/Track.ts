@@ -115,6 +115,14 @@ export default class Track
     // Add offset if one is defined
     currentYPos += section.offsetHeight;
 
+    if (this.type === 'gene')
+    {
+      if (section.svgY > 0)
+      {
+        return section.svgY;
+      }
+    }
+
     section.svgY = currentYPos;
   }
 

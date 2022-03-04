@@ -187,7 +187,7 @@ const updateOverviewPanel = async () => {
   }
 
   // Set the backbone selection to the start and stop positions selected on the config screen if a selection doesn't already exist
-  // (the backbone should have just 1 section)
+  // (the backbone should have just 1 [0] section)
   const prevBackboneSelection = store.state.selectedBackboneRegion;
   if (backboneTrack.sections.length > 0 && prevBackboneSelection.baseSelection.svgHeight === 0)
   {
@@ -251,7 +251,7 @@ const updateDetailsPanel = async () => {
   const backboneSelectionTrack = createBackboneTrack(backboneSpecies, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, store.state.detailedBasePairToHeightRatio);
 
   // Create the backbone data tracks for the entire selection at the updated Detailed panel resolution
-  let tempBackboneTracks = await createBackboneDataTracks(backboneSpecies, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, store.state.detailedBasePairToHeightRatio, true, store.state.detailsSyntenyThreshold, SVGConstants.panelTitleHeight) ?? null;
+  let tempBackboneTracks = await createBackboneDataTracks(backboneSpecies, backboneChromosome, zoomedSelection.basePairStart, zoomedSelection.basePairStop, store.state.detailedBasePairToHeightRatio, true, store.state.detailsSyntenyThreshold, SVGConstants.panelTitleHeight) ?? null;
   if (backboneSelectionTrack != null && tempBackboneTracks != null)
   {
     selectionTrackSets.push(new TrackSet(backboneSelectionTrack, [tempBackboneTracks]));

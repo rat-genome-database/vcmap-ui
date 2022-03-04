@@ -13,13 +13,16 @@ interface TrackSectionParams
   cutoff: number; // last base pair that is displayed for the backbone
   offsetCount?: number; // number of base pairs before this section should begin, useful for knowing when to begin drawing the section
   basePairToHeightRatio: number; // number of base pairs per unit of height in the SVG, use the Resolution module to get the correct ratio
+  svgY?: number; // the Y position of the section on the SVG
   color?: string; // explicitly defined color of the section
   shape: 'rect' | 'line';
   gene?: Gene; // optional - the gene that this section represents
   hiddenGenes?: TrackSection[]; // optional - list of gene track sections that are hidden due to threshold or contained by this section
   combinedGenes?: TrackSection[]; // optional - list of gene track sections that are combined into this section label
+  isComparativeGene?: boolean; // optional - whether this section is a comparative section
   chainLevel?: number;
   isInverted?: boolean;
+  blockId?: number;  //used to identify the block in the synteny track when processing genes
 }
 
 export default class TrackSection
@@ -28,7 +31,6 @@ export default class TrackSection
   sectionStop: number = 0;
   backboneStart: number = 0;
   backboneStop: number = 0;
-  //blockBackboneOffset?: number
   chromosome: string = '';
   chainLevel?: number;
   gene?: Gene;
@@ -36,11 +38,13 @@ export default class TrackSection
   isHovered: boolean = false;
   hiddenGenes?: TrackSection[] = [];
   combinedGenes?: TrackSection[] = [];
+  isComparativeGene?: boolean = false;
   shape: 'rect' | 'line' = 'rect';
   svgY: number = 0;
   isInverted: boolean = false;
   _offsetCount: number = 0;
-  private _backboneCutoff: number = 0;
+  blockId?: number;
+  _backboneCutoff: number = 0;
   private _BPToHeightRatio: number = 0;
    _displayBackboneStart: number = 0; // the displayed starting base pair position on the backbone that this section lines up with
    _displayBackboneStop: number = 0; // the displayed ending base pair position on the backbone that this section lines up with
@@ -56,12 +60,15 @@ export default class TrackSection
     this.trackColor = params.color ?? '';
     this.hiddenGenes = params.hiddenGenes;
     this.combinedGenes = params.hiddenGenes;
+    this.isComparativeGene = params.isComparativeGene;
     this.shape = params.shape;
     this._backboneCutoff = params.cutoff;
     this._offsetCount = params.offsetCount ?? 0;
     this._BPToHeightRatio = params.basePairToHeightRatio;
     this.chainLevel = params.chainLevel;
     this.isInverted = params.isInverted ?? false;
+    this.blockId = params.blockId;
+    params.svgY ? this.svgY = params.svgY : this.svgY = 0;
 
     // Calculate the display start BP and stop BP relative to the backbone that this section might aligning against:
     this.calculateDisplayedBPRegionRelativeToBackbone();
@@ -130,9 +137,11 @@ export default class TrackSection
   // Getter for the height of this section in SVG units
   public get height()
   {
-    
     const height = (this._displayBackboneStop - this._displayBackboneStart) / this._BPToHeightRatio;
-    
+    /* if (this.isComparativeGene)
+    {
+      console.log(this._displayBackboneStop - this._displayBackboneStart, this._BPToHeightRatio, height)
+    } */
     return height > 0 ? height : 0;
   }
 
