@@ -138,10 +138,6 @@ export default class TrackSection
   public get height()
   {
     const height = (this._displayBackboneStop - this._displayBackboneStart) / this._BPToHeightRatio;
-    /* if (height < 0)
-    {
-      console.log(this.gene?.start, this.gene?.stop, this._displayBackboneStart, this._displayBackboneStop);
-    } */
     return height;
   }
 
@@ -185,10 +181,5 @@ export default class TrackSection
     // above the backbone region).
     this._displayBackboneStop = (this.backboneStop > this._backboneCutoff) ? this._backboneCutoff : this.backboneStop;
     this._displayBackboneStart = (this._offsetCount >= 0) ? this.backboneStart : this.backboneStart - this._offsetCount;
-
-    /* if (this._offsetCount < 0 && this._offsetCount * -1 > this.backboneStop - this.backboneStart)
-    {
-      console.log(this.gene);
-    } */
   }
 }
