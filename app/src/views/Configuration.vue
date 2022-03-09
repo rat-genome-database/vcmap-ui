@@ -57,11 +57,18 @@
             </div>
             <div class="grid">
               <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
-                <p class="label-description">Chromosome: {{geneChromosome?.chromosome}} <span v-if="geneChromosome">(Length: {{Formatter.addCommasToBasePair(geneChromosome.seqLength)}}bp)</span></p>
+                <p class="label-description">
+                  Chromosome: {{geneChromosome?.chromosome}} <span v-if="geneChromosome">(Length: {{Formatter.addCommasToBasePair(geneChromosome.seqLength)}}bp)</span>
+                </p>
+              </div>
+            </div>
+            <div class="grid">
+              <div class="col-12 text-center">
+                <Button @click="resetStartStopToGenePosition" label="Reset To Gene Start/Stop" :disabled="backboneGene == null" icon="pi pi-undo" class="p-button p-button-secondary" />
               </div>
             </div>
             <div class="p-fluid grid">
-              <div class="lg:col-2 lg:col-offset-3 md:col-2 md:col-offset-2 sm:col-2 sm:col-offset-1">
+              <div class="lg:col-2 lg:col-offset-3 md:col-1 md:col-offset-2 sm:col-2 sm:col-offset-1">
                 <h4 :class="{'config-label': backboneGene}">Upstream/Downstream</h4>
                 <p v-if="backboneGene" class="label-description">+/- bp range</p>
                 <InputNumber
@@ -74,6 +81,7 @@
                   :step="500"
                   :min="0"
                 />
+                <small v-if="showGenePlusMinusWarning" class="warning-text">Upstream/downstream range cannot be applied to custom start/stop positions</small>
               </div>
               <div class="lg:col-2 md:col-3 sm:col-4">
                 <h4 :class="{'config-label': backboneGene}">Start Position</h4>
@@ -82,6 +90,7 @@
                   showButtons
                   v-model="geneOptionStartPosition"
                   :disabled="!geneChromosome"
+                  @input="resetPlusMinusForCustomInput"
                   required
                   suffix="bp"
                   :step="500"
@@ -96,6 +105,7 @@
                   showButtons
                   v-model="geneOptionStopPosition"
                   :disabled="!geneChromosome"
+                  @input="resetPlusMinusForCustomInput"
                   required
                   suffix="bp"
                   :step="500"
@@ -335,6 +345,7 @@ const maxPosition = ref<number | null>(null);
 
 const comparativeSpeciesSelections = ref<ComparativeSpeciesSelection[]>([]);
 
+const showGenePlusMinusWarning = ref(false);
 const showError = ref(false);
 const errorMessage = ref('');
 
@@ -376,9 +387,28 @@ function onPlusMinusInput(event: { value: number })
     return;
   }
 
+  showGenePlusMinusWarning.value = false;
   const plusMinus = event.value;
   geneOptionStartPosition.value = (backboneGene.value.start - plusMinus > 0) ? backboneGene.value.start - plusMinus : 0;
   geneOptionStopPosition.value = (backboneGene.value.stop + plusMinus < geneChromosome.value.seqLength) ? backboneGene.value.stop + plusMinus : geneChromosome.value.seqLength;
+}
+
+function resetPlusMinusForCustomInput()
+{
+  geneOptionPlusMinus.value = 0;
+  showGenePlusMinusWarning.value = true;
+}
+
+function resetStartStopToGenePosition()
+{
+  if (backboneGene.value  == null)
+  {
+    return;
+  }
+
+  geneOptionStartPosition.value = backboneGene.value.start;
+  geneOptionStopPosition.value = backboneGene.value.stop;
+  geneOptionPlusMinus.value = 0;
 }
 
 async function searchGene(event: {query: string})
@@ -498,6 +528,7 @@ async function prepopulateConfigOptions()
 {
   activeTab.value = store.state.configTab;
   isLoadingSpecies.value = true;
+  const backboneSelection = store.state.selectedBackboneRegion;
   try
   {
     speciesOptions.value = await SpeciesApi.getSpecies();
@@ -578,8 +609,19 @@ async function prepopulateConfigOptions()
   {
     const prevGene = store.state.gene;
     backboneGene.value = prevGene;
-    geneOptionStartPosition.value = store.state.startPos ?? 0;
-    geneOptionStopPosition.value = store.state.stopPos ?? 0;
+    if (backboneSelection.baseSelection.length > 0 && backboneSelection.baseSelection.basePairStart <= prevGene.start && backboneSelection.baseSelection.basePairStop >= prevGene.stop)
+    {
+      // If user's last selection included this gene
+      geneOptionStartPosition.value = store.state.startPos ?? 0;
+      geneOptionStopPosition.value = store.state.stopPos ?? 0;
+    }
+    else
+    {
+      // No previous selection or user's last selected region did not encompass the gene, default to gene start/stop
+      geneOptionStartPosition.value = prevGene.start;
+      geneOptionStopPosition.value = prevGene.stop;
+    }
+
     if (!store.state.chromosome && backboneSpecies.value != null)
     {
       // If chromosome not present in the store, set it based on the gene
@@ -614,15 +656,7 @@ function saveConfigToStoreAndGoToMainScreen()
     backboneSpecies.value.activeMap = backboneAssembly.value;
   }
 
-  // If backbone species, assembly, chromosome, or start/stop position is different -- clear the previous selected region
-  if (store.state.species?.typeKey !== backboneSpecies.value?.typeKey 
-    || store.state.species?.activeMap.key !== backboneSpecies.value?.activeMap.key 
-    || store.state.chromosome?.chromosome !== backboneChromosome.value?.chromosome
-    || store.state.startPos !== startPosition.value
-    || store.state.stopPos !== stopPosition.value)
-  {
-    store.dispatch('clearBackboneSelection');
-  }
+  clearPriorBackboneSelectionIfNecessary();
 
   store.dispatch('setSpecies', backboneSpecies.value);
   if (activeTab.value === TABS.GENE)
@@ -675,6 +709,33 @@ function saveConfigToStoreAndGoToMainScreen()
   store.dispatch('setConfigTab', activeTab.value);
 
   router.push('/main');
+}
+
+function clearPriorBackboneSelectionIfNecessary()
+{
+  if (store.state.species?.typeKey !== backboneSpecies.value?.typeKey || store.state.species?.activeMap.key !== backboneSpecies.value?.activeMap.key)
+  {
+    store.dispatch('clearBackboneSelection');
+    return;
+  }
+
+  if (activeTab.value === TABS.GENE
+    && (store.state.chromosome?.chromosome !== geneChromosome.value?.chromosome
+      || store.state.startPos !== geneOptionStartPosition.value
+      || store.state.stopPos !== geneOptionStopPosition.value))
+  {
+    store.dispatch('clearBackboneSelection');
+    return;
+  }
+  
+  if (activeTab.value === TABS.POSITION 
+    && (store.state.chromosome?.chromosome !== backboneChromosome.value?.chromosome
+      || store.state.startPos !== startPosition.value
+      || store.state.stopPos !== stopPosition.value))
+  {
+    store.dispatch('clearBackboneSelection');
+    return;
+  }
 }
 
 function onApiError(err: any, userMessage: string)
@@ -763,6 +824,9 @@ function clearConfigSelections()
   startPosition.value = null;
   stopPosition.value = null;
   maxPosition.value = null;
+  geneOptionStartPosition.value = null;
+  geneOptionStopPosition.value = null;
+  geneOptionPlusMinus.value = 0;
   comparativeSpeciesSelections.value = [];
   chromosomeOptions.value = [];
 
