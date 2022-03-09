@@ -96,32 +96,20 @@ export function createGeneTrackFromGenesData(genes: Gene[], speciesName: string,
   const sections: TrackSection[] = [];
   let hiddenSections: TrackSection[] = [];
 
-  let previousBlockBackboneStop = startPos;
   const threshold = syntenyThreshold * GENES_DATA_TRACK_THRESHOLD_MULTIPLIER;
   for (let index = 0; index < genes.length; index++)
   {
     const gene = genes[index];
 
-    if (gene.start < startPos || gene.stop > stopPos || gene.start > stopPos)
+    if (gene.stop < startPos || gene.start > stopPos)
     {
       continue;
     }
-    
+
     const geneSize = gene.stop - gene.start;
+    const blockStartOffset = (gene.start - startPos ) / basePairToHeightRatio;
+    const geneSvgY = blockStartOffset + startingSVGYPos;
 
-    let containedFlag = false;
-    let overlapFlag = false;
-    if (gene.stop < previousBlockBackboneStop)
-    {
-      containedFlag = true;
-    }
-
-    if (gene.start < previousBlockBackboneStop)
-    {
-      overlapFlag = true;
-    }
-
-    
     if ( geneSize < threshold)
     {
       const hiddenTrackSection = new TrackSection({
@@ -131,7 +119,6 @@ export function createGeneTrackFromGenesData(genes: Gene[], speciesName: string,
         backboneStop: gene.stop, 
         chromosome: gene.chromosome, 
         cutoff: stopPos, 
-        offsetCount: gene.start - previousBlockBackboneStop,
         basePairToHeightRatio: basePairToHeightRatio,
         shape: 'rect',
         gene: gene
@@ -148,8 +135,8 @@ export function createGeneTrackFromGenesData(genes: Gene[], speciesName: string,
         backboneStart: gene.start, 
         backboneStop: gene.stop,
         chromosome: gene.chromosome, 
-        cutoff: stopPos, 
-        offsetCount: gene.start - previousBlockBackboneStop,
+        cutoff: stopPos,
+        svgY: geneSvgY, 
         basePairToHeightRatio: basePairToHeightRatio,
         color: '#00000',
         shape: 'rect',
@@ -159,15 +146,6 @@ export function createGeneTrackFromGenesData(genes: Gene[], speciesName: string,
 
       hiddenSections =  [];
       sections.push(trackSection);
-
-      if (containedFlag || overlapFlag)
-      {
-        previousBlockBackboneStop;
-      }
-      else
-      {
-        previousBlockBackboneStop = gene.stop;
-      }
     }
   }
 
@@ -235,9 +213,6 @@ function splitBlocksAndGapsIntoSections(speciesSyntenyData: SpeciesSyntenyData, 
   let blockIdCounter = 0;
   filteredRegions.forEach(region => {
     const block = region.block;
-    const blockLength = block.stop - block.start;
-    const blockBackboneLength = block.backboneStop - block.backboneStart;
-    const sizeRatio = blockLength / blockBackboneLength;
 
     if (block.backboneStop <= backboneStart || block.backboneStart >= backboneStop)
     {
@@ -270,7 +245,7 @@ function splitBlocksAndGapsIntoSections(speciesSyntenyData: SpeciesSyntenyData, 
     });
 
     gaplessBlockSections.push(currGaplessBlockSection);
-    blockGenesMap.set(blockIdCounter, {'genes': genes, 'ratio' : sizeRatio});
+    blockGenesMap.set(blockIdCounter, {'genes': genes,});
     blockIdCounter++;
 
     if (gaps.length === 0)
@@ -433,28 +408,15 @@ function createGeneSectionsFromSyntenyBlocks(syntenyBlockSections: TrackSection[
     }
     else
     {
-      let previousGeneStop = syntenyBlockSection.sectionStart;
+      const blockRatio = (syntenyBlockSection.sectionStop - syntenyBlockSection.sectionStart) / syntenyBlockSection.height; 
+ 
       blockGenes.genes.forEach((gene: Gene) => {
         const geneSize = gene.stop - gene.start; //length of gene in bp
         const correctGeneStart = gene.start < syntenyBlockSection.sectionStart ? syntenyBlockSection.sectionStart : gene.start; //adjusted start of gene; if gene starts before block start, use block start
         const correctGeneStop = gene.stop > syntenyBlockSection.sectionStop ? syntenyBlockSection.sectionStop : gene.stop; //adjusted stop of gene; if gene stops after block stop, use block stop
         
-        const blockStartOffset = (correctGeneStart - syntenyBlockSection.sectionStart ) / basePairToHeightRatio; //offset of gene from block start - should never be negative
+        const blockStartOffset = (correctGeneStart - syntenyBlockSection.sectionStart ) / (blockRatio); //offset of gene from block start in svg units - should never be negative
         const geneSvgY = syntenyBlockSection.svgY + blockStartOffset;
-        const geneOffset = (correctGeneStart - previousGeneStop);
-
-        
-        let containedFlag = false;
-        let overlapFlag = false;
-        if(gene.stop < previousGeneStop)
-        {
-          containedFlag = true;
-        }
-
-        if (gene.start < previousGeneStop)
-        {
-          overlapFlag = true;
-        }
 
         if (geneSize < threshold)
         {
@@ -482,11 +444,10 @@ function createGeneSectionsFromSyntenyBlocks(syntenyBlockSections: TrackSection[
             backboneStart: correctGeneStart, 
             backboneStop: correctGeneStop, 
             chromosome: gene.chromosome, 
-            cutoff: syntenyBlockSection.sectionStop, 
-            basePairToHeightRatio: basePairToHeightRatio,
+            cutoff: correctGeneStop, 
+            basePairToHeightRatio: blockRatio,
             isComparativeGene: true,
             svgY: geneSvgY,
-            offsetCount: geneOffset,
             color: '#00000',
             shape: 'rect',
             gene: gene,
@@ -495,15 +456,6 @@ function createGeneSectionsFromSyntenyBlocks(syntenyBlockSections: TrackSection[
           
           hiddenSections = [];
           geneSections.push(trackSection);
-
-          if (containedFlag || overlapFlag)
-          {
-            previousGeneStop;
-          }
-          else
-          {
-            previousGeneStop = correctGeneStop;
-          }
         }
       });
     }
