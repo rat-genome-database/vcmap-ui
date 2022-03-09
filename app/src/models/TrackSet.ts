@@ -42,7 +42,7 @@ export default class TrackSet
         this.dataTracks.forEach(dataTrack => {
           if (dataTrack.track.rawGeneData)
           {
-            convertedDataTracks.push(createGeneTrackFromGenesData(
+            const convertedSpeciesDataTrack = createGeneTrackFromGenesData(
               dataTrack.track.rawGeneData,
               dataTrack.track.name,
               start,
@@ -51,7 +51,9 @@ export default class TrackSet
               true, // this will always be used on the detailed panel
               syntenyThreshold,
               this.svgY
-            ));
+            );
+
+            convertedDataTracks.push(convertedSpeciesDataTrack);
           }
         });
       }

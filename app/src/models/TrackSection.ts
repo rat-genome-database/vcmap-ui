@@ -138,11 +138,7 @@ export default class TrackSection
   public get height()
   {
     const height = (this._displayBackboneStop - this._displayBackboneStart) / this._BPToHeightRatio;
-    /* if (this.isComparativeGene)
-    {
-      console.log(this._displayBackboneStop - this._displayBackboneStart, this._BPToHeightRatio, height)
-    } */
-    return height > 0 ? height : 0;
+    return height;
   }
 
   // Getter for the ending SVG Y point

@@ -32,7 +32,7 @@
     <template v-if="!labelModal">
       <text data-test="gene-symbol" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 10">Symbol: {{props.tooltipData.genomicSection.gene.symbol}}</text>
       <text data-test="gene-name" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 20" :textLength="width - 5" lengthAdjust="spacingAndGlyphs">Name: {{props.tooltipData.genomicSection.gene.name ?? 'N/A'}}</text>
-      <text data-test="chromosome-name" class="label small" :x=" - width" :y="SVGConstants.overviewTrackYPosition + 30">Chromosome: {{props.tooltipData.genomicSection.gene.chromosome}}</text>
+      <text data-test="chromosome-name" class="label small" :x=" - width" :y="SVGConstants.overviewTrackYPosition + 30">Chromosome: {{props.tooltipData.genomicSection.chromosome}}</text>
       <text data-test="start-stop" class="label small" :x="xPos + 2 - width" :y="SVGConstants.overviewTrackYPosition + 40">Region: {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.gene.start)}} - {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.gene.stop)}}</text>
       <text data-test="start-stop" class="label small" :x=" - width" :y="SVGConstants.overviewTrackYPosition + 50"></text>
 
