@@ -91,11 +91,7 @@
 import TooltipData from '@/models/TooltipData';
 import SVGConstants from '@/utils/SVGConstants';
 import { Formatter } from '@/utils/Formatter';
-import { ref, computed, onMounted, } from 'vue';
-import { useStore } from 'vuex';
-import { key } from '@/store';
-const store = useStore(key);
-
+import { computed, } from 'vue';
 
 const TOOLTIP_GAP = 5; // gap between the tooltip window and the starting x position given
 const DEFAULT_WIDTH = 130;
