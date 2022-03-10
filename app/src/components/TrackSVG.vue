@@ -38,7 +38,8 @@
         class="ortholog-line"
         @mouseenter="onMouseEnter($event, line, 'orthologLine')"
         @mouseleave="onMouseLeave(line, 'orthologLine')"
-        :x1="posX + width" :x2="line.comparativeGeneX" 
+        :stroke="checkForSelectedGene(line)"
+        :x1="posX + width" :x2="line.comparativeGeneX"
         :y1="line.backboneGeneY" :y2="line.comparativeGeneY" />
     </template>
   </template>
@@ -50,7 +51,8 @@
       class="section"
       @mouseenter="onMouseEnter($event, section, 'trackSection')"
       @mouseleave="onMouseLeave(section, 'trackSection')"
-      :fill="section.isHovered ? HIGHLIGHT_COLOR : section.color"
+      @click="onClick($event, section, 'trackSection')"
+      :fill="(section.isHovered || isSelected(section)) ? HIGHLIGHT_COLOR : section.color"
       :fill-opacity="geneDataTrack ? .7 : 1"
       :x="posX" :y="section.svgY" 
       :width="width" 
@@ -103,6 +105,7 @@
 </template>
 
 <script lang="ts" setup>
+import { watch } from 'vue';
 import TooltipData from '@/models/TooltipData';
 import Track from '@/models/Track';
 import OrthologLine from '@/models/OrthologLine';
@@ -138,6 +141,10 @@ const props = defineProps<Props>();
 //Converts each property in this object to its own reactive prop
 toRefs(props);
 
+watch(() => store.state.selectedGeneId, () => {
+  console.log(store.state.selectedGeneId);
+});
+
 const onMouseEnter = (event: any, section: TrackSection, type: string) => {
   
   if (type === 'trackSection' || type === 'geneLabel') 
@@ -163,6 +170,24 @@ const onMouseLeave = (section: TrackSection, type: string) => {
   store.dispatch('setTooltipData', null);
 };
 
+const onClick = (event: any, section: TrackSection, type: string) => {
+  // section.isSelected = !section.isSelected;
+  // TODO: probably set tooltip too?
+  store.dispatch('setSelectedGeneId', section.gene?.rgdId || -1);
+};
+
+const checkForSelectedGene = (line: OrthologLine): string => {
+  if (line.backboneGene.gene?.rgdId === store.state.selectedGeneId ||
+      line.comparativeGene.gene?.rgdId === store.state.selectedGeneId) {
+    return HIGHLIGHT_COLOR;
+  }
+  return 'gray';
+};
+
+const isSelected = (section: TrackSection) => {
+  return section.gene?.rgdId === store.state.selectedGeneId;
+};
+
 /* const tooltipClick = (event: any, section: TrackSection, type: string) => {
   let currentSVGPoint = getMousePosSVG(svg, event);
   const tooltipData = new TooltipData(props.posX, currentSVGPoint.y, section, type);
@@ -185,7 +210,6 @@ const onMouseLeave = (section: TrackSection, type: string) => {
 .ortholog-line
 {
   stroke-width: 1;
-  stroke: grey;
 }
 
 .section

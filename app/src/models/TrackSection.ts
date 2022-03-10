@@ -36,6 +36,7 @@ export default class TrackSection
   gene?: Gene;
   trackColor: string = '';
   isHovered: boolean = false;
+  isSelected: boolean = false;
   hiddenGenes?: TrackSection[] = [];
   combinedGenes?: TrackSection[] = [];
   isComparativeGene?: boolean = false;
