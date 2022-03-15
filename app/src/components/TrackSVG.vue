@@ -52,7 +52,7 @@
       @mouseenter="onMouseEnter($event, section, 'trackSection')"
       @mouseleave="onMouseLeave(section, 'trackSection')"
       @click="onClick($event, section, 'trackSection')"
-      :fill="(section.isHovered || isSelected(section)) ? HIGHLIGHT_COLOR : section.color"
+      :fill="(section.isHovered || section.isSelected) ? HIGHLIGHT_COLOR : section.color"
       :fill-opacity="geneDataTrack ? .7 : 1"
       :x="posX" :y="section.svgY" 
       :width="width" 
@@ -143,6 +143,17 @@ toRefs(props);
 
 watch(() => store.state.selectedGeneId, () => {
   // TODO: When selected gene changes, get the relvant line and connected genes
+  if (props.lines)
+    props.lines?.forEach((line) => {
+      if (line.backboneGene.gene?.rgdId === store.state.selectedGeneId ||
+        line.comparativeGene.gene?.rgdId === store.state.selectedGeneId) {
+        line.backboneGene.isSelected = true;
+        line.comparativeGene.isSelected = true;
+      } else {
+        line.backboneGene.isSelected = false;
+        line.comparativeGene.isSelected = false;
+      }
+    });
 });
 
 const onMouseEnter = (event: any, section: TrackSection, type: string) => {
@@ -171,7 +182,7 @@ const onMouseLeave = (section: TrackSection, type: string) => {
 };
 
 const onClick = (event: any, section: TrackSection, type: string) => {
-  // section.isSelected = !section.isSelected;
+  section.isSelected = !section.isSelected;
   // TODO: probably set tooltip too?
   store.dispatch('setSelectedGeneId', section.gene?.rgdId || -1);
 };
@@ -182,10 +193,6 @@ const checkForSelectedGene = (line: OrthologLine): string => {
     return HIGHLIGHT_COLOR;
   }
   return 'gray';
-};
-
-const isSelected = (section: TrackSection) => {
-  return section.gene?.rgdId === store.state.selectedGeneId;
 };
 
 /* const tooltipClick = (event: any, section: TrackSection, type: string) => {
