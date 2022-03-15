@@ -142,7 +142,7 @@ const props = defineProps<Props>();
 toRefs(props);
 
 watch(() => store.state.selectedGeneId, () => {
-  console.log(store.state.selectedGeneId);
+  // TODO: When selected gene changes, get the relvant line and connected genes
 });
 
 const onMouseEnter = (event: any, section: TrackSection, type: string) => {
