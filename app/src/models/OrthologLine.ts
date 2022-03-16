@@ -17,6 +17,7 @@ export default class OrthologLine
   comparativeGeneY: number;
   backboneGene: TrackSection;
   comparativeGene: TrackSection;
+  isSelected: boolean = false;
 
   constructor(params: OrthologLineParams)
   {
