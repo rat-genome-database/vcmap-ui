@@ -105,7 +105,7 @@
 </template>
 
 <script lang="ts" setup>
-import { watch } from 'vue';
+import { watch, onMounted} from 'vue';
 import TooltipData from '@/models/TooltipData';
 import Track from '@/models/Track';
 import OrthologLine from '@/models/OrthologLine';
@@ -141,22 +141,14 @@ const props = defineProps<Props>();
 //Converts each property in this object to its own reactive prop
 toRefs(props);
 
+// update highlighting if selected genes change
 watch(() => store.state.selectedGeneIds, () => {
-  // Look through the sections and highlight based on selected genes
-  props.track.sections.forEach((section) => {
-    section.isSelected = store.state.selectedGeneIds.includes(section.gene?.rgdId || -1);
-  })
-  // Highlight the line if needed, and make sure genes highlighted too
-  props.lines?.forEach((line) => {
-    if (store.state.selectedGeneIds.includes(line.backboneGene.gene?.rgdId || -1) ||
-        store.state.selectedGeneIds.includes(line.comparativeGene.gene?.rgdId || -1)) {
-      line.isSelected = true;
-      line.backboneGene.isSelected = true;
-      line.comparativeGene.isSelected = true;
-    } else {
-      line.isSelected = false;
-    }
-  });
+  highlightSelections(store.state.selectedGeneIds);
+});
+
+// Set up highlighting on mount, to handle selection updates
+onMounted(() => {
+  highlightSelections(store.state.selectedGeneIds);
 });
 
 const onMouseEnter = (event: any, section: TrackSection, type: string) => {
@@ -185,6 +177,11 @@ const onMouseLeave = (section: TrackSection, type: string) => {
 };
 
 const onClick = (event: any, section: TrackSection, type: string) => {
+  // If clicked section already selected, just reset the selectedGeneId state
+  if (store.state.selectedGeneIds.includes(section.gene?.rgdId || -1)) {
+    store.dispatch('setSelectedGeneIds', []);
+    return;
+  }
   let foundLine = false;
   props.lines?.forEach((line) => {
     if (line.backboneGene.gene?.rgdId === section.gene?.rgdId) {
@@ -197,6 +194,25 @@ const onClick = (event: any, section: TrackSection, type: string) => {
     store.dispatch('setSelectedGeneIds', [section.gene?.rgdId] || []);
   }
 };
+
+const highlightSelections = (selectedGeneIds: number[]) => {
+  // Look through the sections and highlight based on selected genes
+  props.track.sections.forEach((section) => {
+    section.isSelected = selectedGeneIds.includes(section.gene?.rgdId || -1);
+  })
+  // Highlight the line if needed, and make sure genes highlighted too
+  // (this ensures backbone and comparitive genes are highlighted, regardless of which is clicked)
+  props.lines?.forEach((line) => {
+    if (selectedGeneIds.includes(line.backboneGene.gene?.rgdId || -1) ||
+        selectedGeneIds.includes(line.comparativeGene.gene?.rgdId || -1)) {
+      line.isSelected = true;
+      line.backboneGene.isSelected = true;
+      line.comparativeGene.isSelected = true;
+    } else {
+      line.isSelected = false;
+    }
+  });
+}
 
 /* const tooltipClick = (event: any, section: TrackSection, type: string) => {
   let currentSVGPoint = getMousePosSVG(svg, event);
