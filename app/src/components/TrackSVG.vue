@@ -176,18 +176,26 @@ const onMouseLeave = (section: TrackSection, type: string) => {
   store.dispatch('setTooltipData', null);
 };
 
-const onClick = (event: any, section: TrackSection, type: string) => {
+const onClick = (event: any, section: TrackSection) => {
   // If clicked section already selected, just reset the selectedGeneId state
   if (store.state.selectedGeneIds.includes(section.gene?.rgdId || -1)) {
     store.dispatch('setSelectedGeneIds', []);
     return;
   }
+  let geneIds: number[] = [];
   let foundLine = false;
   props.lines?.forEach((line) => {
     if (line.backboneGene.gene?.rgdId === section.gene?.rgdId) {
       foundLine = true;
-      let geneIds = [section.gene?.rgdId, line.comparativeGene.gene?.rgdId];
-      store.dispatch('setSelectedGeneIds', geneIds || [])
+      let sectionGeneId = section.gene?.rgdId;
+      let comparativeGeneId = line.comparativeGene.gene?.rgdId;
+      if (sectionGeneId && !geneIds.includes(sectionGeneId)) {
+        geneIds.push(sectionGeneId);
+      }
+      if (comparativeGeneId && !geneIds.includes(comparativeGeneId)) {
+        geneIds.push(comparativeGeneId);
+      }
+      store.dispatch('setSelectedGeneIds', geneIds);
     }
   });
   if (!foundLine) {
@@ -199,7 +207,7 @@ const highlightSelections = (selectedGeneIds: number[]) => {
   // Look through the sections and highlight based on selected genes
   props.track.sections.forEach((section) => {
     section.isSelected = selectedGeneIds.includes(section.gene?.rgdId || -1);
-  })
+  });
   // Highlight the line if needed, and make sure genes highlighted too
   // (this ensures backbone and comparitive genes are highlighted, regardless of which is clicked)
   props.lines?.forEach((line) => {
@@ -212,7 +220,7 @@ const highlightSelections = (selectedGeneIds: number[]) => {
       line.isSelected = false;
     }
   });
-}
+};
 
 /* const tooltipClick = (event: any, section: TrackSection, type: string) => {
   let currentSVGPoint = getMousePosSVG(svg, event);
