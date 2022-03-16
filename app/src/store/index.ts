@@ -30,7 +30,7 @@ export interface VCMapState
   configTab: number;
 
   tooltipData: TooltipData | null;
-  selectedGeneId: number;
+  selectedGeneIds: number[];
 
   detailedBasePairRange: BasePairRange;
 
@@ -62,7 +62,7 @@ export default createStore({
     configTab: 0,
 
     tooltipData: null,
-    selectedGeneId: -1,
+    selectedGeneIds: [],
 
     detailedBasePairRange: { start: 0, stop: 0 },
 
@@ -117,8 +117,8 @@ export default createStore({
     tooltipData(state: VCMapState, tooltip: TooltipData) {
       state.tooltipData = tooltip;
     },
-    selectedGeneId(state: VCMapState, selectedId: number) {
-      state.selectedGeneId = selectedId;
+    selectedGeneIds(state: VCMapState, selectedIds: number[]) {
+      state.selectedGeneIds = selectedIds;
     },
     isDetailedPanelUpdating(state: VCMapState, isUpdating: boolean) {
       state.isDetailedPanelUpdating = isUpdating;
@@ -167,8 +167,8 @@ export default createStore({
     setTooltipData(context: ActionContext<VCMapState, VCMapState>, tooltip: TooltipData) {
       context.commit('tooltipData', tooltip);
     },
-    setSelectedGeneId(context: ActionContext<VCMapState, VCMapState>, selectedId: number) {
-      context.commit('selectedGeneId', selectedId);
+    setSelectedGeneIds(context: ActionContext<VCMapState, VCMapState>, selectedIds: number[]) {
+      context.commit('selectedGeneIds', selectedIds);
     },
     setComparativeSpecies(context: ActionContext<VCMapState, VCMapState>, species: Species[]) {
       context.commit('comparativeSpecies', species);
