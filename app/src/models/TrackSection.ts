@@ -41,6 +41,7 @@ export default class TrackSection
   isComparativeGene?: boolean = false;
   shape: 'rect' | 'line' = 'rect';
   svgY: number = 0;
+  adjustedHeight?: number = 0;
   isInverted: boolean = false;
   _offsetCount: number = 0;
   blockId?: number;
@@ -137,14 +138,28 @@ export default class TrackSection
   // Getter for the height of this section in SVG units
   public get height()
   {
-    const height = (this._displayBackboneStop - this._displayBackboneStart) / this._BPToHeightRatio;
+    let height = (this._displayBackboneStop - this._displayBackboneStart) / this._BPToHeightRatio;
+    if (this.adjustedHeight)
+    {
+      height = this.adjustedHeight;
+    }
     return height;
+  }
+
+  public set height(height: number)
+  {
+    
   }
 
   // Getter for the ending SVG Y point
   public get svgY2()
   {
-    return this.svgY + this.height;
+    let svgY2 = this.svgY + this.height;
+    if (this.adjustedHeight)
+    {
+      svgY2 = this.svgY + this.adjustedHeight;
+    }
+    return svgY2;
   }
 
   public get offsetHeight()

@@ -95,6 +95,8 @@ export function createGeneTrackFromGenesData(genes: Gene[], speciesName: string,
   const sections: TrackSection[] = [];
   let hiddenSections: TrackSection[] = [];
 
+  const topSvgYCutoff = 55; //SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight;
+  const bottomSvgYCutoff = SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight;
   const threshold = syntenyThreshold * GENES_DATA_TRACK_THRESHOLD_MULTIPLIER;
   for (let index = 0; index < genes.length; index++)
   {
@@ -144,6 +146,19 @@ export function createGeneTrackFromGenesData(genes: Gene[], speciesName: string,
       });
 
       hiddenSections =  [];
+
+      //gene is above the top nav button, adjust to be cutoff correctly
+      if (geneSvgY < topSvgYCutoff)
+      {
+        //bottom of gene is below nav button
+        if (trackSection.svgY2 > topSvgYCutoff)
+        {
+          const visibleHeight = trackSection.height - (topSvgYCutoff - trackSection.svgY);
+          
+          trackSection.adjustedHeight = visibleHeight;
+          trackSection.svgY = topSvgYCutoff;
+        }
+      }
       sections.push(trackSection);
     }
   }
@@ -203,7 +218,7 @@ function splitBlocksAndGapsIntoSections(speciesSyntenyData: SpeciesSyntenyData, 
   const gaplessBlockSections: TrackSection[] = [];
 
   let previousBlockBackboneStop = backboneStart;
-  //let previousGeneBackboneStop = backboneStart;
+  let previousGaplessBlockStop = backboneStart;
 
   const filteredRegions = regions.filter(r => {
     // Filter out blocks that are not at least partially in the selected/zoomed-in backbone region
@@ -236,13 +251,14 @@ function splitBlocksAndGapsIntoSections(speciesSyntenyData: SpeciesSyntenyData, 
       backboneStop: block.backboneStop, 
       chromosome: block.chromosome, 
       cutoff: backboneStop, 
-      offsetCount: block.backboneStart - previousBlockBackboneStop,
+      offsetCount: block.backboneStart - previousGaplessBlockStop,
       basePairToHeightRatio: basePairToHeightRatio,
       shape: 'rect',
       chainLevel: block.chainLevel,
       isInverted: block.orientation === '-',
       blockId: blockIdCounter,
     });
+    previousGaplessBlockStop = block.backboneStop;
 
     gaplessBlockSections.push(currGaplessBlockSection);
     blockGenesMap.set(blockIdCounter, {'genes': genes,});
@@ -379,18 +395,22 @@ function splitBlocksAndGapsIntoSections(speciesSyntenyData: SpeciesSyntenyData, 
   const speciesTrack = new Track({ speciesName: speciesSyntenyData.speciesName, speciesMap: speciesSyntenyData.mapKey, sections: gaplessBlockSections, mapName: speciesSyntenyData.mapName, isSyntenyTrack: true, startingSVGY: SVGConstants.panelTitleHeight, rawSyntenyData: speciesSyntenyData, type: 'comparative' });
 
   const geneThreshold = threshold * GENES_DATA_TRACK_THRESHOLD_MULTIPLIER;
-  const geneSections = createGeneSectionsFromSyntenyBlocks(speciesTrack.sections, geneThreshold, basePairToHeightRatio, blockGenesMap);
+  const geneSections = createGeneSectionsFromSyntenyBlocks(speciesTrack.sections, geneThreshold, basePairToHeightRatio, blockGenesMap, backboneStart, backboneStop);
 
   console.debug(`Regions split into ${trackSections.length} sections`, trackSections);
   warnIfNegativeHeight(trackSections);
   return [trackSections, geneSections, gaplessBlockSections];
 }
 
-function createGeneSectionsFromSyntenyBlocks(syntenyBlockSections: TrackSection[], threshold: number, basePairToHeightRatio: number, blockMap: Map<number, any>)
+function createGeneSectionsFromSyntenyBlocks(syntenyBlockSections: TrackSection[], threshold: number, basePairToHeightRatio: number, blockMap: Map<number, any>, backboneStart: number, backboneStop: number)
 {
   const geneSections: TrackSection[] = [];
   let hiddenSections: TrackSection[] = [];
 
+  /* if (syntenyBlockSections.length === 1)
+  {
+    console.log('single block', syntenyBlockSections);
+  } */
   syntenyBlockSections.forEach((syntenyBlockSection) => {
     //first, check for genes in this synteny block
     if (!syntenyBlockSection?.blockId)
@@ -412,7 +432,7 @@ function createGeneSectionsFromSyntenyBlocks(syntenyBlockSections: TrackSection[
     }
     else
     {
-      const blockRatio = (syntenyBlockSection.sectionStop - syntenyBlockSection.sectionStart) / syntenyBlockSection.height; 
+      const blockRatio = (syntenyBlockSection.sectionStop - syntenyBlockSection.sectionStart) / syntenyBlockSection.height;
  
       blockGenes.genes.forEach((gene: Gene) => {
         const geneSize = gene.stop - gene.start; //length of gene in bp
