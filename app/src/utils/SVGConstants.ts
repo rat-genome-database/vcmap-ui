@@ -1,6 +1,6 @@
 export default {
   overviewPanelWidth: 300,
-  detailsPanelWidth: 700,
+  detailsPanelWidth: 500,
   overviewTitleXPosition: 10,
   detailsTitleXPosition: 310,
   panelTitleYPosition: 15,

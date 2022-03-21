@@ -1,4 +1,17 @@
 <template>
+  <Panel>
+    <div>
+      <span>symbol: {{props.tooltipData?.genomicSection.gene.symbol}}</span>
+      <br>
+      <span>gene name: {{props.tooltipData?.genomicSection.gene.name}}</span>
+      <br>
+      <span>position: {{props.tooltipData?.genomicSection.gene.start}} - {{props.tooltipData?.genomicSection.gene.stop}}</span>
+      <br>
+      <span></span>
+    </div>
+  </Panel>
+</template>
+<!--<template>
   <rect v-if="props.tooltipData"
     data-test="tooltip-data-svg"
     fill="bisque"
@@ -86,7 +99,7 @@
     :y1="SVGConstants.overviewTrackYPosition" :y2="props.tooltipData?.y" 
   />
 </template>
-
+-->
 <script setup lang="ts">
 import TooltipData from '@/models/TooltipData';
 import SVGConstants from '@/utils/SVGConstants';
