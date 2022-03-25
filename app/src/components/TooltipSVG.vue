@@ -1,13 +1,14 @@
 <template>
   <Panel>
-    <div>
+    <template #header>
+        Selected Genes
+    </template>
+    <div class="gene-data">
       <span>symbol: {{props.tooltipData?.genomicSection.gene.symbol}}</span>
       <br>
       <span>gene name: {{props.tooltipData?.genomicSection.gene.name}}</span>
       <br>
       <span>position: {{props.tooltipData?.genomicSection.gene.start}} - {{props.tooltipData?.genomicSection.gene.stop}}</span>
-      <br>
-      <span></span>
     </div>
   </Panel>
 </template>
@@ -226,5 +227,10 @@ const labelYPosition = (index: number, textLine: number) => {
 {
   stroke-width: 1;
   stroke: red;
+}
+.gene-data
+{
+  overflow-y: scroll;
+  max-height: 550px;
 }
 </style>
