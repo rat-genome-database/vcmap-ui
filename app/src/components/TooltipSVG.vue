@@ -6,7 +6,7 @@
     <div class="gene-data">
 
       <template v-if="props.tooltipData?.type === 'trackSection'">
-        <div v-if="props.tooltipData.genomicSection.gene" data-test="gene-symbol">Symbol: {{props.tooltipData.genomicSection.gene.symbol}}</div>
+        <div v-if="props.tooltipData.genomicSection.gene" data-test="gene-symbol">Symbol: <b>{{props.tooltipData.genomicSection.gene.symbol}}</b></div>
         <div v-if="props.tooltipData.genomicSection.gene" data-test="gene-name">Name: {{props.tooltipData.genomicSection.gene.name ?? 'N/A'}}</div>
         <div data-test="chromosome-name">Chromosome: {{props.tooltipData.genomicSection.chromosome}}</div>
         <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.sectionStart)}} - {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.sectionStop)}}</div>
@@ -16,32 +16,35 @@
 
       <template v-else-if="props.tooltipData?.type === 'geneLabel'">
         <template v-if="!labelModal">
-          <div data-test="gene-symbol">Symbol: {{props.tooltipData.genomicSection.gene.symbol}}</div>
+          <div data-test="gene-symbol">Symbol: <b>{{props.tooltipData.genomicSection.gene.symbol}}</b></div>
           <div data-test="gene-name">Name: {{props.tooltipData.genomicSection.gene.name ?? 'N/A'}}</div>
           <div data-test="chromosome-name">Chromosome: {{props.tooltipData.genomicSection.chromosome}}</div>
           <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.gene.start)}} - {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.gene.stop)}}</div>
+          <Divider />
 
           <template v-for="gene in props.tooltipData.genomicSection?.combinedGenes" :key="gene">
-            <div data-test="gene-symbol">Symbol: {{gene.gene.symbol}}</div>
+            <div data-test="gene-symbol">Symbol: <b>{{gene.gene.symbol}}</b></div>
             <div data-test="gene-name">Name: {{gene.gene.name ?? 'N/A'}}</div>
             <div data-test="chromosome-name">Chromosome: {{gene.gene.chromosome}}</div>
             <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(gene.gene.start)}} - {{Formatter.addCommasToBasePair(gene.gene.stop)}}</div>
+            <Divider />
           </template>
         </template>
 
         <template v-else >
-          <div data-test="gene-symbol">Symbol: {{props.tooltipData.genomicSection.gene.symbol}}</div>
+          <div data-test="gene-symbol">Symbol: <b>{{props.tooltipData.genomicSection.gene.symbol}}</b></div>
           <div data-test="gene-name">Name: {{props.tooltipData.genomicSection.gene.name ?? 'N/A'}}</div>
           <div data-test="chromosome-name">Chromosome: {{props.tooltipData.genomicSection.chromosome}}</div>
           <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.gene.start)}} - {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.gene.stop)}}</div>
-          <br>
+          <Divider />
+
 
           <template v-for="gene in props.tooltipData.genomicSection?.combinedGenes" :key="gene">
-            <div data-test="gene-symbol">Symbol: {{gene.gene.symbol}}</div>
+            <div data-test="gene-symbol">Symbol: <b>{{gene.gene.symbol}}</b></div>
             <div data-test="gene-name"> Name: {{gene.gene.name ?? 'N/A'}}</div>
             <div data-test="chromosome-name">Chromosome: {{gene.gene.chromosome}}</div>
             <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(gene.gene.start)}} - {{Formatter.addCommasToBasePair(gene.gene.stop)}}</div>
-            <br>
+            <Divider />
           </template>
         </template>
       </template>
