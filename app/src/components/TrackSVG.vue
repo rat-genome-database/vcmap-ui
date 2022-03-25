@@ -173,7 +173,7 @@ const onMouseLeave = (section: TrackSection, type: string) => {
       section.isHovered = false;
     }
   }
-  store.dispatch('setTooltipData', null);
+  // store.dispatch('setTooltipData', null);
 };
 
 const onClick = (event: any, section: TrackSection) => {
