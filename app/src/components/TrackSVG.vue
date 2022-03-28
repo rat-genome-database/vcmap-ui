@@ -161,9 +161,12 @@ const onMouseEnter = (event: any, section: TrackSection, type: string) => {
       section.isHovered = true;
     }
   }
-  let currentSVGPoint = getMousePosSVG(svg, event);
-  //const tooltipData = new TooltipData(props.posX, currentSVGPoint.x, currentSVGPoint.y, section, type);
-  //store.dispatch('setTooltipData', tooltipData);
+  // If there are selected genes, don't update the tooltip data panel
+  if (store.state.selectedGeneIds.length === 0) {
+    let currentSVGPoint = getMousePosSVG(svg, event);
+    const tooltipData = new TooltipData(props.posX, currentSVGPoint.x, currentSVGPoint.y, section, type);
+    store.dispatch('setTooltipData', tooltipData);
+  }
 };
 
 const onMouseLeave = (section: TrackSection, type: string) => {
@@ -174,7 +177,10 @@ const onMouseLeave = (section: TrackSection, type: string) => {
       section.isHovered = false;
     }
   }
-  // store.dispatch('setTooltipData', null);
+  // Only reset data onMouseLeave if there isn't a selected gene
+  if (store.state.selectedGeneIds.length === 0) {
+    store.dispatch('setTooltipData', null);
+  }
 };
 
 const onClick = (event: any, section: TrackSection, type: string) => {
