@@ -70,7 +70,7 @@
       class="section level-2"
       @mouseenter="onMouseEnter($event, section, 'trackSection')"
       @mouseleave="onMouseLeave(section, 'trackSection')"
-      :fill="section.isHovered ? HIGHLIGHT_COLOR : section.color"
+      :fill="section.isHovered ? HOVER_HIGHLIGHT_COLOR : section.color"
       :x="posX + ((width * (1 - LEVEL_2_WIDTH_MULTIPLIER)) / 2)" :y="section.svgY" 
       :width="width * LEVEL_2_WIDTH_MULTIPLIER" 
       :height="section.height" />
