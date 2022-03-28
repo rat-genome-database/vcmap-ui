@@ -4,13 +4,23 @@
         Selected Genes
         <Button
           label="Clear Selection"
+          class="p-button-info"
           @click="clearSelectedGenes"
         />
     </template>
     <div class="gene-data">
 
       <template v-if="props.tooltipData?.type === 'trackSection'">
-        <div v-if="props.tooltipData.genomicSection.gene" data-test="gene-symbol">Symbol: <b>{{props.tooltipData.genomicSection.gene.symbol}}</b></div>
+        <div v-if="props.tooltipData.genomicSection.gene" data-test="gene-symbol">
+          Symbol:
+          <Button
+            class="p-button-link rgd-link"
+            @click="goToRgd(props.tooltipData.genomicSection.gene.rgdId)"
+          >
+            <b>{{props.tooltipData.genomicSection.gene.symbol}}</b>
+            <i class="pi pi-link external-link"></i>
+          </Button>
+        </div>
         <div v-if="props.tooltipData.genomicSection.gene" data-test="gene-name">Name: {{props.tooltipData.genomicSection.gene.name ?? 'N/A'}}</div>
         <div data-test="chromosome-name">Chromosome: {{props.tooltipData.genomicSection.chromosome}}</div>
         <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.sectionStart)}} - {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.sectionStop)}}</div>
@@ -20,14 +30,32 @@
 
       <template v-else-if="props.tooltipData?.type === 'geneLabel'">
         <template v-if="!labelModal">
-          <div data-test="gene-symbol">Symbol: <b>{{props.tooltipData.genomicSection.gene.symbol}}</b></div>
+          <div data-test="gene-symbol">
+            Symbol:
+            <Button
+              class="p-button-link rgd-link"
+              @click="goToRgd(props.tooltipData.genomicSection.gene.rgdId)"
+            >
+              <b>{{props.tooltipData.genomicSection.gene.symbol}}</b>
+              <i class="pi pi-link external-link"></i>
+            </Button>
+          </div>
           <div data-test="gene-name">Name: {{props.tooltipData.genomicSection.gene.name ?? 'N/A'}}</div>
           <div data-test="chromosome-name">Chromosome: {{props.tooltipData.genomicSection.chromosome}}</div>
           <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.gene.start)}} - {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.gene.stop)}}</div>
           <Divider />
 
           <template v-for="gene in props.tooltipData.genomicSection?.combinedGenes" :key="gene">
-            <div data-test="gene-symbol">Symbol: <b>{{gene.gene.symbol}}</b></div>
+            <div data-test="gene-symbol">
+              Symbol: 
+              <Button
+                class="p-button-link rgd-link"
+                @click="goToRgd(gene.gene.rgdId)"
+              >
+                <b>{{gene.gene.symbol}}</b>
+                <i class="pi pi-link external-link"></i>
+              </Button>
+            </div>
             <div data-test="gene-name">Name: {{gene.gene.name ?? 'N/A'}}</div>
             <div data-test="chromosome-name">Chromosome: {{gene.gene.chromosome}}</div>
             <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(gene.gene.start)}} - {{Formatter.addCommasToBasePair(gene.gene.stop)}}</div>
@@ -36,7 +64,16 @@
         </template>
 
         <template v-else >
-          <div data-test="gene-symbol">Symbol: <b>{{props.tooltipData.genomicSection.gene.symbol}}</b></div>
+          <div data-test="gene-symbol">
+            Symbol:
+            <Button
+              class="p-button-link rgd-link"
+              @click="goToRgd(props.tooltipData.genomicSection.gene.rgdId)"
+            >
+              <b>{{props.tooltipData.genomicSection.gene.symbol}}</b>
+              <i class="pi pi-link external-link"></i>
+            </Button>
+          </div>
           <div data-test="gene-name">Name: {{props.tooltipData.genomicSection.gene.name ?? 'N/A'}}</div>
           <div data-test="chromosome-name">Chromosome: {{props.tooltipData.genomicSection.chromosome}}</div>
           <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.gene.start)}} - {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.gene.stop)}}</div>
@@ -44,7 +81,15 @@
 
 
           <template v-for="gene in props.tooltipData.genomicSection?.combinedGenes" :key="gene">
-            <div data-test="gene-symbol">Symbol: <b>{{gene.gene.symbol}}</b></div>
+            <div data-test="gene-symbol">
+              Symbol:
+              <Button
+                class="p-button-link rgd-link"
+                @click="goToRgd(gene.gene.rgdId)"
+              >
+                <b>{{gene.gene.symbol}}</b>
+                <i class="pi pi-link external-link"></i>
+              </Button></div>
             <div data-test="gene-name"> Name: {{gene.gene.name ?? 'N/A'}}</div>
             <div data-test="chromosome-name">Chromosome: {{gene.gene.chromosome}}</div>
             <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(gene.gene.start)}} - {{Formatter.addCommasToBasePair(gene.gene.stop)}}</div>
@@ -209,6 +254,11 @@ const labelYPosition = (index: number, textLine: number) => {
   let yPos = ((index * 50) + (textLine * 10)) + SVGConstants.overviewTrackYPosition;
   return yPos;
 };
+
+const goToRgd = (rgdId: number) => {
+  const rgdUrl = `https://rgd.mcw.edu/rgdweb/report/gene/main.html?id=${rgdId}`;
+  window.open(rgdUrl);
+}
 </script>
 
 <style lang="scss" scoped>
@@ -221,5 +271,15 @@ const labelYPosition = (index: number, textLine: number) => {
 {
   overflow-y: scroll;
   max-height: 550px;
+}
+
+.rgd-link
+{
+  padding: 0;
+}
+
+.external-link
+{
+  padding-left: 4px;
 }
 </style>
