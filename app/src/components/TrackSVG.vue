@@ -107,7 +107,7 @@
 
 <script lang="ts" setup>
 import { watch, onMounted} from 'vue';
-import TooltipData from '@/models/TooltipData';
+import SelectedData from '@/models/SelectedData';
 import Track from '@/models/Track';
 import OrthologLine from '@/models/OrthologLine';
 import TrackSection from '@/models/TrackSection';
@@ -162,11 +162,11 @@ const onMouseEnter = (event: any, section: TrackSection, type: string) => {
       section.isHovered = true;
     }
   }
-  // If there are selected genes, don't update the tooltip data panel
+  // If there are selected genes, don't update the selected data panel
   if (store.state.selectedGeneIds.length === 0) {
     let currentSVGPoint = getMousePosSVG(svg, event);
-    const tooltipData = new TooltipData(props.posX, currentSVGPoint.x, currentSVGPoint.y, section, type);
-    store.dispatch('setTooltipData', tooltipData);
+    const selectedData = new SelectedData(props.posX, currentSVGPoint.x, currentSVGPoint.y, section, type);
+    store.dispatch('setSelectedData', selectedData);
   }
 };
 
@@ -180,7 +180,7 @@ const onMouseLeave = (section: TrackSection, type: string) => {
   }
   // Only reset data onMouseLeave if there isn't a selected gene
   if (store.state.selectedGeneIds.length === 0) {
-    store.dispatch('setTooltipData', null);
+    store.dispatch('setSelectedData', null);
   }
 };
 
@@ -188,7 +188,7 @@ const onClick = (event: any, section: TrackSection, type: string) => {
   // If clicked section already selected, just reset the selectedGeneId state
   if (store.state.selectedGeneIds.includes(section.gene?.rgdId || -1)) {
     store.dispatch('setSelectedGeneIds', []);
-    store.dispatch('setTooltipData', null);
+    store.dispatch('setSelectedData', null);
     return;
   }
   let geneIds: number[] = [];
@@ -211,8 +211,8 @@ const onClick = (event: any, section: TrackSection, type: string) => {
     store.dispatch('setSelectedGeneIds', [section.gene?.rgdId] || []);
   }
   let currentSVGPoint = getMousePosSVG(svg, event);
-  const tooltipData = new TooltipData(props.posX, currentSVGPoint.x, currentSVGPoint.y, section, type);
-  store.dispatch('setTooltipData', tooltipData);
+  const selectedData = new SelectedData(props.posX, currentSVGPoint.x, currentSVGPoint.y, section, type);
+  store.dispatch('setSelectedData', selectedData);
 };
 
 const highlightSelections = (selectedGeneIds: number[]) => {
@@ -240,10 +240,10 @@ const getSectionFill = (section: TrackSection) => {
   return section.color;
 };
 
-/* const tooltipClick = (event: any, section: TrackSection, type: string) => {
+/* const selectedClick = (event: any, section: TrackSection, type: string) => {
   let currentSVGPoint = getMousePosSVG(svg, event);
-  const tooltipData = new TooltipData(props.posX, currentSVGPoint.y, section, type);
-  store.dispatch('setTooltipData', tooltipData);
+  const selectedData = new SelectedData(props.posX, currentSVGPoint.y, section, type);
+  store.dispatch('setSelectedData', selectedData);
 }; */
 </script>
 

@@ -43,8 +43,6 @@
     <image href="../../node_modules/primeicons/raw-svg/chevron-down.svg" :x="SVGConstants.overviewPanelWidth + (SVGConstants.detailsPanelWidth / 2)" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
     <rect class="navigation-btn" :class="{'disabled': isNavigationDownDisabled }" @click="navigateDown" :x="SVGConstants.overviewPanelWidth" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
 
-    <!--<TooltipSVG :tooltip-data="store.state.tooltipData" />-->
-
     <!-- Detailed panel selection svg for zoom -->
     <rect v-if="startDetailedSelectionY && stopDetailedSelectionY" 
       @mouseup.left="completeZoomSelection"
@@ -75,7 +73,6 @@ import TrackSVG from './TrackSVG.vue';
 import SVGConstants from '@/utils/SVGConstants';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 import VCMapDialog from '@/components/VCMapDialog.vue';
-import TooltipSVG from './TooltipSVG.vue';
 import useDialog from '@/composables/useDialog';
 import BackboneTrackSVG from './BackboneTrackSVG.vue';
 import TrackSet from '@/models/TrackSet';
@@ -119,7 +116,7 @@ async function attachToProgressLoader(storeLoadingActionName: string, func: () =
 
 onMounted(async () => {
   // Clear any prior selections
-  store.dispatch('setTooltipData', null);
+  store.dispatch('setSelectedData', null);
 
   await attachToProgressLoader('setIsOverviewPanelUpdating', updateOverviewPanel);
   checkSyntenyResultsOnComparativeSpecies(comparativeOverviewTracks);

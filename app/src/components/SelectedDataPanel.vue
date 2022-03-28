@@ -10,42 +10,42 @@
     </template>
     <div class="gene-data">
 
-      <template v-if="props.tooltipData?.type === 'trackSection'">
-        <div v-if="props.tooltipData.genomicSection.gene" data-test="gene-symbol">
+      <template v-if="props.selectedData?.type === 'trackSection'">
+        <div v-if="props.selectedData.genomicSection.gene" data-test="gene-symbol">
           Symbol:
           <Button
             class="p-button-link rgd-link"
-            @click="goToRgd(props.tooltipData.genomicSection.gene.rgdId)"
+            @click="goToRgd(props.selectedData.genomicSection.gene.rgdId)"
           >
-            <b>{{props.tooltipData.genomicSection.gene.symbol}}</b>
+            <b>{{props.selectedData.genomicSection.gene.symbol}}</b>
             <i class="pi pi-link external-link"></i>
           </Button>
         </div>
-        <div v-if="props.tooltipData.genomicSection.gene" data-test="gene-name">Name: {{props.tooltipData.genomicSection.gene.name ?? 'N/A'}}</div>
-        <div data-test="chromosome-name">Chromosome: {{props.tooltipData.genomicSection.chromosome}}</div>
-        <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.sectionStart)}} - {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.sectionStop)}}</div>
-        <div>Orientation: {{props.tooltipData.genomicSection.isInverted ? '-' : '+'}}</div>
-        <div v-if="props.tooltipData.genomicSection.chainLevel != null" data-test="level">Level: {{props.tooltipData.genomicSection.chainLevel}}</div>
+        <div v-if="props.selectedData.genomicSection.gene" data-test="gene-name">Name: {{props.selectedData.genomicSection.gene.name ?? 'N/A'}}</div>
+        <div data-test="chromosome-name">Chromosome: {{props.selectedData.genomicSection.chromosome}}</div>
+        <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(props.selectedData.genomicSection.sectionStart)}} - {{Formatter.addCommasToBasePair(props.selectedData.genomicSection.sectionStop)}}</div>
+        <div>Orientation: {{props.selectedData.genomicSection.isInverted ? '-' : '+'}}</div>
+        <div v-if="props.selectedData.genomicSection.chainLevel != null" data-test="level">Level: {{props.selectedData.genomicSection.chainLevel}}</div>
       </template>
 
-      <template v-else-if="props.tooltipData?.type === 'geneLabel'">
+      <template v-else-if="props.selectedData?.type === 'geneLabel'">
         <template v-if="!labelModal">
           <div data-test="gene-symbol">
             Symbol:
             <Button
               class="p-button-link rgd-link"
-              @click="goToRgd(props.tooltipData.genomicSection.gene.rgdId)"
+              @click="goToRgd(props.selectedData.genomicSection.gene.rgdId)"
             >
-              <b>{{props.tooltipData.genomicSection.gene.symbol}}</b>
+              <b>{{props.selectedData.genomicSection.gene.symbol}}</b>
               <i class="pi pi-link external-link"></i>
             </Button>
           </div>
-          <div data-test="gene-name">Name: {{props.tooltipData.genomicSection.gene.name ?? 'N/A'}}</div>
-          <div data-test="chromosome-name">Chromosome: {{props.tooltipData.genomicSection.chromosome}}</div>
-          <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.gene.start)}} - {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.gene.stop)}}</div>
+          <div data-test="gene-name">Name: {{props.selectedData.genomicSection.gene.name ?? 'N/A'}}</div>
+          <div data-test="chromosome-name">Chromosome: {{props.selectedData.genomicSection.chromosome}}</div>
+          <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(props.selectedData.genomicSection.gene.start)}} - {{Formatter.addCommasToBasePair(props.selectedData.genomicSection.gene.stop)}}</div>
           <Divider />
 
-          <template v-for="gene in props.tooltipData.genomicSection?.combinedGenes" :key="gene">
+          <template v-for="gene in props.selectedData.genomicSection?.combinedGenes" :key="gene">
             <div data-test="gene-symbol">
               Symbol: 
               <Button
@@ -68,19 +68,19 @@
             Symbol:
             <Button
               class="p-button-link rgd-link"
-              @click="goToRgd(props.tooltipData.genomicSection.gene.rgdId)"
+              @click="goToRgd(props.selectedData.genomicSection.gene.rgdId)"
             >
-              <b>{{props.tooltipData.genomicSection.gene.symbol}}</b>
+              <b>{{props.selectedData.genomicSection.gene.symbol}}</b>
               <i class="pi pi-link external-link"></i>
             </Button>
           </div>
-          <div data-test="gene-name">Name: {{props.tooltipData.genomicSection.gene.name ?? 'N/A'}}</div>
-          <div data-test="chromosome-name">Chromosome: {{props.tooltipData.genomicSection.chromosome}}</div>
-          <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.gene.start)}} - {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.gene.stop)}}</div>
+          <div data-test="gene-name">Name: {{props.selectedData.genomicSection.gene.name ?? 'N/A'}}</div>
+          <div data-test="chromosome-name">Chromosome: {{props.selectedData.genomicSection.chromosome}}</div>
+          <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(props.selectedData.genomicSection.gene.start)}} - {{Formatter.addCommasToBasePair(props.selectedData.genomicSection.gene.stop)}}</div>
           <Divider />
 
 
-          <template v-for="gene in props.tooltipData.genomicSection?.combinedGenes" :key="gene">
+          <template v-for="gene in props.selectedData.genomicSection?.combinedGenes" :key="gene">
             <div data-test="gene-symbol">
               Symbol:
               <Button
@@ -98,43 +98,35 @@
         </template>
       </template>
 
-      <template v-else-if="props.tooltipData?.type === 'orthologLine'">
+      <template v-else-if="props.selectedData?.type === 'orthologLine'">
         <div data-test="start-stop">BACKBONE GENE:</div>
-        <div data-test="gene-symbol">Symbol: {{props.tooltipData.genomicSection.backboneGene.gene.symbol}}</div>
-        <div data-test="gene-name">Name:{{props.tooltipData.genomicSection.backboneGene.gene.name ?? 'N/A'}}</div>
-        <div data-test="chromosome-name">Chromosome: {{props.tooltipData.genomicSection.backboneGene.gene.chromosome}}</div>
-        <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.backboneGene.gene.start)}} - {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.backboneGene.gene.stop)}}</div>
+        <div data-test="gene-symbol">Symbol: {{props.selectedData.genomicSection.backboneGene.gene.symbol}}</div>
+        <div data-test="gene-name">Name:{{props.selectedData.genomicSection.backboneGene.gene.name ?? 'N/A'}}</div>
+        <div data-test="chromosome-name">Chromosome: {{props.selectedData.genomicSection.backboneGene.gene.chromosome}}</div>
+        <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(props.selectedData.genomicSection.backboneGene.gene.start)}} - {{Formatter.addCommasToBasePair(props.selectedData.genomicSection.backboneGene.gene.stop)}}</div>
 
         <div data-test="start-stop">&lt;---------------------------------------&gt;</div>
 
         <div data-test="start-stop">COMPARATIVE GENE HOMOLOG:</div>
-        <div data-test="gene-symbol">Species: {{props.tooltipData.genomicSection.comparativeGene.gene.speciesName}}</div>
-        <div data-test="gene-symbol">Symbol: {{props.tooltipData.genomicSection.comparativeGene.gene.symbol}}</div>
-        <div data-test="gene-name">Name:{{props.tooltipData.genomicSection.comparativeGene.gene.name ?? 'N/A'}}</div>
-        <div data-test="chromosome-name">Chromosome: {{props.tooltipData.genomicSection.comparativeGene.gene.chromosome}}</div>
-        <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.comparativeGene.gene.start)}} - {{Formatter.addCommasToBasePair(props.tooltipData.genomicSection.comparativeGene.gene.stop)}}</div>
+        <div data-test="gene-symbol">Species: {{props.selectedData.genomicSection.comparativeGene.gene.speciesName}}</div>
+        <div data-test="gene-symbol">Symbol: {{props.selectedData.genomicSection.comparativeGene.gene.symbol}}</div>
+        <div data-test="gene-name">Name:{{props.selectedData.genomicSection.comparativeGene.gene.name ?? 'N/A'}}</div>
+        <div data-test="chromosome-name">Chromosome: {{props.selectedData.genomicSection.comparativeGene.gene.chromosome}}</div>
+        <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(props.selectedData.genomicSection.comparativeGene.gene.start)}} - {{Formatter.addCommasToBasePair(props.selectedData.genomicSection.comparativeGene.gene.stop)}}</div>
     </template>
     </div>
   </Panel>
 </template>
-<!--<template>
 
-  <line v-if="props.tooltipData !== null && props.tooltipData.type !== null"
-    class="tooltip-line"
-    :x1="xPos + 2 - width" :x2="props.tooltipData.type === 'trackSection' ? props.tooltipData.x + 5 : props.tooltipData.type === 'orthologLine' ? props.tooltipData.mouseX : props.tooltipData.x + 50" 
-    :y1="SVGConstants.overviewTrackYPosition" :y2="props.tooltipData?.y" 
-  />
-</template>
--->
 <script setup lang="ts">
-import TooltipData from '@/models/TooltipData';
+import SelectedData from '@/models/SelectedData';
 import SVGConstants from '@/utils/SVGConstants';
 import { Formatter } from '@/utils/Formatter';
 import { computed, } from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 
-const TOOLTIP_GAP = 5; // gap between the tooltip window and the starting x position given
+const TOOLTIP_GAP = 5; // gap between the selected data window and the starting x position given
 const DEFAULT_WIDTH = 130;
 const DEFAULT_HEIGHT = 55;
 const MAX_HEIGHT = 350;
@@ -143,14 +135,14 @@ const store = useStore(key);
 
 interface Props
 {
-  tooltipData: TooltipData | null;
+  selectedData: SelectedData | null;
 }
 
 const props = defineProps<Props>();
 
 const labelModal = computed(() =>
 {
-  if (!props.tooltipData)
+  if (!props.selectedData)
   {
     return false;
   }
@@ -167,16 +159,16 @@ const labelModal = computed(() =>
 
 const clearSelectedGenes = () => {
   store.dispatch('setSelectedGeneIds', []);
-  store.dispatch('setTooltipData', null);
+  store.dispatch('setSelectedData', null);
 }
 
 const width = computed(() => {
-  if (props.tooltipData == null || props.tooltipData.genomicSection.gene == null)
+  if (props.selectedData == null || props.selectedData.genomicSection.gene == null)
   {
     return DEFAULT_WIDTH;
   }
 
-  const geneName = props.tooltipData.genomicSection.gene.name;
+  const geneName = props.selectedData.genomicSection.gene.name;
   // Based on font size, the width will need to increase if the geneName name is longer than 26 chars...
   const diff = (geneName.length - 24);
   if (diff > 0)
@@ -200,18 +192,18 @@ const width = computed(() => {
 });
 
 const height = computed(() => {
-  if (props.tooltipData == null || props.tooltipData?.type == 'trackSection')
+  if (props.selectedData == null || props.selectedData?.type == 'trackSection')
   {
     return DEFAULT_HEIGHT;
   }
 
-  if (props.tooltipData?.type == 'orthologLine')
+  if (props.selectedData?.type == 'orthologLine')
   {
     return 200;
   }
 
-  const combinedGenes = props.tooltipData.genomicSection.combinedGenes;
-  const hiddenGenes = props.tooltipData.genomicSection.hiddenGenes;
+  const combinedGenes = props.selectedData.genomicSection.combinedGenes;
+  const hiddenGenes = props.selectedData.genomicSection.hiddenGenes;
   //for combined genes, 6 total can be shown.  If more, us max height and set modal btn to true
   if (combinedGenes.length > 6)
   {
@@ -233,17 +225,17 @@ const height = computed(() => {
 
 
 const xPos = computed(() => {
-  if (props.tooltipData == null)
+  if (props.selectedData == null)
   {
     return 0;
   }
 
-  // Show tooltip on the left
-  let x = props.tooltipData.x - width.value - TOOLTIP_GAP;
+  // Show selected data on the left
+  let x = props.selectedData.x - width.value - TOOLTIP_GAP;
   if (x < 0)
   {
-    // Show tooltip on the right
-    x = props.tooltipData.x + SVGConstants.trackWidth + TOOLTIP_GAP;
+    // Show selected on the right
+    x = props.selectedData.x + SVGConstants.trackWidth + TOOLTIP_GAP;
   }
 
   return 990;
@@ -262,11 +254,6 @@ const goToRgd = (rgdId: number) => {
 </script>
 
 <style lang="scss" scoped>
-.tooltip-line
-{
-  stroke-width: 1;
-  stroke: red;
-}
 .gene-data
 {
   overflow-y: scroll;
