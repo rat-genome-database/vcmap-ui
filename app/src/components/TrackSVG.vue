@@ -25,6 +25,7 @@
     <text v-if="showGeneLabel && label.isVisible" 
       @mouseenter="onMouseEnter($event, label.section, 'geneLabel')"
       @mouseleave="onMouseLeave(label.section, 'geneLabel')"
+      @click="onClick($event, label.section, 'geneLabel')"
       class="label small" 
       :x="posX + width" 
       :y="label.svgY + LABEL_Y_OFFSET">
@@ -119,7 +120,7 @@ import { key } from '@/store';
 const LEVEL_2_WIDTH_MULTIPLIER = 0.75;
 const LABEL_Y_OFFSET = 3;
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
-const SELECTED_HIGHLIGHT_COLOR = '#FF5733';
+const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
 
 const store = useStore(key);
 const svg = document.querySelector('svg');
