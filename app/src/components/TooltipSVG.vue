@@ -2,6 +2,10 @@
   <Panel>
     <template #header>
         Selected Genes
+        <Button
+          label="Clear Selection"
+          @click="clearSelectedGenes"
+        />
     </template>
     <div class="gene-data">
 
@@ -82,11 +86,15 @@ import TooltipData from '@/models/TooltipData';
 import SVGConstants from '@/utils/SVGConstants';
 import { Formatter } from '@/utils/Formatter';
 import { computed, } from 'vue';
+import { useStore } from 'vuex';
+import { key } from '@/store';
 
 const TOOLTIP_GAP = 5; // gap between the tooltip window and the starting x position given
 const DEFAULT_WIDTH = 130;
 const DEFAULT_HEIGHT = 55;
 const MAX_HEIGHT = 350;
+
+const store = useStore(key);
 
 interface Props
 {
@@ -111,6 +119,11 @@ const labelModal = computed(() =>
     return false;
   }
 });
+
+const clearSelectedGenes = () => {
+  store.dispatch('setSelectedGeneIds', []);
+  store.dispatch('setTooltipData', null);
+}
 
 const width = computed(() => {
   if (props.tooltipData == null || props.tooltipData.genomicSection.gene == null)
