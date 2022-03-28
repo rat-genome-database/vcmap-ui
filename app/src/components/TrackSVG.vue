@@ -235,8 +235,8 @@ const highlightSelections = (selectedGeneIds: number[]) => {
 };
 
 const getSectionFill = (section: TrackSection) => {
-  if (section.isSelected) {return SELECTED_HIGHLIGHT_COLOR}
-  if (section.isHovered) {return HOVER_HIGHLIGHT_COLOR}
+  if (section.isSelected) {return SELECTED_HIGHLIGHT_COLOR;}
+  if (section.isHovered) {return HOVER_HIGHLIGHT_COLOR;}
   return section.color;
 };
 
