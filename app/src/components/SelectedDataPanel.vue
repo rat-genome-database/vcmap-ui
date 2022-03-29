@@ -12,6 +12,10 @@
         </div>
         <!--@item-select="setGeneChromosomeAndDefaultStartAndStopPositions($event.value)"-->
         <div>
+          <Button
+            icon="pi pi-search"
+            @click="searchSVG()"
+          />
           <AutoComplete
             v-model="searchedGene"
             :suggestions="geneSuggestions"
@@ -19,6 +23,9 @@
             field="symbol"
             :minLength="3"
           />
+          <div v-if="searchedGene">
+            Chromosome {{searchedGene.chromosome}}
+          </div>
         </div>
       </div>
     </template>
@@ -135,6 +142,11 @@ const searchGene = async (event: {query: string}) => {
     }
   }
 };
+
+const searchSVG = () => {
+  console.log("searching the SVG for the follow gene");
+  console.log(searchedGene.value);
+}
 
 const goToRgd = (rgdId: number) => {
   const rgdUrl = `https://rgd.mcw.edu/rgdweb/report/gene/main.html?id=${rgdId}`;
