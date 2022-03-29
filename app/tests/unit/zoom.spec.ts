@@ -9,7 +9,7 @@ describe('Zoom', () => {
 
   let store: Store<VCMapState>;
   let actions: ActionTree<VCMapState, VCMapState>;
-  let state = {
+  const state = {
     species: null,
     chromosomeNum: null,
     chromosome: null,

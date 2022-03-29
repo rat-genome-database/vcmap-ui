@@ -126,7 +126,6 @@ import { computed, } from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 
-const TOOLTIP_GAP = 5; // gap between the selected data window and the starting x position given
 const DEFAULT_WIDTH = 130;
 const DEFAULT_HEIGHT = 55;
 const MAX_HEIGHT = 350;
@@ -160,7 +159,7 @@ const labelModal = computed(() =>
 const clearSelectedGenes = () => {
   store.dispatch('setSelectedGeneIds', []);
   store.dispatch('setSelectedData', null);
-}
+};
 
 const width = computed(() => {
   if (props.selectedData == null || props.selectedData.genomicSection.gene == null)
@@ -224,23 +223,6 @@ const height = computed(() => {
 });
 
 
-const xPos = computed(() => {
-  if (props.selectedData == null)
-  {
-    return 0;
-  }
-
-  // Show selected data on the left
-  let x = props.selectedData.x - width.value - TOOLTIP_GAP;
-  if (x < 0)
-  {
-    // Show selected on the right
-    x = props.selectedData.x + SVGConstants.trackWidth + TOOLTIP_GAP;
-  }
-
-  return 990;
-});
-
 const labelYPosition = (index: number, textLine: number) => {
   index = index + 1;
   let yPos = ((index * 50) + (textLine * 10)) + SVGConstants.overviewTrackYPosition;
@@ -250,7 +232,7 @@ const labelYPosition = (index: number, textLine: number) => {
 const goToRgd = (rgdId: number) => {
   const rgdUrl = `https://rgd.mcw.edu/rgdweb/report/gene/main.html?id=${rgdId}`;
   window.open(rgdUrl);
-}
+};
 </script>
 
 <style lang="scss" scoped>

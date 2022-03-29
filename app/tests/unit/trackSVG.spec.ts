@@ -13,7 +13,7 @@ const BACKBONE_BASEPAIR_TO_HEIGHT_RATIO = 1000;
 describe('TrackSVG', () => {
 
   let store: Store<VCMapState>;
-  let state = {
+  const state = {
     species: null,
     chromosomeNum: null,
     chromosome: null,
@@ -29,7 +29,7 @@ describe('TrackSVG', () => {
     detailsSyntenyThreshold: 0,
     backboneDataTracks: [],
     configTab: 0,
-    tooltipData: null,
+    selectedData: null,
     isDetailedPanelUpdating: false,
     isOverviewPanelUpdating: false,
   };
@@ -37,7 +37,7 @@ describe('TrackSVG', () => {
   beforeEach(() => {
     store = createStore({
       state
-    })
+    });
   });
 
   it('renders a single section track with base pair labels', async () => {

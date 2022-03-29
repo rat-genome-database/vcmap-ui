@@ -1,10 +1,10 @@
 import { shallowMount } from '@vue/test-utils';
-import TooltipSVG from '@/components/TooltipSVG.vue';
-import TooltipData from '@/models/TooltipData';
+import SelectedDataPanel from '@/components/SelectedDataPanel.vue';
+import SelectedData from '@/models/SelectedData';
 import TrackSection from '@/models/TrackSection';
 import Gene from '@/models/Gene';
 
-describe('TooltipSVG', () => {
+describe('SelectedDataPanel', () => {
 
   it('displays gene name if present', async () => {
     const section = new TrackSection({
@@ -18,16 +18,16 @@ describe('TooltipSVG', () => {
       shape: 'rect',
       gene: new Gene({symbol: 'TEST', name: 'Test 123', type: '', key: 0, rgdId: 0, chromosome: '1', start: 0, stop: 10000, speciesTypeKey: 1})
     });
-    const tooltipData = new TooltipData(0, 0, section, false);
-    const wrapper = shallowMount(TooltipSVG, {
+    const selectedData = new SelectedData(0, 0, section, false);
+    const wrapper = shallowMount(SelectedDataPanel, {
       props: {
-        tooltipData: tooltipData
+        selectedData: selectedData
       }
     });
 
-    const geneTextSVG = wrapper.get('[data-test="gene-name"]');
+    const geneText = wrapper.get('[data-test="gene-name"]');
 
-    expect(geneTextSVG.text()).toEqual('Name: Test 123');
+    expect(geneText.text()).toEqual('Name: Test 123');
   });
 
   it('displays data about the genomic region', async () => {
@@ -41,41 +41,17 @@ describe('TooltipSVG', () => {
       basePairToHeightRatio: 100,
       shape: 'rect',
     });
-    const tooltipData = new TooltipData(0, 0, section, false);
-    const wrapper = shallowMount(TooltipSVG, {
+    const selectedData = new SelectedData(0, 0, section, false);
+    const wrapper = shallowMount(SelectedDataPanel, {
       props: {
-        tooltipData: tooltipData
+        selectedData: selectedData
       }
     });
 
-    const chromosomeTextSVG = wrapper.get('[data-test="chromosome-name"]');
-    const startStopTextSVG = wrapper.get('[data-test="start-stop"]');
+    const chromosomeText = wrapper.get('[data-test="chromosome-name"]');
+    const startStopText = wrapper.get('[data-test="start-stop"]');
 
-    expect(chromosomeTextSVG.text()).toEqual('Chromosome: 1');
-    expect(startStopTextSVG.text()).toEqual('Region: 0.00Mbp - 0.01Mbp');
-  });
-
-  it('expands its width if gene name is long', async () => {
-    const section = new TrackSection({
-      start: 0,
-      stop: 10000,
-      backboneStart: 0,
-      backboneStop: 10000,
-      chromosome: '1',
-      cutoff: 50000,
-      basePairToHeightRatio: 100,
-      shape: 'rect',
-      gene: new Gene({symbol: 'TEST', name: 'This is a really long gene test name', type: '', key: 0, rgdId: 0, chromosome: '1', start: 0, stop: 10000, speciesTypeKey: 1})
-    });
-    const tooltipData = new TooltipData(0, 0, section, false);
-    const wrapper = shallowMount(TooltipSVG, {
-      props: {
-        tooltipData: tooltipData
-      }
-    });
-
-    const tooltipSVG = wrapper.get('[data-test="tooltip-data-svg"]');
-    // 120 is the default width in the TooltipSVG component
-    expect(parseInt(tooltipSVG.attributes().width)).toBeGreaterThan(120);
+    expect(chromosomeText.text()).toEqual('Chromosome: 1');
+    expect(startStopText.text()).toEqual('Region: 0.00Mbp - 0.01Mbp');
   });
 });
