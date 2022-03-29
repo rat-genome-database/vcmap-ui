@@ -252,6 +252,11 @@ const getSectionFill = (section: TrackSection) => {
 .label.small
 {
   font: normal 8px sans-serif;
+
+  &:hover
+  {
+    cursor: pointer;
+  }
 }
 
 .chromosome-label
@@ -263,6 +268,11 @@ const getSectionFill = (section: TrackSection) => {
 .ortholog-line
 {
   stroke-width: 1;
+
+  &:hover
+  {
+    stroke-width: 2.5;
+  }
 }
 
 .section
@@ -284,6 +294,11 @@ const getSectionFill = (section: TrackSection) => {
   &.level-2
   {
     filter: brightness(60%);
+  }
+
+  &:hover
+  {
+    cursor: pointer;
   }
 }
 </style>
