@@ -2,9 +2,9 @@ import TrackSection from "./TrackSection";
 import OrthologLine from "./OrthologLine";
 
 /**
- * Model that represents the Tooltip that will appear when hovering over genomic regions
+ * Model that represents the Selected Data that will appear when Selected Data Panel
  */
-export default class TooltipData
+export default class SelectedData
 {
   genomicSection: TrackSection | OrthologLine;
   type: string;

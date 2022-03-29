@@ -9,7 +9,7 @@ describe('Zoom', () => {
 
   let store: Store<VCMapState>;
   let actions: ActionTree<VCMapState, VCMapState>;
-  let state = {
+  const state = {
     species: null,
     chromosomeNum: null,
     chromosome: null,
@@ -25,7 +25,8 @@ describe('Zoom', () => {
     detailsSyntenyThreshold: 0,
     backboneDataTracks: [],
     configTab: 0,
-    tooltipData: null,
+    selectedGeneIds: [],
+    selectedData: null,
     detailedBasePairRange: { start: 0, stop: 0 },
     isDetailedPanelUpdating: false,
     isOverviewPanelUpdating: false,

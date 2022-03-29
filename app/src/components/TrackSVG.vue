@@ -25,6 +25,7 @@
     <text v-if="showGeneLabel && label.isVisible" 
       @mouseenter="onMouseEnter($event, label.section, 'geneLabel')"
       @mouseleave="onMouseLeave(label.section, 'geneLabel')"
+      @click="onClick($event, label.section, 'geneLabel')"
       class="label small" 
       :x="posX + width" 
       :y="label.svgY + LABEL_Y_OFFSET">
@@ -38,7 +39,7 @@
         class="ortholog-line"
         @mouseenter="onMouseEnter($event, line, 'orthologLine')"
         @mouseleave="onMouseLeave(line, 'orthologLine')"
-        :stroke="(line.isSelected ? HIGHLIGHT_COLOR : 'gray')"
+        :stroke="(line.isSelected ? SELECTED_HIGHLIGHT_COLOR : 'gray')"
         :x1="posX + width" :x2="line.comparativeGeneX"
         :y1="line.backboneGeneY" :y2="line.comparativeGeneY" />
     </template>
@@ -52,7 +53,7 @@
       @mouseenter="onMouseEnter($event, section, 'trackSection')"
       @mouseleave="onMouseLeave(section, 'trackSection')"
       @click="onClick($event, section, 'trackSection')"
-      :fill="(section.isHovered || section.isSelected) ? HIGHLIGHT_COLOR : section.color"
+      :fill="getSectionFill(section)"
       :fill-opacity="geneDataTrack ? .7 : 1"
       :x="posX" :y="section.svgY" 
       :width="width" 
@@ -69,7 +70,7 @@
       class="section level-2"
       @mouseenter="onMouseEnter($event, section, 'trackSection')"
       @mouseleave="onMouseLeave(section, 'trackSection')"
-      :fill="section.isHovered ? HIGHLIGHT_COLOR : section.color"
+      :fill="section.isHovered ? HOVER_HIGHLIGHT_COLOR : section.color"
       :x="posX + ((width * (1 - LEVEL_2_WIDTH_MULTIPLIER)) / 2)" :y="section.svgY" 
       :width="width * LEVEL_2_WIDTH_MULTIPLIER" 
       :height="section.height" />
@@ -106,7 +107,7 @@
 
 <script lang="ts" setup>
 import { watch, onMounted} from 'vue';
-import TooltipData from '@/models/TooltipData';
+import SelectedData from '@/models/SelectedData';
 import Track from '@/models/Track';
 import OrthologLine from '@/models/OrthologLine';
 import TrackSection from '@/models/TrackSection';
@@ -118,7 +119,8 @@ import { key } from '@/store';
 
 const LEVEL_2_WIDTH_MULTIPLIER = 0.75;
 const LABEL_Y_OFFSET = 3;
-const HIGHLIGHT_COLOR = 'bisque';
+const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
+const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
 
 const store = useStore(key);
 const svg = document.querySelector('svg');
@@ -160,9 +162,12 @@ const onMouseEnter = (event: any, section: TrackSection, type: string) => {
       section.isHovered = true;
     }
   }
-  let currentSVGPoint = getMousePosSVG(svg, event);
-  const tooltipData = new TooltipData(props.posX, currentSVGPoint.x, currentSVGPoint.y, section, type);
-  store.dispatch('setTooltipData', tooltipData);
+  // If there are selected genes, don't update the selected data panel
+  if (store.state.selectedGeneIds.length === 0) {
+    let currentSVGPoint = getMousePosSVG(svg, event);
+    const selectedData = new SelectedData(props.posX, currentSVGPoint.x, currentSVGPoint.y, section, type);
+    store.dispatch('setSelectedData', selectedData);
+  }
 };
 
 const onMouseLeave = (section: TrackSection, type: string) => {
@@ -173,13 +178,17 @@ const onMouseLeave = (section: TrackSection, type: string) => {
       section.isHovered = false;
     }
   }
-  store.dispatch('setTooltipData', null);
+  // Only reset data onMouseLeave if there isn't a selected gene
+  if (store.state.selectedGeneIds.length === 0) {
+    store.dispatch('setSelectedData', null);
+  }
 };
 
-const onClick = (event: any, section: TrackSection) => {
+const onClick = (event: any, section: TrackSection, type: string) => {
   // If clicked section already selected, just reset the selectedGeneId state
   if (store.state.selectedGeneIds.includes(section.gene?.rgdId || -1)) {
     store.dispatch('setSelectedGeneIds', []);
+    store.dispatch('setSelectedData', null);
     return;
   }
   let geneIds: number[] = [];
@@ -201,6 +210,9 @@ const onClick = (event: any, section: TrackSection) => {
   if (!foundLine) {
     store.dispatch('setSelectedGeneIds', [section.gene?.rgdId] || []);
   }
+  let currentSVGPoint = getMousePosSVG(svg, event);
+  const selectedData = new SelectedData(props.posX, currentSVGPoint.x, currentSVGPoint.y, section, type);
+  store.dispatch('setSelectedData', selectedData);
 };
 
 const highlightSelections = (selectedGeneIds: number[]) => {
@@ -222,10 +234,16 @@ const highlightSelections = (selectedGeneIds: number[]) => {
   });
 };
 
-/* const tooltipClick = (event: any, section: TrackSection, type: string) => {
+const getSectionFill = (section: TrackSection) => {
+  if (section.isSelected) {return SELECTED_HIGHLIGHT_COLOR;}
+  if (section.isHovered) {return HOVER_HIGHLIGHT_COLOR;}
+  return section.color;
+};
+
+/* const selectedClick = (event: any, section: TrackSection, type: string) => {
   let currentSVGPoint = getMousePosSVG(svg, event);
-  const tooltipData = new TooltipData(props.posX, currentSVGPoint.y, section, type);
-  store.dispatch('setTooltipData', tooltipData);
+  const selectedData = new SelectedData(props.posX, currentSVGPoint.y, section, type);
+  store.dispatch('setSelectedData', selectedData);
 }; */
 </script>
 

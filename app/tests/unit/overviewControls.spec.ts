@@ -12,7 +12,7 @@ import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 describe('OverviewControls', () => {
   let store: Store<VCMapState>;
   let actions: ActionTree<VCMapState, VCMapState>;
-  let state = {
+  const state = {
     species: new Species({ typeKey: 1, name: 'Test Species', defaultMapKey: 1, maps: [new Map({ key: 1, primaryRefAssembly: true, description: '', notes: '', name: 'GRCh38'})]}),
     chromosome: new Chromosome({ chromosome: '1', mapKey: 38, seqLength: 1000000, gapCount: 5, gapLength: 10000, contigCount: 100, ordinalNumber: 1 }),
     startPos: 1,
@@ -27,7 +27,8 @@ describe('OverviewControls', () => {
     detailsSyntenyThreshold: 0,
     backboneDataTracks: [],
     configTab: 0,
-    tooltipData: null,
+    selectedGeneIds: [],
+    selectedData: null,
     isDetailedPanelUpdating: false,
     isOverviewPanelUpdating: false,
   };
@@ -40,7 +41,7 @@ describe('OverviewControls', () => {
     store = createStore({
       state,
       actions
-    })
+    });
   });
 
   it('renders backbone species name from store', async () => {

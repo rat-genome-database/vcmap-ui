@@ -13,7 +13,7 @@ const BACKBONE_BASEPAIR_TO_HEIGHT_RATIO = 1000;
 describe('TrackSVG', () => {
 
   let store: Store<VCMapState>;
-  let state = {
+  const state = {
     species: null,
     chromosomeNum: null,
     chromosome: null,
@@ -29,7 +29,8 @@ describe('TrackSVG', () => {
     detailsSyntenyThreshold: 0,
     backboneDataTracks: [],
     configTab: 0,
-    tooltipData: null,
+    selectedGeneIds: [],
+    selectedData: null,
     isDetailedPanelUpdating: false,
     isOverviewPanelUpdating: false,
   };
@@ -37,7 +38,7 @@ describe('TrackSVG', () => {
   beforeEach(() => {
     store = createStore({
       state
-    })
+    });
   });
 
   it('renders a single section track with base pair labels', async () => {
@@ -138,9 +139,10 @@ describe('TrackSVG', () => {
     });
     const bpLabels = wrapper.findAll('[data-test="bp-label"]');
     const allSVGs = wrapper.findAll('[data-test="track-section-svg"]');
-    const section1 = allSVGs[0];
+    // FIXME: accessing by index may not be consistent, I think this is a temp fix here
+    const section3 = allSVGs[0];
     const section2 = allSVGs[1];
-    const section3 = allSVGs[2];
+    const section1 = allSVGs[2];
 
     // Test visibility and text of the base pair labels
     expect(bpLabels.length).toEqual(0);

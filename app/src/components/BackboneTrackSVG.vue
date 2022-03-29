@@ -64,7 +64,7 @@
 
 <script lang="ts" setup>
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
-import TooltipData from '@/models/TooltipData';
+import SelectedData from '@/models/SelectedData';
 import Track, { Label } from '@/models/Track';
 import TrackSection from '@/models/TrackSection';
 import { toRefs } from '@vue/reactivity';
@@ -133,9 +133,12 @@ const onMouseEnter = (event: any, section: TrackSection, type: string) => {
       section.isHovered = true;
     }
   }
-  let currentSVGPoint = getMousePosSVG(svg, event);
-  const tooltipData = new TooltipData(props.posX, currentSVGPoint.x, currentSVGPoint.y, section, type);
-  store.dispatch('setTooltipData', tooltipData);
+  // Only set selected data if there are no selected genes
+  if (store.state.selectedGeneIds.length === 0) {
+    let currentSVGPoint = getMousePosSVG(svg, event);
+    const selectedData = new SelectedData(props.posX, currentSVGPoint.x, currentSVGPoint.y, section, type);
+    store.dispatch('setSelectedData', selectedData);
+  }
 };
 
 const onMouseLeave = (section: TrackSection, type: string) => {
@@ -146,7 +149,10 @@ const onMouseLeave = (section: TrackSection, type: string) => {
       section.isHovered = false;
     }
   }
-  store.dispatch('setTooltipData', null);
+  // Only reset selected data if there are no selected genes
+  if (store.state.selectedGeneIds.length === 0) {
+    store.dispatch('setSelectedData', null);
+  }
 };
 </script>
 

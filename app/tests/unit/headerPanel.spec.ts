@@ -26,7 +26,7 @@ const mockStore = createStore({
     detailsSyntenyThreshold: 0,
     backboneDataTracks: [],
     configTab: 0,
-    tooltipData: null,
+    selectedData: null,
     isDetailedPanelUpdating: false,
     isOverviewPanelUpdating: false,
   },

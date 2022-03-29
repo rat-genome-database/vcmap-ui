@@ -5,7 +5,7 @@ import Chromosome from '@/models/Chromosome';
 import Gene from '@/models/Gene';
 import BackboneSelection, { BasePairRange, SelectedRegion } from '@/models/BackboneSelection';
 import SVGConstants from '@/utils/SVGConstants';
-import TooltipData from '@/models/TooltipData';
+import SelectedData from '@/models/SelectedData';
 import { InjectionKey } from 'vue';
 
 export const key: InjectionKey<Store<VCMapState>> = Symbol();
@@ -29,7 +29,7 @@ export interface VCMapState
 
   configTab: number;
 
-  tooltipData: TooltipData | null;
+  selectedData: SelectedData | null;
   selectedGeneIds: number[];
 
   detailedBasePairRange: BasePairRange;
@@ -61,7 +61,7 @@ export default createStore({
 
     configTab: 0,
 
-    tooltipData: null,
+    selectedData: null,
     selectedGeneIds: [],
 
     detailedBasePairRange: { start: 0, stop: 0 },
@@ -114,8 +114,8 @@ export default createStore({
     configTab(state: VCMapState, tab: number) {
       state.configTab = tab;
     },
-    tooltipData(state: VCMapState, tooltip: TooltipData) {
-      state.tooltipData = tooltip;
+    selectedData(state: VCMapState, selectedData: SelectedData) {
+      state.selectedData = selectedData;
     },
     selectedGeneIds(state: VCMapState, selectedIds: number[]) {
       state.selectedGeneIds = selectedIds;
@@ -164,8 +164,8 @@ export default createStore({
     setConfigTab(context: ActionContext<VCMapState, VCMapState>, tab: number) {
       context.commit('configTab', tab);
     },
-    setTooltipData(context: ActionContext<VCMapState, VCMapState>, tooltip: TooltipData) {
-      context.commit('tooltipData', tooltip);
+    setSelectedData(context: ActionContext<VCMapState, VCMapState>, selected: SelectedData) {
+      context.commit('selectedData', selected);
     },
     setSelectedGeneIds(context: ActionContext<VCMapState, VCMapState>, selectedIds: number[]) {
       context.commit('selectedGeneIds', selectedIds);
