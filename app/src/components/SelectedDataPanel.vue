@@ -23,7 +23,7 @@
         </div>
         <div v-if="props.selectedData.genomicSection.gene" data-test="gene-name">Name: {{props.selectedData.genomicSection.gene.name ?? 'N/A'}}</div>
         <div data-test="chromosome-name">Chromosome: {{props.selectedData.genomicSection.chromosome}}</div>
-        <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(props.selectedData.genomicSection.sectionStart)}} - {{Formatter.addCommasToBasePair(props.selectedData.genomicSection.sectionStop)}}</div>
+        <div data-test="start-stop">Region: {{props.selectedData.genomicSection.regionLabel}}</div>
         <div>Orientation: {{props.selectedData.genomicSection.isInverted ? '-' : '+'}}</div>
         <div v-if="props.selectedData.genomicSection.chainLevel != null" data-test="level">Level: {{props.selectedData.genomicSection.chainLevel}}</div>
       </template>

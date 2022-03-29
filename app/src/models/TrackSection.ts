@@ -104,6 +104,14 @@ export default class TrackSection
     return Formatter.convertBasePairToLabel(this.sectionStop);
   }
 
+  public get regionLabel()
+  {
+    const start = this.isInverted ? this.sectionStop : this.sectionStart;
+    const stop = this.isInverted ? this.sectionStart : this.sectionStop;
+
+    return Formatter.addCommasToBasePair(start) + ' - ' + Formatter.addCommasToBasePair(stop);
+  }
+
   public get geneLabel()
   {
     if (this.gene)
