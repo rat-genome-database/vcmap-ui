@@ -5,8 +5,8 @@ import Gene from './Gene';
 
 interface TrackSectionParams
 {
-  start: number; // starting base pair of this section (ex: starting bp of synteny block, data block, etc)
-  stop: number; // ending base pair of this section
+  start: number; // starting base pair of this section, following the direction of its orientation (start could be larger than stop if inverted)
+  stop: number; // ending base pair of this section, following the direction of its orientation (stop could be smaller than start if inverted)
   backboneStart: number; // base pair on the backbone that this section's starting base pair lines up with
   backboneStop: number; // base pair on the backbone that this section's ending base pair lines up with
   chromosome: string; // chromosome name
@@ -145,11 +145,6 @@ export default class TrackSection
       height = this.adjustedHeight;
     }
     return height;
-  }
-
-  public set height(height: number)
-  {
-    
   }
 
   // Getter for the ending SVG Y point
