@@ -29,6 +29,7 @@ describe('BackboneTrackSVG', () => {
     detailsSyntenyThreshold: 0,
     backboneDataTracks: [],
     configTab: 0,
+    selectedGeneIds: [],
     selectedData: null,
     isDetailedPanelUpdating: false,
     isOverviewPanelUpdating: false,

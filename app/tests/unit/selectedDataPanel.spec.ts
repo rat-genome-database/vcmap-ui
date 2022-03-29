@@ -16,9 +16,9 @@ describe('SelectedDataPanel', () => {
       cutoff: 50000,
       basePairToHeightRatio: 100,
       shape: 'rect',
-      gene: new Gene({symbol: 'TEST', name: 'Test 123', type: '', key: 0, rgdId: 0, chromosome: '1', start: 0, stop: 10000, speciesTypeKey: 1})
+      gene: new Gene({geneSymbol: 'TEST', geneName: 'Test 123', geneType: '', key: 0, geneRgdId: 0, chr: '1', startPos: 0, stopPos: 10000})
     });
-    const selectedData = new SelectedData(0, 0, section, false);
+    const selectedData = new SelectedData(0, 0, 0, section, 'trackSection');
     const wrapper = shallowMount(SelectedDataPanel, {
       props: {
         selectedData: selectedData
@@ -41,7 +41,7 @@ describe('SelectedDataPanel', () => {
       basePairToHeightRatio: 100,
       shape: 'rect',
     });
-    const selectedData = new SelectedData(0, 0, section, false);
+    const selectedData = new SelectedData(0, 0, 0, section, 'trackSection');
     const wrapper = shallowMount(SelectedDataPanel, {
       props: {
         selectedData: selectedData
@@ -52,6 +52,6 @@ describe('SelectedDataPanel', () => {
     const startStopText = wrapper.get('[data-test="start-stop"]');
 
     expect(chromosomeText.text()).toEqual('Chromosome: 1');
-    expect(startStopText.text()).toEqual('Region: 0.00Mbp - 0.01Mbp');
+    expect(startStopText.text()).toEqual('Region: 0 - 10,000');
   });
 });

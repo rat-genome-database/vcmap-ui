@@ -27,7 +27,8 @@ describe('OverviewControls', () => {
     detailsSyntenyThreshold: 0,
     backboneDataTracks: [],
     configTab: 0,
-    tooltipData: null,
+    selectedGeneIds: [],
+    selectedData: null,
     isDetailedPanelUpdating: false,
     isOverviewPanelUpdating: false,
   };

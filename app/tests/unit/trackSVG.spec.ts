@@ -29,6 +29,7 @@ describe('TrackSVG', () => {
     detailsSyntenyThreshold: 0,
     backboneDataTracks: [],
     configTab: 0,
+    selectedGeneIds: [],
     selectedData: null,
     isDetailedPanelUpdating: false,
     isOverviewPanelUpdating: false,
@@ -138,9 +139,10 @@ describe('TrackSVG', () => {
     });
     const bpLabels = wrapper.findAll('[data-test="bp-label"]');
     const allSVGs = wrapper.findAll('[data-test="track-section-svg"]');
-    const section1 = allSVGs[0];
+    // FIXME: accessing by index may not be consistent, I think this is a temp fix here
+    const section3 = allSVGs[0];
     const section2 = allSVGs[1];
-    const section3 = allSVGs[2];
+    const section1 = allSVGs[2];
 
     // Test visibility and text of the base pair labels
     expect(bpLabels.length).toEqual(0);
