@@ -1,6 +1,6 @@
 import Track from "./Track";
 import DataTrack from "./DataTrack";
-import { createGeneTrackFromGenesData, createSyntenyTrackFromSpeciesSyntenyData } from "@/utils/TrackBuilder";
+import { createBackboneGeneTrackFromGenesData, createSyntenyTrackFromSpeciesSyntenyData } from "@/utils/TrackBuilder";
 import TrackSection from "./TrackSection";
 
 //track sets are a grouping of a species track and its respective data tracks
@@ -42,7 +42,7 @@ export default class TrackSet
         this.dataTracks.forEach(dataTrack => {
           if (dataTrack.track.rawGeneData)
           {
-            const convertedSpeciesDataTrack = createGeneTrackFromGenesData(
+            const convertedSpeciesDataTrack = createBackboneGeneTrackFromGenesData(
               dataTrack.track.rawGeneData,
               dataTrack.track.name,
               start,

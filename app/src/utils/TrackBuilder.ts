@@ -87,10 +87,10 @@ export function createSyntenyTrackFromSpeciesSyntenyData(speciesSyntenyData: Spe
 export async function createBackboneDataTracks(species: Species, chromosome: Chromosome, startPos: number, stopPos: number, basePairToHeightRatio: number, isComparative: boolean, syntenyThreshold: number, startingSVGYPos: number)
 {
   const genes = await SpeciesApi.getGenesByRegion(chromosome.chromosome, startPos, stopPos, species.defaultMapKey);
-  return createGeneTrackFromGenesData(genes, species.name, startPos, stopPos, basePairToHeightRatio, isComparative, syntenyThreshold, startingSVGYPos);
+  return createBackboneGeneTrackFromGenesData(genes, species.name, startPos, stopPos, basePairToHeightRatio, isComparative, syntenyThreshold, startingSVGYPos);
 }
 
-export function createGeneTrackFromGenesData(genes: Gene[], speciesName: string, startPos: number, stopPos: number,  basePairToHeightRatio: number, isComparative: boolean, syntenyThreshold: number, startingSVGYPos: number)
+export function createBackboneGeneTrackFromGenesData(genes: Gene[], speciesName: string, startPos: number, stopPos: number,  basePairToHeightRatio: number, isComparative: boolean, syntenyThreshold: number, startingSVGYPos: number)
 {
   const sections: TrackSection[] = [];
   let hiddenSections: TrackSection[] = [];
@@ -228,7 +228,6 @@ function splitBlocksAndGapsIntoSections(speciesSyntenyData: SpeciesSyntenyData, 
   let blockIdCounter = 1;
   filteredRegions.forEach(region => {
     const block = region.block;
-
     if (block.backboneStop <= backboneStart || block.backboneStart >= backboneStop)
     {
       return;
@@ -243,6 +242,10 @@ function splitBlocksAndGapsIntoSections(speciesSyntenyData: SpeciesSyntenyData, 
       return g.length >= threshold * GAPS_THRESHOLD_MULTIPLIER && g.chainLevel === block.chainLevel && g.backboneStop > backboneStart && g.backboneStart < backboneStop; 
     });
 
+    const isInverted = block.orientation === '-';
+    const blockStart = (isInverted) ? block.stop : block.start;
+    const blockStop = (isInverted) ? block.start : block.stop;
+
     const genes = region.genes;
     const currGaplessBlockSection = new TrackSection({
       start: block.start,
@@ -255,7 +258,7 @@ function splitBlocksAndGapsIntoSections(speciesSyntenyData: SpeciesSyntenyData, 
       basePairToHeightRatio: basePairToHeightRatio,
       shape: 'rect',
       chainLevel: block.chainLevel,
-      isInverted: block.orientation === '-',
+      isInverted: isInverted,
       blockId: blockIdCounter,
     });
     previousGaplessBlockStop = block.backboneStop;
@@ -268,8 +271,8 @@ function splitBlocksAndGapsIntoSections(speciesSyntenyData: SpeciesSyntenyData, 
     {
       // No gaps, create section for this synteny block like normal
       trackSections.push(new TrackSection({
-        start: block.start,
-        stop: block.stop,
+        start: blockStart,
+        stop: blockStop,
         backboneStart: block.backboneStart, 
         backboneStop: block.backboneStop, 
         chromosome: block.chromosome, 
@@ -278,7 +281,7 @@ function splitBlocksAndGapsIntoSections(speciesSyntenyData: SpeciesSyntenyData, 
         basePairToHeightRatio: basePairToHeightRatio,
         shape: 'rect',
         chainLevel: block.chainLevel,
-        isInverted: block.orientation === '-',
+        isInverted: isInverted,
       }));
 
       previousBlockBackboneStop = block.backboneStop;
@@ -288,12 +291,15 @@ function splitBlocksAndGapsIntoSections(speciesSyntenyData: SpeciesSyntenyData, 
     // Split the block and its gaps into their own TrackSections
     gaps.forEach((gap, index) => {
 
+      const gapStart = (isInverted) ? gap.stop : gap.start;
+      const gapStop = (isInverted) ? gap.start : gap.stop;
+
       if (index === 0 && (gap.backboneStart <= backboneStart))
       {
         // Block starts off with a gap
         trackSections.push(new TrackSection({
-          start: gap.start,
-          stop: gap.stop,
+          start: gapStart,
+          stop: gapStop,
           backboneStart: gap.backboneStart, 
           backboneStop: gap.backboneStop, 
           chromosome: gap.chromosome, 
@@ -302,15 +308,15 @@ function splitBlocksAndGapsIntoSections(speciesSyntenyData: SpeciesSyntenyData, 
           basePairToHeightRatio: basePairToHeightRatio,
           shape: 'line',
           chainLevel: block.chainLevel,
-          isInverted: block.orientation === '-',
+          isInverted: isInverted,
         }));
       }
       else if (index === 0)
       {
         // Starts off with part of a block and then the gap
         trackSections.push(new TrackSection({
-          start: block.start,
-          stop: gap.start,
+          start: blockStart,
+          stop: gapStart,
           backboneStart: block.backboneStart, 
           backboneStop: gap.backboneStart, 
           chromosome: block.chromosome, 
@@ -319,12 +325,12 @@ function splitBlocksAndGapsIntoSections(speciesSyntenyData: SpeciesSyntenyData, 
           basePairToHeightRatio: basePairToHeightRatio,
           shape: 'rect',
           chainLevel: block.chainLevel,
-          isInverted: block.orientation === '-',
+          isInverted: isInverted,
         }));
 
         trackSections.push(new TrackSection({
-          start: gap.start,
-          stop: gap.stop,
+          start: gapStart,
+          stop: gapStop,
           backboneStart: gap.backboneStart, 
           backboneStop: gap.backboneStop, 
           chromosome: gap.chromosome, 
@@ -332,7 +338,7 @@ function splitBlocksAndGapsIntoSections(speciesSyntenyData: SpeciesSyntenyData, 
           basePairToHeightRatio: basePairToHeightRatio,
           shape: 'line',
           chainLevel: block.chainLevel,
-          isInverted: block.orientation === '-',
+          isInverted: isInverted,
         }));
       }
       else
@@ -340,8 +346,8 @@ function splitBlocksAndGapsIntoSections(speciesSyntenyData: SpeciesSyntenyData, 
         // Create a section for the part of the block that comes before this gap
         const previousGap = gaps[index - 1];
         trackSections.push(new TrackSection({
-          start: previousGap.stop,
-          stop: gap.start,
+          start: (isInverted) ? previousGap.start : previousGap.stop,
+          stop: gapStart,
           backboneStart: previousGap.backboneStop, 
           backboneStop: gap.backboneStart, 
           chromosome: block.chromosome, 
@@ -349,12 +355,12 @@ function splitBlocksAndGapsIntoSections(speciesSyntenyData: SpeciesSyntenyData, 
           basePairToHeightRatio: basePairToHeightRatio,
           shape: 'rect',
           chainLevel: block.chainLevel,
-          isInverted: block.orientation === '-',
+          isInverted: isInverted,
         }));
 
         trackSections.push(new TrackSection({
-          start: gap.start,
-          stop: gap.stop,
+          start: gapStart,
+          stop: gapStop,
           backboneStart: gap.backboneStart, 
           backboneStop: gap.backboneStop, 
           chromosome: gap.chromosome, 
@@ -362,7 +368,7 @@ function splitBlocksAndGapsIntoSections(speciesSyntenyData: SpeciesSyntenyData, 
           basePairToHeightRatio: basePairToHeightRatio,
           shape: 'line',
           chainLevel: block.chainLevel,
-          isInverted: block.orientation === '-',
+          isInverted: isInverted,
         }));
       }
     });
@@ -372,8 +378,8 @@ function splitBlocksAndGapsIntoSections(speciesSyntenyData: SpeciesSyntenyData, 
     {
       // Create a section for the last part of the block
       trackSections.push(new TrackSection({
-        start: lastGap.stop,
-        stop: block.stop,
+        start: (isInverted) ? lastGap.start : lastGap.stop,
+        stop: blockStop,
         backboneStart: lastGap.backboneStop, 
         backboneStop: block.backboneStop, 
         chromosome: block.chromosome, 
@@ -381,7 +387,7 @@ function splitBlocksAndGapsIntoSections(speciesSyntenyData: SpeciesSyntenyData, 
         basePairToHeightRatio: basePairToHeightRatio,
         shape: 'rect',
         chainLevel: block.chainLevel,
-        isInverted: block.orientation === '-',
+        isInverted: isInverted,
       }));
     }
     else
@@ -399,6 +405,7 @@ function splitBlocksAndGapsIntoSections(speciesSyntenyData: SpeciesSyntenyData, 
 
   console.debug(`Regions split into ${trackSections.length} sections`, trackSections);
   warnIfNegativeHeight(trackSections);
+
   return [trackSections, geneSections, gaplessBlockSections];
 }
 
@@ -432,14 +439,23 @@ function createGeneSectionsFromSyntenyBlocks(syntenyBlockSections: TrackSection[
     }
     else
     {
-      const blockRatio = (syntenyBlockSection.sectionStop - syntenyBlockSection.sectionStart) / syntenyBlockSection.height;
+      // Basepair to height ratio for this specific synteny block
+      const blockRatio = Math.abs(syntenyBlockSection.sectionStop - syntenyBlockSection.sectionStart) / syntenyBlockSection.height;
  
       blockGenes.genes.forEach((gene: Gene) => {
         const geneSize = gene.stop - gene.start; //length of gene in bp
         const correctGeneStart = gene.start < syntenyBlockSection.sectionStart ? syntenyBlockSection.sectionStart : gene.start; //adjusted start of gene; if gene starts before block start, use block start
         const correctGeneStop = gene.stop > syntenyBlockSection.sectionStop ? syntenyBlockSection.sectionStop : gene.stop; //adjusted stop of gene; if gene stops after block stop, use block stop
         
-        const blockStartOffset = (correctGeneStart - syntenyBlockSection.sectionStart ) / (blockRatio); //offset of gene from block start in svg units - should never be negative
+        let blockStartOffset = 0; //offset of gene from block start in svg units
+        if (syntenyBlockSection.isInverted)
+        {
+          blockStartOffset = (syntenyBlockSection.sectionStop - correctGeneStop) / blockRatio;
+        }
+        else
+        {
+          blockStartOffset = (correctGeneStart - syntenyBlockSection.sectionStart) / blockRatio;
+        }
         const geneSvgY = syntenyBlockSection.svgY + blockStartOffset;
 
         if (geneSize < threshold)

@@ -80,7 +80,7 @@ import OrthologLine from '@/models/OrthologLine';
 import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
 import { key } from '@/store';
 import { backboneDetailedError, backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError } from '@/utils/VCMapErrors';
-import { createBackboneDataTracks, createComparativeDataTracks, createBackboneTrack, createSyntenyTracks } from '@/utils/TrackBuilder';
+import { createBackboneDataTracks, createBackboneTrack, createSyntenyTracks } from '@/utils/TrackBuilder';
 import useOverviewPanelSelection from '@/composables/useOverviewPanelSelection';
 import SpeciesApi from '@/api/SpeciesApi';
 
