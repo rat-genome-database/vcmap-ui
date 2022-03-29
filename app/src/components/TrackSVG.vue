@@ -145,12 +145,12 @@ toRefs(props);
 
 // update highlighting if selected genes change
 watch(() => store.state.selectedGeneIds, () => {
-  highlightSelections(store.state.selectedGeneIds);
+  highlightSelections(store.state.selectedGeneIds, false);
 });
 
 // Set up highlighting on mount, to handle selection updates
 onMounted(() => {
-  highlightSelections(store.state.selectedGeneIds);
+  highlightSelections(store.state.selectedGeneIds, true);
 });
 
 const onMouseEnter = (event: any, section: TrackSection, type: string) => {
@@ -164,8 +164,7 @@ const onMouseEnter = (event: any, section: TrackSection, type: string) => {
   }
   // If there are selected genes, don't update the selected data panel
   if (store.state.selectedGeneIds.length === 0) {
-    let currentSVGPoint = getMousePosSVG(svg, event);
-    const selectedData = new SelectedData(props.posX, currentSVGPoint.x, currentSVGPoint.y, section, type);
+    const selectedData = new SelectedData(section, type);
     store.dispatch('setSelectedData', selectedData);
   }
 };
@@ -210,15 +209,22 @@ const onClick = (event: any, section: TrackSection, type: string) => {
   if (!foundLine) {
     store.dispatch('setSelectedGeneIds', [section.gene?.rgdId] || []);
   }
-  let currentSVGPoint = getMousePosSVG(svg, event);
-  const selectedData = new SelectedData(props.posX, currentSVGPoint.x, currentSVGPoint.y, section, type);
+  const selectedData = new SelectedData(section, type);
   store.dispatch('setSelectedData', selectedData);
 };
 
-const highlightSelections = (selectedGeneIds: number[]) => {
+const highlightSelections = (selectedGeneIds: number[], setSelectedData: boolean) => {
   // Look through the sections and highlight based on selected genes
   props.track.sections.forEach((section) => {
-    section.isSelected = selectedGeneIds.includes(section.gene?.rgdId || -1);
+    if (selectedGeneIds.includes(section.gene?.rgdId || -1)) {
+      section.isSelected = true;
+      if (setSelectedData) {
+        const selectedData = new SelectedData(section, 'trackSection');
+        store.dispatch('setSelectedData', selectedData);
+      }
+    } else {
+      section.isSelected = false;
+    }
   });
   // Highlight the line if needed, and make sure genes highlighted too
   // (this ensures backbone and comparitive genes are highlighted, regardless of which is clicked)
@@ -240,11 +246,6 @@ const getSectionFill = (section: TrackSection) => {
   return section.color;
 };
 
-/* const selectedClick = (event: any, section: TrackSection, type: string) => {
-  let currentSVGPoint = getMousePosSVG(svg, event);
-  const selectedData = new SelectedData(props.posX, currentSVGPoint.y, section, type);
-  store.dispatch('setSelectedData', selectedData);
-}; */
 </script>
 
 <style lang="scss" scoped>

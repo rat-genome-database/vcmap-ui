@@ -113,7 +113,7 @@
         <div data-test="gene-name">Name:{{props.selectedData.genomicSection.comparativeGene.gene.name ?? 'N/A'}}</div>
         <div data-test="chromosome-name">Chromosome: {{props.selectedData.genomicSection.comparativeGene.gene.chromosome}}</div>
         <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(props.selectedData.genomicSection.comparativeGene.gene.start)}} - {{Formatter.addCommasToBasePair(props.selectedData.genomicSection.comparativeGene.gene.stop)}}</div>
-    </template>
+      </template>
     </div>
   </Panel>
 </template>
@@ -223,12 +223,6 @@ const height = computed(() => {
 });
 
 
-const labelYPosition = (index: number, textLine: number) => {
-  index = index + 1;
-  let yPos = ((index * 50) + (textLine * 10)) + SVGConstants.overviewTrackYPosition;
-  return yPos;
-};
-
 const goToRgd = (rgdId: number) => {
   const rgdUrl = `https://rgd.mcw.edu/rgdweb/report/gene/main.html?id=${rgdId}`;
   window.open(rgdUrl);
@@ -239,7 +233,7 @@ const goToRgd = (rgdId: number) => {
 .gene-data
 {
   overflow-y: scroll;
-  max-height: 550px;
+  height: 550px;
 }
 
 .rgd-link

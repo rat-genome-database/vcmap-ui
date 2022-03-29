@@ -665,6 +665,8 @@ function saveConfigToStoreAndGoToMainScreen()
     store.dispatch('setChromosome', geneChromosome.value);
     store.dispatch('setStartPosition', geneOptionStartPosition.value ?? backboneGene.value?.start);
     store.dispatch('setStopPosition', geneOptionStopPosition.value ?? backboneGene.value?.stop);
+    // If loading by gene, set the selectedGeneIds based on search, and selected data panel
+    store.dispatch('setSelectedGeneIds', [backboneGene.value?.rgdId] || []);
   }
   else if (activeTab.value === TABS.POSITION)
   {
@@ -672,6 +674,8 @@ function saveConfigToStoreAndGoToMainScreen()
     store.dispatch('setStartPosition', startPosition.value ?? 0);
     store.dispatch('setStopPosition', stopPosition.value ?? backboneChromosome.value?.seqLength);
     store.dispatch('setGene', null);
+    // If loading by position, make sure selectedGeneIds is empty
+    store.dispatch('setSelectedGeneIds', []);
   }
   else
   {

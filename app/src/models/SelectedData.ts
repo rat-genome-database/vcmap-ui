@@ -8,15 +8,9 @@ export default class SelectedData
 {
   genomicSection: TrackSection | OrthologLine;
   type: string;
-  x: number;
-  mouseX: number;
-  y: number;
 
-  constructor(svgX: number, mouseX: number, svgY: number, section: TrackSection | OrthologLine, type: string)
+  constructor(section: TrackSection | OrthologLine, type: string)
   {
-    this.x = svgX;
-    this.mouseX = mouseX;
-    this.y = svgY;
     this.genomicSection = section;
     this.type = type;
   }
