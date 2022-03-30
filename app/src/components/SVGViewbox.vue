@@ -77,10 +77,11 @@ import useDialog from '@/composables/useDialog';
 import BackboneTrackSVG from './BackboneTrackSVG.vue';
 import TrackSet from '@/models/TrackSet';
 import OrthologLine from '@/models/OrthologLine';
+import Gene from '@/models/Gene';
 import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
 import { key } from '@/store';
 import { backboneDetailedError, backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError } from '@/utils/VCMapErrors';
-import { createBackboneDataTracks, createComparativeDataTracks, createBackboneTrack, createSyntenyTracks } from '@/utils/TrackBuilder';
+import { createBackboneDataTracks, createGeneTrackFromGenesData, createComparativeDataTracks, createBackboneTrack, createSyntenyTracks } from '@/utils/TrackBuilder';
 import useOverviewPanelSelection from '@/composables/useOverviewPanelSelection';
 import SpeciesApi from '@/api/SpeciesApi';
 
@@ -248,7 +249,12 @@ const updateDetailsPanel = async () => {
   const backboneSelectionTrack = createBackboneTrack(backboneSpecies, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, store.state.detailedBasePairToHeightRatio);
 
   // Create the backbone data tracks for the entire selection at the updated Detailed panel resolution
-  let tempBackboneTracks = await createBackboneDataTracks(backboneSpecies, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, store.state.detailedBasePairToHeightRatio, true, store.state.detailsSyntenyThreshold, SVGConstants.panelTitleHeight) ?? null;
+  let tempBackboneGenes: Gene[] = await createBackboneDataTracks(backboneSpecies, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, store.state.detailedBasePairToHeightRatio, true, store.state.detailsSyntenyThreshold, SVGConstants.panelTitleHeight) ?? null;
+  store.dispatch('setLoadedGenes', tempBackboneGenes)
+  let tempBackboneTracks = createGeneTrackFromGenesData(tempBackboneGenes, backboneSpecies.name,
+    originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop,
+    store.state.detailedBasePairToHeightRatio, true, store.state.detailsSyntenyThreshold, SVGConstants.panelTitleHeight);
+
   if (backboneSelectionTrack != null && tempBackboneTracks != null)
   {
     selectionTrackSets.push(new TrackSet(backboneSelectionTrack, [tempBackboneTracks]));

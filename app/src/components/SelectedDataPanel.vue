@@ -16,11 +16,12 @@
             icon="pi pi-search"
             @click="searchSVG()"
           />
+          <!--:field="getSearchDisplay(item)"-->
           <AutoComplete
             v-model="searchedGene"
             :suggestions="geneSuggestions"
             @complete="searchGene($event)"
-            field="symbol"
+            :field="getSuggestionDisplay"
             :minLength="3"
           />
           <div v-if="searchedGene">
@@ -108,7 +109,7 @@ import SelectedData from '@/models/SelectedData';
 import Gene from '@/models/Gene';
 import SpeciesApi from '@/api/SpeciesApi';
 import { Formatter } from '@/utils/Formatter';
-import { ref, computed, } from 'vue';
+import { ref } from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 
@@ -131,27 +132,49 @@ const clearSelectedGenes = () => {
 
 const searchGene = async (event: {query: string}) => {
   const backboneSpeciesKey = store.state.species?.activeMap.key;
+  const comparativeSpecies = store.state.comparativeSpecies;
+  let matches: any[] = [];
   if (backboneSpeciesKey) {
     try {
-      const matches = await SpeciesApi.getGenesBySymbol(backboneSpeciesKey, event.query)
-      geneSuggestions.value = matches;
+      const backboneMatches = await SpeciesApi.getGenesBySymbol(backboneSpeciesKey, event.query)
+      matches.push(...backboneMatches);
     } catch (err: any) {
       // TODO could probably use a better error handle there too...
       // onApiError(err, 'An error occurred while looking up genes');
       console.log(err);
     }
   }
+  if (comparativeSpecies) {
+    for (let i = 0; i < comparativeSpecies.length; i++) {
+      let key = comparativeSpecies[i].activeMap.key;
+      try {
+        const comparativeMatches = await SpeciesApi.getGenesBySymbol(key, event.query);
+        matches.push(...comparativeMatches);
+      } catch (err: any) {
+        console.log(err);
+      }
+    }
+  }
+  geneSuggestions.value = matches;
 };
 
 const searchSVG = () => {
   console.log("searching the SVG for the follow gene");
   console.log(searchedGene.value);
+
+  store.dispatch('setGene', searchedGene.value);
+  store.dispatch('setSelectedGeneIds', [searchedGene.value?.rgdId] || [])
+
 }
 
 const goToRgd = (rgdId: number) => {
   const rgdUrl = `https://rgd.mcw.edu/rgdweb/report/gene/main.html?id=${rgdId}`;
   window.open(rgdUrl);
 };
+
+const getSuggestionDisplay = (item: any) => {
+  return `${item.symbol} - ${item.speciesName}`;
+}
 </script>
 
 <style lang="scss" scoped>
