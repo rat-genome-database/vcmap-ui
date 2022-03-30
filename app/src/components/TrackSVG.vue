@@ -190,7 +190,8 @@ const onClick = (event: any, section: TrackSection, type: string) => {
     store.dispatch('setSelectedData', null);
     return;
   }
-  let geneIds: number[] = [];
+  // If shift key is held, we'll just add to the selections, otherwise, reset first
+  let geneIds: number[] = event.shiftKey ? [...store.state.selectedGeneIds] : [];
   let foundLine = false;
   props.lines?.forEach((line) => {
     if (line.backboneGene.gene?.rgdId === section.gene?.rgdId) {
@@ -207,7 +208,8 @@ const onClick = (event: any, section: TrackSection, type: string) => {
     }
   });
   if (!foundLine) {
-    store.dispatch('setSelectedGeneIds', [section.gene?.rgdId] || []);
+    geneIds.push(section.gene?.rgdId || -1);
+    store.dispatch('setSelectedGeneIds', geneIds || []);
   }
   const selectedData = new SelectedData(section, type);
   store.dispatch('setSelectedData', selectedData);
