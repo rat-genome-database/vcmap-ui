@@ -155,6 +155,7 @@ const clearSelectedGenes = () => {
 };
 
 const searchGene = (event: {query: string}) => {
+  showSearch.value = false;
   const loadedGenes = store.state.loadedGenes;
   let matches: Gene[] = loadedGenes.filter((gene) => gene.symbol.toLowerCase().includes(event.query.toLowerCase()));
   geneSuggestions.value = matches;
