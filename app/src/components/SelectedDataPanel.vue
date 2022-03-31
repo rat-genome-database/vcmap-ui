@@ -144,6 +144,7 @@ const showSearch = ref<boolean>(false);
 const clearSelectedGenes = () => {
   store.dispatch('setSelectedGeneIds', []);
   store.dispatch('setSelectedData', null);
+  store.dispatch('setGene', null);
   searchedGene.value = null;
   showSearch.value = false;
 };

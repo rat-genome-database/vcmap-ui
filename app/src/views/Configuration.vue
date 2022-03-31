@@ -608,7 +608,7 @@ async function prepopulateConfigOptions()
   if (store.state.gene)
   {
     const prevGene = store.state.gene;
-    backboneGene.value = prevGene;
+    backboneGene.value = (prevGene.speciesName === backboneSpecies.value.name) ? prevGene : null;
     if (backboneSelection.baseSelection.length > 0 && backboneSelection.baseSelection.basePairStart <= prevGene.start && backboneSelection.baseSelection.basePairStop >= prevGene.stop)
     {
       // If user's last selection included this gene
@@ -659,6 +659,8 @@ function saveConfigToStoreAndGoToMainScreen()
   clearPriorBackboneSelectionIfNecessary();
 
   store.dispatch('setSpecies', backboneSpecies.value);
+  // Always reset loaded genes before loading VCMap
+  store.dispatch('setLoadedGenes', []);
   if (activeTab.value === TABS.GENE)
   {
     store.dispatch('setGene', backboneGene.value);
