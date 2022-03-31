@@ -216,7 +216,7 @@ const onClick = (event: any, section: TrackSection, type: string) => {
 const highlightSelections = (selectedGeneIds: number[], setSelectedData: boolean) => {
   // Look through the sections and highlight based on selected genes
   props.track.sections.forEach((section) => {
-    if (selectedGeneIds.includes(section.gene?.rgdId || -1)) {
+    if (checkSectionForGene(section, selectedGeneIds)) {
       section.isSelected = true;
       // FIXME: this is a bit hacky, but to get the search to work and update the search panel,
       // we'll always set the selected data if there's only 1 selectedGeneId
@@ -242,6 +242,28 @@ const highlightSelections = (selectedGeneIds: number[], setSelectedData: boolean
     }
   });
 };
+
+const checkSectionForGene = (section: TrackSection, selectedGeneIds: number[]) => {
+  if (selectedGeneIds.includes(section.gene?.rgdId || -1)) {
+    return true;
+  }
+  if (section.hiddenGenes) {
+    for (let i = 0; i < section.hiddenGenes.length; i++) {
+      if(selectedGeneIds.includes(section.hiddenGenes[i].gene?.rgdId || -1)) {
+        return true;
+      }
+    }
+  }
+  if (section.combinedGenes) {
+    for (let i = 0; i < section.combinedGenes.length; i++) {
+      if(selectedGeneIds.includes(section.combinedGenes[i].gene?.rgdId || -1)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
 
 const getSectionFill = (section: TrackSection) => {
   if (section.isSelected) {return SELECTED_HIGHLIGHT_COLOR;}

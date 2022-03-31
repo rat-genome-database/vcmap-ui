@@ -16,7 +16,6 @@
             icon="pi pi-search"
             @click="searchSVG()"
           />
-          <!--:field="getSearchDisplay(item)"-->
           <AutoComplete
             v-model="searchedGene"
             :suggestions="geneSuggestions"
@@ -130,38 +129,13 @@ const clearSelectedGenes = () => {
   store.dispatch('setSelectedData', null);
 };
 
-const searchGene = async (event: {query: string}) => {
-  const backboneSpeciesKey = store.state.species?.activeMap.key;
-  const comparativeSpecies = store.state.comparativeSpecies;
-  let matches: any[] = [];
-  if (backboneSpeciesKey) {
-    try {
-      const backboneMatches = await SpeciesApi.getGenesBySymbol(backboneSpeciesKey, event.query)
-      matches.push(...backboneMatches);
-    } catch (err: any) {
-      // TODO could probably use a better error handle there too...
-      // onApiError(err, 'An error occurred while looking up genes');
-      console.log(err);
-    }
-  }
-  if (comparativeSpecies) {
-    for (let i = 0; i < comparativeSpecies.length; i++) {
-      let key = comparativeSpecies[i].activeMap.key;
-      try {
-        const comparativeMatches = await SpeciesApi.getGenesBySymbol(key, event.query);
-        matches.push(...comparativeMatches);
-      } catch (err: any) {
-        console.log(err);
-      }
-    }
-  }
+const searchGene = (event: {query: string}) => {
+  const loadedGenes = store.state.loadedGenes;
+  let matches: Gene[] = loadedGenes.filter((gene) => gene.symbol.toLowerCase().includes(event.query.toLowerCase()));
   geneSuggestions.value = matches;
 };
 
 const searchSVG = () => {
-  console.log("searching the SVG for the follow gene");
-  console.log(searchedGene.value);
-
   store.dispatch('setGene', searchedGene.value);
   store.dispatch('setSelectedGeneIds', [searchedGene.value?.rgdId] || [])
 
@@ -173,7 +147,7 @@ const goToRgd = (rgdId: number) => {
 };
 
 const getSuggestionDisplay = (item: any) => {
-  return `${item.symbol} - ${item.speciesName}`;
+  return `${item.symbol}`;
 }
 </script>
 
