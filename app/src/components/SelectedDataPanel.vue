@@ -2,16 +2,17 @@
   <Panel>
     <template #header>
       <div class="selected-data-header">
-        <div>
-          Selected Genes
+        <div class="panel-header-item">
+          <b>Selected Data</b>
+        </div>
+        <div class="panel-header-item">
           <Button
             label="Clear Selection"
             class="p-button-info"
             @click="clearSelectedGenes"
           />
         </div>
-        <!--@item-select="setGeneChromosomeAndDefaultStartAndStopPositions($event.value)"-->
-        <div>
+        <div class="panel-header-item">
           <Button
             icon="pi pi-search"
             @click="searchSVG()"
@@ -22,6 +23,7 @@
             @complete="searchGene($event)"
             :field="getSuggestionDisplay"
             :minLength="3"
+            placeholder="Search loaded genes..."
           />
         </div>
       </div>
@@ -29,7 +31,7 @@
     <div class="gene-data">
 
       <template v-if="searchedGene && showSearch">
-        <Divider>Searched Gene</Divider>
+        <div class="searched-gene-divider">Searched Gene</div>
         <div>
           Symbol:
           <Button
@@ -43,7 +45,7 @@
         <div>Name: {{searchedGene.name}}</div>
         <div>Chromosome: {{searchedGene.chromosome}}</div>
         <div>Region: {{Formatter.addCommasToBasePair(searchedGene.start)}} - {{Formatter.addCommasToBasePair(searchedGene.stop)}}</div>
-        <Divider>Highlighted Sections</Divider>
+        <Divider><b>Highlighted Sections</b></Divider>
       </template>
 
       <template v-if="props.selectedData?.type === 'trackSection'">
@@ -185,8 +187,19 @@ const getSuggestionDisplay = (item: any) => {
   padding-left: 4px;
 }
 
-.selected-data-header.p-panel-header
+.selected-data-header
 {
-  flex-direction: column
+  flex-direction: column;
+}
+
+.panel-header-item
+{
+  padding-bottom: 10px;
+}
+
+.searched-gene-divider
+{
+  padding-bottom: 1rem;
+  font-weight: bold;
 }
 </style>
