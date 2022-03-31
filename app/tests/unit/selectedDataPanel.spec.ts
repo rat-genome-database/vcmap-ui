@@ -18,7 +18,7 @@ describe('SelectedDataPanel', () => {
       shape: 'rect',
       gene: new Gene({geneSymbol: 'TEST', geneName: 'Test 123', geneType: '', key: 0, geneRgdId: 0, chr: '1', startPos: 0, stopPos: 10000})
     });
-    const selectedData = new SelectedData(0, 0, 0, section, 'trackSection');
+    const selectedData = new SelectedData(section, 'trackSection');
     const wrapper = shallowMount(SelectedDataPanel, {
       props: {
         selectedData: selectedData
@@ -41,7 +41,7 @@ describe('SelectedDataPanel', () => {
       basePairToHeightRatio: 100,
       shape: 'rect',
     });
-    const selectedData = new SelectedData(0, 0, 0, section, 'trackSection');
+    const selectedData = new SelectedData(section, 'trackSection');
     const wrapper = shallowMount(SelectedDataPanel, {
       props: {
         selectedData: selectedData

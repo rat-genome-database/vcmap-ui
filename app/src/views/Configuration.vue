@@ -608,7 +608,7 @@ async function prepopulateConfigOptions()
   if (store.state.gene)
   {
     const prevGene = store.state.gene;
-    backboneGene.value = prevGene;
+    backboneGene.value = (prevGene.speciesName === backboneSpecies.value.name) ? prevGene : null;
     if (backboneSelection.baseSelection.length > 0 && backboneSelection.baseSelection.basePairStart <= prevGene.start && backboneSelection.baseSelection.basePairStop >= prevGene.stop)
     {
       // If user's last selection included this gene
@@ -659,12 +659,16 @@ function saveConfigToStoreAndGoToMainScreen()
   clearPriorBackboneSelectionIfNecessary();
 
   store.dispatch('setSpecies', backboneSpecies.value);
+  // Always reset loaded genes before loading VCMap
+  store.dispatch('setLoadedGenes', []);
   if (activeTab.value === TABS.GENE)
   {
     store.dispatch('setGene', backboneGene.value);
     store.dispatch('setChromosome', geneChromosome.value);
     store.dispatch('setStartPosition', geneOptionStartPosition.value ?? backboneGene.value?.start);
     store.dispatch('setStopPosition', geneOptionStopPosition.value ?? backboneGene.value?.stop);
+    // If loading by gene, set the selectedGeneIds based on search, and selected data panel
+    store.dispatch('setSelectedGeneIds', [backboneGene.value?.rgdId] || []);
   }
   else if (activeTab.value === TABS.POSITION)
   {
@@ -672,6 +676,8 @@ function saveConfigToStoreAndGoToMainScreen()
     store.dispatch('setStartPosition', startPosition.value ?? 0);
     store.dispatch('setStopPosition', stopPosition.value ?? backboneChromosome.value?.seqLength);
     store.dispatch('setGene', null);
+    // If loading by position, make sure selectedGeneIds is empty
+    store.dispatch('setSelectedGeneIds', []);
   }
   else
   {

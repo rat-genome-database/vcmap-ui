@@ -19,6 +19,7 @@ export interface VCMapState
   gene: Gene | null; // backbone gene
 
   comparativeSpecies: Species[];
+  loadedGenes: Gene[];
 
   selectedBackboneRegion: BackboneSelection;
 
@@ -51,6 +52,7 @@ export default createStore({
     gene: null,
 
     comparativeSpecies: [],
+    loadedGenes: [],
 
     selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
 
@@ -88,6 +90,9 @@ export default createStore({
     },
     comparativeSpecies (state: VCMapState, speciesArray: Species[]) {
       state.comparativeSpecies = speciesArray;
+    },
+    loadedGenes (state: VCMapState, loadedGenesArray: Gene[]) {
+      state.loadedGenes = loadedGenesArray;
     },
     selectedBackboneRegion ( state: VCMapState, selection: BackboneSelection) {
       state.selectedBackboneRegion = selection;
@@ -173,6 +178,9 @@ export default createStore({
     setComparativeSpecies(context: ActionContext<VCMapState, VCMapState>, species: Species[]) {
       context.commit('comparativeSpecies', species);
     },
+    setLoadedGenes(context: ActionContext<VCMapState, VCMapState>, loadedGenes: Gene[]) {
+      context.commit('loadedGenes', loadedGenes)
+    },
     setIsDetailedPanelUpdating(context: ActionContext<VCMapState, VCMapState>, isUpdating: boolean) {
       context.commit('isDetailedPanelUpdating', isUpdating);
     },
@@ -186,6 +194,8 @@ export default createStore({
       context.commit('startPosition', null);
       context.commit('stopPosition', null);
       context.commit('comparativeSpecies', []);
+      context.commit('selectedGeneIds', []);
+      context.commit('loadedGenes', []);
       context.commit('selectedBackboneRegion', new BackboneSelection(new SelectedRegion(0,0,0,0)));
       context.commit('detailedBasePairRange', { start: 0, stop: 0 });
     },

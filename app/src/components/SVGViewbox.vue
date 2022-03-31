@@ -77,10 +77,12 @@ import useDialog from '@/composables/useDialog';
 import BackboneTrackSVG from './BackboneTrackSVG.vue';
 import TrackSet from '@/models/TrackSet';
 import OrthologLine from '@/models/OrthologLine';
+import Gene from '@/models/Gene';
+import { SpeciesSyntenyData } from '@/models/SyntenicRegion';
 import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
 import { key } from '@/store';
 import { backboneDetailedError, backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError } from '@/utils/VCMapErrors';
-import { createBackboneDataTracks, createBackboneTrack, createSyntenyTracks } from '@/utils/TrackBuilder';
+import { createBackboneDataTracks, createBackboneGeneTrackFromGenesData, createBackboneTrack, createSyntenyTracks } from '@/utils/TrackBuilder';
 import useOverviewPanelSelection from '@/composables/useOverviewPanelSelection';
 import SpeciesApi from '@/api/SpeciesApi';
 
@@ -166,16 +168,17 @@ const updateOverviewPanel = async () => {
     return;
   }
 
-  comparativeOverviewTracks = await createSyntenyTracks(
+  let syntenyTrackResults = await createSyntenyTracks(
     store.state.comparativeSpecies,
     backboneChromosome,
-    0, 
+    0,
     backboneChromosome.seqLength, 
     store.state.overviewBasePairToHeightRatio,
     store.state.overviewSyntenyThreshold,
     SVGConstants.overviewTrackYPosition, // SVG positioning of the overview tracks will start just underneath the header panels with a bit of space in between
     false,
  );
+ comparativeOverviewTracks = syntenyTrackResults.tracks;
 
   for (let index = 0; index < comparativeOverviewTracks.length; index++)
   {
@@ -248,7 +251,12 @@ const updateDetailsPanel = async () => {
   const backboneSelectionTrack = createBackboneTrack(backboneSpecies, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, store.state.detailedBasePairToHeightRatio);
 
   // Create the backbone data tracks for the entire selection at the updated Detailed panel resolution
-  let tempBackboneTracks = await createBackboneDataTracks(backboneSpecies, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, store.state.detailedBasePairToHeightRatio, true, store.state.detailsSyntenyThreshold, SVGConstants.panelTitleHeight) ?? null;
+  let tempBackboneGenes: Gene[] = await createBackboneDataTracks(backboneSpecies, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, store.state.detailedBasePairToHeightRatio, true, store.state.detailsSyntenyThreshold, SVGConstants.panelTitleHeight) ?? null;
+  tempBackboneGenes.forEach(gene => gene.speciesName = backboneSpecies.name);
+  let tempBackboneTracks = createBackboneGeneTrackFromGenesData(tempBackboneGenes, backboneSpecies.name,
+    originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop,
+    store.state.detailedBasePairToHeightRatio, true, store.state.detailsSyntenyThreshold, SVGConstants.panelTitleHeight);
+
   if (backboneSelectionTrack != null && tempBackboneTracks != null)
   {
     selectionTrackSets.push(new TrackSet(backboneSelectionTrack, [tempBackboneTracks]));
@@ -259,16 +267,23 @@ const updateDetailsPanel = async () => {
       return;
     }
 
-    let comparativeSelectionTracks = await createSyntenyTracks(
+    let syntenyTracksResults = await createSyntenyTracks(
       store.state.comparativeSpecies,
       backboneChromosome,
       originalSelectedBackboneRegion.baseSelection.basePairStart, 
-      originalSelectedBackboneRegion.baseSelection.basePairStop, 
+      originalSelectedBackboneRegion.baseSelection.basePairStop,
       store.state.detailedBasePairToHeightRatio,
       store.state.detailsSyntenyThreshold,
       SVGConstants.panelTitleHeight, // SVG positioning of detailed tracks will start immediately after the header panel
       true
     );
+    let comparativeSelectionTracks: TrackSet[] = syntenyTracksResults.tracks;
+    let syntenyDataArray: SpeciesSyntenyData[] = syntenyTracksResults?.speciesSyntenyDataArray || [];
+    let allSyntenyGenes: Gene[] = [];
+    syntenyDataArray.forEach((dataArray) => {
+      Array.prototype.push.apply(allSyntenyGenes, dataArray.allGenes ?? []);
+    });
+    store.dispatch('setLoadedGenes', tempBackboneGenes.concat([...allSyntenyGenes]));
 
     const compSpeciesMaps: Number[] = [];
     for (let index = 0; index < comparativeSelectionTracks.length; index++)

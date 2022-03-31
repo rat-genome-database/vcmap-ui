@@ -5,6 +5,7 @@ export interface SpeciesSyntenyData
   mapName: string;
   mapKey: number;
   regionData: SyntenyRegionData[];
+  allGenes?: Gene[];
 }
 
 export interface SyntenyRegionData

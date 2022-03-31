@@ -145,12 +145,12 @@ toRefs(props);
 
 // update highlighting if selected genes change
 watch(() => store.state.selectedGeneIds, () => {
-  highlightSelections(store.state.selectedGeneIds);
+  highlightSelections(store.state.selectedGeneIds, false);
 });
 
 // Set up highlighting on mount, to handle selection updates
 onMounted(() => {
-  highlightSelections(store.state.selectedGeneIds);
+  highlightSelections(store.state.selectedGeneIds, true);
 });
 
 const onMouseEnter = (event: any, section: TrackSection, type: string) => {
@@ -164,8 +164,7 @@ const onMouseEnter = (event: any, section: TrackSection, type: string) => {
   }
   // If there are selected genes, don't update the selected data panel
   if (store.state.selectedGeneIds.length === 0) {
-    let currentSVGPoint = getMousePosSVG(svg, event);
-    const selectedData = new SelectedData(props.posX, currentSVGPoint.x, currentSVGPoint.y, section, type);
+    const selectedData = new SelectedData(section, type);
     store.dispatch('setSelectedData', selectedData);
   }
 };
@@ -210,15 +209,25 @@ const onClick = (event: any, section: TrackSection, type: string) => {
   if (!foundLine) {
     store.dispatch('setSelectedGeneIds', [section.gene?.rgdId] || []);
   }
-  let currentSVGPoint = getMousePosSVG(svg, event);
-  const selectedData = new SelectedData(props.posX, currentSVGPoint.x, currentSVGPoint.y, section, type);
+  const selectedData = new SelectedData(section, type);
   store.dispatch('setSelectedData', selectedData);
 };
 
-const highlightSelections = (selectedGeneIds: number[]) => {
+const highlightSelections = (selectedGeneIds: number[], setSelectedData: boolean) => {
   // Look through the sections and highlight based on selected genes
   props.track.sections.forEach((section) => {
-    section.isSelected = selectedGeneIds.includes(section.gene?.rgdId || -1);
+    if (checkSectionForGene(section, selectedGeneIds)) {
+      section.isSelected = true;
+      // FIXME: this is a bit hacky, but to get the search to work and update the search panel,
+      // we'll always set the selected data if there's only 1 selectedGeneId
+      // (prevents the selected data to be set to the off-backbone gene when clicking a gene with an ortholog)
+      if (setSelectedData || selectedGeneIds.length === 1) {
+        const selectedData = new SelectedData(section, 'geneLabel');
+        store.dispatch('setSelectedData', selectedData);
+      }
+    } else {
+      section.isSelected = false;
+    }
   });
   // Highlight the line if needed, and make sure genes highlighted too
   // (this ensures backbone and comparitive genes are highlighted, regardless of which is clicked)
@@ -234,23 +243,45 @@ const highlightSelections = (selectedGeneIds: number[]) => {
   });
 };
 
+const checkSectionForGene = (section: TrackSection, selectedGeneIds: number[]) => {
+  if (selectedGeneIds.includes(section.gene?.rgdId || -1)) {
+    return true;
+  }
+  if (section.hiddenGenes) {
+    for (let i = 0; i < section.hiddenGenes.length; i++) {
+      if(selectedGeneIds.includes(section.hiddenGenes[i].gene?.rgdId || -1)) {
+        return true;
+      }
+    }
+  }
+  if (section.combinedGenes) {
+    for (let i = 0; i < section.combinedGenes.length; i++) {
+      if(selectedGeneIds.includes(section.combinedGenes[i].gene?.rgdId || -1)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 const getSectionFill = (section: TrackSection) => {
   if (section.isSelected) {return SELECTED_HIGHLIGHT_COLOR;}
   if (section.isHovered) {return HOVER_HIGHLIGHT_COLOR;}
   return section.color;
 };
 
-/* const selectedClick = (event: any, section: TrackSection, type: string) => {
-  let currentSVGPoint = getMousePosSVG(svg, event);
-  const selectedData = new SelectedData(props.posX, currentSVGPoint.y, section, type);
-  store.dispatch('setSelectedData', selectedData);
-}; */
 </script>
 
 <style lang="scss" scoped>
 .label.small
 {
   font: normal 8px sans-serif;
+
+  &:hover
+  {
+    cursor: pointer;
+  }
 }
 
 .chromosome-label
@@ -262,6 +293,11 @@ const getSectionFill = (section: TrackSection) => {
 .ortholog-line
 {
   stroke-width: 1;
+
+  &:hover
+  {
+    stroke-width: 2.5;
+  }
 }
 
 .section
@@ -283,6 +319,11 @@ const getSectionFill = (section: TrackSection) => {
   &.level-2
   {
     filter: brightness(60%);
+  }
+
+  &:hover
+  {
+    cursor: pointer;
   }
 }
 </style>
