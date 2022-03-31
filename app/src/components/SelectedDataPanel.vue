@@ -23,13 +23,28 @@
             :field="getSuggestionDisplay"
             :minLength="3"
           />
-          <div v-if="searchedGene">
-            Chromosome {{searchedGene.chromosome}}
-          </div>
         </div>
       </div>
     </template>
     <div class="gene-data">
+
+      <template v-if="searchedGene">
+        Searched Gene
+        <div>
+          Symbol:
+          <Button
+            class="p-button-link rgd-link"
+            @click="goToRgd(searchedGene?.rgdId || -1)"
+          >
+            <b>{{searchedGene.symbol}}</b>
+            <i class="pi pi-link external-link"></i>
+          </Button>
+        </div>
+        <div>Name: {{searchedGene.name}}</div>
+        <div>Chromosome: {{searchedGene.chromosome}}</div>
+        <div>Region: {{Formatter.addCommasToBasePair(searchedGene.start)}} - {{Formatter.addCommasToBasePair(searchedGene.stop)}}</div>
+        <Divider />
+      </template>
 
       <template v-if="props.selectedData?.type === 'trackSection'">
         <div v-if="props.selectedData.genomicSection.gene" data-test="gene-symbol">
