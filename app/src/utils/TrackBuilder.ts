@@ -84,7 +84,7 @@ export function createSyntenyTrackFromSpeciesSyntenyData(speciesSyntenyData: Spe
 /**
  * Creates the backbone data tracks (currently just genes)
  */
-export async function createBackboneDataTracks(species: Species, chromosome: Chromosome, startPos: number, stopPos: number, basePairToHeightRatio: number, isComparative: boolean, syntenyThreshold: number, startingSVGYPos: number)
+export async function createBackboneDataTracks(species: Species, chromosome: Chromosome, startPos: number, stopPos: number)
 {
   const genes = await SpeciesApi.getGenesByRegion(chromosome.chromosome, startPos, stopPos, species.defaultMapKey);
   return genes;
