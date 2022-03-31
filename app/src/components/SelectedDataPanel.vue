@@ -28,8 +28,8 @@
     </template>
     <div class="gene-data">
 
-      <template v-if="searchedGene">
-        Searched Gene
+      <template v-if="searchedGene && showSearch">
+        <Divider>Searched Gene</Divider>
         <div>
           Symbol:
           <Button
@@ -43,7 +43,7 @@
         <div>Name: {{searchedGene.name}}</div>
         <div>Chromosome: {{searchedGene.chromosome}}</div>
         <div>Region: {{Formatter.addCommasToBasePair(searchedGene.start)}} - {{Formatter.addCommasToBasePair(searchedGene.stop)}}</div>
-        <Divider />
+        <Divider>Highlighted Sections</Divider>
       </template>
 
       <template v-if="props.selectedData?.type === 'trackSection'">
@@ -121,7 +121,6 @@
 <script setup lang="ts">
 import SelectedData from '@/models/SelectedData';
 import Gene from '@/models/Gene';
-import SpeciesApi from '@/api/SpeciesApi';
 import { Formatter } from '@/utils/Formatter';
 import { ref } from 'vue';
 import { useStore } from 'vuex';
@@ -138,10 +137,13 @@ const props = defineProps<Props>();
 
 const searchedGene = ref<Gene | null>(null);
 const geneSuggestions = ref<Gene[]>([]);
+const showSearch = ref<boolean>(false);
 
 const clearSelectedGenes = () => {
   store.dispatch('setSelectedGeneIds', []);
   store.dispatch('setSelectedData', null);
+  searchedGene.value = null;
+  showSearch.value = false;
 };
 
 const searchGene = (event: {query: string}) => {
@@ -152,9 +154,9 @@ const searchGene = (event: {query: string}) => {
 
 const searchSVG = () => {
   store.dispatch('setGene', searchedGene.value);
-  store.dispatch('setSelectedGeneIds', [searchedGene.value?.rgdId] || [])
-
-}
+  store.dispatch('setSelectedGeneIds', [searchedGene.value?.rgdId] || []);
+  showSearch.value = true;
+};
 
 const goToRgd = (rgdId: number) => {
   const rgdUrl = `https://rgd.mcw.edu/rgdweb/report/gene/main.html?id=${rgdId}`;
@@ -162,8 +164,8 @@ const goToRgd = (rgdId: number) => {
 };
 
 const getSuggestionDisplay = (item: any) => {
-  return `${item.symbol}`;
-}
+  return `${item.symbol} - ${item.speciesName}`;
+};
 </script>
 
 <style lang="scss" scoped>
