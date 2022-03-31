@@ -136,8 +136,8 @@ const onMouseEnter = (event: any, section: TrackSection, type: string) => {
   // Only set selected data if there are no selected genes
   if (store.state.selectedGeneIds.length === 0) {
     let currentSVGPoint = getMousePosSVG(svg, event);
-    const selectedData = new SelectedData(props.posX, currentSVGPoint.x, currentSVGPoint.y, section, type);
-    store.dispatch('setSelectedData', selectedData);
+    const selectedData = new SelectedData(section, type);
+    store.dispatch('setSelectedData', [selectedData]);
   }
 };
 

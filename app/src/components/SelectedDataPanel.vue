@@ -48,73 +48,78 @@
         <Divider><b>Highlighted Sections</b></Divider>
       </template>
 
-      <template v-if="props.selectedData?.type === 'trackSection'">
-        <div v-if="props.selectedData.genomicSection.gene" data-test="gene-symbol">
-          Symbol:
-          <Button
-            class="p-button-link rgd-link"
-            @click="goToRgd(props.selectedData.genomicSection.gene.rgdId)"
-          >
-            <b>{{props.selectedData.genomicSection.gene.symbol}}</b>
-            <i class="pi pi-link external-link"></i>
-          </Button>
-        </div>
-        <div v-if="props.selectedData.genomicSection.gene" data-test="gene-name">Name: {{props.selectedData.genomicSection.gene.name ?? 'N/A'}}</div>
-        <div data-test="chromosome-name">Chromosome: {{props.selectedData.genomicSection.chromosome}}</div>
-        <div data-test="start-stop">Region: {{props.selectedData.genomicSection.regionLabel}}</div>
-        <div>Orientation: {{props.selectedData.genomicSection.isInverted ? '-' : '+'}}</div>
-        <div v-if="props.selectedData.genomicSection.chainLevel != null" data-test="level">Level: {{props.selectedData.genomicSection.chainLevel}}</div>
-      </template>
-
-      <template v-else-if="props.selectedData?.type === 'geneLabel'">
-        <div data-test="gene-symbol">
-          Symbol:
-          <Button
-            class="p-button-link rgd-link"
-            @click="goToRgd(props.selectedData.genomicSection.gene.rgdId)"
-          >
-            <b>{{props.selectedData.genomicSection.gene.symbol}}</b>
-            <i class="pi pi-link external-link"></i>
-          </Button>
-        </div>
-        <div data-test="gene-name">Name: {{props.selectedData.genomicSection.gene.name ?? 'N/A'}}</div>
-        <div data-test="chromosome-name">Chromosome: {{props.selectedData.genomicSection.chromosome}}</div>
-        <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(props.selectedData.genomicSection.gene.start)}} - {{Formatter.addCommasToBasePair(props.selectedData.genomicSection.gene.stop)}}</div>
-        <Divider />
-
-
-        <template v-for="gene in props.selectedData.genomicSection?.combinedGenes" :key="gene">
-          <div data-test="gene-symbol">
+      <template v-for="dataObject in props.selectedData" :key="dataObject">
+        <template v-if="dataObject?.type === 'trackSection'">
+          <div v-if="dataObject.genomicSection.gene" data-test="gene-symbol">
             Symbol:
             <Button
               class="p-button-link rgd-link"
-              @click="goToRgd(gene.gene.rgdId)"
+              @click="goToRgd(dataObject.genomicSection.gene.rgdId)"
             >
-              <b>{{gene.gene.symbol}}</b>
+              <b>{{dataObject.genomicSection.gene.symbol}}</b>
               <i class="pi pi-link external-link"></i>
-            </Button></div>
-          <div data-test="gene-name"> Name: {{gene.gene.name ?? 'N/A'}}</div>
-          <div data-test="chromosome-name">Chromosome: {{gene.gene.chromosome}}</div>
-          <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(gene.gene.start)}} - {{Formatter.addCommasToBasePair(gene.gene.stop)}}</div>
+            </Button>
+          </div>
+          <div v-if="dataObject.genomicSection.gene" data-test="gene-name">Name: {{dataObject.genomicSection.gene.name ?? 'N/A'}}</div>
+          <div data-test="chromosome-name">Chromosome: {{dataObject.genomicSection.chromosome}}</div>
+          <div data-test="start-stop">Region: {{dataObject.genomicSection.regionLabel}}</div>
+          <div>Orientation: {{dataObject.genomicSection.isInverted ? '-' : '+'}}</div>
+          <div v-if="dataObject.genomicSection.chainLevel != null" data-test="level">Level: {{dataObject.genomicSection.chainLevel}}</div>
           <Divider />
         </template>
-      </template>
 
-      <template v-else-if="props.selectedData?.type === 'orthologLine'">
-        <div data-test="start-stop">BACKBONE GENE:</div>
-        <div data-test="gene-symbol">Symbol: {{props.selectedData.genomicSection.backboneGene.gene.symbol}}</div>
-        <div data-test="gene-name">Name:{{props.selectedData.genomicSection.backboneGene.gene.name ?? 'N/A'}}</div>
-        <div data-test="chromosome-name">Chromosome: {{props.selectedData.genomicSection.backboneGene.gene.chromosome}}</div>
-        <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(props.selectedData.genomicSection.backboneGene.gene.start)}} - {{Formatter.addCommasToBasePair(props.selectedData.genomicSection.backboneGene.gene.stop)}}</div>
+        <template v-else-if="dataObject?.type === 'geneLabel'">
+          <div v-if="dataObject.genomicSection.gene">
+            <div data-test="gene-symbol">
+              Symbol:
+              <Button
+                class="p-button-link rgd-link"
+                @click="goToRgd(dataObject.genomicSection.gene.rgdId)"
+              >
+                <b>{{dataObject.genomicSection.gene.symbol}}</b>
+                <i class="pi pi-link external-link"></i>
+              </Button>
+            </div>
+            <div data-test="gene-name">Name: {{dataObject.genomicSection.gene.name ?? 'N/A'}}</div>
+            <div data-test="chromosome-name">Chromosome: {{dataObject.genomicSection.chromosome}}</div>
+            <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(dataObject.genomicSection.gene.start)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.gene.stop)}}</div>
+            <Divider />
 
-        <div data-test="start-stop">&lt;---------------------------------------&gt;</div>
 
-        <div data-test="start-stop">COMPARATIVE GENE HOMOLOG:</div>
-        <div data-test="gene-symbol">Species: {{props.selectedData.genomicSection.comparativeGene.gene.speciesName}}</div>
-        <div data-test="gene-symbol">Symbol: {{props.selectedData.genomicSection.comparativeGene.gene.symbol}}</div>
-        <div data-test="gene-name">Name:{{props.selectedData.genomicSection.comparativeGene.gene.name ?? 'N/A'}}</div>
-        <div data-test="chromosome-name">Chromosome: {{props.selectedData.genomicSection.comparativeGene.gene.chromosome}}</div>
-        <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(props.selectedData.genomicSection.comparativeGene.gene.start)}} - {{Formatter.addCommasToBasePair(props.selectedData.genomicSection.comparativeGene.gene.stop)}}</div>
+            <template v-for="gene in dataObject.genomicSection?.combinedGenes" :key="gene">
+              <div data-test="gene-symbol">
+                Symbol:
+                <Button
+                  class="p-button-link rgd-link"
+                  @click="goToRgd(gene.gene.rgdId)"
+                >
+                  <b>{{gene.gene.symbol}}</b>
+                  <i class="pi pi-link external-link"></i>
+                </Button></div>
+              <div data-test="gene-name"> Name: {{gene.gene.name ?? 'N/A'}}</div>
+              <div data-test="chromosome-name">Chromosome: {{gene.gene.chromosome}}</div>
+              <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(gene.gene.start)}} - {{Formatter.addCommasToBasePair(gene.gene.stop)}}</div>
+              <Divider />
+            </template>
+          </div>
+        </template>
+
+        <template v-else-if="dataObject?.type === 'orthologLine'">
+          <div data-test="start-stop">BACKBONE GENE:</div>
+          <div data-test="gene-symbol">Symbol: {{dataObject.genomicSection.backboneGene.gene.symbol}}</div>
+          <div data-test="gene-name">Name:{{dataObject.genomicSection.backboneGene.gene.name ?? 'N/A'}}</div>
+          <div data-test="chromosome-name">Chromosome: {{dataObject.genomicSection.backboneGene.gene.chromosome}}</div>
+          <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(dataObject.genomicSection.backboneGene.gene.start)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.backboneGene.gene.stop)}}</div>
+
+          <div data-test="start-stop">&lt;---------------------------------------&gt;</div>
+
+          <div data-test="start-stop">COMPARATIVE GENE HOMOLOG:</div>
+          <div data-test="gene-symbol">Species: {{dataObject.genomicSection.comparativeGene.gene.speciesName}}</div>
+          <div data-test="gene-symbol">Symbol: {{dataObject.genomicSection.comparativeGene.gene.symbol}}</div>
+          <div data-test="gene-name">Name:{{dataObject.genomicSection.comparativeGene.gene.name ?? 'N/A'}}</div>
+          <div data-test="chromosome-name">Chromosome: {{dataObject.genomicSection.comparativeGene.gene.chromosome}}</div>
+          <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(dataObject.genomicSection.comparativeGene.gene.start)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.comparativeGene.gene.stop)}}</div>
+        </template>
       </template>
     </div>
   </Panel>
@@ -132,7 +137,7 @@ const store = useStore(key);
 
 interface Props
 {
-  selectedData: SelectedData | null;
+  selectedData: SelectedData[] | null;
 }
 
 const props = defineProps<Props>();
