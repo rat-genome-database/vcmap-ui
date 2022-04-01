@@ -27,6 +27,7 @@ describe('Zoom', () => {
     configTab: 0,
     selectedGeneIds: [],
     selectedData: null,
+    loadedGenes: [],
     detailedBasePairRange: { start: 0, stop: 0 },
     isDetailedPanelUpdating: false,
     isOverviewPanelUpdating: false,

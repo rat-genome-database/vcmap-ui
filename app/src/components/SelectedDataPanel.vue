@@ -190,7 +190,7 @@ const adjustSelectionWindow = () => {
   const selectionStop = selectedRegion.innerSelection?.basePairStop || selectedRegion.baseSelection.basePairStop;
   // If gene is outside of current window, reset the new window range
   if (searchedGene.value && (selectionStart > searchedGene.value.start || selectionStop < searchedGene.value.stop)) {
-    // New start and stop will be +/- some fraction of the gene's length (currently 2x)
+    // New start and stop will be +/- some multiple of the gene's length (currently 2x)
     const geneBasePairLength = searchedGene.value.stop - searchedGene.value.start;
     // Take the max of new start position, and selected region's original start
     // to avoid jumping to outside of loaded region
