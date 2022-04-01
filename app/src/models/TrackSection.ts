@@ -119,11 +119,16 @@ export default class TrackSection
       let geneName = this.gene.symbol;
       let truncatedGenes = '';
 
-      if (this.combinedGenes)
+      if (!this.combinedGenes && !this.hiddenGenes)
+      {
+        return geneName;
+      }
+
+      if (this.combinedGenes && this.combinedGenes.length > 0)
       {
         truncatedGenes = this.hiddenGenes ? `...(${this.combinedGenes.length + this.hiddenGenes.length})` : `...(${this.combinedGenes.length})`;
       }
-      else if (this.hiddenGenes)
+      else if (this.hiddenGenes && this.hiddenGenes.length > 0)
       {
         truncatedGenes = `...(${this.hiddenGenes.length})`;
       }
