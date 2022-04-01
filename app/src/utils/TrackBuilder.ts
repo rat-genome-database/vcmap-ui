@@ -96,7 +96,7 @@ export function createBackboneGeneTrackFromGenesData(genes: Gene[], speciesName:
   let hiddenSections: TrackSection[] = [];
 
   const topSvgYCutoff = 55; //SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight;
-  const bottomSvgYCutoff = SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight;
+  
   const threshold = syntenyThreshold * GENES_DATA_TRACK_THRESHOLD_MULTIPLIER;
   for (let index = 0; index < genes.length; index++)
   {
@@ -317,6 +317,7 @@ function splitBlocksAndGapsIntoSections(speciesSyntenyData: SpeciesSyntenyData, 
         });
         trackSections.push(gapSection);
         processedBlockSections.push(gapSection);
+        
       }
       else if (index === 0)
       {
@@ -385,6 +386,8 @@ function splitBlocksAndGapsIntoSections(speciesSyntenyData: SpeciesSyntenyData, 
         });
         trackSections.push(gapSection);
         processedBlockSections.push(gapSection);
+
+        
       }
     });
 
@@ -406,6 +409,8 @@ function splitBlocksAndGapsIntoSections(speciesSyntenyData: SpeciesSyntenyData, 
       });
       trackSections.push(blockSection);
       processedBlockSections.push(blockSection);
+
+    
     }
     else
     {
@@ -414,6 +419,7 @@ function splitBlocksAndGapsIntoSections(speciesSyntenyData: SpeciesSyntenyData, 
 
     const currBlockMap = blockGenesMap.get(lastBlockId);
     const tempProcessedTrack = new Track({ speciesName: speciesSyntenyData.speciesName, speciesMap: speciesSyntenyData.mapKey, sections: processedBlockSections, mapName: speciesSyntenyData.mapName, isSyntenyTrack: true, startingSVGY: SVGConstants.panelTitleHeight, rawSyntenyData: speciesSyntenyData, type: 'comparative' });
+
     currBlockMap.sections = tempProcessedTrack.sections;
     processedBlockSections = [];
 
@@ -423,7 +429,7 @@ function splitBlocksAndGapsIntoSections(speciesSyntenyData: SpeciesSyntenyData, 
   const speciesTrack = new Track({ speciesName: speciesSyntenyData.speciesName, speciesMap: speciesSyntenyData.mapKey, sections: gaplessBlockSections, mapName: speciesSyntenyData.mapName, isSyntenyTrack: true, startingSVGY: SVGConstants.panelTitleHeight, rawSyntenyData: speciesSyntenyData, type: 'comparative' });
 
   const geneThreshold = threshold * GENES_DATA_TRACK_THRESHOLD_MULTIPLIER;
-  const geneSections = createGeneSectionsFromSyntenyBlocks(speciesTrack.sections, geneThreshold, blockGenesMap,);
+  const geneSections = createGeneSectionsFromSyntenyBlocks(speciesTrack.sections, geneThreshold, blockGenesMap, backboneStart, backboneStop);
 
   console.debug(`Regions split into ${trackSections.length} sections`, trackSections);
   warnIfNegativeHeight(trackSections);
@@ -431,10 +437,11 @@ function splitBlocksAndGapsIntoSections(speciesSyntenyData: SpeciesSyntenyData, 
   return [trackSections, geneSections, gaplessBlockSections];
 }
 
-function createGeneSectionsFromSyntenyBlocks(syntenyBlockSections: TrackSection[], threshold: number, blockMap: Map<number, any>,)
+function createGeneSectionsFromSyntenyBlocks(syntenyBlockSections: TrackSection[], threshold: number, blockMap: Map<number, any>, backboneStart: number, backboneStop: number)
 {
   const geneSections: TrackSection[] = [];
   let hiddenSections: TrackSection[] = [];
+
 
   syntenyBlockSections.forEach((syntenyBlockSection) => {
     //first, check for genes in the block using map
@@ -466,55 +473,59 @@ function createGeneSectionsFromSyntenyBlocks(syntenyBlockSections: TrackSection[
       let blockStart: number = syntenyBlockSection.sectionStart;
       let blockStartSvgY: number = syntenyBlockSection.svgY;
 
-      
-      if (syntenyBlockSection.isInverted)
-      {
-        //find the relative to the viewport start and stop of the block, capture starting svgY
-        for (let i = 0; i < sections.length; i++)
+      /* if (syntenyBlockSections.length === 1)
+      { */
+        if (syntenyBlockSection.isInverted)
         {
-          const section = sections[i];
-          if (section.shape === 'rect' && section.chromosome == syntenyBlockSection.chromosome)
+          //find the relative to the viewport start and stop of the block, capture starting svgY
+          for (let i = 0; i < sections.length; i++)
           {
-            blockStop = section.sectionStop;
-            blockStartSvgY = section.svgY;
-            break;
-          }
-        }
-        for (let index = sections.length -1; index > 0; index--)
-        {
-          const currSection = sections[index];
-          if (currSection.shape === 'rect' && currSection.chromosome == syntenyBlockSection.chromosome)
-          {
-            blockStart = currSection.sectionStart;
-            break;
-          }
-        }
-      }
-      else
-      {
-        for (let i = 0; i < sections.length; i++)
-        {
-          const section = sections[i];
-          if (section.shape === 'rect' && section.chromosome == syntenyBlockSection.chromosome)
-          {
-            blockStart = section.sectionStart;
-            blockStartSvgY = section.svgY;
-            break;
-          }
-        }
+            const section = sections[i];
+            if (section.shape === 'rect' && section.chromosome == syntenyBlockSection.chromosome && section.isInverted)
+            {
+              blockStop = section.sectionStart;
+              blockStartSvgY = section.svgY;
 
-        for (let index = sections.length -1; index > 0; index--)
-        {
-          const currSection = sections[index];
-          if (currSection.shape === 'rect' && currSection.chromosome == syntenyBlockSection.chromosome)
+              if (blockStartSvgY < syntenyBlockSection.svgY)
+              {
+                blockStartSvgY = syntenyBlockSection.svgY;
+              }
+              break;
+            }
+          }
+          for (let index = sections.length -1; index > 0; index--)
           {
-            blockStop = currSection.sectionStop;
-            
-            break;
+            const currSection = sections[index];
+            if (currSection.shape === 'rect' && currSection.chromosome == syntenyBlockSection.chromosome && currSection.isInverted)
+            {
+              blockStart = currSection.sectionStop;
+              break;
+            }
           }
         }
-      }
-      
+        else
+        {
+          for (let i = 0; i < sections.length; i++)
+          {
+            const section = sections[i];
+            if (section.shape === 'rect' && section.chromosome == syntenyBlockSection.chromosome && (section.sectionStart <= syntenyBlockSection.sectionStart))
+            {
+              blockStart = section.sectionStart;
+              blockStartSvgY = section.svgY;
+              break;
+            }
+          }
+
+          for (let index = sections.length -1; index > 0; index--)
+          {
+            const currSection = sections[index];
+            if (currSection.shape === 'rect' && currSection.chromosome == syntenyBlockSection.chromosome)
+            {
+              blockStop = currSection.sectionStart;
+              break;
+            }
+          }
+        }
 
       const blockRatio = (blockStop - blockStart) / syntenyBlockSection.height;
 
