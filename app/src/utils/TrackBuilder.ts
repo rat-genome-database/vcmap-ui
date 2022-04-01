@@ -512,6 +512,10 @@ function createGeneSectionsFromSyntenyBlocks(syntenyBlockSections: TrackSection[
             {
               blockStart = section.sectionStart;
               blockStartSvgY = section.svgY;
+              if (blockStartSvgY < syntenyBlockSection.svgY)
+              {
+                blockStartSvgY = syntenyBlockSection.svgY;
+              }
               break;
             }
           }
