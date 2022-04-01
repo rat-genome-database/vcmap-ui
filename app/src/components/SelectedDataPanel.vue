@@ -146,6 +146,10 @@ const searchedGene = ref<Gene | null>(null);
 const geneSuggestions = ref<Gene[]>([]);
 const showSearch = ref<boolean>(false);
 
+// fraction of gene bp length to add to the window when jumping
+// to the gene after a search
+const SEARCHED_GENE_WINDOW_FACTOR = 2;
+
 const clearSelectedGenes = () => {
   store.dispatch('setSelectedGeneIds', []);
   store.dispatch('setSelectedData', null);
@@ -164,6 +168,10 @@ const searchGene = (event: {query: string}) => {
 const searchSVG = () => {
   store.dispatch('setGene', searchedGene.value);
   store.dispatch('setSelectedGeneIds', [searchedGene.value?.rgdId] || []);
+  // Only adjust window of the searched gene is on backbone
+  if (searchedGene.value && searchedGene.value.speciesName === store.state.species?.name) {
+    adjustSelectionWindow();
+  }
   showSearch.value = true;
 };
 
@@ -174,6 +182,25 @@ const goToRgd = (rgdId: number) => {
 
 const getSuggestionDisplay = (item: any) => {
   return `${item.symbol} - ${item.speciesName}`;
+};
+
+const adjustSelectionWindow = () => {
+  const selectedRegion = store.state.selectedBackboneRegion;
+  const selectionStart = selectedRegion.innerSelection?.basePairStart || selectedRegion.baseSelection.basePairStart;
+  const selectionStop = selectedRegion.innerSelection?.basePairStop || selectedRegion.baseSelection.basePairStop;
+  // If gene is outside of current window, reset the new window range
+  if (searchedGene.value && (selectionStart > searchedGene.value.start || selectionStop < searchedGene.value.stop)) {
+    // New start and stop will be +/- some fraction of the gene's length (currently 2x)
+    const geneBasePairLength = searchedGene.value.stop - searchedGene.value.start;
+    // Take the max of new start position, and selected region's original start
+    // to avoid jumping to outside of loaded region
+    const newInnerStart = Math.max(Math.floor(searchedGene.value.start 
+      - SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), selectedRegion.baseSelection.basePairStart);
+    // Take min of new stop and selected regions original stop
+    const newInnerStop = Math.min(Math.floor(searchedGene.value.stop
+      + SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), selectedRegion.baseSelection.basePairStop);
+    store.dispatch('setDetailedBasePairRange', { start: newInnerStart, stop: newInnerStop});
+  }
 };
 </script>
 
