@@ -30,7 +30,7 @@ export interface VCMapState
 
   configTab: number;
 
-  selectedData: SelectedData | null;
+  selectedData: SelectedData[] | null;
   selectedGeneIds: number[];
 
   detailedBasePairRange: BasePairRange;
@@ -119,7 +119,7 @@ export default createStore({
     configTab(state: VCMapState, tab: number) {
       state.configTab = tab;
     },
-    selectedData(state: VCMapState, selectedData: SelectedData) {
+    selectedData(state: VCMapState, selectedData: SelectedData[]) {
       state.selectedData = selectedData;
     },
     selectedGeneIds(state: VCMapState, selectedIds: number[]) {
@@ -169,7 +169,7 @@ export default createStore({
     setConfigTab(context: ActionContext<VCMapState, VCMapState>, tab: number) {
       context.commit('configTab', tab);
     },
-    setSelectedData(context: ActionContext<VCMapState, VCMapState>, selected: SelectedData) {
+    setSelectedData(context: ActionContext<VCMapState, VCMapState>, selected: SelectedData[]) {
       context.commit('selectedData', selected);
     },
     setSelectedGeneIds(context: ActionContext<VCMapState, VCMapState>, selectedIds: number[]) {
@@ -179,7 +179,7 @@ export default createStore({
       context.commit('comparativeSpecies', species);
     },
     setLoadedGenes(context: ActionContext<VCMapState, VCMapState>, loadedGenes: Gene[]) {
-      context.commit('loadedGenes', loadedGenes)
+      context.commit('loadedGenes', loadedGenes);
     },
     setIsDetailedPanelUpdating(context: ActionContext<VCMapState, VCMapState>, isUpdating: boolean) {
       context.commit('isDetailedPanelUpdating', isUpdating);

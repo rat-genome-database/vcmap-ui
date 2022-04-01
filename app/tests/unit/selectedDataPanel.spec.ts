@@ -21,7 +21,7 @@ describe('SelectedDataPanel', () => {
     const selectedData = new SelectedData(section, 'trackSection');
     const wrapper = shallowMount(SelectedDataPanel, {
       props: {
-        selectedData: selectedData
+        selectedData: [selectedData]
       }
     });
 
@@ -44,7 +44,7 @@ describe('SelectedDataPanel', () => {
     const selectedData = new SelectedData(section, 'trackSection');
     const wrapper = shallowMount(SelectedDataPanel, {
       props: {
-        selectedData: selectedData
+        selectedData: [selectedData]
       }
     });
 

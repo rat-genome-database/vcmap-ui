@@ -27,6 +27,7 @@ const mockStore = createStore({
     backboneDataTracks: [],
     configTab: 0,
     selectedData: null,
+    loadedGenes: [],
     isDetailedPanelUpdating: false,
     isOverviewPanelUpdating: false,
   },

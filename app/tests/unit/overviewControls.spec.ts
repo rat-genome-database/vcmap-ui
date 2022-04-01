@@ -29,6 +29,7 @@ describe('OverviewControls', () => {
     configTab: 0,
     selectedGeneIds: [],
     selectedData: null,
+    loadedGenes: [],
     isDetailedPanelUpdating: false,
     isOverviewPanelUpdating: false,
   };

@@ -165,7 +165,7 @@ const onMouseEnter = (event: any, section: TrackSection, type: string) => {
   // If there are selected genes, don't update the selected data panel
   if (store.state.selectedGeneIds.length === 0) {
     const selectedData = new SelectedData(section, type);
-    store.dispatch('setSelectedData', selectedData);
+    store.dispatch('setSelectedData', [selectedData]);
   }
 };
 
@@ -184,13 +184,17 @@ const onMouseLeave = (section: TrackSection, type: string) => {
 };
 
 const onClick = (event: any, section: TrackSection, type: string) => {
+  if (!section.gene?.rgdId) {
+    return;
+  }
   // If clicked section already selected, just reset the selectedGeneId state
   if (store.state.selectedGeneIds.includes(section.gene?.rgdId || -1)) {
     store.dispatch('setSelectedGeneIds', []);
     store.dispatch('setSelectedData', null);
     return;
   }
-  let geneIds: number[] = [];
+  // If shift key is held, we'll just add to the selections, otherwise, reset first
+  let geneIds: number[] = event.shiftKey ? [...store.state.selectedGeneIds] : [];
   let foundLine = false;
   props.lines?.forEach((line) => {
     if (line.backboneGene.gene?.rgdId === section.gene?.rgdId) {
@@ -207,10 +211,17 @@ const onClick = (event: any, section: TrackSection, type: string) => {
     }
   });
   if (!foundLine) {
-    store.dispatch('setSelectedGeneIds', [section.gene?.rgdId] || []);
+    geneIds.push(section.gene?.rgdId || -1);
+    store.dispatch('setSelectedGeneIds', geneIds || []);
   }
-  const selectedData = new SelectedData(section, type);
-  store.dispatch('setSelectedData', selectedData);
+  const newSelectedData = new SelectedData(section, type);
+  if (event.shiftKey) {
+    const selectedDataArray = store.state.selectedData;
+    selectedDataArray?.push(newSelectedData);
+    store.dispatch('setSelectedData', selectedDataArray);
+  } else {
+    store.dispatch('setSelectedData', [newSelectedData]);
+  }
 };
 
 const highlightSelections = (selectedGeneIds: number[], setSelectedData: boolean) => {
@@ -223,7 +234,7 @@ const highlightSelections = (selectedGeneIds: number[], setSelectedData: boolean
       // (prevents the selected data to be set to the off-backbone gene when clicking a gene with an ortholog)
       if (setSelectedData || selectedGeneIds.length === 1) {
         const selectedData = new SelectedData(section, 'geneLabel');
-        store.dispatch('setSelectedData', selectedData);
+        store.dispatch('setSelectedData', [selectedData]);
       }
     } else {
       section.isSelected = false;
