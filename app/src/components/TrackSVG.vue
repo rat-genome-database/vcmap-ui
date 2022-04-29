@@ -145,12 +145,12 @@ toRefs(props);
 
 // update highlighting if selected genes change
 watch(() => store.state.selectedGeneIds, () => {
-  highlightSelections(store.state.selectedGeneIds);
+  highlightSelections(store.state.selectedGeneIds, false);
 });
 
 // Set up highlighting on mount, to handle selection updates
 onMounted(() => {
-  highlightSelections(store.state.selectedGeneIds);
+  highlightSelections(store.state.selectedGeneIds, true);
 });
 
 const onMouseEnter = (event: any, section: TrackSection, type: string) => {
@@ -224,7 +224,7 @@ const onClick = (event: any, section: TrackSection, type: string) => {
   }
 };
 
-const highlightSelections = (selectedGeneIds: number[]) => {
+const highlightSelections = (selectedGeneIds: number[], setSelectedData: boolean) => {
   // Look through the sections and highlight based on selected genes
   props.track.sections.forEach((section) => {
     if (checkSectionForGene(section, selectedGeneIds)) {

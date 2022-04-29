@@ -29,26 +29,7 @@
     <div class="gene-data">
 
       <template v-for="dataObject in props.selectedData" :key="dataObject">
-        <template v-if="dataObject?.type === 'trackSection'">
-          <div v-if="dataObject.genomicSection.gene" data-test="gene-symbol">
-            Symbol:
-            <Button
-              class="p-button-link rgd-link"
-              @click="goToRgd(dataObject.genomicSection.gene.rgdId)"
-            >
-              <b>{{dataObject.genomicSection.gene.symbol}}</b>
-              <i class="pi pi-link external-link"></i>
-            </Button>
-          </div>
-          <div v-if="dataObject.genomicSection.gene" data-test="gene-name">Name: {{dataObject.genomicSection.gene.name ?? 'N/A'}}</div>
-          <div data-test="chromosome-name">Chromosome: {{dataObject.genomicSection.chromosome}}</div>
-          <div data-test="start-stop">Region: {{dataObject.genomicSection.regionLabel}}</div>
-          <div>Orientation: {{dataObject.genomicSection.isInverted ? '-' : '+'}}</div>
-          <div v-if="dataObject.genomicSection.chainLevel != null" data-test="level">Level: {{dataObject.genomicSection.chainLevel}}</div>
-          <Divider />
-        </template>
-
-        <template v-else-if="dataObject?.type === 'Gene'">
+        <template v-if="dataObject?.type === 'Gene'">
           <div v-if="dataObject.genomicSection">
             <div>
               Symbol:
@@ -67,24 +48,24 @@
           <Divider />
         </template>
 
-        <template v-else-if="dataObject?.type === 'geneLabel'">
-          <div v-if="dataObject.genomicSection.gene">
-            <div data-test="gene-symbol">
-              Symbol:
-              <Button
-                class="p-button-link rgd-link"
-                @click="goToRgd(dataObject.genomicSection.gene.rgdId)"
-              >
-                <b>{{dataObject.genomicSection.gene.symbol}}</b>
-                <i class="pi pi-link external-link"></i>
-              </Button>
-            </div>
-            <div data-test="gene-name">Name: {{dataObject.genomicSection.gene.name ?? 'N/A'}}</div>
-            <div data-test="chromosome-name">Chromosome: {{dataObject.genomicSection.chromosome}}</div>
-            <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(dataObject.genomicSection.gene.start)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.gene.stop)}}</div>
-            <Divider />
+        <template v-else-if="dataObject?.type === 'geneLabel' || dataObject?.type === 'trackSection'">
+          <div v-if="dataObject?.genomicSection.gene" data-test="gene-symbol">
+            Symbol:
+            <Button
+              class="p-button-link rgd-link"
+              @click="goToRgd(dataObject.genomicSection.gene.rgdId)"
+            >
+              <b>{{dataObject.genomicSection.gene.symbol}}</b>
+              <i class="pi pi-link external-link"></i>
+            </Button>
+          </div>
+          <div v-if="dataObject.genomicSection.gene" data-test="gene-name">Name: {{dataObject.genomicSection.gene.name ?? 'N/A'}}</div>
+          <div data-test="chromosome-name">Chromosome: {{dataObject.genomicSection.chromosome}}</div>
+          <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(dataObject.genomicSection.gene.start)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.gene.stop)}}</div>
+          <Divider />
 
 
+          <template v-if="dataObject.genomicSection?.combinedGenes">
             <template v-for="gene in dataObject.genomicSection?.combinedGenes" :key="gene">
               <div data-test="gene-symbol">
                 Symbol:
@@ -100,7 +81,9 @@
               <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(gene.gene.start)}} - {{Formatter.addCommasToBasePair(gene.gene.stop)}}</div>
               <Divider />
             </template>
+          </template>
 
+          <template v-if="dataObject.genomicSection?.hiddenGenes">
             <template v-for="gene in dataObject.genomicSection?.hiddenGenes" :key="gene">
               <div data-test="gene-symbol">
                 Symbol:
@@ -116,7 +99,7 @@
               <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(gene.gene.start)}} - {{Formatter.addCommasToBasePair(gene.gene.stop)}}</div>
               <Divider />
             </template>
-          </div>
+          </template>
         </template>
 
         <template v-else-if="dataObject?.type === 'orthologLine'">
@@ -233,7 +216,6 @@ const updateSelectedData = (gene: Gene) => {
   if (geneOrthologs) {
     let geneKeys = Object.keys(geneOrthologs);
     for (let i = 0; i < geneKeys.length; i++) {
-      console.log(geneOrthologs[geneKeys[i]][0]);
       let ortholog = new Gene(geneOrthologs[geneKeys[i]][0]);
       selectedData.push(new SelectedData(ortholog, 'Gene'));
     }
