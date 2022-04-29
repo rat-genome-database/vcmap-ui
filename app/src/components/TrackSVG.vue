@@ -196,11 +196,13 @@ const onClick = (event: any, section: TrackSection, type: string) => {
   // If shift key is held, we'll just add to the selections, otherwise, reset first
   let geneIds: number[] = event.shiftKey ? [...store.state.selectedGeneIds] : [];
   let foundLine = false;
+  const newSelectedData = [new SelectedData(section, type)];
   props.lines?.forEach((line) => {
     if (line.backboneGene.gene?.rgdId === section.gene?.rgdId) {
       foundLine = true;
       let sectionGeneId = section.gene?.rgdId;
       let comparativeGeneId = line.comparativeGene.gene?.rgdId;
+      newSelectedData.push(new SelectedData(line.comparativeGene.gene, 'Gene'));
       if (sectionGeneId && !geneIds.includes(sectionGeneId)) {
         geneIds.push(sectionGeneId);
       }
@@ -214,13 +216,11 @@ const onClick = (event: any, section: TrackSection, type: string) => {
     geneIds.push(section.gene?.rgdId || -1);
     store.dispatch('setSelectedGeneIds', geneIds || []);
   }
-  const newSelectedData = new SelectedData(section, type);
   if (event.shiftKey) {
-    const selectedDataArray = store.state.selectedData;
-    selectedDataArray?.push(newSelectedData);
+    const selectedDataArray = [...store.state.selectedData, ...newSelectedData];
     store.dispatch('setSelectedData', selectedDataArray);
   } else {
-    store.dispatch('setSelectedData', [newSelectedData]);
+    store.dispatch('setSelectedData', newSelectedData);
   }
 };
 

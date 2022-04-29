@@ -48,6 +48,25 @@
           <Divider />
         </template>
 
+        <template v-else-if="dataObject?.type === 'Gene'">
+          <div v-if="dataObject.genomicSection">
+            <div>
+              Symbol:
+              <Button
+                class="p-button-link rgd-link"
+                @click="goToRgd(dataObject.genomicSection.rgdId)"
+              >
+                <b>{{dataObject.genomicSection.symbol}}</b>
+                <i class="pi pi-link external-link"></i>
+              </Button>
+            </div>
+          </div>
+          <div data-test="gene-name">Name: {{dataObject.genomicSection.name ?? 'N/A'}}</div>
+          <div data-test="chromosome-name">Chromosome: {{dataObject.genomicSection.chromosome}}</div>
+          <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(dataObject.genomicSection.start)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.stop)}}</div>
+          <Divider />
+        </template>
+
         <template v-else-if="dataObject?.type === 'geneLabel'">
           <div v-if="dataObject.genomicSection.gene">
             <div data-test="gene-symbol">
@@ -163,7 +182,7 @@ const searchGene = (event: {query: string}) => {
 
 const searchSVG = (event: any) => {
   store.dispatch('setGene', event.value);
-  const geneOrthologIds = getGeneOrthologIds(event.value);
+  const geneOrthologIds = getGeneOrthologIds(event.value) || [];
   const rgdIds: number[] = [event.value?.rgdId] || [];
   store.dispatch('setSelectedGeneIds', [...rgdIds, ...geneOrthologIds] || []);
   updateSelectedData(event.value);
@@ -178,7 +197,7 @@ const selectAndSearchSVG = (event: any) => {
   // If "Enter" is pressed, just search the first gene
   if (event.key === "Enter") {
     searchedGene.value = geneSuggestions.value[0];
-    const geneOrthologIds = getGeneOrthologIds(searchedGene.value);
+    const geneOrthologIds = getGeneOrthologIds(searchedGene.value) || [];
     const rgdIds: number[] = [searchedGene.value?.rgdId] || [];
     store.dispatch('setGene', searchedGene.value);
     store.dispatch('setSelectedGeneIds', [...geneOrthologIds, ...rgdIds] || []);
@@ -210,11 +229,16 @@ const getGeneOrthologIds = (gene: Gene) => {
 
 const updateSelectedData = (gene: Gene) => {
   const geneOrthologs = store.state.selectedBackboneRegion.orthologData.get(gene.symbol);
-
-  console.log(geneOrthologs);
-  const selectedData = new SelectedData(gene, 'Gene');
-  console.log(selectedData);
-  store.dispatch('setSelectedData', [gene]);
+  const selectedData = [new SelectedData(gene, 'Gene')];
+  if (geneOrthologs) {
+    let geneKeys = Object.keys(geneOrthologs);
+    for (let i = 0; i < geneKeys.length; i++) {
+      console.log(geneOrthologs[geneKeys[i]][0]);
+      let ortholog = new Gene(geneOrthologs[geneKeys[i]][0]);
+      selectedData.push(new SelectedData(ortholog, 'Gene'));
+    }
+  }
+  store.dispatch('setSelectedData', selectedData);
 }
 
 const adjustSelectionWindow = () => {
