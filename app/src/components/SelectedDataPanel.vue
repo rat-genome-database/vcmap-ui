@@ -28,24 +28,6 @@
     </template>
     <div class="gene-data">
 
-      <template v-if="searchedGene && showSearch">
-        <div class="searched-gene-divider">Searched Gene</div>
-        <div>
-          Symbol:
-          <Button
-            class="p-button-link rgd-link"
-            @click="goToRgd(searchedGene?.rgdId || -1)"
-          >
-            <b>{{searchedGene.symbol}}</b>
-            <i class="pi pi-link external-link"></i>
-          </Button>
-        </div>
-        <div>Name: {{searchedGene.name}}</div>
-        <div>Chromosome: {{searchedGene.chromosome}}</div>
-        <div>Region: {{Formatter.addCommasToBasePair(searchedGene.start)}} - {{Formatter.addCommasToBasePair(searchedGene.stop)}}</div>
-        <Divider><b>Highlighted Sections</b></Divider>
-      </template>
-
       <template v-for="dataObject in props.selectedData" :key="dataObject">
         <template v-if="dataObject?.type === 'trackSection'">
           <div v-if="dataObject.genomicSection.gene" data-test="gene-symbol">
@@ -85,6 +67,22 @@
 
 
             <template v-for="gene in dataObject.genomicSection?.combinedGenes" :key="gene">
+              <div data-test="gene-symbol">
+                Symbol:
+                <Button
+                  class="p-button-link rgd-link"
+                  @click="goToRgd(gene.gene.rgdId)"
+                >
+                  <b>{{gene.gene.symbol}}</b>
+                  <i class="pi pi-link external-link"></i>
+                </Button></div>
+              <div data-test="gene-name"> Name: {{gene.gene.name ?? 'N/A'}}</div>
+              <div data-test="chromosome-name">Chromosome: {{gene.gene.chromosome}}</div>
+              <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(gene.gene.start)}} - {{Formatter.addCommasToBasePair(gene.gene.stop)}}</div>
+              <Divider />
+            </template>
+
+            <template v-for="gene in dataObject.genomicSection?.hiddenGenes" :key="gene">
               <div data-test="gene-symbol">
                 Symbol:
                 <Button
@@ -165,7 +163,10 @@ const searchGene = (event: {query: string}) => {
 
 const searchSVG = (event: any) => {
   store.dispatch('setGene', event.value);
-  store.dispatch('setSelectedGeneIds', [event.value?.rgdId] || []);
+  const geneOrthologIds = getGeneOrthologIds(event.value);
+  const rgdIds: number[] = [event.value?.rgdId] || [];
+  store.dispatch('setSelectedGeneIds', [...rgdIds, ...geneOrthologIds] || []);
+  updateSelectedData(event.value);
   // Only adjust window of the searched gene is on backbone
   if (event.value && event.value.speciesName === store.state.species?.name) {
     adjustSelectionWindow();
@@ -177,8 +178,11 @@ const selectAndSearchSVG = (event: any) => {
   // If "Enter" is pressed, just search the first gene
   if (event.key === "Enter") {
     searchedGene.value = geneSuggestions.value[0];
+    const geneOrthologIds = getGeneOrthologIds(searchedGene.value);
+    const rgdIds: number[] = [searchedGene.value?.rgdId] || [];
     store.dispatch('setGene', searchedGene.value);
-    store.dispatch('setSelectedGeneIds', [searchedGene.value?.rgdId] || []);
+    store.dispatch('setSelectedGeneIds', [...geneOrthologIds, ...rgdIds] || []);
+    updateSelectedData(searchedGene.value);
     if (searchedGene.value && searchedGene.value.speciesName === store.state.species?.name) {
       adjustSelectionWindow();
     }
@@ -194,6 +198,24 @@ const goToRgd = (rgdId: number) => {
 const getSuggestionDisplay = (item: any) => {
   return `${item.symbol} - ${item.speciesName}`;
 };
+
+const getGeneOrthologIds = (gene: Gene) => {
+  const geneOrthologs = store.state.selectedBackboneRegion.orthologData.get(gene.symbol);
+  let geneOrthologIds: number[];
+  if (geneOrthologs) {
+    geneOrthologIds = Object.keys(geneOrthologs).map((geneKey) => geneOrthologs[geneKey][0].geneRgdId);
+  }
+  return geneOrthologIds;
+};
+
+const updateSelectedData = (gene: Gene) => {
+  const geneOrthologs = store.state.selectedBackboneRegion.orthologData.get(gene.symbol);
+
+  console.log(geneOrthologs);
+  const selectedData = new SelectedData(gene, 'Gene');
+  console.log(selectedData);
+  store.dispatch('setSelectedData', [gene]);
+}
 
 const adjustSelectionWindow = () => {
   const selectedRegion = store.state.selectedBackboneRegion;

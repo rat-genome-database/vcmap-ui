@@ -233,7 +233,7 @@ const highlightSelections = (selectedGeneIds: number[], setSelectedData: boolean
       // we'll always set the selected data if there's only 1 selectedGeneId
       // (prevents the selected data to be set to the off-backbone gene when clicking a gene with an ortholog)
       if (setSelectedData || selectedGeneIds.length === 1) {
-        const selectedData = new SelectedData(section, 'geneLabel');
+        const selectedData = new SelectedData(section, 'trackSection');
         store.dispatch('setSelectedData', [selectedData]);
       }
     } else {
