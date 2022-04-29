@@ -21,6 +21,7 @@
             v-model="searchedGene"
             :suggestions="geneSuggestions"
             @complete="searchGene($event)"
+            @item-select="searchSVG($event)"
             :field="getSuggestionDisplay"
             :minLength="3"
             placeholder="Search loaded genes..."
@@ -165,11 +166,11 @@ const searchGene = (event: {query: string}) => {
   geneSuggestions.value = matches;
 };
 
-const searchSVG = () => {
-  store.dispatch('setGene', searchedGene.value);
-  store.dispatch('setSelectedGeneIds', [searchedGene.value?.rgdId] || []);
+const searchSVG = (event: any) => {
+  store.dispatch('setGene', event.value);
+  store.dispatch('setSelectedGeneIds', [event.value?.rgdId] || []);
   // Only adjust window of the searched gene is on backbone
-  if (searchedGene.value && searchedGene.value.speciesName === store.state.species?.name) {
+  if (event.value && event.value.speciesName === store.state.species?.name) {
     adjustSelectionWindow();
   }
   showSearch.value = true;
