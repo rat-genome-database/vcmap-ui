@@ -18,6 +18,7 @@
             :suggestions="geneSuggestions"
             @complete="searchGene($event)"
             @item-select="searchSVG($event)"
+            @keydown="selectAndSearchSVG($event)"
             :field="getSuggestionDisplay"
             :minLength="3"
             placeholder="Search loaded genes..."
@@ -170,6 +171,19 @@ const searchSVG = (event: any) => {
     adjustSelectionWindow();
   }
   showSearch.value = true;
+};
+
+const selectAndSearchSVG = (event: any) => {
+  // If "Enter" is pressed, just search the first gene
+  if (event.key === "Enter") {
+    searchedGene.value = geneSuggestions.value[0];
+    store.dispatch('setGene', searchedGene.value);
+    store.dispatch('setSelectedGeneIds', [searchedGene.value?.rgdId] || []);
+    if (searchedGene.value && searchedGene.value.speciesName === store.state.species?.name) {
+      adjustSelectionWindow();
+    }
+    showSearch.value = true;
+  }
 };
 
 const goToRgd = (rgdId: number) => {
