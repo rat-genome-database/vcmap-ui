@@ -13,10 +13,6 @@
           />
         </div>
         <div class="panel-header-item">
-          <Button
-            icon="pi pi-search"
-            @click="searchSVG()"
-          />
           <AutoComplete
             v-model="searchedGene"
             :suggestions="geneSuggestions"
