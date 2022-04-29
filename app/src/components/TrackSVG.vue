@@ -145,12 +145,12 @@ toRefs(props);
 
 // update highlighting if selected genes change
 watch(() => store.state.selectedGeneIds, () => {
-  highlightSelections(store.state.selectedGeneIds, false);
+  highlightSelections(store.state.selectedGeneIds);
 });
 
 // Set up highlighting on mount, to handle selection updates
 onMounted(() => {
-  highlightSelections(store.state.selectedGeneIds, true);
+  highlightSelections(store.state.selectedGeneIds);
 });
 
 const onMouseEnter = (event: any, section: TrackSection, type: string) => {
@@ -224,18 +224,11 @@ const onClick = (event: any, section: TrackSection, type: string) => {
   }
 };
 
-const highlightSelections = (selectedGeneIds: number[], setSelectedData: boolean) => {
+const highlightSelections = (selectedGeneIds: number[]) => {
   // Look through the sections and highlight based on selected genes
   props.track.sections.forEach((section) => {
     if (checkSectionForGene(section, selectedGeneIds)) {
       section.isSelected = true;
-      // FIXME: this is a bit hacky, but to get the search to work and update the search panel,
-      // we'll always set the selected data if there's only 1 selectedGeneId
-      // (prevents the selected data to be set to the off-backbone gene when clicking a gene with an ortholog)
-      if (setSelectedData || selectedGeneIds.length === 1) {
-        const selectedData = new SelectedData(section, 'trackSection');
-        store.dispatch('setSelectedData', [selectedData]);
-      }
     } else {
       section.isSelected = false;
     }
