@@ -195,6 +195,12 @@ const onClick = (event: any, section: TrackSection, type: string) => {
   }
   // If shift key is held, we'll just add to the selections, otherwise, reset first
   let geneIds: number[] = event.shiftKey ? [...store.state.selectedGeneIds] : [];
+  // If this is a geneLabel, we're going to set all combined genes as "selected"
+  if (type === 'geneLabel') {
+    if (section.combinedGenes && section.combinedGenes.length > 0) {
+      section.combinedGenes.forEach((section) => geneIds.push(section.gene.rgdId));
+    }
+  }
   let foundLine = false;
   const newSelectedData = [new SelectedData(section, type)];
   props.lines?.forEach((line) => {
