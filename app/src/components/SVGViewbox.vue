@@ -352,8 +352,10 @@ const generateOrthologLines = (orthologData: any, comparativeMaps: Number[]) => 
         const orthologKeys = Object.keys(orthologInfo);
         orthologKeys.forEach((key) => {
           const orthologGene = new Gene({...orthologInfo[key][0], key: orthologInfo[key][0].mapKey});
-          selectedIds.push(orthologGene.rgdId);
-          selectedData.push(new SelectedData(orthologGene, 'Gene'));
+          if (!selectedIds.includes(orthologGene.rgdId)) {
+            selectedIds.push(orthologGene.rgdId);
+            selectedData.push(new SelectedData(orthologGene, 'Gene'));
+          }
         });
         store.dispatch('setSelectedGeneIds', selectedIds);
         store.dispatch('setSelectedData', selectedData);

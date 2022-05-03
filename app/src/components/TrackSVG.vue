@@ -258,13 +258,6 @@ const checkSectionForGene = (section: TrackSection, selectedGeneIds: number[]) =
       }
     }
   }
-  if (section.combinedGenes) {
-    for (let i = 0; i < section.combinedGenes.length; i++) {
-      if(selectedGeneIds.includes(section.combinedGenes[i].gene?.rgdId || -1)) {
-        return true;
-      }
-    }
-  }
 
   return false;
 }

@@ -60,8 +60,8 @@ export default class TrackSection
     this.chromosome = params.chromosome;
     this.gene = params.gene;
     this.trackColor = params.color ?? '';
-    this.hiddenGenes = params.hiddenGenes;
-    this.combinedGenes = params.hiddenGenes;
+    this.hiddenGenes = [...params.hiddenGenes || []];
+    this.combinedGenes = [...params.hiddenGenes || []];
     this.isComparativeGene = params.isComparativeGene;
     this.shape = params.shape;
     this._backboneCutoff = params.cutoff;

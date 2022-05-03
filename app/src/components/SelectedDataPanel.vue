@@ -49,41 +49,39 @@
         </template>
 
         <template v-else-if="dataObject?.type === 'geneLabel' || dataObject?.type === 'trackSection'">
-          <template v-if="(dataObject.geneSet && dataObject.geneSet.size > 0)">
-            <template v-for="gene of dataObject?.geneSet" :key="gene">
+          <div v-if="dataObject?.genomicSection.gene" data-test="gene-symbol">
+            Symbol:
+            <Button
+              class="p-button-link rgd-link"
+              @click="goToRgd(dataObject.genomicSection.gene.rgdId)"
+            >
+              <b>{{dataObject.genomicSection.gene.symbol}}</b>
+              <i class="pi pi-link external-link"></i>
+            </Button>
+          </div>
+          <div v-if="dataObject.genomicSection.gene" data-test="gene-name">Name: {{dataObject.genomicSection.gene.name ?? 'N/A'}}</div>
+          <div data-test="chromosome-name">Chromosome: {{dataObject.genomicSection.chromosome}}</div>
+          <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(dataObject.genomicSection.sectionStart)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.sectionStop)}}</div>
+          <div>Orientation: {{dataObject.genomicSection.isInverted ? '-' : '+'}}</div>
+          <div v-if="dataObject.genomicSection.chainLevel != null" data-test="level">Level: {{dataObject.genomicSection.chainLevel}}</div>
+          <Divider />
+
+          <template v-if="(dataObject.genomicSection.combinedGenes && dataObject.genomicSection.combinedGenes.length > 0)">
+            <template v-for="section in dataObject?.genomicSection.combinedGenes" :key="section">
               <div data-test="gene-symbol">
                 Symbol:
                 <Button
                   class="p-button-link rgd-link"
-                  @click="goToRgd(gene.rgdId)"
+                  @click="goToRgd(section.gene.rgdId)"
                 >
-                  <b>{{gene.symbol}}</b>
+                <b>{{section.gene.symbol}}</b>
                   <i class="pi pi-link external-link"></i>
                 </Button></div>
-              <div data-test="gene-name"> Name: {{gene.name ?? 'N/A'}}</div>
-              <div data-test="chromosome-name">Chromosome: {{gene.chromosome}}</div>
-              <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(gene.start)}} - {{Formatter.addCommasToBasePair(gene.stop)}}</div>
+              <div data-test="gene-name"> Name: {{section.gene.name ?? 'N/A'}}</div>
+              <div data-test="chromosome-name">Chromosome: {{section.gene.chromosome}}</div>
+              <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(section.gene.start)}} - {{Formatter.addCommasToBasePair(section.gene.stop)}}</div>
               <Divider />
             </template>
-          </template>
-
-          <template v-else>
-            <div v-if="dataObject?.genomicSection.gene" data-test="gene-symbol">
-              Symbol:
-              <Button
-                class="p-button-link rgd-link"
-                @click="goToRgd(dataObject.genomicSection.gene.rgdId)"
-              >
-                <b>{{dataObject.genomicSection.gene.symbol}}</b>
-                <i class="pi pi-link external-link"></i>
-              </Button>
-            </div>
-            <div v-if="dataObject.genomicSection.gene" data-test="gene-name">Name: {{dataObject.genomicSection.gene.name ?? 'N/A'}}</div>
-            <div data-test="chromosome-name">Chromosome: {{dataObject.genomicSection.chromosome}}</div>
-            <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(dataObject.genomicSection.sectionStart)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.sectionStop)}}</div>
-            <div>Orientation: {{dataObject.genomicSection.isInverted ? '-' : '+'}}</div>
-            <div v-if="dataObject.genomicSection.chainLevel != null" data-test="level">Level: {{dataObject.genomicSection.chainLevel}}</div>
-            <Divider />
           </template>
         </template>
 
@@ -206,7 +204,7 @@ const updateSelectedData = (gene: Gene) => {
     }
   }
   store.dispatch('setSelectedData', selectedData);
-}
+};
 
 const adjustSelectionWindow = () => {
   const selectedRegion = store.state.selectedBackboneRegion;
