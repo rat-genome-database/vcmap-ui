@@ -49,56 +49,41 @@
         </template>
 
         <template v-else-if="dataObject?.type === 'geneLabel' || dataObject?.type === 'trackSection'">
-          <div v-if="dataObject?.genomicSection.gene" data-test="gene-symbol">
-            Symbol:
-            <Button
-              class="p-button-link rgd-link"
-              @click="goToRgd(dataObject.genomicSection.gene.rgdId)"
-            >
-              <b>{{dataObject.genomicSection.gene.symbol}}</b>
-              <i class="pi pi-link external-link"></i>
-            </Button>
-          </div>
-          <div v-if="dataObject.genomicSection.gene" data-test="gene-name">Name: {{dataObject.genomicSection.gene.name ?? 'N/A'}}</div>
-          <div data-test="chromosome-name">Chromosome: {{dataObject.genomicSection.chromosome}}</div>
-          <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(dataObject.genomicSection.gene.start)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.gene.stop)}}</div>
-          <Divider />
-
-
-          <template v-if="dataObject.genomicSection?.combinedGenes">
-            <template v-for="gene in dataObject.genomicSection?.combinedGenes" :key="gene">
+          <template v-if="(dataObject.geneSet && dataObject.geneSet.size > 0)">
+            <template v-for="gene of dataObject?.geneSet" :key="gene">
               <div data-test="gene-symbol">
                 Symbol:
                 <Button
                   class="p-button-link rgd-link"
-                  @click="goToRgd(gene.gene.rgdId)"
+                  @click="goToRgd(gene.rgdId)"
                 >
-                  <b>{{gene.gene.symbol}}</b>
+                  <b>{{gene.symbol}}</b>
                   <i class="pi pi-link external-link"></i>
                 </Button></div>
-              <div data-test="gene-name"> Name: {{gene.gene.name ?? 'N/A'}}</div>
-              <div data-test="chromosome-name">Chromosome: {{gene.gene.chromosome}}</div>
-              <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(gene.gene.start)}} - {{Formatter.addCommasToBasePair(gene.gene.stop)}}</div>
+              <div data-test="gene-name"> Name: {{gene.name ?? 'N/A'}}</div>
+              <div data-test="chromosome-name">Chromosome: {{gene.chromosome}}</div>
+              <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(gene.start)}} - {{Formatter.addCommasToBasePair(gene.stop)}}</div>
               <Divider />
             </template>
           </template>
 
-          <template v-if="dataObject.genomicSection?.hiddenGenes">
-            <template v-for="gene in dataObject.genomicSection?.hiddenGenes" :key="gene">
-              <div data-test="gene-symbol">
-                Symbol:
-                <Button
-                  class="p-button-link rgd-link"
-                  @click="goToRgd(gene.gene.rgdId)"
-                >
-                  <b>{{gene.gene.symbol}}</b>
-                  <i class="pi pi-link external-link"></i>
-                </Button></div>
-              <div data-test="gene-name"> Name: {{gene.gene.name ?? 'N/A'}}</div>
-              <div data-test="chromosome-name">Chromosome: {{gene.gene.chromosome}}</div>
-              <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(gene.gene.start)}} - {{Formatter.addCommasToBasePair(gene.gene.stop)}}</div>
-              <Divider />
-            </template>
+          <template v-else>
+            <div v-if="dataObject?.genomicSection.gene" data-test="gene-symbol">
+              Symbol:
+              <Button
+                class="p-button-link rgd-link"
+                @click="goToRgd(dataObject.genomicSection.gene.rgdId)"
+              >
+                <b>{{dataObject.genomicSection.gene.symbol}}</b>
+                <i class="pi pi-link external-link"></i>
+              </Button>
+            </div>
+            <div v-if="dataObject.genomicSection.gene" data-test="gene-name">Name: {{dataObject.genomicSection.gene.name ?? 'N/A'}}</div>
+            <div data-test="chromosome-name">Chromosome: {{dataObject.genomicSection.chromosome}}</div>
+            <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(dataObject.genomicSection.sectionStart)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.sectionStop)}}</div>
+            <div>Orientation: {{dataObject.genomicSection.isInverted ? '-' : '+'}}</div>
+            <div v-if="dataObject.genomicSection.chainLevel != null" data-test="level">Level: {{dataObject.genomicSection.chainLevel}}</div>
+            <Divider />
           </template>
         </template>
 

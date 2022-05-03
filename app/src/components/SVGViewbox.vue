@@ -349,7 +349,7 @@ const generateOrthologLines = (orthologData: any, comparativeMaps: Number[]) => 
       {
         const selectedIds: number[] = store.state.selectedGeneIds;
         const selectedData: SelectedData[] = store.state.selectedData;
-        const orthologKeys = Object.keys(orthologInfo)
+        const orthologKeys = Object.keys(orthologInfo);
         orthologKeys.forEach((key) => {
           const orthologGene = new Gene({...orthologInfo[key][0], key: orthologInfo[key][0].mapKey});
           selectedIds.push(orthologGene.rgdId);
