@@ -13,7 +13,7 @@
   <template v-for="(label, index) in track.labels" :key="index">
     <text v-if="showStartStop && label.isVisible" 
       data-test="bp-label"
-      class="label small" 
+      class="label small"
       :x="posX + width" 
       :y="label.svgY + LABEL_Y_OFFSET">
       - {{label.text}}
@@ -26,8 +26,8 @@
       @mouseenter="onMouseEnter($event, label.section, 'geneLabel')"
       @mouseleave="onMouseLeave(label.section, 'geneLabel')"
       @click="onClick($event, label.section, 'geneLabel')"
-      class="label small" 
-      :x="posX + width" 
+      :class="(label.section.isSelected ? 'bold-label' : 'label small')"
+      :x="posX + width"
       :y="label.svgY + LABEL_Y_OFFSET">
       - {{label.text}}
     </text>
@@ -280,6 +280,17 @@ const getSectionFill = (section: TrackSection) => {
 .label.small
 {
   font: normal 8px sans-serif;
+
+  &:hover
+  {
+    cursor: pointer;
+  }
+}
+
+.bold-label
+{
+  font: 8px sans-serif;
+  font-weight: bold;
 
   &:hover
   {
