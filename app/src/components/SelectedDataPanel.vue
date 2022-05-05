@@ -24,6 +24,11 @@
             placeholder="Search loaded genes..."
           />
         </div>
+        <template v-if="showResultsNumber">
+          <div class="panel-header-item">
+            {{numberOfResults}} Selected Genes
+          </div>
+        </template>
       </div>
     </template>
     <div class="gene-data">
@@ -133,7 +138,7 @@
 import SelectedData from '@/models/SelectedData';
 import Gene from '@/models/Gene';
 import { Formatter } from '@/utils/Formatter';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 
@@ -148,22 +153,42 @@ const props = defineProps<Props>();
 
 const searchedGene = ref<Gene | null>(null);
 const geneSuggestions = ref<Gene[]>([]);
-const showSearch = ref<boolean>(false);
+const showResultsNumber = ref<boolean>(false);
+const numberOfResults = ref<number>(0);
 
 // fraction of gene bp length to add to the window when jumping
 // to the gene after a search
 const SEARCHED_GENE_WINDOW_FACTOR = 2;
+
+watch(() => props.selectedData, () => {
+  showResultsNumber.value = false;
+  numberOfResults.value = 0;
+  if (props.selectedData) {
+    props.selectedData.forEach((dataObject) => {
+      if (dataObject.type === 'trackSection' || dataObject.type === 'Gene' || dataObject.type === 'geneLabel') {
+        showResultsNumber.value = true;
+        if (dataObject.type === 'trackSection' && dataObject.genomicSection.gene) {
+          numberOfResults.value += (dataObject.genomicSection.hiddenGenes.length + 1);
+        }
+        if (dataObject.type === 'geneLabel') {
+          numberOfResults.value += (dataObject.genomicSection.combinedGenes.length + 1);
+        }
+        if (dataObject.type === 'Gene') {
+          numberOfResults.value += 1;
+        }
+      }
+    });
+  }
+});
 
 const clearSelectedGenes = () => {
   store.dispatch('setSelectedGeneIds', []);
   store.dispatch('setSelectedData', null);
   store.dispatch('setGene', null);
   searchedGene.value = null;
-  showSearch.value = false;
 };
 
 const searchGene = (event: {query: string}) => {
-  showSearch.value = false;
   const loadedGenes = store.state.loadedGenes;
   let matches: Gene[] = loadedGenes.filter((gene) => gene.symbol.toLowerCase().includes(event.query.toLowerCase()));
   geneSuggestions.value = matches;
@@ -179,7 +204,6 @@ const searchSVG = (event: any) => {
   if (event.value && event.value.speciesName === store.state.species?.name) {
     adjustSelectionWindow();
   }
-  showSearch.value = true;
 };
 
 const selectAndSearchSVG = (event: any) => {
@@ -194,7 +218,6 @@ const selectAndSearchSVG = (event: any) => {
     if (searchedGene.value && searchedGene.value.speciesName === store.state.species?.name) {
       adjustSelectionWindow();
     }
-    showSearch.value = true;
   }
 };
 
