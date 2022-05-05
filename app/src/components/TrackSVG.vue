@@ -13,7 +13,7 @@
   <template v-for="(label, index) in track.labels" :key="index">
     <text v-if="showStartStop && label.isVisible" 
       data-test="bp-label"
-      class="label small" 
+      class="label small"
       :x="posX + width" 
       :y="label.svgY + LABEL_Y_OFFSET">
       - {{label.text}}
@@ -26,8 +26,8 @@
       @mouseenter="onMouseEnter($event, label.section, 'geneLabel')"
       @mouseleave="onMouseLeave(label.section, 'geneLabel')"
       @click="onClick($event, label.section, 'geneLabel')"
-      class="label small" 
-      :x="posX + width" 
+      :class="(label.section.isSelected ? 'bold-label' : 'label small')"
+      :x="posX + width"
       :y="label.svgY + LABEL_Y_OFFSET">
       - {{label.text}}
     </text>
@@ -195,12 +195,20 @@ const onClick = (event: any, section: TrackSection, type: string) => {
   }
   // If shift key is held, we'll just add to the selections, otherwise, reset first
   let geneIds: number[] = event.shiftKey ? [...store.state.selectedGeneIds] : [];
+  // If this is a geneLabel, we're going to set all combined genes as "selected"
+  if (type === 'geneLabel') {
+    if (section.combinedGenes && section.combinedGenes.length > 0) {
+      section.combinedGenes.forEach((section) => geneIds.push(section.gene.rgdId));
+    }
+  }
   let foundLine = false;
+  const newSelectedData = [new SelectedData(section, type)];
   props.lines?.forEach((line) => {
     if (line.backboneGene.gene?.rgdId === section.gene?.rgdId) {
       foundLine = true;
       let sectionGeneId = section.gene?.rgdId;
       let comparativeGeneId = line.comparativeGene.gene?.rgdId;
+      newSelectedData.push(new SelectedData(line.comparativeGene.gene, 'Gene'));
       if (sectionGeneId && !geneIds.includes(sectionGeneId)) {
         geneIds.push(sectionGeneId);
       }
@@ -214,13 +222,11 @@ const onClick = (event: any, section: TrackSection, type: string) => {
     geneIds.push(section.gene?.rgdId || -1);
     store.dispatch('setSelectedGeneIds', geneIds || []);
   }
-  const newSelectedData = new SelectedData(section, type);
   if (event.shiftKey) {
-    const selectedDataArray = store.state.selectedData;
-    selectedDataArray?.push(newSelectedData);
+    const selectedDataArray = [...store.state.selectedData, ...newSelectedData];
     store.dispatch('setSelectedData', selectedDataArray);
   } else {
-    store.dispatch('setSelectedData', [newSelectedData]);
+    store.dispatch('setSelectedData', newSelectedData);
   }
 };
 
@@ -229,13 +235,6 @@ const highlightSelections = (selectedGeneIds: number[], setSelectedData: boolean
   props.track.sections.forEach((section) => {
     if (checkSectionForGene(section, selectedGeneIds)) {
       section.isSelected = true;
-      // FIXME: this is a bit hacky, but to get the search to work and update the search panel,
-      // we'll always set the selected data if there's only 1 selectedGeneId
-      // (prevents the selected data to be set to the off-backbone gene when clicking a gene with an ortholog)
-      if (setSelectedData || selectedGeneIds.length === 1) {
-        const selectedData = new SelectedData(section, 'geneLabel');
-        store.dispatch('setSelectedData', [selectedData]);
-      }
     } else {
       section.isSelected = false;
     }
@@ -265,13 +264,6 @@ const checkSectionForGene = (section: TrackSection, selectedGeneIds: number[]) =
       }
     }
   }
-  if (section.combinedGenes) {
-    for (let i = 0; i < section.combinedGenes.length; i++) {
-      if(selectedGeneIds.includes(section.combinedGenes[i].gene?.rgdId || -1)) {
-        return true;
-      }
-    }
-  }
 
   return false;
 }
@@ -288,6 +280,17 @@ const getSectionFill = (section: TrackSection) => {
 .label.small
 {
   font: normal 8px sans-serif;
+
+  &:hover
+  {
+    cursor: pointer;
+  }
+}
+
+.bold-label
+{
+  font: 8px sans-serif;
+  font-weight: bold;
 
   &:hover
   {

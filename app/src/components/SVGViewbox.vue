@@ -79,6 +79,7 @@ import TrackSet from '@/models/TrackSet';
 import OrthologLine from '@/models/OrthologLine';
 import Gene from '@/models/Gene';
 import { SpeciesSyntenyData } from '@/models/SyntenicRegion';
+import SelectedData from '@/models/SelectedData';
 import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
 import { key } from '@/store';
 import { backboneDetailedError, backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError } from '@/utils/VCMapErrors';
@@ -117,8 +118,14 @@ async function attachToProgressLoader(storeLoadingActionName: string, func: () =
 }
 
 onMounted(async () => {
-  // Clear any prior selections
-  store.dispatch('setSelectedData', null);
+  // Clear any prior selections or set as the searched gene
+  const gene = store.state.gene;
+  if (gene) {
+    let selectedData = new SelectedData(gene, 'Gene');
+    store.dispatch('setSelectedData', [selectedData]);
+  } else {
+    store.dispatch('setSelectedData', null);
+  }
 
   await attachToProgressLoader('setIsOverviewPanelUpdating', updateOverviewPanel);
   checkSyntenyResultsOnComparativeSpecies(comparativeOverviewTracks);
@@ -336,6 +343,23 @@ const generateOrthologLines = (orthologData: any, comparativeMaps: Number[]) => 
     if (orthologInfo)
     {
       possibleOrthologs.push({'backboneGene': backboneGene, 'orthologs': orthologInfo});
+
+      // if this is a selected gene, set orthologs as selected and for data panel
+      if (store.state.selectedGeneIds.includes(backboneGene.gene.rgdId))
+      {
+        const selectedIds: number[] = store.state.selectedGeneIds;
+        const selectedData: SelectedData[] = store.state.selectedData;
+        const orthologKeys = Object.keys(orthologInfo);
+        orthologKeys.forEach((key) => {
+          const orthologGene = new Gene({...orthologInfo[key][0], key: orthologInfo[key][0].mapKey});
+          if (!selectedIds.includes(orthologGene.rgdId)) {
+            selectedIds.push(orthologGene.rgdId);
+            selectedData.push(new SelectedData(orthologGene, 'Gene'));
+          }
+        });
+        store.dispatch('setSelectedGeneIds', selectedIds);
+        store.dispatch('setSelectedData', selectedData);
+      }
     }
   });
   
