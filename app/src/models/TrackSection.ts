@@ -22,6 +22,7 @@ interface TrackSectionParams
   isComparativeGene?: boolean; // optional - whether this section is a comparative section
   chainLevel?: number;
   isInverted?: boolean;
+  isVisible?: boolean;
   blockId?: number;  //used to identify the block in the synteny track when processing genes
 }
 
@@ -44,12 +45,13 @@ export default class TrackSection
   svgY: number = 0;
   adjustedHeight?: number = 0;
   isInverted: boolean = false;
+  isVisible: boolean = true;
   _offsetCount: number = 0;
   blockId?: number;
   _backboneCutoff: number = 0;
-  private _BPToHeightRatio: number = 0;
-   _displayBackboneStart: number = 0; // the displayed starting base pair position on the backbone that this section lines up with
-   _displayBackboneStop: number = 0; // the displayed ending base pair position on the backbone that this section lines up with
+  _BPToHeightRatio: number = 0;
+  _displayBackboneStart: number = 0; // the displayed starting base pair position on the backbone that this section lines up with
+  _displayBackboneStop: number = 0; // the displayed ending base pair position on the backbone that this section lines up with
 
   constructor(params: TrackSectionParams)
   {
@@ -69,6 +71,7 @@ export default class TrackSection
     this._BPToHeightRatio = params.basePairToHeightRatio;
     this.chainLevel = params.chainLevel;
     this.isInverted = params.isInverted ?? false;
+    this.isVisible = params.isVisible ?? true;
     this.blockId = params.blockId;
     params.svgY ? this.svgY = params.svgY : this.svgY = 0;
 
@@ -154,6 +157,10 @@ export default class TrackSection
   // Getter for the height of this section in SVG units
   public get height()
   {
+    if (!this.isVisible)
+    {
+      return 0;
+    }
     let height = (this._displayBackboneStop - this._displayBackboneStart) / this._BPToHeightRatio;
     if (this.adjustedHeight)
     {
@@ -207,5 +214,14 @@ export default class TrackSection
     // above the backbone region).
     this._displayBackboneStop = (this.backboneStop > this._backboneCutoff) ? this._backboneCutoff : this.backboneStop;
     this._displayBackboneStart = (this._offsetCount >= 0) ? this.backboneStart : this.backboneStart - this._offsetCount;
+
+    if (this._displayBackboneStop < this._displayBackboneStart)
+    {
+      if (this.backboneStop > this._displayBackboneStart)
+      {
+        this._displayBackboneStop = this.backboneStop;
+      }
+      
+    }
   }
 }
