@@ -117,7 +117,7 @@ export default class Track
 
     if (this.type === 'gene')
     {
-      if (section.svgY > 0)
+      if (section.svgY !== 0)
       {
         return section.svgY;
       }
@@ -182,7 +182,7 @@ export default class Track
 
     
     drawnSections.forEach(s => {
-      if (!s.gene)
+      if (!s.gene || !s.isVisible)
       {
         return;
       }
