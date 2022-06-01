@@ -14,19 +14,15 @@
     <!-- Overview panel SVGs ------------------------------------------->
     <text class="label medium bold" :x="SVGConstants.overviewTitleXPosition" :y="SVGConstants.panelTitleYPosition">Overview</text>
     <template v-for="(trackSet, index) in overviewTrackSets" :key="trackSet">
-      <text class="label small" :x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :y="SVGConstants.trackLabelYPosition">{{trackSet.speciesTrack.name}}</text>
-      <text class="label small" :x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
       <TrackSVG v-if="index != 0" show-chromosome show-synteny-on-hover show-start-stop :pos-x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
       <BackboneTrackSVG v-else show-data-on-hover :pos-x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :track="trackSet.speciesTrack as Track" />
+      <text class="label small" :x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :y="SVGConstants.trackLabelYPosition">{{trackSet.speciesTrack.name}}</text>
+      <text class="label small" :x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
     </template>
 
 
     <!-- Detail panel SVGs ----------------------------------------->
-    <text class="label medium bold" :x="SVGConstants.selectedBackboneXPosition" :y="SVGConstants.panelTitleYPosition">Detailed</text>
-
     <template v-for="(trackSet, index) in detailTrackSets" :key="trackSet">
-      <text class="label small" :x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackLabelYPosition">{{trackSet.speciesTrack.name}}</text>
-      <text class="label small" :x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
       <TrackSVG v-if="index != 0" show-chromosome :pos-x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
       <BackboneTrackSVG v-else is-detailed show-data-on-hover :pos-x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :track="trackSet.speciesTrack as Track" />
 
@@ -37,11 +33,18 @@
       </template>
     </template>
 
+    <template v-for="(trackSet, index) in detailTrackSets" :key="trackSet">
+      <text class="label small" :x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackLabelYPosition">{{trackSet.speciesTrack.name}}</text>
+      <text class="label small" :x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
+    </template>
+
+    <text class="label medium bold" :x="SVGConstants.selectedBackboneXPosition" :y="SVGConstants.panelTitleYPosition">Detailed</text>
+
      <!-- Navigation buttons -->
-    <image href="../../node_modules/primeicons/raw-svg/chevron-up.svg" :x="SVGConstants.overviewPanelWidth + (SVGConstants.detailsPanelWidth / 2)" :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
     <rect class="navigation-btn" :class="{'disabled': isNavigationUpDisabled }" @click="navigateUp" :x="SVGConstants.overviewPanelWidth" :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
-    <image href="../../node_modules/primeicons/raw-svg/chevron-down.svg" :x="SVGConstants.overviewPanelWidth + (SVGConstants.detailsPanelWidth / 2)" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
     <rect class="navigation-btn" :class="{'disabled': isNavigationDownDisabled }" @click="navigateDown" :x="SVGConstants.overviewPanelWidth" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
+    <image class="nav-btn-img" href="../../node_modules/primeicons/raw-svg/chevron-up.svg" @click="navigateUp" :x="SVGConstants.overviewPanelWidth + (SVGConstants.detailsPanelWidth / 2)" :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
+    <image class="nav-btn-img" href="../../node_modules/primeicons/raw-svg/chevron-down.svg" @click="navigateDown" :x="SVGConstants.overviewPanelWidth + (SVGConstants.detailsPanelWidth / 2)" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
 
     <!-- Detailed panel selection svg for zoom -->
     <rect v-if="startDetailedSelectionY && stopDetailedSelectionY" 
@@ -71,7 +74,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import TrackSVG from './TrackSVG.vue';
 import SVGConstants from '@/utils/SVGConstants';
-import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
+import BackboneSelection, { SelectedRegion, BasePairRange } from '@/models/BackboneSelection';
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import useDialog from '@/composables/useDialog';
 import BackboneTrackSVG from './BackboneTrackSVG.vue';
@@ -184,6 +187,7 @@ const updateOverviewPanel = async () => {
     store.state.overviewSyntenyThreshold,
     SVGConstants.overviewTrackYPosition, // SVG positioning of the overview tracks will start just underneath the header panels with a bit of space in between
     false,
+    store.state.selectedBackboneRegion
  );
  comparativeOverviewTracks = syntenyTrackResults.tracks;
 
@@ -262,7 +266,7 @@ const updateDetailsPanel = async () => {
   tempBackboneGenes.forEach(gene => gene.speciesName = backboneSpecies.name);
   let tempBackboneTracks = createBackboneGeneTrackFromGenesData(tempBackboneGenes, backboneSpecies.name,
     originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop,
-    store.state.detailedBasePairToHeightRatio, true, store.state.detailsSyntenyThreshold, SVGConstants.panelTitleHeight);
+    store.state.detailedBasePairToHeightRatio, true, store.state.detailsSyntenyThreshold, SVGConstants.panelTitleHeight, store.state.selectedBackboneRegion);
 
   if (backboneSelectionTrack != null && tempBackboneTracks != null)
   {
@@ -282,8 +286,10 @@ const updateDetailsPanel = async () => {
       store.state.detailedBasePairToHeightRatio,
       store.state.detailsSyntenyThreshold,
       SVGConstants.panelTitleHeight, // SVG positioning of detailed tracks will start immediately after the header panel
-      true
+      true,
+      store.state.selectedBackboneRegion,
     );
+    
     let comparativeSelectionTracks: TrackSet[] = syntenyTracksResults.tracks;
     let syntenyDataArray: SpeciesSyntenyData[] = syntenyTracksResults?.speciesSyntenyDataArray || [];
     let allSyntenyGenes: Gene[] = [];
@@ -307,7 +313,7 @@ const updateDetailsPanel = async () => {
 
     // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
     selectionTrackSets.forEach(trackSet => {
-      const visibleTrackSet = trackSet.getVisibleRegion(zoomedSelection.basePairStart, zoomedSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold);
+      const visibleTrackSet = trackSet.getVisibleRegion(zoomedSelection.basePairStart, zoomedSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold, store.state.selectedBackboneRegion);
       if (visibleTrackSet)
       {
         detailTrackSets.value.push(visibleTrackSet);
@@ -329,6 +335,7 @@ const updateDetailsPanel = async () => {
 
   store.dispatch('setIsDetailedPanelUpdating', false);
   console.log(`Update detailed time: ${(Date.now() - detailedUpdateStart)} ms`);
+
 };
 
 const generateOrthologLines = (orthologData: any, comparativeMaps: Number[]) => {
@@ -381,14 +388,30 @@ const generateOrthologLines = (orthologData: any, comparativeMaps: Number[]) => 
         const sectionMap = new Map<string, any>();
         const xPos = getDetailedPanelTrackXOffset(index, 'datatrack', 1) + SVGConstants.selectedBackboneXPosition;
         sections.forEach(section => {
-          sectionMap.set(section.gene.symbol, {'section': section, 'xPos': xPos});
+          let existingGene = sectionMap.get(section.gene.symbol);
+
+          if (!section.isVisible)
+          {
+            if (section.height < 0)
+            {
+              return;
+            }
+          }
+          if (!existingGene)
+          {
+            sectionMap.set(section.gene.symbol, {'section': section, 'xPos': xPos, 'duplicates': []});
+          }
+          else
+          {
+            existingGene.duplicates.push({'section': section, 'xPos': xPos});
+          }
         });
         comparativeGenes[speciesMap] = sectionMap;
       }
     }
   });
 
-  //find correlating orthologs on comparative species and create orhtolog lines
+  //find correlating orthologs on comparative species and create ortholog lines
   possibleOrthologs.forEach(possibleOrtholog => {
     const compSpeciesOrthologs = possibleOrtholog.orthologs;
     const backboneGene = possibleOrtholog.backboneGene;
@@ -402,21 +425,42 @@ const generateOrthologLines = (orthologData: any, comparativeMaps: Number[]) => 
         compOrthologInfo.forEach(gene => {
           const geneSymbol = gene.geneSymbol;
           const comparativeGene = comparativeGenes[speciesMapKey].get(geneSymbol);
+          
           if (comparativeGene)
           {
-            const orthologLine = createOrthologLine(backboneGene, comparativeGene);
+            const orthologLine = createOrthologLine(backboneGene, comparativeGene, );
             orthologLines.push(orthologLine);
+
+            //if this gene has duplicate located elsewhere, add an ortholog line for each duplicate
+            if (comparativeGene.duplicates.length > 0)
+            {
+              comparativeGene.duplicates.forEach(duplicate => {
+                const orthologLine = createOrthologLine(backboneGene, duplicate, );
+                orthologLines.push(orthologLine);
+              });
+            }
           }
         });
       }
       else
       {
-        const geneSymbol = compOrthologInfo[0].geneSymbol;
-        const comparativeGene = comparativeGenes[speciesMapKey].get(geneSymbol);
-        if (comparativeGene)
+        if (comparativeGenes[speciesMapKey])
         {
-          const orthologLine = createOrthologLine(backboneGene, comparativeGene);
-          orthologLines.push(orthologLine);
+          const geneSymbol = compOrthologInfo[0].geneSymbol;
+          const comparativeGene = comparativeGenes[speciesMapKey].get(geneSymbol);
+          if (comparativeGene)
+          {
+            const orthologLine = createOrthologLine(backboneGene, comparativeGene);
+            orthologLines.push(orthologLine);
+            
+            if (comparativeGene.duplicates.length > 0)
+            {
+              comparativeGene.duplicates.forEach(duplicate => {
+                const orthologLine = createOrthologLine(backboneGene, duplicate);
+                orthologLines.push(orthologLine);
+              });
+            }
+          }
         }
       }
     });
@@ -433,8 +477,8 @@ const generateOrthologLines = (orthologData: any, comparativeMaps: Number[]) => 
   }
 };
 
-const createOrthologLine = (backboneGeneSection: any, comparativeGeneSection: any) => {
-  let orthologLine = new OrthologLine({backboneY: backboneGeneSection.svgY + (backboneGeneSection.height/2), backboneGene:backboneGeneSection, comparativeY: comparativeGeneSection.section.svgY + (comparativeGeneSection.section.height/2), comparativeX: comparativeGeneSection.xPos, comparativeGene: comparativeGeneSection.section});
+const createOrthologLine = (backboneGeneSection: any, comparativeGeneSection: any,) => {
+  let orthologLine = new OrthologLine({backboneY: backboneGeneSection.svgY + (backboneGeneSection.height/2), backboneGene: backboneGeneSection, comparativeY: comparativeGeneSection.section.svgY + (comparativeGeneSection.section.height/2), comparativeX: comparativeGeneSection.xPos, comparativeGene: comparativeGeneSection.section});
   return orthologLine;
 };
 
@@ -482,7 +526,7 @@ const navigateUp = () => {
   selectionTrackSets.forEach(trackSet => {
     if (!selectedRegion.innerSelection) return;
 
-    const visibleTrackSet = trackSet.getVisibleRegion(selectedRegion.innerSelection.basePairStart, selectedRegion.innerSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold);
+    const visibleTrackSet = trackSet.getVisibleRegion(selectedRegion.innerSelection.basePairStart, selectedRegion.innerSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold, store.state.selectedBackboneRegion);
     if (visibleTrackSet)
     {
       detailTrackSets.value.push(visibleTrackSet);
@@ -493,7 +537,7 @@ const navigateUp = () => {
   {
     const comparativeSpecies = store.state.comparativeSpecies;
     const comparativeSpeciesMaps = [];
-    comparativeSpecies.forEach(species => {comparativeSpeciesMaps.push(species.defaultMapKey);});
+    comparativeSpecies.forEach(species => {comparativeSpeciesMaps.push(species.activeMap.key)});
     generateOrthologLines(selectedRegion.orthologData, comparativeSpeciesMaps);
   }
 };
@@ -510,7 +554,7 @@ const navigateDown = () => {
   selectionTrackSets.forEach(trackSet => {
     if (!selectedRegion.innerSelection) return;
 
-    const visibleTrackSet = trackSet.getVisibleRegion(selectedRegion.innerSelection.basePairStart, selectedRegion.innerSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold);
+    const visibleTrackSet = trackSet.getVisibleRegion(selectedRegion.innerSelection.basePairStart, selectedRegion.innerSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold, store.state.selectedBackboneRegion);
     if (visibleTrackSet)
     {
       detailTrackSets.value.push(visibleTrackSet);
@@ -521,7 +565,7 @@ const navigateDown = () => {
   {
     const comparativeSpecies = store.state.comparativeSpecies;
     const comparativeSpeciesMaps = [];
-    comparativeSpecies.forEach(species => {comparativeSpeciesMaps.push(species.defaultMapKey);});
+    comparativeSpecies.forEach(species => {comparativeSpeciesMaps.push(species.activeMap.key);});
     generateOrthologLines(selectedRegion.orthologData, comparativeSpeciesMaps);
   }
 };
@@ -598,7 +642,6 @@ rect.panel
 rect.navigation-btn
 {
   fill: lightgray;
-  fill-opacity: 0.5;
   stroke-width: 1;
   stroke: lightslategray;
   &:hover:not(.disabled)
@@ -611,5 +654,10 @@ rect.navigation-btn
   {
     cursor: not-allowed;
   }
+}
+
+.nav-btn-img
+{
+  cursor: pointer;
 }
 </style>

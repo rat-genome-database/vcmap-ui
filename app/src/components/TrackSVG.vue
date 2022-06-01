@@ -20,6 +20,18 @@
     </text>
   </template>
 
+  <template v-if="lines">
+    <template v-for="(line, index) in lines" :key="index">
+      <line
+        class="ortholog-line"
+        @mouseenter="onMouseEnter($event, line, 'orthologLine')"
+        @mouseleave="onMouseLeave(line, 'orthologLine')"
+        :stroke="(line.isSelected ? SELECTED_HIGHLIGHT_COLOR : 'gray')"
+        :x1="posX + width" :x2="line.comparativeGeneX"
+        :y1="line.backboneGeneY" :y2="line.comparativeGeneY" />
+    </template>
+  </template>
+  
   <!-- Gene Labels: only shown with ample offset-->
   <template v-for="(label, index) in track.geneLabels" :key="index">
     <text v-if="showGeneLabel && label.isVisible" 
@@ -31,18 +43,6 @@
       :y="label.svgY + LABEL_Y_OFFSET">
       - {{label.text}}
     </text>
-  </template>
-
-  <template v-if="lines">
-    <template v-for="(line, index) in lines" :key="index">
-      <line
-        class="ortholog-line"
-        @mouseenter="onMouseEnter($event, line, 'orthologLine')"
-        @mouseleave="onMouseLeave(line, 'orthologLine')"
-        :stroke="(line.isSelected ? SELECTED_HIGHLIGHT_COLOR : 'gray')"
-        :x1="posX + width" :x2="line.comparativeGeneX"
-        :y1="line.backboneGeneY" :y2="line.comparativeGeneY" />
-    </template>
   </template>
 
   <template v-for="(section, index) in track.sections" :key="index">
@@ -103,6 +103,9 @@
       :y1="section.svgY2" :y2="(section.isInverted) ? section.svgY : section.svgY2" />
     </template>
   </template>
+
+  <rect class="panel" :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.panelTitleHeight" />
+
 </template>
 
 <script lang="ts" setup>
@@ -277,6 +280,12 @@ const getSectionFill = (section: TrackSection) => {
 </script>
 
 <style lang="scss" scoped>
+rect.panel
+{
+  fill: white;
+  stroke-width: 2;
+  stroke: lightgray;
+}
 .label.small
 {
   font: normal 8px sans-serif;
