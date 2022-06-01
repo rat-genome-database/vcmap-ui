@@ -5,10 +5,12 @@ import DataTrack from "@/models/DataTrack";
 import Gene from "@/models/Gene";
 import Species from "@/models/Species";
 import SyntenicRegion, { SpeciesSyntenyData, SyntenyRegionData } from "@/models/SyntenicRegion";
+import BackboneSelection from '@/models/BackboneSelection';
 import Track from "@/models/Track";
 import TrackSet from "@/models/TrackSet";
 import TrackSection from "@/models/TrackSection";
 import SVGConstants from "./SVGConstants";
+
 
 const GENES_DATA_TRACK_THRESHOLD_MULTIPLIER = 5;
 const GAPS_THRESHOLD_MULTIPLIER = 10;
@@ -37,7 +39,7 @@ export function createBackboneTrack(species: Species, chromosome: Chromosome, st
 /**
  * Creates the synteny tracks for a particular set of comparative species
  */
-export async function createSyntenyTracks(comparativeSpecies: Species[], backboneChr: Chromosome, backboneStart: number, backboneStop: number, basePairToHeightRatio: number, syntenyThreshold: number, startingSVGYPos: number, isComparative: boolean)
+export async function createSyntenyTracks(comparativeSpecies: Species[], backboneChr: Chromosome, backboneStart: number, backboneStop: number, basePairToHeightRatio: number, syntenyThreshold: number, startingSVGYPos: number, isComparative: boolean, backboneSelection: BackboneSelection)
 {
   const speciesSyntenyDataArray =  isComparative ? await SyntenyApi.getSyntenicRegions({
     backboneChromosome: backboneChr,
@@ -56,7 +58,7 @@ export async function createSyntenyTracks(comparativeSpecies: Species[], backbon
 
   const tracks: TrackSet[] = [];
   speciesSyntenyDataArray?.forEach(speciesSyntenyData => {
-    const speciesTracks = createSyntenyTrackFromSpeciesSyntenyData(speciesSyntenyData, backboneStart, backboneStop, basePairToHeightRatio, syntenyThreshold, startingSVGYPos);
+    const speciesTracks = createSyntenyTrackFromSpeciesSyntenyData(speciesSyntenyData, backboneStart, backboneStop, basePairToHeightRatio, syntenyThreshold, startingSVGYPos, backboneSelection, isComparative);
     const speciesTrack = speciesTracks[0];
     const geneTrack = speciesTracks[1];
 
@@ -71,10 +73,10 @@ export async function createSyntenyTracks(comparativeSpecies: Species[], backbon
   return {tracks: tracks, speciesSyntenyDataArray: speciesSyntenyDataArray};
 }
 
-export function createSyntenyTrackFromSpeciesSyntenyData(speciesSyntenyData: SpeciesSyntenyData, backboneStart: number, backboneStop: number, basePairToHeightRatio: number, syntenyThreshold: number, startingSVGYPos: number)
+export function createSyntenyTrackFromSpeciesSyntenyData(speciesSyntenyData: SpeciesSyntenyData, backboneStart: number, backboneStop: number, basePairToHeightRatio: number, syntenyThreshold: number, startingSVGYPos: number, backboneSelection: BackboneSelection, isComparative: boolean)
 {
   console.debug(`-- Building synteny track for species: ${speciesSyntenyData.speciesName} / ${speciesSyntenyData.mapName} --`);
-  const trackSections = splitLevel1And2RegionsIntoSections(speciesSyntenyData, backboneStart, backboneStop, basePairToHeightRatio, syntenyThreshold);
+  const trackSections = splitLevel1And2RegionsIntoSections(speciesSyntenyData, backboneStart, backboneStop, basePairToHeightRatio, syntenyThreshold, backboneSelection, isComparative);
   const speciesTrack = new Track({ speciesName: speciesSyntenyData.speciesName, speciesMap: speciesSyntenyData.mapKey, sections: trackSections[0], mapName: speciesSyntenyData.mapName, isSyntenyTrack: true, startingSVGY: startingSVGYPos, rawSyntenyData: speciesSyntenyData, type: 'comparative' });
 
   const geneTrack = new Track({ speciesName: speciesSyntenyData.speciesName, sections: trackSections[1], mapName: speciesSyntenyData.mapName, startingSVGY: startingSVGYPos, rawGeneData: [], type: 'gene' });
@@ -90,21 +92,21 @@ export async function createBackboneDataTracks(species: Species, chromosome: Chr
   return genes;
 }
 
-export function createBackboneGeneTrackFromGenesData(genes: Gene[], speciesName: string, startPos: number, stopPos: number,  basePairToHeightRatio: number, isComparative: boolean, syntenyThreshold: number, startingSVGYPos: number)
+export function createBackboneGeneTrackFromGenesData(genes: Gene[], speciesName: string, startPos: number, stopPos: number,  basePairToHeightRatio: number, isComparative: boolean, syntenyThreshold: number, startingSVGYPos: number, backboneSelection: BackboneSelection)
 {
   const sections: TrackSection[] = [];
   let hiddenSections: TrackSection[] = [];
 
-  const topSvgYCutoff = 55; //SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight;
+  const topSvgYCutoff = 55;
   
   const threshold = syntenyThreshold * GENES_DATA_TRACK_THRESHOLD_MULTIPLIER;
   for (let index = 0; index < genes.length; index++)
   {
     const gene = genes[index];
-
+    let visibleFlag = true;
     if (gene.stop < startPos || gene.start > stopPos)
     {
-      continue;
+      visibleFlag = false;
     }
 
     const geneSize = gene.stop - gene.start;
@@ -122,7 +124,8 @@ export function createBackboneGeneTrackFromGenesData(genes: Gene[], speciesName:
         cutoff: stopPos, 
         basePairToHeightRatio: basePairToHeightRatio,
         shape: 'rect',
-        gene: gene
+        gene: gene,
+        isVisible: visibleFlag,
       });
 
       hiddenSections.push(hiddenTrackSection);
@@ -142,23 +145,25 @@ export function createBackboneGeneTrackFromGenesData(genes: Gene[], speciesName:
         color: '#00000',
         shape: 'rect',
         gene: gene,
+        isVisible: visibleFlag,
         hiddenGenes: hiddenSections.length > 0 ? hiddenSections : []
       });
 
       hiddenSections =  [];
 
       //gene is above the top nav button, adjust to be cutoff correctly
-      if (geneSvgY < topSvgYCutoff)
+      /* if (geneSvgY < topSvgYCutoff && visibleFlag)
       {
         //bottom of gene is below nav button
         if (trackSection.svgY2 > topSvgYCutoff)
         {
           const visibleHeight = trackSection.height - (topSvgYCutoff - trackSection.svgY);
           
-          trackSection.adjustedHeight = visibleHeight;
+          trackSection.adjustedHeight = visibleHeight > 0 ? visibleHeight : .01;
           trackSection.svgY = topSvgYCutoff;
         }
-      }
+      } */
+      
       sections.push(trackSection);
     }
   }
@@ -183,7 +188,7 @@ export function createBackboneGeneTrackFromGenesData(genes: Gene[], speciesName:
 }
 
 
-function splitLevel1And2RegionsIntoSections(speciesSyntenyData: SpeciesSyntenyData, backboneStart: number, backboneStop: number, basePairToHeightRatio: number, threshold: number)
+function splitLevel1And2RegionsIntoSections(speciesSyntenyData: SpeciesSyntenyData, backboneStart: number, backboneStop: number, basePairToHeightRatio: number, threshold: number, backboneSelection: BackboneSelection, isComparative: boolean)
 {
   const regions: SyntenyRegionData[] = speciesSyntenyData.regionData;
   console.debug('LEVEL 1');
@@ -193,7 +198,9 @@ function splitLevel1And2RegionsIntoSections(speciesSyntenyData: SpeciesSyntenyDa
     backboneStart,
     backboneStop,
     basePairToHeightRatio,
-    threshold
+    threshold,
+    /* backboneSelection,
+    isComparative */
   );
   console.debug('LEVEL 2');
   const level2Sections = splitBlocksAndGapsIntoSections(
@@ -202,7 +209,9 @@ function splitLevel1And2RegionsIntoSections(speciesSyntenyData: SpeciesSyntenyDa
     backboneStart,
     backboneStop,
     basePairToHeightRatio,
-    threshold
+    threshold,
+   /*  backboneSelection,
+    isComparative */
   );
 
   const trackSections = level1Sections[0].concat(level2Sections[0]);
@@ -388,8 +397,6 @@ function splitBlocksAndGapsIntoSections(speciesSyntenyData: SpeciesSyntenyData, 
         });
         trackSections.push(gapSection);
         processedBlockSections.push(gapSection);
-
-        
       }
     });
 
@@ -439,6 +446,9 @@ function splitBlocksAndGapsIntoSections(speciesSyntenyData: SpeciesSyntenyData, 
   return [trackSections, geneSections, gaplessBlockSections];
 }
 
+
+
+
 function calculateVisibleBlockEnds(blockInfo: SyntenicRegion, backboneStart: number, backboneStop: number, isInverted: boolean)
 {
   //calculate the percentage of the block backbone that is not visible above and below current viewport
@@ -470,7 +480,6 @@ function calculateVisibleBlockEnds(blockInfo: SyntenicRegion, backboneStart: num
   
   return [visibleTop, visibleBottom];
 }
-
 
 function createGeneSectionsFromSyntenyBlocks(syntenyBlockSections: TrackSection[], threshold: number, blockMap: Map<number, any>,)
 {
@@ -520,8 +529,8 @@ function createGeneSectionsFromSyntenyBlocks(syntenyBlockSections: TrackSection[
 
       blockGenes.forEach((gene: Gene) => {
         const geneSize = gene.stop - gene.start; //length of gene in bp
-        const correctGeneStart = gene.start < blockStart ? blockStart : gene.start; //adjusted start of gene; if gene starts before block start, use block start
-        const correctGeneStop = gene.stop > blockStop ? blockStop : gene.stop; //adjusted stop of gene; if gene stops after block stop, use block stop
+        const correctGeneStart = gene.start //< blockStart ? blockStart : gene.start; //adjusted start of gene; if gene starts before block start, use block start
+        const correctGeneStop = gene.stop //> blockStop ? blockStop : gene.stop; //adjusted stop of gene; if gene stops after block stop, use block stop
         
         let blockStartOffset = 0; //offset of gene from block start in svg units
         if (syntenyBlockSection.isInverted)
@@ -533,11 +542,6 @@ function createGeneSectionsFromSyntenyBlocks(syntenyBlockSections: TrackSection[
           blockStartOffset = (correctGeneStart - blockStart) / blockRatio;
         }
         const geneSvgY = blockStartSvgY + blockStartOffset;
-        //if gene ends before current block start or starts after current block stop, skip
-        if (correctGeneStart > blockStop || correctGeneStop < blockStart)
-        {
-          return;
-        }
         
         if (geneSize < threshold)
         {
@@ -569,7 +573,7 @@ function createGeneSectionsFromSyntenyBlocks(syntenyBlockSections: TrackSection[
             basePairToHeightRatio: blockRatio,
             isComparativeGene: true,
             svgY: geneSvgY,
-            color: syntenyBlockSection.chainLevel == 2 ? '' : '#00000',
+            color: '#00000',
             shape: 'rect',
             gene: gene,
             hiddenGenes: hiddenSections.length > 0 ? hiddenSections : []
@@ -584,11 +588,14 @@ function createGeneSectionsFromSyntenyBlocks(syntenyBlockSections: TrackSection[
 
   return geneSections;
 }
-
 function warnIfNegativeHeight(trackSections: TrackSection[])
 {
   trackSections.forEach((section, index) => {
-    if (section.height < 0)
+    if (section.svgY < 55 || section.svgY > 425)
+    {
+      return;
+    }
+    else if (section.height < 0)
     {
       console.warn('Negative height', index, section);
     }

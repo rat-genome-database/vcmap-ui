@@ -78,7 +78,7 @@
                   :disabled="!geneChromosome"
                   required
                   suffix="bp"
-                  :step="500"
+                  :step="1000"
                   :min="0"
                 />
                 <small v-if="showGenePlusMinusWarning" class="warning-text">Upstream/downstream range cannot be applied to custom start/stop positions</small>
@@ -93,7 +93,7 @@
                   @input="resetPlusMinusForCustomInput"
                   required
                   suffix="bp"
-                  :step="500"
+                  :step="1000"
                   :max="(maxPosition != null) ? maxPosition - 1 : 1"
                   :min="0"
                 />
@@ -108,7 +108,7 @@
                   @input="resetPlusMinusForCustomInput"
                   required
                   suffix="bp"
-                  :step="500"
+                  :step="1000"
                   :max="maxPosition"
                   :min="1"
                 />
@@ -213,7 +213,7 @@
                   v-model="startPosition"
                   :disabled="!backboneChromosome"
                   suffix="bp"
-                  :step="500"
+                  :step="1000"
                   :max="(maxPosition != null) ? maxPosition - 1 : 1"
                   :min="0"
                 />
@@ -227,7 +227,7 @@
                     v-model="stopPosition"
                     :disabled="!backboneChromosome"
                     suffix="bp"
-                    :step="500"
+                    :step="1000"
                     :max="maxPosition"
                     :min="1"
                   />
