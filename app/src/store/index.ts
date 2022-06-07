@@ -2,6 +2,7 @@ import { ActionContext, createStore, Store } from 'vuex';
 import VuexPersistence from 'vuex-persist';
 import Species from '@/models/Species';
 import Chromosome from '@/models/Chromosome';
+import TrackSection from '@/models/TrackSection';
 import Gene from '@/models/Gene';
 import BackboneSelection, { BasePairRange, SelectedRegion } from '@/models/BackboneSelection';
 import SVGConstants from '@/utils/SVGConstants';
@@ -14,12 +15,15 @@ export interface VCMapState
 {
   species: Species | null; // backbone species
   chromosome: Chromosome | null; // backbone chromosome
-  startPos: number | null; // original backbone start position
-  stopPos: number | null; // original backbone stop position
+  startPos: number | null; // backbone start position
+  stopPos: number | null; // backbone stop position
+  loadStart: number | null; // load start position
+  loadStop: number | null; // load stop position
   gene: Gene | null; // backbone gene
 
   comparativeSpecies: Species[];
   loadedGenes: Gene[];
+  loadedGeneSections: TrackSection[];
 
   selectedBackboneRegion: BackboneSelection;
 
@@ -49,10 +53,13 @@ export default createStore({
     chromosome: null,
     startPos: null,
     stopPos: null,
+    loadStart: null,
+    loadStop: null,
     gene: null,
 
     comparativeSpecies: [],
     loadedGenes: [],
+    loadedGeneSections: [],
 
     selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
 
@@ -85,6 +92,12 @@ export default createStore({
     stopPosition (state: VCMapState, stopPos: number) {
       state.stopPos = stopPos;
     },
+    loadStart (state: VCMapState, loadStart: number) {
+      state.loadStart = loadStart;
+    },
+    loadStop (state: VCMapState, loadStop: number) {
+      state.loadStop = loadStop;
+    },
     gene (state: VCMapState, gene: Gene) {
       state.gene = gene;
     },
@@ -93,6 +106,9 @@ export default createStore({
     },
     loadedGenes (state: VCMapState, loadedGenesArray: Gene[]) {
       state.loadedGenes = loadedGenesArray;
+    },
+    loadedGeneSections (state: VCMapState, loadedGeneSections: TrackSection[]) {
+      state.loadedGeneSections = loadedGeneSections;
     },
     selectedBackboneRegion ( state: VCMapState, selection: BackboneSelection) {
       state.selectedBackboneRegion = selection;
@@ -149,6 +165,12 @@ export default createStore({
     setStopPosition(context: ActionContext<VCMapState, VCMapState>, stopPos: number) {
       context.commit('stopPosition', stopPos);
     },
+    setLoadStart(context: ActionContext<VCMapState, VCMapState>, loadStart: number) {
+      context.commit('loadStart', loadStart);
+    },
+    setLoadStop(context: ActionContext<VCMapState, VCMapState>, loadStop: number) {
+      context.commit('loadStop', loadStop);
+    },
     setGene(context: ActionContext<VCMapState, VCMapState>, gene: Gene) {
       context.commit('gene', gene);
     },
@@ -181,6 +203,9 @@ export default createStore({
     setLoadedGenes(context: ActionContext<VCMapState, VCMapState>, loadedGenes: Gene[]) {
       context.commit('loadedGenes', loadedGenes);
     },
+    setLoadedGeneSections(context: ActionContext<VCMapState, VCMapState>, loadedGeneSections: TrackSection[]) {
+      context.commit('loadedGeneSections', loadedGeneSections);
+    },
     setIsDetailedPanelUpdating(context: ActionContext<VCMapState, VCMapState>, isUpdating: boolean) {
       context.commit('isDetailedPanelUpdating', isUpdating);
     },
@@ -193,9 +218,12 @@ export default createStore({
       context.commit('chromosome', null);
       context.commit('startPosition', null);
       context.commit('stopPosition', null);
+      context.commit('loadStart', null);
+      context.commit('loadStop', null);
       context.commit('comparativeSpecies', []);
       context.commit('selectedGeneIds', []);
       context.commit('loadedGenes', []);
+      context.commit('loadedGeneSections', []);
       context.commit('selectedBackboneRegion', new BackboneSelection(new SelectedRegion(0,0,0,0)));
       context.commit('detailedBasePairRange', { start: 0, stop: 0 });
     },
