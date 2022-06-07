@@ -529,8 +529,8 @@ function createGeneSectionsFromSyntenyBlocks(syntenyBlockSections: TrackSection[
 
       blockGenes.forEach((gene: Gene) => {
         const geneSize = gene.stop - gene.start; //length of gene in bp
-        const correctGeneStart = gene.start //< blockStart ? blockStart : gene.start; //adjusted start of gene; if gene starts before block start, use block start
-        const correctGeneStop = gene.stop //> blockStop ? blockStop : gene.stop; //adjusted stop of gene; if gene stops after block stop, use block stop
+        const correctGeneStart = gene.start; //< blockStart ? blockStart : gene.start; //adjusted start of gene; if gene starts before block start, use block start
+        const correctGeneStop = gene.stop; //> blockStop ? blockStop : gene.stop; //adjusted stop of gene; if gene stops after block stop, use block stop
         
         let blockStartOffset = 0; //offset of gene from block start in svg units
         if (syntenyBlockSection.isInverted)

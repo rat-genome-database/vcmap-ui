@@ -70,6 +70,7 @@
 
 <script setup lang="ts">
 import Track from '@/models/Track';
+import TrackSection from '@/models/TrackSection';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import TrackSVG from './TrackSVG.vue';
@@ -101,6 +102,7 @@ const detailTrackSets = ref<TrackSet[]>([]); // The currently displayed TrackSet
 
 let comparativeOverviewTracks: Track[] = []; // Keeps track of current comparative tracks displayed in the overview panel
 let selectionTrackSets: TrackSet[] = []; // The track sets for the entire selected region
+let geneReload: boolean = false; //whether or not load by gene reload has occurred
 
 
 async function attachToProgressLoader(storeLoadingActionName: string, func: () => Promise<any>)
@@ -149,6 +151,7 @@ const updateOverviewPanel = async () => {
   const backboneChromosome = store.state.chromosome;
   const backboneStart = store.state.startPos;
   const backboneStop = store.state.stopPos;
+  const loadType = store.state.configTab;
 
   if (backboneSpecies == null || backboneChromosome == null || backboneStart == null || backboneStop == null)
   {
@@ -202,8 +205,17 @@ const updateOverviewPanel = async () => {
   const prevBackboneSelection = store.state.selectedBackboneRegion;
   if (backboneTrack.sections.length > 0 && prevBackboneSelection.baseSelection.svgHeight === 0)
   {
-    const selection = backboneTrack.sections[0].generateBackboneSelection(backboneStart, backboneStop, store.state.overviewBasePairToHeightRatio, backboneChromosome);
-    store.dispatch('setBackboneSelection', selection);
+    //if initially loading by gene, we need to set and process the full backbone range and syntenic blocks to find ortholog positions to later adjust so all are visible in the detail panel
+    if (loadType === 0)
+    {
+      const selection = backboneTrack.sections[0].generateBackboneSelection(0, backboneChromosome.seqLength, store.state.overviewBasePairToHeightRatio, backboneChromosome);
+      store.dispatch('setBackboneSelection', selection);
+    }
+    else
+    {
+      const selection = backboneTrack.sections[0].generateBackboneSelection(backboneStart, backboneStop, store.state.overviewBasePairToHeightRatio, backboneChromosome);
+      store.dispatch('setBackboneSelection', selection);
+    }
   }
   else
   {
@@ -233,6 +245,7 @@ const updateDetailsPanel = async () => {
 
   const backboneSpecies = store.state.species;
   const backboneChromosome = store.state.chromosome;
+  const loadType = store.state.configTab;
   const originalSelectedBackboneRegion = store.state.selectedBackboneRegion;
   const detailedBasePairRange = store.state.detailedBasePairRange;
   if (detailedBasePairRange.stop - detailedBasePairRange.start <= 0)
@@ -289,7 +302,72 @@ const updateDetailsPanel = async () => {
       true,
       store.state.selectedBackboneRegion,
     );
-    
+
+    //if loading by gene initially, we need to find the backbone start of the "highest" positioned ortholog, and the backbone stop of the "lowest" positioned ortholog, then setting the backbone selection to those coords
+    if ((loadType == 0) && (store.state.selectedGeneIds.length > 0) && (!geneReload))
+    {
+      const backboneStart = store.state.loadStart;
+      const backboneStop = store.state.loadStop;
+      const orthologs: TrackSection[] = [];
+
+      //collect all rendered orthologs for selected gene
+      const geneTracks = syntenyTracksResults.tracks[0].dataTracks[0].track.sections;
+      let selectedIds: number[] = [];
+      selectedIds = [...store.state.selectedGeneIds];
+      geneTracks.sort((a, b) => a.svgY - b.svgY);
+      for (let index = 0; index < geneTracks.length; index++)
+      {
+        const section = geneTracks[index];
+        if (section.gene)
+        {
+          if (section.gene && selectedIds.includes(section.gene.rgdId))
+          {
+            orthologs.push(section);
+          }
+          else if (section.gene && ((store.state.gene.symbol).toLowerCase() == (section.gene.symbol).toLowerCase()))
+          {
+            if (!selectedIds.includes(section.gene.rgdId)) 
+            {
+              selectedIds.push(section.gene.rgdId); 
+            }
+            orthologs.push(section);
+          }
+        }
+      }
+
+      //convert ortholog svgs to backbone coords
+      if (orthologs.length)
+      {
+        let highestOrtholog;
+        let lowestOrtholog;
+        orthologs.sort((a, b) => a.svgY - b.svgY);
+        highestOrtholog = orthologs[0];
+        orthologs.length > 1 ? lowestOrtholog = orthologs[orthologs.length - 1] : lowestOrtholog = highestOrtholog;
+
+        const topOrthologLength = highestOrtholog.sectionStop - highestOrtholog.sectionStart;
+        const bottomOrthologLength = lowestOrtholog.sectionStop - lowestOrtholog.sectionStart;
+        const basePairsFromInnerSelection1 = Math.floor((highestOrtholog.svgY - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
+        const basePairStart = Math.max(basePairsFromInnerSelection1 + originalSelectedBackboneRegion.innerSelection.basePairStart - (topOrthologLength * 5), originalSelectedBackboneRegion.innerSelection.basePairStart);
+
+        const basePairsFromInnerSelection2 = Math.floor((lowestOrtholog.svgY - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
+        const basePairStop = Math.min(basePairsFromInnerSelection2 + originalSelectedBackboneRegion.innerSelection.basePairStart + (bottomOrthologLength * 5), originalSelectedBackboneRegion.innerSelection.basePairStop);
+
+        const selection = backboneSelectionTrack.sections[0].generateBackboneSelection(basePairStart, basePairStop, store.state.detailedBasePairToHeightRatio, backboneChromosome);
+        store.dispatch('clearBackboneSelection');
+        store.dispatch('setBackboneSelection', selection);
+        geneReload = true;
+        return;
+      }
+      else
+      {
+        const selection = backboneSelectionTrack.sections[0].generateBackboneSelection(backboneStart, backboneStop, store.state.detailedBasePairToHeightRatio, backboneChromosome);
+        store.dispatch('clearBackboneSelection');
+        store.dispatch('setBackboneSelection', selection);
+        geneReload = true;
+        return;
+      }
+    }
+
     let comparativeSelectionTracks: TrackSet[] = syntenyTracksResults.tracks;
     let syntenyDataArray: SpeciesSyntenyData[] = syntenyTracksResults?.speciesSyntenyDataArray || [];
     let allSyntenyGenes: Gene[] = [];
@@ -297,6 +375,7 @@ const updateDetailsPanel = async () => {
       Array.prototype.push.apply(allSyntenyGenes, dataArray.allGenes ?? []);
     });
     store.dispatch('setLoadedGenes', tempBackboneGenes.concat([...allSyntenyGenes]));
+    //store.dispatch('setLoadedGeneSections', tempBackboneTracks.track.sections.concat(syntenyTracksResults.tracks[0].dataTracks[0].track.sections));
 
     const compSpeciesMaps: Number[] = [];
     for (let index = 0; index < comparativeSelectionTracks.length; index++)
