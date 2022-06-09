@@ -26,6 +26,11 @@
     Region: {{Formatter.addCommasToBasePair(start)}} -
       {{Formatter.addCommasToBasePair(stop)}}
   </div>
+  <div v-if="isInverted !== undefined">Orientation: {{isInverted ? '-' : '+'}}</div>
+  <div v-if="chainLevel"
+    data-test="level">
+      Level: {{chainLevel}}
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -40,10 +45,11 @@ const store = useStore(key);
 interface Props
 {
   gene: Gene | null;
-  chromosome: number;
+  chromosome: string;
   start: number;
   stop: number;
-  chainLevel: number | null;
+  chainLevel?: number;
+  isInverted?: boolean;
 }
 
 const props = defineProps<Props>();

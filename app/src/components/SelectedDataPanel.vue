@@ -35,87 +35,35 @@
 
       <template v-for="dataObject in props.selectedData" :key="dataObject">
         <template v-if="dataObject?.type === 'Gene'">
-          <div v-if="dataObject.genomicSection">
-            <div class="gene-row">
-              <div>
-                Symbol:
-                <Button
-                  class="p-button-link rgd-link"
-                  @click="selectGene(dataObject.genomicSection)"
-                >
-                  <b>{{dataObject.genomicSection.symbol}}</b>
-                </Button>
-              </div>
-              <div>
-                <Button
-                  class="p-button-link rgd-link"
-                  @click="goToRgd(dataObject.genomicSection.rgdId)"
-                >
-                  <i class="pi pi-external-link external-link"></i>
-                </Button>
-              </div>
-            </div>
-          </div>
-          <div data-test="gene-name">Name: {{dataObject.genomicSection.name ?? 'N/A'}}</div>
-          <div data-test="chromosome-name">Chromosome: {{dataObject.genomicSection.chromosome}}</div>
-          <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(dataObject.genomicSection.start)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.stop)}}</div>
+          <GeneInfo
+            :gene="dataObject.genomicSection"
+            :chromosome="dataObject.genomicSection.chromosome"
+            :start="dataObject.genomicSection.start"
+            :stop="dataObject.genomicSection.stop"
+          />
           <Divider />
         </template>
 
         <template v-else-if="dataObject?.type === 'geneLabel' || dataObject?.type === 'trackSection'">
-          <div v-if="dataObject?.genomicSection.gene" data-test="gene-symbol">
-            <div class="gene-row">
-              <div>
-                Symbol:
-                <Button
-                  class="p-button-link rgd-link"
-                  @click="selectGene(dataObject.genomicSection.gene)"
-                >
-                  <b>{{dataObject.genomicSection.gene.symbol}}</b>
-                </Button>
-              </div>
-              <div>
-                <Button
-                  class="p-button-link rgd-link"
-                  @click="goToRgd(dataObject.genomicSection.gene.rgdId)"
-                >
-                  <i class="pi pi-external-link external-link"></i>
-                </Button>
-              </div>
-            </div>
-          </div>
-          <div v-if="dataObject.genomicSection.gene" data-test="gene-name">Name: {{dataObject.genomicSection.gene.name ?? 'N/A'}}</div>
-          <div data-test="chromosome-name">Chromosome: {{dataObject.genomicSection.chromosome}}</div>
-          <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(dataObject.genomicSection.sectionStart)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.sectionStop)}}</div>
-          <div>Orientation: {{dataObject.genomicSection.isInverted ? '-' : '+'}}</div>
-          <div v-if="dataObject.genomicSection.chainLevel != null" data-test="level">Level: {{dataObject.genomicSection.chainLevel}}</div>
+          <GeneInfo
+            :gene="dataObject?.genomicSection.gene"
+            :chromosome="dataObject.genomicSection.chromosome"
+            :start="dataObject.genomicSection.sectionStart"
+            :stop="dataObject.genomicSection.sectionStop"
+            :chain-level="dataObject.genomicSection.chainLevel"
+            :is-inverted="dataObject.genomicSection.isInverted"
+          />
           <Divider />
 
           <template v-if="dataObject.type === 'geneLabel'">
             <template v-if="(dataObject.genomicSection.combinedGenes && dataObject.genomicSection.combinedGenes.length > 0)">
               <template v-for="section in dataObject?.genomicSection.combinedGenes" :key="section">
-                <div class="gene-row">
-                  <div>
-                    Symbol:
-                    <Button
-                      class="p-button-link rgd-link"
-                      @click="selectGene(section.gene)"
-                    >
-                      <b>{{section.gene.symbol}}</b>
-                    </Button>
-                  </div>
-                  <div>
-                    <Button
-                      class="p-button-link rgd-link"
-                      @click="goToRgd(section.gene.rgdId)"
-                    >
-                      <i class="pi pi-external-link external-link"></i>
-                    </Button>
-                  </div>
-                </div>
-                <div data-test="gene-name"> Name: {{section.gene.name ?? 'N/A'}}</div>
-                <div data-test="chromosome-name">Chromosome: {{section.gene.chromosome}}</div>
-                <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(section.gene.start)}} - {{Formatter.addCommasToBasePair(section.gene.stop)}}</div>
+                <GeneInfo
+                  :gene="section.gene"
+                  :chromosome="section.gene.chromose"
+                  :start="section.gene.start"
+                  :stop="section.gene.stop"
+                />
                 <Divider />
               </template>
             </template>
@@ -124,33 +72,16 @@
           <template v-else-if="dataObject.type === 'trackSection'">
             <template v-if="(dataObject.genomicSection.hiddenGenes && dataObject.genomicSection.hiddenGenes.length > 0)">
               <template v-for="section in dataObject?.genomicSection.hiddenGenes" :key="section">
-                <div class="gene-row" data-test="gene-symbol">
-                  <div>
-                    Symbol:
-                    <Button
-                      class="p-button-link rgd-link"
-                      @click="selectGene(section.gene)"
-                    >
-                      <b>{{section.gene.symbol}}</b>
-                    </Button>
-                  </div>
-                  <div>
-                    <Button
-                      class="p-button-link rgd-link"
-                      @click="goToRgd(section.gene.rgdId)"
-                    >
-                      <i class="pi pi-external-link external-link"></i>
-                    </Button>
-                  </div>
-                </div>
-                <div data-test="gene-name"> Name: {{section.gene.name ?? 'N/A'}}</div>
-                <div data-test="chromosome-name">Chromosome: {{section.gene.chromosome}}</div>
-                <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(section.gene.start)}} - {{Formatter.addCommasToBasePair(section.gene.stop)}}</div>
+                <GeneInfo
+                  :gene="section.gene"
+                  :chromosome="section.gene.chromosome"
+                  :start="section.gene.start"
+                  :stop="section.gene.stop"
+                />
                 <Divider />
               </template>
             </template>
           </template>
-
         </template>
 
         <template v-else-if="dataObject?.type === 'orthologLine'">
