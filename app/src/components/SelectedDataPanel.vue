@@ -177,6 +177,7 @@
 <script setup lang="ts">
 import SelectedData from '@/models/SelectedData';
 import Gene from '@/models/Gene';
+import GeneInfo from '@/components/GeneInfo.vue';
 import { Formatter } from '@/utils/Formatter';
 import { ref, watch } from 'vue';
 import { useStore } from 'vuex';
@@ -228,13 +229,6 @@ const clearSelectedGenes = () => {
   searchedGene.value = null;
 };
 
-const selectGene = (gene: Gene) => {
-    const geneOrthologIds = getGeneOrthologIds(gene) || [];
-    const rgdIds: number[] = [gene?.rgdId] || [];
-    store.dispatch('setSelectedGeneIds', [...rgdIds, ...geneOrthologIds] || []);
-    updateSelectedData(gene);
-};
-
 const searchGene = (event: {query: string}) => {
   const loadedGenes = store.state.loadedGenes;
   let matches: Gene[] = loadedGenes.filter((gene) => gene.symbol.toLowerCase().includes(event.query.toLowerCase()));
@@ -268,18 +262,13 @@ const selectAndSearchSVG = (event: any) => {
   }
 };
 
-const goToRgd = (rgdId: number) => {
-  const rgdUrl = `https://rgd.mcw.edu/rgdweb/report/gene/main.html?id=${rgdId}`;
-  window.open(rgdUrl);
-};
-
 const getSuggestionDisplay = (item: any) => {
   return `${item.symbol} - ${item.speciesName}`;
 };
 
 const getGeneOrthologIds = (gene: Gene) => {
   const geneOrthologs = store.state.selectedBackboneRegion.orthologData.get(gene.symbol);
-  let geneOrthologIds: number[];
+  let geneOrthologIds: number[] = [];
   if (geneOrthologs) {
     geneOrthologIds = Object.keys(geneOrthologs).map((geneKey) => geneOrthologs[geneKey][0].geneRgdId);
   }
@@ -310,7 +299,7 @@ const adjustSelectionWindow = () => {
     const geneBasePairLength = searchedGene.value.stop - searchedGene.value.start;
     // Take the max of new start position, and selected region's original start
     // to avoid jumping to outside of loaded region
-    const newInnerStart = Math.max(Math.floor(searchedGene.value.start 
+    const newInnerStart = Math.max(Math.floor(searchedGene.value.start
       - SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), selectedRegion.baseSelection.basePairStart);
     // Take min of new stop and selected regions original stop
     const newInnerStop = Math.min(Math.floor(searchedGene.value.stop
@@ -321,25 +310,10 @@ const adjustSelectionWindow = () => {
 </script>
 
 <style lang="scss" scoped>
-.gene-row
-{
-  display: flex;
-  justify-content: space-between;
-}
 .gene-data
 {
   overflow-y: scroll;
   height: 550px;
-}
-
-.rgd-link
-{
-  padding: 0;
-}
-
-.external-link
-{
-  padding-left: 4px;
 }
 
 .selected-data-header
@@ -350,11 +324,5 @@ const adjustSelectionWindow = () => {
 .panel-header-item
 {
   padding-bottom: 10px;
-}
-
-.searched-gene-divider
-{
-  padding-bottom: 1rem;
-  font-weight: bold;
 }
 </style>
