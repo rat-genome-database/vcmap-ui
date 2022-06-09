@@ -1,10 +1,10 @@
 import { shallowMount } from '@vue/test-utils';
-import SelectedDataPanel from '@/components/SelectedDataPanel.vue';
+import GeneInfo from '@/components/GeneInfo.vue';
 import SelectedData from '@/models/SelectedData';
 import TrackSection from '@/models/TrackSection';
 import Gene from '@/models/Gene';
 
-describe('SelectedDataPanel', () => {
+describe('GeneInfo', () => {
 
   it('displays gene name if present', async () => {
     const section = new TrackSection({
@@ -18,10 +18,12 @@ describe('SelectedDataPanel', () => {
       shape: 'rect',
       gene: new Gene({geneSymbol: 'TEST', geneName: 'Test 123', geneType: '', key: 0, geneRgdId: 0, chr: '1', startPos: 0, stopPos: 10000})
     });
-    const selectedData = new SelectedData(section, 'trackSection');
-    const wrapper = shallowMount(SelectedDataPanel, {
+    const wrapper = shallowMount(GeneInfo, {
       props: {
-        selectedData: [selectedData]
+        gene: section.gene,
+        chromosome: section.chromosome,
+        start: section.sectionStart,
+        stop: section.sectionStop,
       }
     });
 
@@ -41,10 +43,12 @@ describe('SelectedDataPanel', () => {
       basePairToHeightRatio: 100,
       shape: 'rect',
     });
-    const selectedData = new SelectedData(section, 'trackSection');
-    const wrapper = shallowMount(SelectedDataPanel, {
+    const wrapper = shallowMount(GeneInfo, {
       props: {
-        selectedData: [selectedData]
+        gene: null,
+        chromosome: section.chromosome,
+        start: section.sectionStart,
+        stop: section.sectionStop,
       }
     });
 
