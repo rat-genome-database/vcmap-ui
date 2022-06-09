@@ -35,10 +35,10 @@
 
 <script setup lang="ts">
 import Gene from '@/models/Gene';
-import SelectedData from '@/models/SelectedData';
 import { Formatter } from '@/utils/Formatter';
 import { useStore } from 'vuex';
 import { key } from '@/store';
+import { getGeneOrthologIds, updateSelectedData } from '@/utils/DataPanelHelpers';
 
 const store = useStore(key);
 
@@ -52,41 +52,18 @@ interface Props
   trackOrientation?: string;
 }
 
-const props = defineProps<Props>();
+defineProps<Props>();
 
 const selectGene = (gene: Gene) => {
-  const geneOrthologIds = getGeneOrthologIds(gene) || [];
+  const geneOrthologIds = getGeneOrthologIds(store, gene) || [];
   const rgdIds: number[] = [gene?.rgdId] || [];
   store.dispatch('setSelectedGeneIds', [...rgdIds, ...geneOrthologIds] || []);
-  updateSelectedData(gene);
+  updateSelectedData(store, gene);
 };
 
 const goToRgd = (rgdId: number) => {
   const rgdUrl = `https://rgd.mcw.edu/rgdweb/report/gene/main.html?id=${rgdId}`;
   window.open(rgdUrl);
-};
-
-// TODO: methods below here should be moved to a util?
-const getGeneOrthologIds = (gene: Gene) => {
-  const geneOrthologs = store.state.selectedBackboneRegion.orthologData.get(gene.symbol);
-  let geneOrthologIds: number[] = [];
-  if (geneOrthologs) {
-    geneOrthologIds = Object.keys(geneOrthologs).map((geneKey) => geneOrthologs[geneKey][0].geneRgdId);
-  }
-  return geneOrthologIds;
-};
-
-const updateSelectedData = (gene: Gene) => {
-  const geneOrthologs = store.state.selectedBackboneRegion.orthologData.get(gene.symbol);
-  const selectedData = [new SelectedData(gene, 'Gene')];
-  if (geneOrthologs) {
-    let geneKeys = Object.keys(geneOrthologs);
-    for (let i = 0; i < geneKeys.length; i++) {
-      let ortholog = new Gene(geneOrthologs[geneKeys[i]][0]);
-      selectedData.push(new SelectedData(ortholog, 'Gene'));
-    }
-  }
-  store.dispatch('setSelectedData', selectedData);
 };
 
 </script>

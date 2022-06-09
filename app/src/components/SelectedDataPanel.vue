@@ -24,11 +24,9 @@
             placeholder="Search loaded genes..."
           />
         </div>
-        <template v-if="showResultsNumber">
-          <div class="panel-header-item">
-            {{numberOfResults}} Selected Genes
-          </div>
-        </template>
+        <div class="panel-header-item">
+          {{numberOfResults}} Selected Genes
+        </div>
       </div>
     </template>
     <div class="gene-data">
@@ -123,6 +121,7 @@ import { Formatter } from '@/utils/Formatter';
 import { ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
+import { getGeneOrthologIds, updateSelectedData } from '@/utils/DataPanelHelpers';
 
 const store = useStore(key);
 
@@ -135,7 +134,6 @@ const props = defineProps<Props>();
 
 const searchedGene = ref<Gene | null>(null);
 const geneSuggestions = ref<Gene[]>([]);
-const showResultsNumber = ref<boolean>(false);
 const numberOfResults = ref<number>(0);
 
 // fraction of gene bp length to add to the window when jumping
@@ -143,12 +141,10 @@ const numberOfResults = ref<number>(0);
 const SEARCHED_GENE_WINDOW_FACTOR = 2;
 
 watch(() => props.selectedData, () => {
-  showResultsNumber.value = false;
   numberOfResults.value = 0;
   if (props.selectedData) {
     props.selectedData.forEach((dataObject) => {
       if (dataObject.type === 'trackSection' || dataObject.type === 'Gene' || dataObject.type === 'geneLabel') {
-        showResultsNumber.value = true;
         if (dataObject.type === 'trackSection' && dataObject.genomicSection.gene) {
           numberOfResults.value += (dataObject.genomicSection.hiddenGenes.length + 1);
         }
@@ -178,10 +174,10 @@ const searchGene = (event: {query: string}) => {
 
 const searchSVG = (event: any) => {
   store.dispatch('setGene', event.value);
-  const geneOrthologIds = getGeneOrthologIds(event.value) || [];
+  const geneOrthologIds = getGeneOrthologIds(store, event.value) || [];
   const rgdIds: number[] = [event.value?.rgdId] || [];
   store.dispatch('setSelectedGeneIds', [...rgdIds, ...geneOrthologIds] || []);
-  updateSelectedData(event.value);
+  updateSelectedData(store, event.value);
   // Only adjust window of the searched gene is on backbone
   if (event.value && event.value.speciesName === store.state.species?.name) {
     adjustSelectionWindow();
@@ -192,11 +188,11 @@ const selectAndSearchSVG = (event: any) => {
   // If "Enter" is pressed, just search the first gene
   if (event.key === "Enter") {
     searchedGene.value = geneSuggestions.value[0];
-    const geneOrthologIds = getGeneOrthologIds(searchedGene.value) || [];
+    const geneOrthologIds = getGeneOrthologIds(store, searchedGene.value) || [];
     const rgdIds: number[] = [searchedGene.value?.rgdId] || [];
     store.dispatch('setGene', searchedGene.value);
     store.dispatch('setSelectedGeneIds', [...geneOrthologIds, ...rgdIds] || []);
-    updateSelectedData(searchedGene.value);
+    updateSelectedData(store, searchedGene.value);
     if (searchedGene.value && searchedGene.value.speciesName === store.state.species?.name) {
       adjustSelectionWindow();
     }
@@ -205,28 +201,6 @@ const selectAndSearchSVG = (event: any) => {
 
 const getSuggestionDisplay = (item: any) => {
   return `${item.symbol} - ${item.speciesName}`;
-};
-
-const getGeneOrthologIds = (gene: Gene) => {
-  const geneOrthologs = store.state.selectedBackboneRegion.orthologData.get(gene.symbol);
-  let geneOrthologIds: number[] = [];
-  if (geneOrthologs) {
-    geneOrthologIds = Object.keys(geneOrthologs).map((geneKey) => geneOrthologs[geneKey][0].geneRgdId);
-  }
-  return geneOrthologIds;
-};
-
-const updateSelectedData = (gene: Gene) => {
-  const geneOrthologs = store.state.selectedBackboneRegion.orthologData.get(gene.symbol);
-  const selectedData = [new SelectedData(gene, 'Gene')];
-  if (geneOrthologs) {
-    let geneKeys = Object.keys(geneOrthologs);
-    for (let i = 0; i < geneKeys.length; i++) {
-      let ortholog = new Gene(geneOrthologs[geneKeys[i]][0]);
-      selectedData.push(new SelectedData(ortholog, 'Gene'));
-    }
-  }
-  store.dispatch('setSelectedData', selectedData);
 };
 
 const adjustSelectionWindow = () => {
