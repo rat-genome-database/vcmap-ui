@@ -537,7 +537,7 @@ const navigateUp = () => {
   {
     const comparativeSpecies = store.state.comparativeSpecies;
     const comparativeSpeciesMaps = [];
-    comparativeSpecies.forEach(species => {comparativeSpeciesMaps.push(species.activeMap.key)});
+    comparativeSpecies.forEach(species => {comparativeSpeciesMaps.push(species.activeMap.key);});
     generateOrthologLines(selectedRegion.orthologData, comparativeSpeciesMaps);
   }
 };

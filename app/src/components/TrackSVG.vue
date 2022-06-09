@@ -269,7 +269,7 @@ const checkSectionForGene = (section: TrackSection, selectedGeneIds: number[]) =
   }
 
   return false;
-}
+};
 
 const getSectionFill = (section: TrackSection) => {
   if (section.isSelected) {return SELECTED_HIGHLIGHT_COLOR;}
