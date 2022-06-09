@@ -20,7 +20,7 @@
       </div>
     </div>
   </div>
-  <div data-test="gene-name">Name: {{gene.name ?? 'N/A'}}</div>
+  <div v-if="gene" data-test="gene-name">Name: {{gene.name ?? 'N/A'}}</div>
   <div data-test="chromosome-name">Chromosome: {{chromosome}}</div>
   <div data-test="start-stop">
     Region: {{Formatter.addCommasToBasePair(start)}} -
@@ -101,7 +101,9 @@ const updateSelectedData = (gene: Gene) => {
 
 .rgd-link
 {
-  padding: 0;
+  padding-bottom: 0;
+  padding-left: 0;
+  padding-top: 0;
 }
 
 .external-link

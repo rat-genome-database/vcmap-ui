@@ -46,7 +46,7 @@
 
         <template v-else-if="dataObject?.type === 'geneLabel' || dataObject?.type === 'trackSection'">
           <GeneInfo
-            :gene="dataObject?.genomicSection.gene"
+            :gene="dataObject?.genomicSection.gene ? dataObject?.genomicSection.gene : null"
             :chromosome="dataObject.genomicSection.chromosome"
             :start="dataObject.genomicSection.sectionStart"
             :stop="dataObject.genomicSection.sectionStop"
@@ -60,7 +60,7 @@
               <template v-for="section in dataObject?.genomicSection.combinedGenes" :key="section">
                 <GeneInfo
                   :gene="section.gene"
-                  :chromosome="section.gene.chromose"
+                  :chromosome="section.gene.chromosome"
                   :start="section.gene.start"
                   :stop="section.gene.stop"
                 />
@@ -207,7 +207,6 @@ const getGeneOrthologIds = (gene: Gene) => {
 };
 
 const updateSelectedData = (gene: Gene) => {
-  console.log(gene);
   const geneOrthologs = store.state.selectedBackboneRegion.orthologData.get(gene.symbol);
   const selectedData = [new SelectedData(gene, 'Gene')];
   if (geneOrthologs) {
