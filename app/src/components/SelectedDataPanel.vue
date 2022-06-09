@@ -45,14 +45,24 @@
         </template>
 
         <template v-else-if="dataObject?.type === 'geneLabel' || dataObject?.type === 'trackSection'">
-          <GeneInfo
-            :gene="dataObject?.genomicSection.gene ? dataObject?.genomicSection.gene : null"
-            :chromosome="dataObject.genomicSection.chromosome"
-            :start="dataObject.genomicSection.sectionStart"
-            :stop="dataObject.genomicSection.sectionStop"
-            :chain-level="dataObject.genomicSection.chainLevel"
-            :is-inverted="dataObject.genomicSection.isInverted"
-          />
+          <template v-if="dataObject?.type === 'trackSection'">
+            <GeneInfo
+              :gene="dataObject?.genomicSection.gene ? dataObject?.genomicSection.gene : null"
+              :chromosome="dataObject.genomicSection.chromosome"
+              :start="dataObject.genomicSection.sectionStart"
+              :stop="dataObject.genomicSection.sectionStop"
+              :chain-level="dataObject.genomicSection.chainLevel"
+              :track-orientation="dataObject.genomicSection.isInverted ? '-' : '+'"
+            />
+          </template>
+          <template v-else>
+            <GeneInfo
+              :gene="dataObject?.genomicSection.gene ? dataObject?.genomicSection.gene : null"
+              :chromosome="dataObject.genomicSection.chromosome"
+              :start="dataObject.genomicSection.sectionStart"
+              :stop="dataObject.genomicSection.sectionStop"
+            />
+          </template>
           <Divider />
 
           <template v-if="dataObject.type === 'geneLabel'">

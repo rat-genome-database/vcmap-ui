@@ -26,7 +26,7 @@
     Region: {{Formatter.addCommasToBasePair(start)}} -
       {{Formatter.addCommasToBasePair(stop)}}
   </div>
-  <div v-if="isInverted !== undefined">Orientation: {{isInverted ? '-' : '+'}}</div>
+  <div v-if="trackOrientation">Orientation: {{trackOrientation}}</div>
   <div v-if="chainLevel"
     data-test="level">
       Level: {{chainLevel}}
@@ -49,7 +49,7 @@ interface Props
   start: number;
   stop: number;
   chainLevel?: number;
-  isInverted?: boolean;
+  trackOrientation?: string;
 }
 
 const props = defineProps<Props>();
@@ -77,7 +77,6 @@ const getGeneOrthologIds = (gene: Gene) => {
 };
 
 const updateSelectedData = (gene: Gene) => {
-  console.log(gene);
   const geneOrthologs = store.state.selectedBackboneRegion.orthologData.get(gene.symbol);
   const selectedData = [new SelectedData(gene, 'Gene')];
   if (geneOrthologs) {
