@@ -131,7 +131,7 @@ export default class TrackSection
       {
         // Combined genes for this section includes hidden genes plus the added combined
         // So the number of genes represented is combined + 1 (the gene itself)
-        truncatedGenes = `...(${this.combinedGenes.length + 1})`
+        truncatedGenes = `...(${this.combinedGenes.length + 1})`;
       }
       else if (this.hiddenGenes && this.hiddenGenes.length > 0)
       {

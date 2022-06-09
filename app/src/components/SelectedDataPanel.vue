@@ -24,68 +24,54 @@
             placeholder="Search loaded genes..."
           />
         </div>
-        <template v-if="showResultsNumber">
-          <div class="panel-header-item">
-            {{numberOfResults}} Selected Genes
-          </div>
-        </template>
+        <div class="panel-header-item">
+          {{numberOfResults}} Selected Genes
+        </div>
       </div>
     </template>
     <div class="gene-data">
 
       <template v-for="dataObject in props.selectedData" :key="dataObject">
         <template v-if="dataObject?.type === 'Gene'">
-          <div v-if="dataObject.genomicSection">
-            <div>
-              Symbol:
-              <Button
-                class="p-button-link rgd-link"
-                @click="goToRgd(dataObject.genomicSection.rgdId)"
-              >
-                <b>{{dataObject.genomicSection.symbol}}</b>
-                <i class="pi pi-link external-link"></i>
-              </Button>
-            </div>
-          </div>
-          <div data-test="gene-name">Name: {{dataObject.genomicSection.name ?? 'N/A'}}</div>
-          <div data-test="chromosome-name">Chromosome: {{dataObject.genomicSection.chromosome}}</div>
-          <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(dataObject.genomicSection.start)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.stop)}}</div>
+          <GeneInfo
+            :gene="dataObject.genomicSection"
+            :chromosome="dataObject.genomicSection.chromosome"
+            :start="dataObject.genomicSection.start"
+            :stop="dataObject.genomicSection.stop"
+          />
           <Divider />
         </template>
 
         <template v-else-if="dataObject?.type === 'geneLabel' || dataObject?.type === 'trackSection'">
-          <div v-if="dataObject?.genomicSection.gene" data-test="gene-symbol">
-            Symbol:
-            <Button
-              class="p-button-link rgd-link"
-              @click="goToRgd(dataObject.genomicSection.gene.rgdId)"
-            >
-              <b>{{dataObject.genomicSection.gene.symbol}}</b>
-              <i class="pi pi-link external-link"></i>
-            </Button>
-          </div>
-          <div v-if="dataObject.genomicSection.gene" data-test="gene-name">Name: {{dataObject.genomicSection.gene.name ?? 'N/A'}}</div>
-          <div data-test="chromosome-name">Chromosome: {{dataObject.genomicSection.chromosome}}</div>
-          <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(dataObject.genomicSection.sectionStart)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.sectionStop)}}</div>
-          <div>Orientation: {{dataObject.genomicSection.isInverted ? '-' : '+'}}</div>
-          <div v-if="dataObject.genomicSection.chainLevel != null" data-test="level">Level: {{dataObject.genomicSection.chainLevel}}</div>
+          <template v-if="dataObject?.type === 'trackSection'">
+            <GeneInfo
+              :gene="dataObject?.genomicSection.gene ? dataObject?.genomicSection.gene : null"
+              :chromosome="dataObject.genomicSection.chromosome"
+              :start="dataObject.genomicSection.sectionStart"
+              :stop="dataObject.genomicSection.sectionStop"
+              :chain-level="dataObject.genomicSection.chainLevel"
+              :track-orientation="dataObject.genomicSection.isInverted ? '-' : '+'"
+            />
+          </template>
+          <template v-else>
+            <GeneInfo
+              :gene="dataObject?.genomicSection.gene ? dataObject?.genomicSection.gene : null"
+              :chromosome="dataObject.genomicSection.chromosome"
+              :start="dataObject.genomicSection.sectionStart"
+              :stop="dataObject.genomicSection.sectionStop"
+            />
+          </template>
           <Divider />
 
           <template v-if="dataObject.type === 'geneLabel'">
             <template v-if="(dataObject.genomicSection.combinedGenes && dataObject.genomicSection.combinedGenes.length > 0)">
               <template v-for="section in dataObject?.genomicSection.combinedGenes" :key="section">
-                <div data-test="gene-symbol">
-                  Symbol:
-                  <Button
-                    class="p-button-link rgd-link"
-                    @click="goToRgd(section.gene.rgdId)"
-                  >
-                  <b>{{section.gene.symbol}}</b>
-                    <i class="pi pi-link external-link"></i>
-                  </Button></div>
-                <div data-test="gene-name"> Name: {{section.gene.name ?? 'N/A'}}</div>
-                <div data-test="chromosome-name">Chromosome: {{section.gene.chromosome}}</div>
-                <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(section.gene.start)}} - {{Formatter.addCommasToBasePair(section.gene.stop)}}</div>
+                <GeneInfo
+                  :gene="section.gene"
+                  :chromosome="section.gene.chromosome"
+                  :start="section.gene.start"
+                  :stop="section.gene.stop"
+                />
                 <Divider />
               </template>
             </template>
@@ -94,23 +80,16 @@
           <template v-else-if="dataObject.type === 'trackSection'">
             <template v-if="(dataObject.genomicSection.hiddenGenes && dataObject.genomicSection.hiddenGenes.length > 0)">
               <template v-for="section in dataObject?.genomicSection.hiddenGenes" :key="section">
-                <div data-test="gene-symbol">
-                  Symbol:
-                  <Button
-                    class="p-button-link rgd-link"
-                    @click="goToRgd(section.gene.rgdId)"
-                  >
-                  <b>{{section.gene.symbol}}</b>
-                    <i class="pi pi-link external-link"></i>
-                  </Button></div>
-                <div data-test="gene-name"> Name: {{section.gene.name ?? 'N/A'}}</div>
-                <div data-test="chromosome-name">Chromosome: {{section.gene.chromosome}}</div>
-                <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(section.gene.start)}} - {{Formatter.addCommasToBasePair(section.gene.stop)}}</div>
+                <GeneInfo
+                  :gene="section.gene"
+                  :chromosome="section.gene.chromosome"
+                  :start="section.gene.start"
+                  :stop="section.gene.stop"
+                />
                 <Divider />
               </template>
             </template>
           </template>
-
         </template>
 
         <template v-else-if="dataObject?.type === 'orthologLine'">
@@ -137,10 +116,12 @@
 <script setup lang="ts">
 import SelectedData from '@/models/SelectedData';
 import Gene from '@/models/Gene';
+import GeneInfo from '@/components/GeneInfo.vue';
 import { Formatter } from '@/utils/Formatter';
 import { ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
+import { getGeneOrthologIds, updateSelectedData } from '@/utils/DataPanelHelpers';
 
 const store = useStore(key);
 
@@ -153,7 +134,6 @@ const props = defineProps<Props>();
 
 const searchedGene = ref<Gene | null>(null);
 const geneSuggestions = ref<Gene[]>([]);
-const showResultsNumber = ref<boolean>(false);
 const numberOfResults = ref<number>(0);
 
 // fraction of gene bp length to add to the window when jumping
@@ -161,12 +141,10 @@ const numberOfResults = ref<number>(0);
 const SEARCHED_GENE_WINDOW_FACTOR = 2;
 
 watch(() => props.selectedData, () => {
-  showResultsNumber.value = false;
   numberOfResults.value = 0;
   if (props.selectedData) {
     props.selectedData.forEach((dataObject) => {
       if (dataObject.type === 'trackSection' || dataObject.type === 'Gene' || dataObject.type === 'geneLabel') {
-        showResultsNumber.value = true;
         if (dataObject.type === 'trackSection' && dataObject.genomicSection.gene) {
           numberOfResults.value += (dataObject.genomicSection.hiddenGenes.length + 1);
         }
@@ -196,10 +174,10 @@ const searchGene = (event: {query: string}) => {
 
 const searchSVG = (event: any) => {
   store.dispatch('setGene', event.value);
-  const geneOrthologIds = getGeneOrthologIds(event.value) || [];
+  const geneOrthologIds = getGeneOrthologIds(store, event.value) || [];
   const rgdIds: number[] = [event.value?.rgdId] || [];
   store.dispatch('setSelectedGeneIds', [...rgdIds, ...geneOrthologIds] || []);
-  updateSelectedData(event.value);
+  updateSelectedData(store, event.value);
   // Only adjust window of the searched gene is on backbone
   if (event.value && event.value.speciesName === store.state.species?.name) {
     adjustSelectionWindow();
@@ -210,46 +188,19 @@ const selectAndSearchSVG = (event: any) => {
   // If "Enter" is pressed, just search the first gene
   if (event.key === "Enter") {
     searchedGene.value = geneSuggestions.value[0];
-    const geneOrthologIds = getGeneOrthologIds(searchedGene.value) || [];
+    const geneOrthologIds = getGeneOrthologIds(store, searchedGene.value) || [];
     const rgdIds: number[] = [searchedGene.value?.rgdId] || [];
     store.dispatch('setGene', searchedGene.value);
     store.dispatch('setSelectedGeneIds', [...geneOrthologIds, ...rgdIds] || []);
-    updateSelectedData(searchedGene.value);
+    updateSelectedData(store, searchedGene.value);
     if (searchedGene.value && searchedGene.value.speciesName === store.state.species?.name) {
       adjustSelectionWindow();
     }
   }
 };
 
-const goToRgd = (rgdId: number) => {
-  const rgdUrl = `https://rgd.mcw.edu/rgdweb/report/gene/main.html?id=${rgdId}`;
-  window.open(rgdUrl);
-};
-
 const getSuggestionDisplay = (item: any) => {
   return `${item.symbol} - ${item.speciesName}`;
-};
-
-const getGeneOrthologIds = (gene: Gene) => {
-  const geneOrthologs = store.state.selectedBackboneRegion.orthologData.get(gene.symbol);
-  let geneOrthologIds: number[];
-  if (geneOrthologs) {
-    geneOrthologIds = Object.keys(geneOrthologs).map((geneKey) => geneOrthologs[geneKey][0].geneRgdId);
-  }
-  return geneOrthologIds;
-};
-
-const updateSelectedData = (gene: Gene) => {
-  const geneOrthologs = store.state.selectedBackboneRegion.orthologData.get(gene.symbol);
-  const selectedData = [new SelectedData(gene, 'Gene')];
-  if (geneOrthologs) {
-    let geneKeys = Object.keys(geneOrthologs);
-    for (let i = 0; i < geneKeys.length; i++) {
-      let ortholog = new Gene(geneOrthologs[geneKeys[i]][0]);
-      selectedData.push(new SelectedData(ortholog, 'Gene'));
-    }
-  }
-  store.dispatch('setSelectedData', selectedData);
 };
 
 const adjustSelectionWindow = () => {
@@ -262,7 +213,7 @@ const adjustSelectionWindow = () => {
     const geneBasePairLength = searchedGene.value.stop - searchedGene.value.start;
     // Take the max of new start position, and selected region's original start
     // to avoid jumping to outside of loaded region
-    const newInnerStart = Math.max(Math.floor(searchedGene.value.start 
+    const newInnerStart = Math.max(Math.floor(searchedGene.value.start
       - SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), selectedRegion.baseSelection.basePairStart);
     // Take min of new stop and selected regions original stop
     const newInnerStop = Math.min(Math.floor(searchedGene.value.stop
@@ -279,16 +230,6 @@ const adjustSelectionWindow = () => {
   height: 550px;
 }
 
-.rgd-link
-{
-  padding: 0;
-}
-
-.external-link
-{
-  padding-left: 4px;
-}
-
 .selected-data-header
 {
   flex-direction: column;
@@ -297,11 +238,5 @@ const adjustSelectionWindow = () => {
 .panel-header-item
 {
   padding-bottom: 10px;
-}
-
-.searched-gene-divider
-{
-  padding-bottom: 1rem;
-  font-weight: bold;
 }
 </style>
