@@ -66,7 +66,7 @@ export default class SpeciesApi
   }
 
 
-  static async getGenesBySymbol(mapKey: Number, symbolPrefix: String):  Promise<any>
+  static async getGenesBySymbol(mapKey: Number, speciesName: string, symbolPrefix: String):  Promise<any>
   {
     const res = await httpInstance.get(`/vcmap/genes/map/${mapKey}?symbolPrefix=${symbolPrefix}`);
 
@@ -75,13 +75,13 @@ export default class SpeciesApi
     for (const gene in res.data)
     {
       const geneInfo = res.data[gene];
-      geneList.push(new Gene({ geneSymbol: geneInfo.gene.symbol, geneName: geneInfo.gene.name, geneType: geneInfo.gene.type, key: geneInfo.gene.key, geneRgdId: geneInfo.gene.rgdId, chr: geneInfo.chromosome, startPos: geneInfo.start, stopPos: geneInfo.stop, }));
+      geneList.push(new Gene({ speciesName: speciesName, geneSymbol: geneInfo.gene.symbol, geneName: geneInfo.gene.name, geneType: geneInfo.gene.type, key: geneInfo.gene.key, geneRgdId: geneInfo.gene.rgdId, chr: geneInfo.chromosome, startPos: geneInfo.start, stopPos: geneInfo.stop, }));
     }
 
     return geneList;
   }
 
-  static async getGenesByRegion(chromosome: String, start: Number, stop: Number, mapKey: Number):  Promise<any>
+  static async getGenesByRegion(chromosome: String, start: Number, stop: Number, mapKey: Number, speciesName: string):  Promise<any>
   {
     const res = await httpInstance.get(`/genes/mapped/${chromosome}/${start}/${stop}/${mapKey}`);
 
@@ -90,7 +90,17 @@ export default class SpeciesApi
     for (const gene in res.data)
     {
       const geneInfo = res.data[gene];
-      geneList.push(new Gene({ geneSymbol: geneInfo.gene.symbol, geneName: geneInfo.gene.name, geneType: geneInfo.gene.type, key: geneInfo.gene.key, geneRgdId: geneInfo.gene.rgdId, chr: geneInfo.chromosome, startPos: geneInfo.start, stopPos: geneInfo.stop, }));
+      geneList.push(new Gene({
+        geneSymbol: geneInfo.gene.symbol,
+        geneName: geneInfo.gene.name,
+        geneType: geneInfo.gene.type,
+        key: geneInfo.gene.key,
+        geneRgdId: geneInfo.gene.rgdId,
+        chr: geneInfo.chromosome,
+        startPos: geneInfo.start,
+        stopPos: geneInfo.stop,
+        speciesName: speciesName
+      }));
     }
 
     return geneList;
