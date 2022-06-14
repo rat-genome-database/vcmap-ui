@@ -16,7 +16,16 @@ describe('GeneInfo', () => {
       cutoff: 50000,
       basePairToHeightRatio: 100,
       shape: 'rect',
-      gene: new Gene({geneSymbol: 'TEST', geneName: 'Test 123', geneType: '', key: 0, geneRgdId: 0, chr: '1', startPos: 0, stopPos: 10000})
+      gene: new Gene({
+        speciesName: 'Test species',
+        geneSymbol: 'TEST',
+        geneName: 'Test 123',
+        geneType: '',
+        key: 0,
+        geneRgdId: 0,
+        chr: '1',
+        startPos: 0,
+        stopPos: 10000})
     });
     const wrapper = shallowMount(GeneInfo, {
       props: {
@@ -28,8 +37,10 @@ describe('GeneInfo', () => {
     });
 
     const geneText = wrapper.get('[data-test="gene-name"]');
+    const geneSpeciesName = wrapper.get('[data-test="species-name"]');
 
     expect(geneText.text()).toEqual('Name: Test 123');
+    expect(geneSpeciesName.text()).toEqual('Species: Test species');
   });
 
   it('displays data about the genomic region', async () => {
