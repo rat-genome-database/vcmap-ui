@@ -426,6 +426,9 @@ const generateOrthologLines = (orthologData: any, comparativeMaps: Number[]) => 
   backboneGenes.forEach(backboneGene => {
     //check ortholog data for currently visible backbone genes that have orthologs
     let orthologInfo = orthologData.get(backboneGene.gene.symbol);
+    const comparativeSpecies = store.state.comparativeSpecies;
+    const compSpeciesNameMap = new Map<Number, string>();
+    comparativeSpecies.forEach((species: any) => compSpeciesNameMap.set(species.activeMap.key, species.name));
     if (orthologInfo)
     {
       possibleOrthologs.push({'backboneGene': backboneGene, 'orthologs': orthologInfo});
@@ -437,7 +440,11 @@ const generateOrthologLines = (orthologData: any, comparativeMaps: Number[]) => 
         const selectedData: SelectedData[] = store.state.selectedData;
         const orthologKeys = Object.keys(orthologInfo);
         orthologKeys.forEach((key) => {
-          const orthologGene = new Gene({...orthologInfo[key][0], key: orthologInfo[key][0].mapKey});
+          const orthologGene = new Gene({
+            ...orthologInfo[key][0],
+            key: orthologInfo[key][0].mapKey,
+            speciesName: compSpeciesNameMap.get(orthologInfo[key][0].mapKey)
+          });
           if (!selectedIds.includes(orthologGene.rgdId)) {
             selectedIds.push(orthologGene.rgdId);
             selectedData.push(new SelectedData(orthologGene, 'Gene'));

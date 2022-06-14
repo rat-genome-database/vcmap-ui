@@ -21,6 +21,7 @@
     </div>
   </div>
   <div v-if="gene" data-test="gene-name">Name: {{gene.name ?? 'N/A'}}</div>
+  <div v-if="gene" data-test="species-name">Species: {{gene.speciesName ?? 'N/A'}}</div>
   <div data-test="chromosome-name">Chromosome: {{chromosome}}</div>
   <div data-test="start-stop">
     Region: {{Formatter.addCommasToBasePair(start)}} -

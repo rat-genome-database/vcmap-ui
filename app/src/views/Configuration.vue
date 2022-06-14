@@ -421,7 +421,7 @@ async function searchGene(event: {query: string})
   isLoadingGene.value = true;
   try
   {
-    const matches = await SpeciesApi.getGenesBySymbol(backboneSpecies.value.activeMap.key, event.query);
+    const matches = await SpeciesApi.getGenesBySymbol(backboneSpecies.value.activeMap.key, backboneSpecies.value.name, event.query);
     geneSuggestions.value = matches;
   }
   catch (err: any)

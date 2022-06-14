@@ -88,7 +88,7 @@ export function createSyntenyTrackFromSpeciesSyntenyData(speciesSyntenyData: Spe
  */
 export async function createBackboneDataTracks(species: Species, chromosome: Chromosome, startPos: number, stopPos: number)
 {
-  const genes = await SpeciesApi.getGenesByRegion(chromosome.chromosome, startPos, stopPos, species.defaultMapKey);
+  const genes = await SpeciesApi.getGenesByRegion(chromosome.chromosome, startPos, stopPos, species.defaultMapKey, species.name);
   return genes;
 }
 
