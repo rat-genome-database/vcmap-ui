@@ -316,7 +316,7 @@ rect.panel
 .ortholog-line
 {
   stroke-width: 1;
-
+  stroke: lightgray;
   &:hover
   {
     stroke-width: 2.5;
