@@ -121,7 +121,8 @@ import { Formatter } from '@/utils/Formatter';
 import { ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
-import { getGeneOrthologIds, updateSelectedData } from '@/utils/DataPanelHelpers';
+import { getGeneOrthologIds, updateSelectedData, sortGeneList } from '@/utils/DataPanelHelpers';
+import TrackSection from '@/models/TrackSection';
 
 const store = useStore(key);
 
@@ -147,9 +148,11 @@ watch(() => props.selectedData, () => {
       if (dataObject.type === 'trackSection' || dataObject.type === 'Gene' || dataObject.type === 'geneLabel') {
         if (dataObject.type === 'trackSection' && dataObject.genomicSection.gene) {
           numberOfResults.value += (dataObject.genomicSection.hiddenGenes.length + 1);
+          if (dataObject.genomicSection.hiddenGenes.length > 0) sortGeneList(dataObject.genomicSection.hiddenGenes);
         }
         if (dataObject.type === 'geneLabel') {
           numberOfResults.value += (dataObject.genomicSection.combinedGenes.length + 1);
+          if (dataObject.genomicSection.combinedGenes.length > 0) sortGeneList(dataObject.genomicSection.combinedGenes);
         }
         if (dataObject.type === 'Gene') {
           numberOfResults.value += 1;

@@ -26,7 +26,7 @@
         class="ortholog-line"
         @mouseenter="onMouseEnter($event, line, 'orthologLine')"
         @mouseleave="onMouseLeave(line, 'orthologLine')"
-        :stroke="(line.isSelected ? SELECTED_HIGHLIGHT_COLOR : 'gray')"
+        :stroke="(line.isSelected ? SELECTED_HIGHLIGHT_COLOR : 'lightgray')"
         :x1="posX + width" :x2="line.comparativeGeneX"
         :y1="line.backboneGeneY" :y2="line.comparativeGeneY" />
     </template>
@@ -119,6 +119,7 @@ import { useStore } from 'vuex';
 import SVGConstants from '@/utils/SVGConstants';
 import { getMousePosSVG } from '@/utils/SVGHelpers';
 import { key } from '@/store';
+import { sortGeneList } from '@/utils/DataPanelHelpers';
 
 const LEVEL_2_WIDTH_MULTIPLIER = 0.75;
 const LABEL_Y_OFFSET = 3;
@@ -196,22 +197,40 @@ const onClick = (event: any, section: TrackSection, type: string) => {
     store.dispatch('setSelectedData', null);
     return;
   }
+
   // If shift key is held, we'll just add to the selections, otherwise, reset first
   let geneIds: number[] = event.shiftKey ? [...store.state.selectedGeneIds] : [];
-  // If this is a geneLabel, we're going to set all combined genes as "selected"
-  if (type === 'geneLabel') {
-    if (section.combinedGenes && section.combinedGenes.length > 0) {
-      section.combinedGenes.forEach((section) => geneIds.push(section.gene.rgdId));
+
+  // Get the list of genes to build the selected data, if this is a gene label, we
+  // add all the combined genes to the selected data panel
+  // Otherwise if its a track section, we'll add the hidden genes
+  let newSelectedData: SelectedData[] = [];
+  const geneList = type === 'geneLabel' ? section.combinedGenes : section.hiddenGenes;
+  if (geneList && geneList.length > 0) {
+    // If this is a geneLabel, we're going to set all combined genes as "selected"
+    if (type === 'geneLabel') {
+      geneList.forEach((section) => geneIds.push(section.gene.rgdId));
     }
+    // Alphabetically sort the combined/hidden gene lists (LOC genes at end of list)
+    sortGeneList(geneList);
+    // Set the new selected data from gene list
+    newSelectedData = geneList.map((section) => {
+      if (section.gene) {return new SelectedData(section.gene, 'Gene');}
+    });
+  }
+  // If this section has a gene we'll list that first in the data panel
+  if (section.gene) {
+    newSelectedData.splice(0, 0, new SelectedData(section.gene, 'Gene'));
   }
   let foundLine = false;
-  const newSelectedData = [new SelectedData(section, type)];
   props.lines?.forEach((line) => {
     if (line.backboneGene.gene?.rgdId === section.gene?.rgdId) {
       foundLine = true;
       let sectionGeneId = section.gene?.rgdId;
       let comparativeGeneId = line.comparativeGene.gene?.rgdId;
-      newSelectedData.push(new SelectedData(line.comparativeGene.gene, 'Gene'));
+      // splice any orthologs into index one so they're listed after the backbone gene
+      // TODO: there may be a better way to group these, other than just inserting into index 1
+      newSelectedData.splice(1, 0, new SelectedData(line.comparativeGene.gene, 'Gene'));
       if (sectionGeneId && !geneIds.includes(sectionGeneId)) {
         geneIds.push(sectionGeneId);
       }
@@ -316,7 +335,6 @@ rect.panel
 .ortholog-line
 {
   stroke-width: 1;
-  stroke: lightgray;
   &:hover
   {
     stroke-width: 2.5;
