@@ -196,22 +196,29 @@ const onClick = (event: any, section: TrackSection, type: string) => {
     store.dispatch('setSelectedData', null);
     return;
   }
+  let newSelectedData: SelectedData[] = [];
   // If shift key is held, we'll just add to the selections, otherwise, reset first
   let geneIds: number[] = event.shiftKey ? [...store.state.selectedGeneIds] : [];
-  // If this is a geneLabel, we're going to set all combined genes as "selected"
-  if (type === 'geneLabel') {
-    if (section.combinedGenes && section.combinedGenes.length > 0) {
-      section.combinedGenes.forEach((section) => geneIds.push(section.gene.rgdId));
+  const geneList = type === 'geneLabel' ? section.combinedGenes : section.hiddenGenes;
+  if (geneList && geneList.length > 0) {
+    // If this is a geneLabel, we're going to set all combined genes as "selected"
+    if (type === 'geneLabel') {
+      geneList.forEach((section) => geneIds.push(section.gene.rgdId));
     }
+    newSelectedData = geneList.map((section) => {
+      if (section.gene) {return new SelectedData(section.gene, 'Gene');}
+    });
+  }
+  if (section.gene) {
+    newSelectedData.splice(0, 0, new SelectedData(section.gene, 'Gene'));
   }
   let foundLine = false;
-  const newSelectedData = [new SelectedData(section, type)];
   props.lines?.forEach((line) => {
     if (line.backboneGene.gene?.rgdId === section.gene?.rgdId) {
       foundLine = true;
       let sectionGeneId = section.gene?.rgdId;
       let comparativeGeneId = line.comparativeGene.gene?.rgdId;
-      newSelectedData.push(new SelectedData(line.comparativeGene.gene, 'Gene'));
+      newSelectedData.splice(1, 0, new SelectedData(line.comparativeGene.gene, 'Gene'));
       if (sectionGeneId && !geneIds.includes(sectionGeneId)) {
         geneIds.push(sectionGeneId);
       }
