@@ -58,6 +58,34 @@
       :x="posX - 2" :y="selectedRegion.innerSelection.svgYPoint"
       :width="SVGConstants.trackWidth + INNER_SELECTION_EXTRA_WIDTH"
       :height="selectedRegion.innerSelection.svgHeight" />
+      
+    <text v-if="!isDetailed && selectedRegion.baseSelection.svgHeight > 0"
+      class="label small"
+      :x="posX - 3"
+      :y="selectedRegion.baseSelection.svgYPoint - 1">
+        {{ Formatter.convertBasePairToLabel(selectedRegion.baseSelection.basePairStart) }}
+    </text>
+
+    <text v-if="!isDetailed && selectedRegion.baseSelection.svgHeight > 0"
+      class="label small"
+      :x="posX - 3"
+      :y="selectedRegion.baseSelection.svgYPoint + selectedRegion.baseSelection.svgHeight + 6">
+        {{ Formatter.convertBasePairToLabel(selectedRegion.baseSelection.basePairStop) }}
+    </text>
+
+    <text v-if="!isDetailed && selectedRegion.innerSelection?.svgHeight > 0 && selectedRegion.innerSelection?.svgYPoint - selectedRegion.baseSelection.svgYPoint > 6"
+      class="label small"
+      :x="posX - 3"
+      :y="selectedRegion.innerSelection?.svgYPoint - 1">
+        {{ Formatter.convertBasePairToLabel(selectedRegion.innerSelection.basePairStart) }}
+    </text>
+    
+    <text v-if="!isDetailed && selectedRegion.innerSelection?.svgHeight >= 6 && ((selectedRegion.baseSelection.svgYPoint + selectedRegion.baseSelection.svgHeight + 6) - (selectedRegion.innerSelection.svgYPoint + selectedRegion.innerSelection.svgHeight + 6) > 6)"
+      class="label small"
+      :x="posX - 3"
+      :y="selectedRegion.innerSelection?.svgYPoint + selectedRegion.innerSelection.svgHeight + 6">
+        {{ Formatter.convertBasePairToLabel(selectedRegion.innerSelection.basePairStop) }}
+    </text>
   </template>
 
 </template>
@@ -73,6 +101,7 @@ import { useStore } from 'vuex';
 import SVGConstants from '@/utils/SVGConstants';
 import { getMousePosSVG } from '@/utils/SVGHelpers';
 import { key } from '@/store';
+import { Formatter } from '@/utils/Formatter';
 
 const INNER_SELECTION_EXTRA_WIDTH = 4;
 const START_LABEL_Y_OFFSET = -3;
