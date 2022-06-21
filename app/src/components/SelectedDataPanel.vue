@@ -23,6 +23,15 @@
             :minLength="3"
             placeholder="Search loaded genes..."
           />
+          <Button
+            v-tooltip.right="`Only searches genes loaded in the selected overview \
+              region (${Formatter.convertBasePairToLabel(overviewStart)} - \
+              ${Formatter.convertBasePairToLabel(overviewStop)}). \
+              Select a wider region on the backbone in the overview panel to search more genes.`"
+            icon="pi pi-info-circle"
+            class="p-button-link"
+          >
+          </Button>
         </div>
         <div class="panel-header-item">
           {{numberOfResults}} Selected Genes
@@ -136,6 +145,8 @@ const props = defineProps<Props>();
 const searchedGene = ref<Gene | null>(null);
 const geneSuggestions = ref<Gene[]>([]);
 const numberOfResults = ref<number>(0);
+const overviewStart = ref<number>(store.state.selectedBackboneRegion.baseSelection.basePairStart);
+const overviewStop = ref<number>(store.state.selectedBackboneRegion.baseSelection.basePairStop);
 
 // fraction of gene bp length to add to the window when jumping
 // to the gene after a search
