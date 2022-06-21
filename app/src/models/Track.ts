@@ -222,9 +222,20 @@ export default class Track
             {
               sectionAbove.labelShown = false;
             }
+            else if (labelSection.trackSection.gene.symbol.split("", 3).join("").toLowerCase() == 'loc')
+            {
+              sectionAbove.trackSection.combinedGenes ? sectionAbove.trackSection.combinedGenes.push(labelSection.trackSection) : sectionAbove.trackSection.combinedGenes = [labelSection.trackSection];
+              labelSection.labelCombined = true;
+              labelSection.labelShown = false;
+              continue;
+            }
             else
             {
               labelSection.trackSection.combinedGenes ? labelSection.trackSection.combinedGenes.push(sectionAbove.trackSection) : labelSection.trackSection.combinedGenes = [sectionAbove.trackSection];
+              if (sectionAbove.trackSection.combinedGenes)
+              {
+                sectionAbove.trackSection.combinedGenes.forEach((section: TrackSection) => { labelSection.trackSection.combinedGenes.push(section); });
+              } 
               sectionAbove.labelCombined = true;
             }
           }
@@ -235,9 +246,20 @@ export default class Track
             {
               sectionBelow.labelShown = false;
             }
+            else if (labelSection.trackSection.gene.symbol.split("", 3).join("").toLowerCase() == 'loc')
+            {
+              sectionBelow.trackSection.combinedGenes ? sectionBelow.trackSection.combinedGenes.push(labelSection.trackSection) : sectionBelow.trackSection.combinedGenes = [labelSection.trackSection];
+              labelSection.labelCombined = true;
+              labelSection.labelShown = false;
+              continue;
+            }
             else
             {
               labelSection.trackSection.combinedGenes ? labelSection.trackSection.combinedGenes.push(sectionBelow.trackSection) : labelSection.trackSection.combinedGenes = [sectionBelow.trackSection];
+              if (sectionBelow.trackSection.combinedGenes)
+              {
+                sectionBelow.trackSection.combinedGenes.forEach((section: TrackSection) => { labelSection.trackSection.combinedGenes.push(section); });
+              } 
               sectionBelow.labelCombined = true;
             }
           }
