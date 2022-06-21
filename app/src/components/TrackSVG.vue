@@ -119,6 +119,7 @@ import { useStore } from 'vuex';
 import SVGConstants from '@/utils/SVGConstants';
 import { getMousePosSVG } from '@/utils/SVGHelpers';
 import { key } from '@/store';
+import { sortGeneList } from '@/utils/DataPanelHelpers';
 
 const LEVEL_2_WIDTH_MULTIPLIER = 0.75;
 const LABEL_Y_OFFSET = 3;
@@ -210,7 +211,9 @@ const onClick = (event: any, section: TrackSection, type: string) => {
     if (type === 'geneLabel') {
       geneList.forEach((section) => geneIds.push(section.gene.rgdId));
     }
-    // Set the new selected data as 
+    // Alphabetically sort the combined/hidden gene lists (LOC genes at end of list)
+    sortGeneList(geneList);
+    // Set the new selected data from gene list
     newSelectedData = geneList.map((section) => {
       if (section.gene) {return new SelectedData(section.gene, 'Gene');}
     });

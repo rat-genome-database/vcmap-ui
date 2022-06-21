@@ -2,6 +2,7 @@ import Gene from '@/models/Gene';
 import SelectedData from '@/models/SelectedData';
 import { Store } from "vuex";
 import { VCMapState } from "@/store";
+import TrackSection from '@/models/TrackSection';
 // Util methods to help process and update selection info
 export function getGeneOrthologIds(store: Store<VCMapState>, gene: Gene) {
   const geneOrthologs = store.state.selectedBackboneRegion.orthologData.get(gene.symbol);
@@ -29,4 +30,20 @@ export function updateSelectedData(store: Store<VCMapState>, gene: Gene) {
     }
   }
   store.dispatch('setSelectedData', selectedData);
+}
+
+export function sortGeneList(geneList: TrackSection[]) {
+  // for combined or hiddent gene lists, sort LOC
+  // genes to end of list, otherwise sort alphabetically
+  geneList.sort((geneA, geneB) => {
+    if (geneA.gene?.symbol.startsWith('LOC')) {
+      return 1;
+    }
+    if (geneB.gene?.symbol.startsWith('LOC')) {
+      return -1;
+    }
+    const geneASymbol = geneA.gene?.symbol.toLowerCase() || '';
+    const geneBSymbol = geneB.gene?.symbol.toLowerCase() || '';
+    return (geneASymbol < geneBSymbol) ? -1 : (geneASymbol > geneBSymbol) ? 1 : 0;
+  });
 }
