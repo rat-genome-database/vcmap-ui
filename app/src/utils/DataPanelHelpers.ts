@@ -36,10 +36,17 @@ export function sortGeneList(geneList: TrackSection[]) {
   // for combined or hiddent gene lists, sort LOC
   // genes to end of list, otherwise sort alphabetically
   geneList.sort((geneA, geneB) => {
-    if (geneA.gene?.symbol.startsWith('LOC')) {
+    const isGeneALOC = geneA.gene?.symbol.startsWith('LOC') || false;
+    const isGeneBLOC = geneB.gene?.symbol.startsWith('LOC') || false;
+    if (isGeneALOC && isGeneBLOC) {
+      const geneASymbol = geneA.gene?.symbol.toLowerCase() || '';
+      const geneBSymbol = geneB.gene?.symbol.toLowerCase() || '';
+      return (geneASymbol < geneBSymbol) ? -1 : (geneASymbol > geneBSymbol) ? 1 : 0;
+    }
+    else if (isGeneALOC) {
       return 1;
     }
-    if (geneB.gene?.symbol.startsWith('LOC')) {
+    else if (isGeneBLOC) {
       return -1;
     }
     const geneASymbol = geneA.gene?.symbol.toLowerCase() || '';
