@@ -56,10 +56,9 @@ interface Props
 defineProps<Props>();
 
 const selectGene = (gene: Gene) => {
-  const geneOrthologIds = getGeneOrthologIds(store, gene) || [];
-  const rgdIds: number[] = [gene?.rgdId] || [];
-  store.dispatch('setSelectedGeneIds', [...rgdIds, ...geneOrthologIds] || []);
-  store.dispatch('setSelectedData', getNewSelectedData(store, gene));
+  const newData = getNewSelectedData(store, gene);
+  store.dispatch('setSelectedGeneIds', newData.rgdIds || []);
+  store.dispatch('setSelectedData', newData.selectedData);
 };
 
 const goToRgd = (rgdId: number) => {

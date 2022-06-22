@@ -216,8 +216,9 @@ const onClick = (event: any, section: TrackSection, type: string) => {
     // Set the new selected data from gene list
     geneSectionList.forEach((section) => {
       if (section.gene) {
-        const geneAndOrthologs = getNewSelectedData(store, section.gene);
-        const newGeneIds = getGeneOrthologIds(store, section.gene);
+        const newData = getNewSelectedData(store, section.gene);
+        const geneAndOrthologs = newData.selectedData;
+        const newGeneIds = newData.rgdIds;
         newSelectedData.push(...geneAndOrthologs);
         geneIds.push(...newGeneIds);
       }
