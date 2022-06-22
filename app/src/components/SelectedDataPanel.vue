@@ -130,7 +130,7 @@ import { Formatter } from '@/utils/Formatter';
 import { ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
-import { getGeneOrthologIds, updateSelectedData, sortGeneList } from '@/utils/DataPanelHelpers';
+import { getGeneOrthologIds, getNewSelectedData, sortGeneList } from '@/utils/DataPanelHelpers';
 import TrackSection from '@/models/TrackSection';
 
 const store = useStore(key);
@@ -191,7 +191,7 @@ const searchSVG = (event: any) => {
   const geneOrthologIds = getGeneOrthologIds(store, event.value) || [];
   const rgdIds: number[] = [event.value?.rgdId] || [];
   store.dispatch('setSelectedGeneIds', [...rgdIds, ...geneOrthologIds] || []);
-  updateSelectedData(store, event.value);
+  store.dispatch('setSelectedData', getNewSelectedData(store, event.value));
   // Only adjust window of the searched gene is on backbone
   if (event.value && event.value.speciesName === store.state.species?.name) {
     adjustSelectionWindow();
@@ -206,7 +206,7 @@ const selectAndSearchSVG = (event: any) => {
     const rgdIds: number[] = [searchedGene.value?.rgdId] || [];
     store.dispatch('setGene', searchedGene.value);
     store.dispatch('setSelectedGeneIds', [...geneOrthologIds, ...rgdIds] || []);
-    updateSelectedData(store, searchedGene.value);
+    store.dispatch('setSelectedData', getNewSelectedData(store, searchedGene.value));
     if (searchedGene.value && searchedGene.value.speciesName === store.state.species?.name) {
       adjustSelectionWindow();
     }

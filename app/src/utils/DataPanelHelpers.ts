@@ -13,7 +13,7 @@ export function getGeneOrthologIds(store: Store<VCMapState>, gene: Gene) {
   return geneOrthologIds;
 }
 
-export function updateSelectedData(store: Store<VCMapState>, gene: Gene) {
+export function getNewSelectedData(store: Store<VCMapState>, gene: Gene): SelectedData[] {
   const geneOrthologs = store.state.selectedBackboneRegion.orthologData.get(gene.symbol);
   const comparativeSpecies = store.state.comparativeSpecies;
   const compSpeciesNameMap = new Map<Number, string>();
@@ -29,7 +29,7 @@ export function updateSelectedData(store: Store<VCMapState>, gene: Gene) {
       selectedData.push(new SelectedData(ortholog, 'Gene'));
     }
   }
-  store.dispatch('setSelectedData', selectedData);
+  return selectedData;
 }
 
 export function sortGeneList(geneList: TrackSection[]) {
