@@ -13,12 +13,35 @@ export function getGeneOrthologIds(store: Store<VCMapState>, gene: Gene) {
   return geneOrthologIds;
 }
 
-export function updateSelectedData(store: Store<VCMapState>, gene: Gene) {
-  const geneOrthologs = store.state.selectedBackboneRegion.orthologData.get(gene.symbol);
+export function getNewSelectedData(store: Store<VCMapState>, gene: Gene): {rgdIds: number[], selectedData: SelectedData[]} {
+  const backboneSpecies = store.state.species?.name || '';
+  const geneSpecies = gene.speciesName || '';
   const comparativeSpecies = store.state.comparativeSpecies;
   const compSpeciesNameMap = new Map<Number, string>();
   comparativeSpecies.forEach((species: any) => compSpeciesNameMap.set(species.activeMap.key, species.name));
-  const selectedData = [new SelectedData(gene, 'Gene')];
+  let geneOrthologs: any;
+  let selectedData: SelectedData[];
+  let rgdIds: number[];
+  // If the selected gene is on the backbone, just search the ortholog data and set the new data
+  if (geneSpecies === backboneSpecies) {
+    geneOrthologs = store.state.selectedBackboneRegion.orthologData.get(gene.symbol);
+    selectedData = [new SelectedData(gene, 'Gene')];
+    rgdIds = getGeneOrthologIds(store, gene);
+  } else { // otherwise we'll search the ortholog data if there's an ortholog matching this gene
+    // get the mapKey from the selected gene
+    const mapKey = [...compSpeciesNameMap].filter(entry => entry[1] === geneSpecies).map(entry => entry[0]);
+    // Check if there is a backone ortholog
+    const orthologResult = getOrthologsFromComparativeSpecies(store, gene, mapKey[0]);
+    geneOrthologs = orthologResult.orthologData;
+    const backboneSymbol = orthologResult.backboneSymbol;
+    // Check if we have the backbone gene loaded
+    const backboneGene = store.state.loadedGenes.find((gene) => gene.symbol === backboneSymbol);
+    // If the backbone gene is loaded, set that selected data, otherwise, just set the selected gene
+    selectedData = backboneGene ? [new SelectedData(backboneGene, 'Gene')] : [new SelectedData(gene, 'Gene')];
+    rgdIds = backboneGene ? getGeneOrthologIds(store, backboneGene) : [gene.rgdId];
+  }
+  // Go through the ortholog data for the backbone gene if it exists,
+  // and update the selected data object with the ortholog genes
   if (geneOrthologs) {
     const geneKeys = Object.keys(geneOrthologs);
     for (let i = 0; i < geneKeys.length; i++) {
@@ -29,7 +52,7 @@ export function updateSelectedData(store: Store<VCMapState>, gene: Gene) {
       selectedData.push(new SelectedData(ortholog, 'Gene'));
     }
   }
-  store.dispatch('setSelectedData', selectedData);
+  return {rgdIds: rgdIds, selectedData: selectedData} ;
 }
 
 export function sortGeneList(geneList: TrackSection[]) {
@@ -53,4 +76,26 @@ export function sortGeneList(geneList: TrackSection[]) {
     const geneBSymbol = geneB.gene?.symbol.toLowerCase() || '';
     return (geneASymbol < geneBSymbol) ? -1 : (geneASymbol > geneBSymbol) ? 1 : 0;
   });
+}
+
+function getOrthologsFromComparativeSpecies(store: Store<VCMapState>, gene: Gene, mapKey: Number) {
+  const orthologData = store.state.selectedBackboneRegion.orthologData;
+  // Iterate through the entries in the orthologData map
+  const backboneOrthologKey = [...orthologData.entries()]
+      // Filter for an ortholog matching the selected gene's symbol
+      .filter((entry: any) => {
+        // Use the mapKey for this gene to only search the relevant ortholog results
+        if (entry[1][mapKey.toString()]) {
+          const orthologGeneIdx = entry[1][mapKey.toString()]
+            .find((ortholog: any) => ortholog.geneSymbol === gene.symbol) || -1;
+          return orthologGeneIdx !== -1;
+        } else {
+          return false;
+        }
+      })
+      // And then map for the symbol (key) of the backbone gene
+      .map((entry: any) => entry[0]);
+
+  // return the symbol for the backbone gene and the ortholog data
+  return {backboneSymbol: backboneOrthologKey[0], orthologData: orthologData.get(backboneOrthologKey[0])};
 }

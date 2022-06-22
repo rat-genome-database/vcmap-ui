@@ -23,6 +23,15 @@
             :minLength="3"
             placeholder="Search loaded genes..."
           />
+          <Button
+            v-tooltip.right="`Only searches genes loaded in the selected overview \
+              region (${Formatter.convertBasePairToLabel(overviewStart)} - \
+              ${Formatter.convertBasePairToLabel(overviewStop)}). \
+              Select a wider region on the backbone in the overview panel to search more genes.`"
+            icon="pi pi-info-circle"
+            class="p-button-link"
+          >
+          </Button>
         </div>
         <div class="panel-header-item">
           {{numberOfResults}} Selected Genes
@@ -121,7 +130,7 @@ import { Formatter } from '@/utils/Formatter';
 import { ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
-import { getGeneOrthologIds, updateSelectedData, sortGeneList } from '@/utils/DataPanelHelpers';
+import { getGeneOrthologIds, getNewSelectedData, sortGeneList } from '@/utils/DataPanelHelpers';
 import TrackSection from '@/models/TrackSection';
 
 const store = useStore(key);
@@ -136,6 +145,8 @@ const props = defineProps<Props>();
 const searchedGene = ref<Gene | null>(null);
 const geneSuggestions = ref<Gene[]>([]);
 const numberOfResults = ref<number>(0);
+const overviewStart = ref<number>(store.state.selectedBackboneRegion.baseSelection.basePairStart);
+const overviewStop = ref<number>(store.state.selectedBackboneRegion.baseSelection.basePairStop);
 
 // fraction of gene bp length to add to the window when jumping
 // to the gene after a search
@@ -162,6 +173,11 @@ watch(() => props.selectedData, () => {
   }
 });
 
+watch(() => store.state.selectedBackboneRegion.baseSelection, () => {
+  overviewStart.value = store.state.selectedBackboneRegion.baseSelection.basePairStart;
+  overviewStop.value = store.state.selectedBackboneRegion.baseSelection.basePairStop;
+});
+
 const clearSelectedGenes = () => {
   store.dispatch('setSelectedGeneIds', []);
   store.dispatch('setSelectedData', null);
@@ -177,10 +193,10 @@ const searchGene = (event: {query: string}) => {
 
 const searchSVG = (event: any) => {
   store.dispatch('setGene', event.value);
-  const geneOrthologIds = getGeneOrthologIds(store, event.value) || [];
+  const newData = getNewSelectedData(store, event.value);
   const rgdIds: number[] = [event.value?.rgdId] || [];
-  store.dispatch('setSelectedGeneIds', [...rgdIds, ...geneOrthologIds] || []);
-  updateSelectedData(store, event.value);
+  store.dispatch('setSelectedGeneIds', newData.rgdIds || []);
+  store.dispatch('setSelectedData', newData.selectedData);
   // Only adjust window of the searched gene is on backbone
   if (event.value && event.value.speciesName === store.state.species?.name) {
     adjustSelectionWindow();
@@ -191,11 +207,11 @@ const selectAndSearchSVG = (event: any) => {
   // If "Enter" is pressed, just search the first gene
   if (event.key === "Enter") {
     searchedGene.value = geneSuggestions.value[0];
-    const geneOrthologIds = getGeneOrthologIds(store, searchedGene.value) || [];
+    const newData = getNewSelectedData(store, searchedGene.value);
     const rgdIds: number[] = [searchedGene.value?.rgdId] || [];
     store.dispatch('setGene', searchedGene.value);
-    store.dispatch('setSelectedGeneIds', [...geneOrthologIds, ...rgdIds] || []);
-    updateSelectedData(store, searchedGene.value);
+    store.dispatch('setSelectedGeneIds', newData.rgdIds || []);
+    store.dispatch('setSelectedData', newData.selectedData);
     if (searchedGene.value && searchedGene.value.speciesName === store.state.species?.name) {
       adjustSelectionWindow();
     }
