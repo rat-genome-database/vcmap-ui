@@ -39,7 +39,7 @@ import Gene from '@/models/Gene';
 import { Formatter } from '@/utils/Formatter';
 import { useStore } from 'vuex';
 import { key } from '@/store';
-import { getGeneOrthologIds, updateSelectedData } from '@/utils/DataPanelHelpers';
+import { getGeneOrthologIds, getNewSelectedData } from '@/utils/DataPanelHelpers';
 
 const store = useStore(key);
 
@@ -59,7 +59,7 @@ const selectGene = (gene: Gene) => {
   const geneOrthologIds = getGeneOrthologIds(store, gene) || [];
   const rgdIds: number[] = [gene?.rgdId] || [];
   store.dispatch('setSelectedGeneIds', [...rgdIds, ...geneOrthologIds] || []);
-  updateSelectedData(store, gene);
+  store.dispatch('setSelectedData', getNewSelectedData(store, gene));
 };
 
 const goToRgd = (rgdId: number) => {
