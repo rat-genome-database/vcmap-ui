@@ -176,7 +176,7 @@ watch(() => props.selectedData, () => {
 watch(() => store.state.selectedBackboneRegion.baseSelection, () => {
   overviewStart.value = store.state.selectedBackboneRegion.baseSelection.basePairStart;
   overviewStop.value = store.state.selectedBackboneRegion.baseSelection.basePairStop;
-})
+});
 
 const clearSelectedGenes = () => {
   store.dispatch('setSelectedGeneIds', []);
