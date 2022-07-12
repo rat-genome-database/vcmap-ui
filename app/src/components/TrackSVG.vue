@@ -298,7 +298,9 @@ const getLabelText = (label: any) => {
   if (!label.section.showAltLabel) {
     return label.text;
   } else {
-    return 'using alt text';
+    const selectedGeneIds = store.state.selectedGeneIds;
+    const altLabelOptions = label.section.altLabels.filter((label) => selectedGeneIds.includes(label.rgdId));
+    return altLabelOptions.length > 0 ? altLabelOptions[0].text : label.text;
   }
 };
 
