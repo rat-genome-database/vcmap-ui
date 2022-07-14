@@ -38,7 +38,7 @@ export function getNewSelectedData(store: Store<VCMapState>, gene: Gene): {rgdId
     const backboneGene = store.state.loadedGenes.find((gene) => gene.symbol === backboneSymbol);
     // If the backbone gene is loaded, set that selected data, otherwise, just set the selected gene
     selectedData = backboneGene ? [new SelectedData(backboneGene, 'Gene')] : [new SelectedData(gene, 'Gene')];
-    rgdIds = backboneGene ? [gene.rgdId, ...getGeneOrthologIds(store, backboneGene)] : [gene.rgdId];
+    rgdIds = backboneGene ? [backboneGene.rgdId, ...getGeneOrthologIds(store, backboneGene)] : [gene.rgdId];
   }
   // Go through the ortholog data for the backbone gene if it exists,
   // and update the selected data object with the ortholog genes
