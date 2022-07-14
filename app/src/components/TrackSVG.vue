@@ -38,7 +38,7 @@
       @mouseenter="onMouseEnter($event, label.section, 'geneLabel')"
       @mouseleave="onMouseLeave(label.section, 'geneLabel')"
       @click="onClick($event, label.section, 'geneLabel')"
-      :class="(label.section.isSelected ? 'bold-label' : 'label small')"
+      :class="(label.section.isSelected || label.section.showAltLabel ? 'bold-label' : 'label small')"
       :x="posX + width"
       :y="label.svgY + LABEL_Y_OFFSET">
       - {{getLabelText(label)}}
@@ -300,7 +300,16 @@ const getLabelText = (label: any) => {
   } else {
     const selectedGeneIds = store.state.selectedGeneIds;
     const altLabelOptions = label.section.altLabels.filter((label) => selectedGeneIds.includes(label.rgdId));
-    return altLabelOptions.length > 0 ? altLabelOptions[0].text : label.text;
+    let newLabelText = label.text;
+    for (let i = 0; i < altLabelOptions.length; i++) {
+      newLabelText = altLabelOptions[i].text;
+      // For now, just find the first label not starting iwth LOC
+      // Unless its the only selected gene available
+      if (!newLabelText.startsWith('LOC')) {
+        break;
+      }
+    }
+    return newLabelText;
   }
 };
 

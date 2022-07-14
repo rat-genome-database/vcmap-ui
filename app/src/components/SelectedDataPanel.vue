@@ -194,7 +194,6 @@ const searchGene = (event: {query: string}) => {
 const searchSVG = (event: any) => {
   store.dispatch('setGene', event.value);
   const newData = getNewSelectedData(store, event.value);
-  const rgdIds: number[] = [event.value?.rgdId] || [];
   store.dispatch('setSelectedGeneIds', newData.rgdIds || []);
   store.dispatch('setSelectedData', newData.selectedData);
   // Only adjust window of the searched gene is on backbone
@@ -208,7 +207,6 @@ const selectAndSearchSVG = (event: any) => {
   if (event.key === "Enter") {
     searchedGene.value = geneSuggestions.value[0];
     const newData = getNewSelectedData(store, searchedGene.value);
-    const rgdIds: number[] = [searchedGene.value?.rgdId] || [];
     store.dispatch('setGene', searchedGene.value);
     store.dispatch('setSelectedGeneIds', newData.rgdIds || []);
     store.dispatch('setSelectedData', newData.selectedData);
