@@ -1,7 +1,18 @@
+import Gene from './Gene';
+export interface SpeciesSyntenyData
+{
+  speciesName: string;
+  mapName: string;
+  mapKey: number;
+  regionData: SyntenyRegionData[];
+  allGenes?: Gene[];
+}
+
 export interface SyntenyRegionData
 {
-  block: SyntenicRegion,
-  gaps: SyntenicRegion[]
+  block: SyntenicRegion;
+  gaps: SyntenicRegion[];
+  genes: Gene[];
 }
 
 export class SyntenicRegionDTO

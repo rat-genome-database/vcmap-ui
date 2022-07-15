@@ -2,7 +2,8 @@
  * Example app config. Copy and paste this file into this same directory (<root>/app/config/) 
  * and rename it to `app.config.ts`
  *
- * API_BASE_URL: The fully qualified URL (with http scheme) to the RGD API web services (e.g. 'https://dev.rgd.mcw.edu/rdgws')
+ * API_BASE_URL: The fully qualified URL (with http scheme) to the RGD API web services
+ *   (e.g. 'https://dev.rgd.mcw.edu/rgdws')
  */
 
 export default {

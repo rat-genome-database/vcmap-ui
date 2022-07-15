@@ -4,56 +4,46 @@ import TrackSection from '@/models/TrackSection';
 import Track from '@/models/Track';
 import Chromosome from '@/models/Chromosome';
 import { ActionTree, createStore, Store } from 'vuex';
-import { VCMapState } from '@/store';
+import { key, VCMapState } from '@/store';
+import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
+import SVGConstants from '@/utils/SVGConstants';
 
 const BACKBONE_BASEPAIR_TO_HEIGHT_RATIO = 1000;
 
 describe('TrackSVG', () => {
 
   let store: Store<VCMapState>;
-  let actions: ActionTree<VCMapState, VCMapState>;
-  let state = {
+  const state = {
     species: null,
     chromosomeNum: null,
     chromosome: null,
-    startPos: null,
-    stopPos: null,
+    startPos: 0,
+    stopPos: 0,
     gene: null,
     comparativeSpecies: [],
-    selectedBackboneRegion: null,
-    zoom: 1,
-    displayStartPos: 0,
-    displayStopPos: 0,
-    backboneBasePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO,
+    selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
+    detailedBasePairRange: { start: 0, stop: 0 },
+    overviewBasePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO,
     overviewSyntenyThreshold: 0,
-    comparativeBasePairToHeightRatio: 1000,
+    detailedBasePairToHeightRatio: 1000,
     detailsSyntenyThreshold: 0,
-    showOverviewGaps: false,
-    showDetailsGaps: false,
     backboneDataTracks: [],
     configTab: 0,
-    tooltipData: null,
-  };
-  let getters = {
-    getSelectedBackboneRegion(state: VCMapState) {
-      return state.selectedBackboneRegion;
-    }
+    selectedGeneIds: [],
+    selectedData: null,
+    loadedGenes: [],
+    isDetailedPanelUpdating: false,
+    isOverviewPanelUpdating: false,
   };
 
   beforeEach(() => {
-    actions = {
-      setSelectedBackboneRegion: jest.fn()
-    };
-
     store = createStore({
-      state,
-      getters,
-      actions
-    })
+      state
+    });
   });
 
   it('renders a single section track with base pair labels', async () => {
-    const backboneTrackSection = new TrackSection({
+    const trackSection = new TrackSection({
       start: 0,
       stop: 10000000,
       backboneStart: 0,
@@ -63,31 +53,29 @@ describe('TrackSVG', () => {
       basePairToHeightRatio: 1000,
       shape: 'rect'
     });
-    const backboneTrack = new Track('Human', [backboneTrackSection]);
+    const track = new Track({ speciesName: 'Human', sections: [trackSection], startingSVGY: SVGConstants.panelTitleHeight, type: 'comparative' });
     const wrapper = shallowMount(TrackSVG, {
       props: {
         showStartStop: true,
         posX: 100,
-        posY: 150,
         width: 30,
-        track: backboneTrack
+        track: track
       },
       global: {
         provide: {
-          store: store
+          [key as symbol]: store
         }
       }
     });
-    const startLabel = wrapper.find('[data-test="start-bp-label"]');
-    const stopLabel = wrapper.find('[data-test="stop-bp-label"');
+    const bpLabels = wrapper.findAll('[data-test="bp-label"]');
     const allSVGs = wrapper.findAll('[data-test="track-section-svg"]');
     const backboneSVG = allSVGs[0];
 
     // Test visibility and text of the base pair labels
-    expect(startLabel.isVisible()).toBe(true);
-    expect(startLabel.text()).toEqual('- 0bp');
-    expect(stopLabel.isVisible()).toBe(true);
-    expect(stopLabel.text()).toEqual('- 10.00Mbp');
+    expect(bpLabels[0].isVisible()).toBe(true);
+    expect(bpLabels[0].text()).toEqual('- 0.00Mbp');
+    expect(bpLabels[1].isVisible()).toBe(true);
+    expect(bpLabels[1].text()).toEqual('- 10.00Mbp');
 
     // Test visibility of the backbone SVG track
     expect(allSVGs.length).toEqual(1);
@@ -97,7 +85,7 @@ describe('TrackSVG', () => {
     const backboneAttributes = backboneSVG.attributes();
     expect(backboneAttributes.fill).toEqual(Chromosome.getColor('1'));
     expect(backboneAttributes.x).toEqual('100');
-    expect(backboneAttributes.y).toEqual('150');
+    expect(backboneAttributes.y).toEqual('55');
     expect(backboneAttributes.width).toEqual('30');
     expect(backboneAttributes.height).toEqual((10000000 / BACKBONE_BASEPAIR_TO_HEIGHT_RATIO).toString());
   });
@@ -136,31 +124,29 @@ describe('TrackSVG', () => {
       basePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO,
       shape: 'rect'
     });
-    const track = new Track('Rat', [trackSection1, trackSection2, trackSection3]);
+    const track = new Track({ speciesName: 'Rat', sections: [trackSection1, trackSection2, trackSection3], startingSVGY: SVGConstants.panelTitleHeight, type: 'comparative' });
 
     const wrapper = shallowMount(TrackSVG, {
       props: {
         posX: 100,
-        posY: 150,
         width: 30,
         track: track
       },
       global: {
         provide: {
-          store: store
+          [key as symbol]: store
         }
       }
     });
-    const startLabel = wrapper.find('[data-test="start-bp-label"]');
-    const stopLabel = wrapper.find('[data-test="stop-bp-label"');
+    const bpLabels = wrapper.findAll('[data-test="bp-label"]');
     const allSVGs = wrapper.findAll('[data-test="track-section-svg"]');
-    const section1 = allSVGs[0];
+    // FIXME: accessing by index may not be consistent, I think this is a temp fix here
+    const section3 = allSVGs[0];
     const section2 = allSVGs[1];
-    const section3 = allSVGs[2];
+    const section1 = allSVGs[2];
 
     // Test visibility and text of the base pair labels
-    expect(startLabel.exists()).toBeFalsy();
-    expect(stopLabel.exists()).toBeFalsy();
+    expect(bpLabels.length).toEqual(0);
 
     // Test visibility of the backbone SVG track
     expect(allSVGs.length).toEqual(3);
@@ -172,7 +158,7 @@ describe('TrackSVG', () => {
     const attrs1 = section1.attributes();
     expect(attrs1.fill).toEqual(Chromosome.getColor('1'));
     expect(attrs1.x).toEqual('100');
-    expect(attrs1.y).toEqual('150'); // Determined by starting position + height of previous section + offset of current section
+    expect(attrs1.y).toEqual('55'); // Determined by starting position + height of previous section + offset of current section
     expect(attrs1.width).toEqual('30');
     expect(attrs1.height).toEqual((10000000 / BACKBONE_BASEPAIR_TO_HEIGHT_RATIO).toString()); // Determined by BASE_PAIR_TO_PIXEL_RATIO in TrackSection model
 
@@ -191,42 +177,5 @@ describe('TrackSVG', () => {
     expect(attrs3.y).toEqual(expectedAttrs3Y); // Determined by starting position + height of previous section + offset of current section
     expect(attrs3.width).toEqual('30');
     expect(attrs3.height).toEqual((150000000 / BACKBONE_BASEPAIR_TO_HEIGHT_RATIO).toString()); // Determined by BASE_PAIR_TO_PIXEL_RATIO in TrackSection model
-  });
-
-  it('emits selected region', async () => {
-    const backboneTrackSection = new TrackSection({
-      start: 0,
-      stop: 10000000,
-      backboneStart: 0,
-      backboneStop: 10000000,
-      chromosome: '1',
-      cutoff: 120000000,
-      basePairToHeightRatio: BACKBONE_BASEPAIR_TO_HEIGHT_RATIO,
-      shape: 'rect'
-    });
-    const backboneTrack = new Track('Human', [backboneTrackSection]);
-    const wrapper = shallowMount(TrackSVG, {
-      props: {
-        showStartStop: true,
-        posX: 100,
-        posY: 150,
-        width: 30,
-        track: backboneTrack,
-        isSelectable: true
-      },
-      global: {
-        provide: {
-          store: store
-        }
-      }
-    });
-
-    // Select a region
-    const section = wrapper.get('[data-test="track-section-svg"]');
-    await section.trigger('mousedown');
-    await section.trigger('mousemove');
-    await section.trigger('mousedown');
-
-    expect(actions.setSelectedBackboneRegion).toBeCalledTimes(1);
   });
 });

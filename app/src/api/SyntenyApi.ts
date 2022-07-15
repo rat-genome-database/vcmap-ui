@@ -1,61 +1,91 @@
 import httpInstance from '@/api/httpInstance';
-import SyntenicRegion, { SyntenicRegionDTO, SyntenyRegionData } from '@/models/SyntenicRegion';
-import Map from '@/models/Map';
+import SyntenicRegion, { SpeciesSyntenyData, SyntenicRegionDTO, SyntenyRegionData } from '@/models/SyntenicRegion';
 import Chromosome from '@/models/Chromosome';
+import Species from '@/models/Species';
+import Gene from '@/models/Gene';
 
 interface SyntenyBlocksParams
 {
   backboneChromosome: Chromosome; 
   start: number; 
   stop: number;
-  comparativeSpeciesMap: Map; 
-  chainLevel?: number; 
   threshold?: number;
-  includeGaps?: boolean;
+  includeGenes?: number; //if includeGenes=1 genes are included for each synteny block
 }
 
 export default class SyntenyApi
 {
-  static async getSyntenicRegions(params: SyntenyBlocksParams)
+  static async getSyntenicRegions(params: SyntenyBlocksParams, comparativeSpecies: Species[])
   {
-    let apiRoute = `/vcmap/${params.includeGaps ? 'synteny' : 'blocks'}`;
-    apiRoute += `/${params.backboneChromosome?.mapKey}/${params.backboneChromosome?.chromosome}/${params.start}/${params.stop}/${params.comparativeSpeciesMap?.key}`;
-    if (params.chainLevel != null)
+    try
     {
-      apiRoute += `/${params.chainLevel}`;
-    }
+      const syntenyApiCalls: Promise<any>[] = [];
+      const comparativeSpeciesMaps = comparativeSpecies.map(s => s.activeMap);
+      comparativeSpeciesMaps.forEach(map => {
+        let apiRoute = `/vcmap/synteny/${params.backboneChromosome?.mapKey}/${params.backboneChromosome?.chromosome}/${params.start}/${params.stop}/${map.key}`;
 
-    if (params.threshold != null && params.threshold > 0)
-    {
-      apiRoute += `?threshold=${params.threshold}`;
-    }
-    
-    const res = await httpInstance.get(apiRoute);
+        if (params.threshold != null && params.threshold > 0)
+        {
+          apiRoute += `?threshold=${params.threshold}`;
 
-    const regions: SyntenyRegionData[] = [];
-    if (params.includeGaps)
-    {
-      res.data.forEach((regionData: any) => {
-        const block = new SyntenicRegion(regionData.block as SyntenicRegionDTO);
-        const gaps = regionData.gaps?.map((g: any) => new SyntenicRegion(g as SyntenicRegionDTO));
-        regions.push({
-          block: block,
-          gaps: gaps ?? []
-        });
+          if (params.includeGenes != null && params.includeGenes == 1)
+          {
+            apiRoute += `&includeGenes=${params.includeGenes}`;
+          }
+        }
+
+        else if (params.includeGenes != null && params.includeGenes == 1)
+        {
+          apiRoute += `?includeGenes=${params.includeGenes}`;
+        }
+
+        syntenyApiCalls.push(httpInstance.get(apiRoute));
       });
-    }
-    else
-    {
-      res.data.forEach((blockData: any) => {
-        const block = new SyntenicRegion(blockData as SyntenicRegionDTO);
-        regions.push({
-          block: block,
-          gaps: []
-        });
-      });
-    }
 
-    console.debug(`Syntenic regions found for mapKey '${params.comparativeSpeciesMap.key}', threshold: '${params.threshold}': ${regions.length}`);
-    return regions;
+      const syntenyResults = await Promise.allSettled(syntenyApiCalls);
+      const speciesSyntenyData: SpeciesSyntenyData[] = [];
+      syntenyResults.forEach((result, index) => {
+        const regions: SyntenyRegionData[] = [];
+        const allGenes: Gene[] = [];
+        if (result.status === 'fulfilled')
+        {
+          result.value.data.forEach((regionData: any) => {
+            const block = new SyntenicRegion(regionData.block as SyntenicRegionDTO);
+            const gaps = regionData.gaps?.map((g: any) => new SyntenicRegion(g as SyntenicRegionDTO));
+            const genes: Gene[] = [];
+            regionData.genes?.forEach((gene: any) => {
+              const currGene = new Gene(gene);
+              currGene.speciesName = comparativeSpecies[index].name;
+              genes.push(currGene);
+            });
+            Array.prototype.push.apply(allGenes, genes);
+            regions.push({
+              block: block,
+              gaps: gaps ?? [],
+              genes: genes ?? [],
+            });
+          });
+        }
+        else
+        {
+          console.error(result.status, result.reason);
+        }
+
+        speciesSyntenyData.push({
+          speciesName: comparativeSpecies[index].name,
+          mapName: comparativeSpeciesMaps[index].name,
+          mapKey: comparativeSpeciesMaps[index].key,
+          regionData: regions,
+          allGenes: allGenes,
+        });
+        console.debug(`Syntenic regions found for mapKey '${comparativeSpeciesMaps[index].key}', threshold: '${params.threshold}': ${regions.length}`);
+      });
+
+      return speciesSyntenyData;
+    }
+    catch (error)
+    {
+      console.error(error);
+    }
   }
 }

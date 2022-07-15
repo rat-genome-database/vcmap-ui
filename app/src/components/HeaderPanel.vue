@@ -4,7 +4,7 @@
       <Panel :toggleable="true" class="vcmap-panel">
         <template #header>
           <div class="vcmap-header">
-            <img alt="VCMap Logo" class="logo" src="../assets/images/vcmap_logo_v2.jpg">
+            <img alt="VCMap Logo" class="logo" src="../assets/images/vcmap_logo_v2.png">
             <h3 class="header">VCMap</h3><span class="version-label">v{{VERSION}}</span>
           </div>
         </template>
@@ -18,8 +18,6 @@
         <div class="grid p-d-flex">
           <OverviewControls />
           <Divider layout="vertical" />
-          <DataTracksOverview />
-          <Divider layout="vertical" />
           <DetailsControls />
         </div>
       </Panel>
@@ -30,7 +28,6 @@
 <script lang="ts" setup>
 import { useRouter } from 'vue-router';
 import OverviewControls from '@/components/OverviewControls.vue';
-import DataTracksOverview from '@/components/DataTracksOverview.vue';
 import DetailsControls from '@/components/DetailsControls.vue';
 import { VERSION } from '@/version';
 
