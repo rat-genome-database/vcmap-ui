@@ -69,7 +69,7 @@ export default class TrackSection
     this.altLabels = params.hiddenGenes ? params.hiddenGenes.map((section) => {
       return {rgdId: section.gene?.rgdId || -1, text: section.gene?.symbol || ''};
     }) : [];
-    this.altLabels.unshift({rgdId: params.gene?.rgdId || -1, text: params.gene?.symbol || ''})
+    this.altLabels.unshift({rgdId: params.gene?.rgdId || -1, text: params.gene?.symbol || ''});
     this.isComparativeGene = params.isComparativeGene;
     this.shape = params.shape;
     this._backboneCutoff = params.cutoff;
