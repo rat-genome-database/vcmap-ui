@@ -40,6 +40,8 @@ export default class TrackSection
   isSelected: boolean = false;
   hiddenGenes?: TrackSection[] = [];
   combinedGenes?: TrackSection[] = [];
+  altLabels: {rgdId: number, text: string}[] = [];
+  showAltLabel: boolean = false;
   isComparativeGene?: boolean = false;
   shape: 'rect' | 'line' = 'rect';
   svgY: number = 0;
@@ -64,6 +66,10 @@ export default class TrackSection
     this.trackColor = params.color ?? '';
     this.hiddenGenes = [...params.hiddenGenes || []];
     this.combinedGenes = [...params.hiddenGenes || []];
+    this.altLabels = params.hiddenGenes ? params.hiddenGenes.map((section) => {
+      return {rgdId: section.gene?.rgdId || -1, text: section.gene?.symbol || ''};
+    }) : [];
+    this.altLabels.unshift({rgdId: params.gene?.rgdId || -1, text: params.gene?.symbol || ''});
     this.isComparativeGene = params.isComparativeGene;
     this.shape = params.shape;
     this._backboneCutoff = params.cutoff;

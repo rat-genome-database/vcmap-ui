@@ -177,7 +177,7 @@ export default class Track
     drawnSections.sort((a, b) => b.height - a.height);
     
     //create labels for each gene, track section with labels using map
-    const geneLabelsMap = new Map<string, any>();
+    const geneLabelsArray: any[] = [];
     let labels: Label[] = [];
 
     
@@ -188,89 +188,110 @@ export default class Track
       }
       const labelObject = {svgY: s.svgY - SVGConstants.panelTitleHeight <= 3 ? (s.svgY + 5): s.svgY + (s.height/2), text: s.geneLabel ?? '', isVisible: false, };
       labels.push(labelObject);
-      geneLabelsMap.set(Math.trunc(labelObject.svgY).toString(), {'labelShown': false, 'labelCombined': false, 'labelY': labelObject.svgY, 'trackSection': s});
+      geneLabelsArray.push({'key': Math.trunc(labelObject.svgY).toString(), 'labelShown': false, 'labelCombined': false, 'labelY': labelObject.svgY, 'trackSection': s});
     });
 
     //labels are sorted in order of longest gene to shortest
     for (let index = 0; index < labels.length; index++)
     {
       const label = labels[index];
-      const labelSection = geneLabelsMap.get(Math.trunc(label.svgY).toString());
-      
-      if (labelSection)
-      {
-        if (labelSection.labelCombined)
+      const labelSections = geneLabelsArray.filter((geneLabel) => geneLabel.key === Math.trunc(label.svgY).toString());
+      for (let i = 0; i < labelSections.length; i++) {
+        const labelSection = labelSections[i];
+        if (labelSection)
         {
-          labelSection.labelShown = false;
-          continue;
-        }
-
-        //check for labels above and below the current label that would overlap
-        for (let keyDiff = 1; keyDiff < 10; keyDiff++)
-        {
-          const aboveKey = (Math.trunc(label.svgY) - keyDiff).toString();
-          const belowKey = (Math.trunc(label.svgY) + keyDiff).toString();
-
-          const aboveKeyCheck = geneLabelsMap.has(aboveKey);
-          const belowKeyCheck = geneLabelsMap.has(belowKey);
-
-          if (aboveKeyCheck)
+          if (labelSection.labelCombined)
           {
-            const sectionAbove = geneLabelsMap.get(aboveKey);
-            //gene has already been combined into a label
-            if (sectionAbove.labelCombined)
-            {
-              sectionAbove.labelShown = false;
-            }
-            else if (labelSection.trackSection.gene.symbol.split("", 3).join("").toLowerCase() == 'loc')
-            {
-              sectionAbove.trackSection.combinedGenes ? sectionAbove.trackSection.combinedGenes.push(labelSection.trackSection) : sectionAbove.trackSection.combinedGenes = [labelSection.trackSection];
-              labelSection.labelCombined = true;
-              labelSection.labelShown = false;
-              continue;
-            }
-            else
-            {
-              labelSection.trackSection.combinedGenes ? labelSection.trackSection.combinedGenes.push(sectionAbove.trackSection) : labelSection.trackSection.combinedGenes = [sectionAbove.trackSection];
-              if (sectionAbove.trackSection.combinedGenes)
-              {
-                sectionAbove.trackSection.combinedGenes.forEach((section: TrackSection) => { labelSection.trackSection.combinedGenes.push(section); });
-              } 
-              sectionAbove.labelCombined = true;
-            }
-          }
-          if (belowKeyCheck)
-          {
-            const sectionBelow = geneLabelsMap.get(belowKey);
-            if (sectionBelow.labelCombined)
-            {
-              sectionBelow.labelShown = false;
-            }
-            else if (labelSection.trackSection.gene.symbol.split("", 3).join("").toLowerCase() == 'loc')
-            {
-              sectionBelow.trackSection.combinedGenes ? sectionBelow.trackSection.combinedGenes.push(labelSection.trackSection) : sectionBelow.trackSection.combinedGenes = [labelSection.trackSection];
-              labelSection.labelCombined = true;
-              labelSection.labelShown = false;
-              continue;
-            }
-            else
-            {
-              labelSection.trackSection.combinedGenes ? labelSection.trackSection.combinedGenes.push(sectionBelow.trackSection) : labelSection.trackSection.combinedGenes = [sectionBelow.trackSection];
-              if (sectionBelow.trackSection.combinedGenes)
-              {
-                sectionBelow.trackSection.combinedGenes.forEach((section: TrackSection) => { labelSection.trackSection.combinedGenes.push(section); });
-              } 
-              sectionBelow.labelCombined = true;
-            }
+            labelSection.labelShown = false;
+            continue;
           }
 
-          labelSection.labelShown = true;
+          //check for labels above and below the current label that would overlap
+          for (let keyDiff = 1; keyDiff < 10; keyDiff++)
+          {
+            const aboveKey = (Math.trunc(label.svgY) - keyDiff).toString();
+            const belowKey = (Math.trunc(label.svgY) + keyDiff).toString();
+
+            const aboveKeyCheck = geneLabelsArray.findIndex((geneLabel) => geneLabel.key === aboveKey);
+            const belowKeyCheck = geneLabelsArray.findIndex((geneLabel) => geneLabel.key === belowKey);
+
+            if (aboveKeyCheck !== -1)
+            {
+              const sectionsAbove = geneLabelsArray.filter((geneLabel) => geneLabel.key === aboveKey);
+              //gene has already been combined into a label
+              for (let i = 0; i < sectionsAbove.length; i++) {
+                const sectionAbove = sectionsAbove[i];
+                if (sectionAbove.labelCombined)
+                {
+                  sectionAbove.labelShown = false;
+                }
+                else if (labelSection.trackSection.gene.symbol.split("", 3).join("").toLowerCase() == 'loc')
+                {
+                  sectionAbove.trackSection.combinedGenes ? sectionAbove.trackSection.combinedGenes.push(labelSection.trackSection) : sectionAbove.trackSection.combinedGenes = [labelSection.trackSection];
+                  sectionAbove.trackSection.altLabels = [...sectionAbove.trackSection.altLabels, ...labelSection.trackSection.altLabels];
+                  labelSection.labelCombined = true;
+                  labelSection.labelShown = false;
+                  continue;
+                }
+                else
+                {
+                  labelSection.trackSection.combinedGenes ? labelSection.trackSection.combinedGenes.push(sectionAbove.trackSection) : labelSection.trackSection.combinedGenes = [sectionAbove.trackSection];
+                  labelSection.trackSection.altLabels = [...labelSection.trackSection.altLabels, ...sectionAbove.trackSection.altLabels];
+                  if (sectionAbove.trackSection.combinedGenes)
+                  {
+                    sectionAbove.trackSection.combinedGenes.forEach((section: TrackSection) => {
+                      labelSection.trackSection.combinedGenes.push(section);
+                      labelSection.trackSection.altLabels = [...labelSection.trackSection.altLabels, ...section.altLabels];
+                    });
+                  } 
+                  sectionAbove.labelCombined = true;
+                }
+              }
+            }
+            if (belowKeyCheck !== -1)
+            {
+              const sectionsBelow = geneLabelsArray.filter((geneLabel) => geneLabel.key === belowKey);
+              for (let i = 0; i < sectionsBelow.length; i++) {
+                const sectionBelow = sectionsBelow[i];
+                if (sectionBelow.labelCombined)
+                {
+                  sectionBelow.labelShown = false;
+                }
+                else if (labelSection.trackSection.gene.symbol.split("", 3).join("").toLowerCase() == 'loc')
+                {
+                  sectionBelow.trackSection.combinedGenes ? sectionBelow.trackSection.combinedGenes.push(labelSection.trackSection) : sectionBelow.trackSection.combinedGenes = [labelSection.trackSection];
+                  sectionBelow.trackSection.altLabels = [...sectionBelow.trackSection.altLabels, ...labelSection.trackSection.altLabels];
+                  labelSection.labelCombined = true;
+                  labelSection.labelShown = false;
+                  continue;
+                }
+                else
+                {
+                  labelSection.trackSection.combinedGenes ? labelSection.trackSection.combinedGenes.push(sectionBelow.trackSection) : labelSection.trackSection.combinedGenes = [sectionBelow.trackSection];
+                  labelSection.trackSection.altLabels = [...labelSection.trackSection.altLabels, ...sectionBelow.trackSection.altLabels];
+                  if (sectionBelow.trackSection.combinedGenes)
+                  {
+                    sectionBelow.trackSection.combinedGenes.forEach((section: TrackSection) => {
+                      labelSection.trackSection.combinedGenes.push(section);
+                      labelSection.trackSection.altLabels = [...labelSection.trackSection.altLabels, ...section.altLabels];
+                    });
+                  } 
+                  sectionBelow.labelCombined = true;
+                }
+              }
+            }
+
+            // Only show the first label if there are multiple for this section
+            if (i === 0) {
+              labelSection.labelShown = true;
+            }
+          }
         }
       }
     }
 
     labels = [];
-    geneLabelsMap.forEach((value) => {
+    geneLabelsArray.forEach((value) => {
       const labelObject = {svgY: value.labelY, text: value.trackSection.geneLabel, isVisible: value.labelShown, section: value.trackSection};
       labels.push(labelObject);
     });

@@ -38,10 +38,10 @@
       @mouseenter="onMouseEnter($event, label.section, 'geneLabel')"
       @mouseleave="onMouseLeave(label.section, 'geneLabel')"
       @click="onClick($event, label.section, 'geneLabel')"
-      :class="(label.section.isSelected ? 'bold-label' : 'label small')"
+      :class="(label.section.isSelected || label.section.showAltLabel ? 'bold-label' : 'label small')"
       :x="posX + width"
       :y="label.svgY + LABEL_Y_OFFSET">
-      - {{label.text}}
+      - {{getLabelText(label)}}
     </text>
   </template>
 
@@ -149,12 +149,12 @@ toRefs(props);
 
 // update highlighting if selected genes change
 watch(() => store.state.selectedGeneIds, () => {
-  highlightSelections(store.state.selectedGeneIds, false);
+  highlightSelections(store.state.selectedGeneIds);
 });
 
 // Set up highlighting on mount, to handle selection updates
 onMounted(() => {
-  highlightSelections(store.state.selectedGeneIds, true);
+  highlightSelections(store.state.selectedGeneIds);
 });
 
 const onMouseEnter = (event: any, section: TrackSection, type: string) => {
@@ -208,9 +208,7 @@ const onClick = (event: any, section: TrackSection, type: string) => {
   const geneSectionList = type === 'geneLabel' ? [section, ...(section.combinedGenes || [])] : [section, ...(section.hiddenGenes || [])];
   if (geneSectionList && geneSectionList.length > 0) {
     // If this is a geneLabel, we're going to set all combined genes as "selected"
-    if (type === 'geneLabel') {
-      geneSectionList.forEach((section) => geneIds.push(section.gene.rgdId));
-    }
+    geneSectionList.forEach((section) => geneIds.push(section.gene.rgdId));
     // Alphabetically sort the combined/hidden gene lists (LOC genes at end of list)
     sortGeneList(geneSectionList);
     // Set the new selected data from gene list
@@ -234,7 +232,7 @@ const onClick = (event: any, section: TrackSection, type: string) => {
   }
 };
 
-const highlightSelections = (selectedGeneIds: number[], setSelectedData: boolean) => {
+const highlightSelections = (selectedGeneIds: number[]) => {
   // Look through the sections and highlight based on selected genes
   props.track.sections.forEach((section) => {
     if (checkSectionForGene(section, selectedGeneIds)) {
@@ -253,6 +251,24 @@ const highlightSelections = (selectedGeneIds: number[], setSelectedData: boolean
       line.comparativeGene.isSelected = true;
     } else {
       line.isSelected = false;
+    }
+  });
+
+  // After selecting the sections, check if we should use alt labels
+  props.track.geneLabels.forEach((label) => {
+    // Only consider geneLabels that are already visible anyway
+    if (label.isVisible) {
+      // If the main gene for this section is selected, we'll use the normal label
+      let useAltLabel = false;
+      if (selectedGeneIds.includes(label.section.gene.rgdId)) {
+        useAltLabel = false;
+      } else { // Otherwise if any selected ids exist in the alt labels, we'll use an alt label
+        const altLabelIds = label.section.altLabels.map((label) => label.rgdId);
+        if (selectedGeneIds.some((id) => altLabelIds.includes(id))) {
+          useAltLabel = true;
+        }
+      }
+      label.section.showAltLabel = useAltLabel;
     }
   });
 };
@@ -276,6 +292,25 @@ const getSectionFill = (section: TrackSection) => {
   if (section.isSelected) {return SELECTED_HIGHLIGHT_COLOR;}
   if (section.isHovered) {return HOVER_HIGHLIGHT_COLOR;}
   return section.color;
+};
+
+const getLabelText = (label: any) => {
+  if (!label.section.showAltLabel) {
+    return label.text;
+  } else {
+    const selectedGeneIds = store.state.selectedGeneIds;
+    const altLabelOptions = label.section.altLabels.filter((label) => selectedGeneIds.includes(label.rgdId));
+    let newLabelText = label.text;
+    for (let i = 0; i < altLabelOptions.length; i++) {
+      newLabelText = altLabelOptions[i].text;
+      // For now, just find the first label not starting iwth LOC
+      // Unless its the only selected gene available
+      if (!newLabelText.startsWith('LOC')) {
+        break;
+      }
+    }
+    return newLabelText;
+  }
 };
 
 </script>
