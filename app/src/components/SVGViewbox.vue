@@ -304,71 +304,6 @@ const updateDetailsPanel = async () => {
       store.state.selectedBackboneRegion,
     );
 
-    //if loading by gene initially, we need to find the backbone start of the "highest" positioned ortholog, and the backbone stop of the "lowest" positioned ortholog, then setting the backbone selection to those coords
-    if ((loadType == 0) && (store.state.selectedGeneIds.length > 0) && (!geneReload))
-    {
-      const backboneStart = store.state.loadStart;
-      const backboneStop = store.state.loadStop;
-      const orthologs: TrackSection[] = [];
-
-      //collect all rendered orthologs for selected gene
-      const geneTracks = syntenyTracksResults.tracks[0].dataTracks[0].track.sections;
-      let selectedIds: number[] = [];
-      selectedIds = [...store.state.selectedGeneIds];
-      geneTracks.sort((a, b) => a.svgY - b.svgY);
-      for (let index = 0; index < geneTracks.length; index++)
-      {
-        const section = geneTracks[index];
-        if (section.gene)
-        {
-          if (section.gene && selectedIds.includes(section.gene.rgdId))
-          {
-            orthologs.push(section);
-          }
-          else if (section.gene && ((store.state.gene.symbol).toLowerCase() == (section.gene.symbol).toLowerCase()))
-          {
-            if (!selectedIds.includes(section.gene.rgdId)) 
-            {
-              selectedIds.push(section.gene.rgdId); 
-            }
-            orthologs.push(section);
-          }
-        }
-      }
-
-      //convert ortholog svgs to backbone coords
-      if (orthologs.length)
-      {
-        let highestOrtholog;
-        let lowestOrtholog;
-        orthologs.sort((a, b) => a.svgY - b.svgY);
-        highestOrtholog = orthologs[0];
-        orthologs.length > 1 ? lowestOrtholog = orthologs[orthologs.length - 1] : lowestOrtholog = highestOrtholog;
-
-        const topOrthologLength = highestOrtholog.sectionStop - highestOrtholog.sectionStart;
-        const bottomOrthologLength = lowestOrtholog.sectionStop - lowestOrtholog.sectionStart;
-        const basePairsFromInnerSelection1 = Math.floor((highestOrtholog.svgY - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
-        const basePairStart = Math.max(basePairsFromInnerSelection1 + originalSelectedBackboneRegion.innerSelection.basePairStart - (topOrthologLength * 5), originalSelectedBackboneRegion.innerSelection.basePairStart);
-
-        const basePairsFromInnerSelection2 = Math.floor((lowestOrtholog.svgY - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
-        const basePairStop = Math.min(basePairsFromInnerSelection2 + originalSelectedBackboneRegion.innerSelection.basePairStart + (bottomOrthologLength * 5), originalSelectedBackboneRegion.innerSelection.basePairStop);
-
-        const selection = backboneSelectionTrack.sections[0].generateBackboneSelection(basePairStart, basePairStop, store.state.detailedBasePairToHeightRatio, backboneChromosome);
-        store.dispatch('clearBackboneSelection');
-        store.dispatch('setBackboneSelection', selection);
-        geneReload = true;
-        return;
-      }
-      else
-      {
-        const selection = backboneSelectionTrack.sections[0].generateBackboneSelection(backboneStart, backboneStop, store.state.detailedBasePairToHeightRatio, backboneChromosome);
-        store.dispatch('clearBackboneSelection');
-        store.dispatch('setBackboneSelection', selection);
-        geneReload = true;
-        return;
-      }
-    }
-
     let comparativeSelectionTracks: TrackSet[] = syntenyTracksResults.tracks;
     let syntenyDataArray: SpeciesSyntenyData[] = syntenyTracksResults?.speciesSyntenyDataArray || [];
     let allSpeciesGeneMap: Map<string, any> = new Map();
@@ -402,25 +337,102 @@ const updateDetailsPanel = async () => {
     });
 
     //map backbone species genes to the master map
-    tempBackboneGenes.forEach((gene: Gene) => {
-        let backboneSpeciesName = gene.speciesName?.toLowerCase();
-        const geneSymbol = gene.symbol.toLowerCase();
-        const geneObject = { gene: gene, drawn: [], };
-        const speciesObject = {[backboneSpeciesName as string]: geneObject};
-        let geneMapIndex = allSpeciesGeneMap.get(geneSymbol);
-        if (geneMapIndex)
-        {
-          //if gene is already in the master map, add the backbone species gene to the master map index
-          geneMapIndex[backboneSpeciesName as string] = geneObject;
-        }
-        else
-        {
-          //if gene is not in the master map, add it
-          allSpeciesGeneMap.set(geneSymbol, speciesObject);
-        }
-      });
+    tempBackboneGenes.forEach((gene: Gene) => 
+    {
+      let backboneSpeciesName = gene.speciesName?.toLowerCase();
+      const geneSymbol = gene.symbol.toLowerCase();
+      const geneObject = { gene: gene, drawn: [], };
+      const speciesObject = {[backboneSpeciesName as string]: geneObject};
+      let geneMapIndex = allSpeciesGeneMap.get(geneSymbol);
+      if (geneMapIndex)
+      {
+        //if gene is already in the master map, add the backbone species gene to the master map index
+        geneMapIndex[backboneSpeciesName as string] = geneObject;
+      }
+      else
+      {
+        //if gene is not in the master map, add it
+        allSpeciesGeneMap.set(geneSymbol, speciesObject);
+      }
+    });
 
-    //store.dispatch('setLoadedGeneSections', tempBackboneTracks.track.sections.concat(syntenyTracksResults.tracks[0].dataTracks[0].track.sections));
+    store.dispatch('setLoadedGenes', allSpeciesGeneMap);
+
+    //if loading by gene initially, we need to find the backbone start of the "highest" positioned ortholog, and the backbone stop of the "lowest" positioned ortholog, then setting the backbone selection to those coords
+    if ((loadType == 0) && (store.state.selectedGeneIds.length > 0) && (!geneReload))
+    {
+      const loadedGenes = store.state.loadedGenes;
+      const loadSelectedGene = store.state.gene
+      const loadedGeneSymbol = loadSelectedGene.symbol.toLowerCase();
+      const loadedGeneSpecies = loadSelectedGene.speciesName.toLowerCase();
+      const backboneStart = store.state.loadStart;
+      const backboneStop = store.state.loadStop;
+
+      const orthologs = loadedGenes.get(loadedGeneSymbol);
+      let drawnOrthologs = [];
+      for (let [key, value] of Object.entries(orthologs)) 
+      {
+        if (value.gene.speciesName.toLowerCase() !== loadedGeneSpecies) 
+        {
+          if (value.visible.length > 0)
+          {
+            drawnOrthologs = drawnOrthologs.concat(value.visible);
+          }
+          else if (value.drawn.length > 0)
+          {
+            drawnOrthologs = drawnOrthologs.concat(value.drawn);
+          }
+        }
+      }
+
+      const selectionStart = originalSelectedBackboneRegion.innerSelection?.basePairStart || originalSelectedBackboneRegion.baseSelection.basePairStart;
+      const selectionStop = originalSelectedBackboneRegion.innerSelection?.basePairStop || originalSelectedBackboneRegion.baseSelection.basePairStop;
+
+      const geneBasePairLength = loadSelectedGene.stop - loadSelectedGene.start;
+      const newInnerStart = Math.max(Math.floor(loadSelectedGene.start - 3 * geneBasePairLength), originalSelectedBackboneRegion.baseSelection.basePairStart);
+      const newInnerStop = Math.min(Math.floor(loadSelectedGene.stop + 3 * geneBasePairLength), originalSelectedBackboneRegion.baseSelection.basePairStop);
+
+      //convert ortholog svgs to backbone coords
+      if (drawnOrthologs.length > 0)
+      {
+        drawnOrthologs.sort((a, b) => a.svgY - b.svgY);
+        const highestOrtholog = drawnOrthologs[0];
+        const lowestOrtholog = drawnOrthologs[drawnOrthologs.length - 1];
+
+        const topOrthologLength = highestOrtholog.sectionStop - highestOrtholog.sectionStart;
+        const bottomOrthologLength = lowestOrtholog.sectionStop - lowestOrtholog.sectionStart;
+
+        const basePairsFromInnerSelection1 = Math.floor((highestOrtholog.svgY - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
+        const basePairStart = Math.max(basePairsFromInnerSelection1 + selectionStart - (topOrthologLength * 5), originalSelectedBackboneRegion.baseSelection.basePairStart);
+
+        const basePairsFromInnerSelection2 = Math.floor((lowestOrtholog.svgY - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
+        const basePairStop = Math.min(basePairsFromInnerSelection2 + selectionStart + (bottomOrthologLength * 5), originalSelectedBackboneRegion.baseSelection.basePairStop);
+
+        //confirm the searched gene is visible in the result and adjust if not
+        if (newInnerStart > basePairStart && newInnerStop < basePairStop)
+        {
+          store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: basePairStop});
+        }
+        else if (newInnerStart < basePairStart)
+        {
+          newInnerStop > basePairStop ? store.dispatch('setDetailedBasePairRange', { start: newInnerStart, stop: newInnerStop }) : store.dispatch('setDetailedBasePairRange', { start: newInnerStart, stop: basePairStop });
+        }
+        else if (newInnerStop > basePairStop)
+        {
+          newInnerStart < basePairStart ? store.dispatch('setDetailedBasePairRange', { start: newInnerStart, stop: newInnerStop}) : store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: newInnerStop}); 
+        }
+        geneReload = true;
+        return;
+      }
+      else
+      {
+        const selection = backboneSelectionTrack.sections[0].generateBackboneSelection(newInnerStart, newInnerStop, store.state.detailedBasePairToHeightRatio, backboneChromosome);
+        store.dispatch('clearBackboneSelection');
+        store.dispatch('setBackboneSelection', selection);
+        geneReload = true;
+        return;
+      }
+    }
 
     const compSpeciesMaps: Number[] = [];
     const compSpeciesNames: string[] = [];
