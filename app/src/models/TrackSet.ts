@@ -24,8 +24,7 @@ export default class TrackSet
     let convertedSpeciesTrack: Track | undefined;
     const convertedDataTracks: DataTrack[] = [];
 
-    const outerSelection = backboneSelection.baseSelection;
-    const innerSelection = backboneSelection.innerSelection;
+    let geneMap: Map<string, any> | null = null;
 
     if (this.speciesTrack.type === 'backbone')
     {
@@ -77,17 +76,19 @@ export default class TrackSet
         backboneSelection,
         true
       );
-      convertedSpeciesTrack = speciesTracks[0];
+      convertedSpeciesTrack = speciesTracks.speciesTrack;
 
       if (this.dataTracks.length)
       {
-        const geneTrack = speciesTracks[1];
+        const geneTrack = speciesTracks.geneTrack;
         const geneDataTrack = new DataTrack('Genes', geneTrack.name + ' Detailed Genes', geneTrack, 'red');
         geneDataTrack.setIsComparativeView(true);
         geneDataTrack.isDisplayed = true;
 
         convertedDataTracks.push(geneDataTrack);
       }
+
+      geneMap = speciesTracks.geneMap as Map<string, any>;
     }
     
     if (!convertedSpeciesTrack)
@@ -97,6 +98,7 @@ export default class TrackSet
     }
 
     const visibleRegionTrackSet = new TrackSet(convertedSpeciesTrack, convertedDataTracks);
-    return visibleRegionTrackSet;
+    
+    return { 'visibleRegionTrackSet': visibleRegionTrackSet, 'geneMap': geneMap };
   }
 }
