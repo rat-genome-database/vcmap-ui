@@ -59,14 +59,14 @@
       :width="SVGConstants.trackWidth + INNER_SELECTION_EXTRA_WIDTH"
       :height="selectedRegion.innerSelection.svgHeight" />
       
-    <text v-if="!isDetailed && selectedRegion.baseSelection.svgHeight > 0"
+    <text v-if="!isDetailed && selectedRegion.baseSelection.svgYPoint > 75"
       class="label small"
       :x="posX - 3"
       :y="selectedRegion.baseSelection.svgYPoint - 1">
         {{ Formatter.convertBasePairToLabel(selectedRegion.baseSelection.basePairStart) }}
     </text>
 
-    <text v-if="!isDetailed && selectedRegion.baseSelection.svgHeight > 0"
+    <text v-if="!isDetailed && (selectedRegion.baseSelection.svgYPoint + selectedRegion.baseSelection.svgHeight) < 405"
       class="label small"
       :x="posX - 3"
       :y="selectedRegion.baseSelection.svgYPoint + selectedRegion.baseSelection.svgHeight + 6">
