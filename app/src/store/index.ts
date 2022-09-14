@@ -22,7 +22,7 @@ export interface VCMapState
   gene: Gene | null; // backbone gene
 
   comparativeSpecies: Species[];
-  loadedGenes: Gene[];
+  loadedGenes: Map<string, any> | Gene[];
   loadedGeneSections: TrackSection[];
 
   selectedBackboneRegion: BackboneSelection;
