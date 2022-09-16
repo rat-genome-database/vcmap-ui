@@ -3,3 +3,4 @@ app.config.ts
 version.ts
 .idea
 .DS_Store
+dist/

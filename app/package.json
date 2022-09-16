@@ -5,6 +5,7 @@
   "scripts": {
     "serve": "npm run prebuild && vue-cli-service serve",
     "build": "npm run prebuild && vue-cli-service build",
+    "build:prod": "NODE_ENV=production npm run prebuild && vue-cli-service build",
     "test:unit": "vue-cli-service test:unit",
     "lint": "vue-cli-service lint",
     "prebuild": "node -p \"'export const VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts"
