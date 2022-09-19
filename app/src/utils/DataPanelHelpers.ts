@@ -97,7 +97,7 @@ function getOrthologsFromComparativeSpecies(store: Store<VCMapState>, gene: Gene
         if (entry[1][mapKey.toString()]) 
         {
           const orthologGeneIdx = entry[1][mapKey.toString()]
-            .find((ortholog: any) => { ortholog.geneSymbol.toLowerCase() == gene.symbol.toLowerCase() }) || -1;
+            .find((ortholog: any) => { ortholog.geneSymbol.toLowerCase() == gene.symbol.toLowerCase(); }) || -1;
           return orthologGeneIdx !== -1;
         } 
         else 

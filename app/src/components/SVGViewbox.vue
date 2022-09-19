@@ -362,7 +362,7 @@ const updateDetailsPanel = async () => {
     if ((loadType == 0) && (store.state.selectedGeneIds.length > 0) && (!geneReload))
     {
       const loadedGenes = store.state.loadedGenes;
-      const loadSelectedGene = store.state.gene
+      const loadSelectedGene = store.state.gene;
       const loadedGeneSymbol = loadSelectedGene.symbol.toLowerCase();
       const loadedGeneSpecies = loadSelectedGene.speciesName.toLowerCase();
       const backboneStart = store.state.loadStart;
@@ -704,7 +704,7 @@ const constructLoadedGenes = (comparativeSpeciesGeneMapsArray: any, allGenesMap:
   });
 
   store.dispatch('setLoadedGenes', allGenesMap);
-}
+};
 
 /**
  * Gets the offset of the X position relative to the backbone species track
