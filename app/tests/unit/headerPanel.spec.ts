@@ -13,11 +13,14 @@ const mockStore = createStore({
     chromosome: null,
     startPos: 0,
     stopPos: 0,
+    loadStart: null,
+    loadStop: null,
     gene: null,
     comparativeSpecies: [
       new Species({ typeKey: 2, name: 'Test Species 2', defaultMapKey: 2, maps: [new Map({ key: 2, primaryRefAssembly: true, description: '', notes: '', name: 'GRCh37'})] }), 
       new Species({ typeKey: 3, name: 'Test Species 3', defaultMapKey: 3, maps: [new Map({ key: 3, primaryRefAssembly: true, description: '', notes: '', name: 'GRCh36'})] })
     ],
+    loadedGeneSections: [],
     selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
     detailedBasePairRange: { start: 0, stop: 0 },
     overviewBasePairToHeightRatio: 1000,
