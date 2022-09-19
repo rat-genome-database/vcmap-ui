@@ -17,6 +17,9 @@ describe('OverviewControls', () => {
     chromosome: new Chromosome({ chromosome: '1', mapKey: 38, seqLength: 1000000, gapCount: 5, gapLength: 10000, contigCount: 100, ordinalNumber: 1 }),
     startPos: 1,
     stopPos: 10000,
+    loadStart: null,
+    loadStop: null,
+    loadedGeneSections: [],
     gene: null,
     comparativeSpecies: [],
     selectedBackboneRegion: new BackboneSelection(new SelectedRegion(50,100,100,10000)),
@@ -59,23 +62,5 @@ describe('OverviewControls', () => {
 
     const speciesText = wrapper.get('[data-test="backbone-overview-display"]');
     expect(speciesText.text()).toBe('Test Species chr1:0-1,000,000');
-  });
-
-  it('clears selection when clear button is clicked', async () => {
-    const wrapper = mount(OverviewControls, {
-      global: {
-        plugins: ExternalComponentsHandler.getPlugins(),
-        components: ExternalComponentsHandler.getComponents(),
-        directives: ExternalComponentsHandler.getDirectives(),
-        provide: {
-          [key as symbol]: store
-        }
-      },
-    });
-    
-    const clearBtn = wrapper.get('[data-test="clear-selection-btn"]');
-    await clearBtn.trigger('click');
-
-    expect(actions.clearBackboneSelection).toBeCalledTimes(1);
   });
 });
