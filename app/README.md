@@ -1,34 +1,14 @@
-# vcmap-web
+# VCMap Web UI
 
-## Project setup
-```
-npm install
-```
+This project is a [Vue](https://vuejs.org) single-page app (SPA). There is `docker` and 
+`docker compose` infrastructure to support the development environment and therefore
+usage of the `npm run` commands in this directory will mostly be limited to certain
+special cases.
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+**NOTE**: Only use the `npm run` commands directly if you are aware of the potential side effects.
 
-### Compiles for development
-```
-npm run build
-```
+## More information
 
-### Compiles and minifies for production
-```
-npm run build:prod
-```
+More documentation can be found in the [README.md](/README.md) file in the root of this
+repository.
 
-### Run your unit tests
-```
-npm run test:unit
-```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
