@@ -57,61 +57,26 @@
             </div>
             <div class="grid">
               <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
-                <p class="label-description">
-                  Chromosome: {{geneChromosome?.chromosome}} <span v-if="geneChromosome">(Length: {{Formatter.addCommasToBasePair(geneChromosome.seqLength)}}bp)</span>
+                <p v-if="geneChromosome" class="label-description">
+                  Chromosome: {{geneChromosome?.chromosome}} <span v-if="geneChromosome">(Length: {{Formatter.addCommasToBasePair(geneChromosome.seqLength)}} bp)</span>
                 </p>
-              </div>
-            </div>
-            <div class="grid">
-              <div class="col-12 text-center">
-                <Button @click="resetStartStopToGenePosition" label="Reset To Gene Start/Stop" :disabled="backboneGene == null" icon="pi pi-undo" class="p-button p-button-secondary" />
+                <p v-if="geneOptionStartPosition" class="label-description" >
+                  Gene Start: <span v-if="geneOptionStartPosition">{{geneOptionStartPosition}} bp</span>
+                </p>
+                <p v-if="geneOptionStopPosition" class="label-description">
+                  Gene Stop: <span>{{geneOptionStopPosition}} bp</span>
+                </p>
               </div>
             </div>
             <div class="p-fluid grid">
               <div class="lg:col-2 lg:col-offset-3 md:col-1 md:col-offset-2 sm:col-2 sm:col-offset-1">
-                <h4 :class="{'config-label': backboneGene}">Upstream/Downstream</h4>
-                <p v-if="backboneGene" class="label-description">+/- bp range</p>
-                <InputNumber
-                  showButtons
-                  v-model="geneOptionPlusMinus"
-                  @input="onPlusMinusInput"
-                  :disabled="!geneChromosome"
-                  required
-                  suffix="bp"
-                  :step="1000"
-                  :min="0"
-                />
-                <small v-if="showGenePlusMinusWarning" class="warning-text">Upstream/downstream range cannot be applied to custom start/stop positions</small>
+                
               </div>
               <div class="lg:col-2 md:col-3 sm:col-4">
-                <h4 :class="{'config-label': backboneGene}">Start Position</h4>
-                <p v-if="backboneGene" class="label-description">Gene Start: {{Formatter.addCommasToBasePair(backboneGene.start)}}bp</p>
-                <InputNumber
-                  showButtons
-                  v-model="geneOptionStartPosition"
-                  :disabled="!geneChromosome"
-                  @input="resetPlusMinusForCustomInput"
-                  required
-                  suffix="bp"
-                  :step="1000"
-                  :max="(maxPosition != null) ? maxPosition - 1 : 1"
-                  :min="0"
-                />
+                
               </div>
               <div class="lg:col-2 md:col-3 sm:col-4">
-                <h4 :class="{'config-label': backboneGene}">Stop Position</h4>
-                <p v-if="backboneGene" class="label-description">Gene Stop: {{Formatter.addCommasToBasePair(backboneGene.stop)}}bp</p>
-                <InputNumber
-                  showButtons
-                  v-model="geneOptionStopPosition"
-                  :disabled="!geneChromosome"
-                  @input="resetPlusMinusForCustomInput"
-                  required
-                  suffix="bp"
-                  :step="1000"
-                  :max="maxPosition"
-                  :min="1"
-                />
+                
               </div>
             </div>
             <div class="col-12 text-center">
@@ -331,7 +296,6 @@ const geneSuggestions = ref<Gene[]>([]);
 const backboneGene = ref<Gene | null>(null);
 const geneChromosome = ref<Chromosome | null>(null);
 const isLoadingGene = ref(false);
-const geneOptionPlusMinus = ref(0);
 const geneOptionStartPosition = ref<number | null>(0);
 const geneOptionStopPosition = ref<number | null>(0);
 
@@ -345,7 +309,6 @@ const maxPosition = ref<number | null>(null);
 
 const comparativeSpeciesSelections = ref<ComparativeSpeciesSelection[]>([]);
 
-const showGenePlusMinusWarning = ref(false);
 const showError = ref(false);
 const errorMessage = ref('');
 
@@ -379,37 +342,6 @@ const isValidConfig = computed(() => {
 const comparativeSpeciesLimitReached = computed(() => {
   return (comparativeSpeciesSelections.value.length >= 5);
 });
-
-function onPlusMinusInput(event: { value: number })
-{
-  if (backboneGene.value == null || geneChromosome.value == null)
-  {
-    return;
-  }
-
-  showGenePlusMinusWarning.value = false;
-  const plusMinus = event.value;
-  geneOptionStartPosition.value = (backboneGene.value.start - plusMinus > 0) ? backboneGene.value.start - plusMinus : 0;
-  geneOptionStopPosition.value = (backboneGene.value.stop + plusMinus < geneChromosome.value.seqLength) ? backboneGene.value.stop + plusMinus : geneChromosome.value.seqLength;
-}
-
-function resetPlusMinusForCustomInput()
-{
-  geneOptionPlusMinus.value = 0;
-  showGenePlusMinusWarning.value = true;
-}
-
-function resetStartStopToGenePosition()
-{
-  if (backboneGene.value  == null)
-  {
-    return;
-  }
-
-  geneOptionStartPosition.value = backboneGene.value.start;
-  geneOptionStopPosition.value = backboneGene.value.stop;
-  geneOptionPlusMinus.value = 0;
-}
 
 async function searchGene(event: {query: string})
 {
@@ -834,7 +766,6 @@ function clearConfigSelections()
   maxPosition.value = null;
   geneOptionStartPosition.value = null;
   geneOptionStopPosition.value = null;
-  geneOptionPlusMinus.value = 0;
   comparativeSpeciesSelections.value = [];
   chromosomeOptions.value = [];
 

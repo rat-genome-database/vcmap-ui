@@ -127,11 +127,11 @@ import SelectedData from '@/models/SelectedData';
 import Gene from '@/models/Gene';
 import GeneInfo from '@/components/GeneInfo.vue';
 import { Formatter } from '@/utils/Formatter';
+import SVGConstants from '@/utils/SVGConstants';
 import { ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
-import { getGeneOrthologIds, getNewSelectedData, sortGeneList } from '@/utils/DataPanelHelpers';
-import TrackSection from '@/models/TrackSection';
+import { getNewSelectedData, sortGeneList } from '@/utils/DataPanelHelpers';
 
 const store = useStore(key);
 
@@ -142,7 +142,7 @@ interface Props
 
 const props = defineProps<Props>();
 
-const searchedGene = ref<Gene | null>(null);
+const searchedGene = ref<Gene | Gene[] | null>(null);
 const geneSuggestions = ref<Gene[]>([]);
 const numberOfResults = ref<number>(0);
 const overviewStart = ref<number>(store.state.selectedBackboneRegion.baseSelection.basePairStart);
@@ -150,22 +150,25 @@ const overviewStop = ref<number>(store.state.selectedBackboneRegion.baseSelectio
 
 // fraction of gene bp length to add to the window when jumping
 // to the gene after a search
-const SEARCHED_GENE_WINDOW_FACTOR = 2;
+const SEARCHED_GENE_WINDOW_FACTOR = 3;
 
 watch(() => props.selectedData, () => {
   numberOfResults.value = 0;
   if (props.selectedData) {
     props.selectedData.forEach((dataObject) => {
       if (dataObject.type === 'trackSection' || dataObject.type === 'Gene' || dataObject.type === 'geneLabel') {
-        if (dataObject.type === 'trackSection' && dataObject.genomicSection.gene) {
+        if (dataObject.type === 'trackSection' && dataObject.genomicSection.gene) 
+        {
           numberOfResults.value += (dataObject.genomicSection.hiddenGenes.length + 1);
           if (dataObject.genomicSection.hiddenGenes.length > 0) sortGeneList(dataObject.genomicSection.hiddenGenes);
         }
-        if (dataObject.type === 'geneLabel') {
+        if (dataObject.type === 'geneLabel') 
+        {
           numberOfResults.value += (dataObject.genomicSection.combinedGenes.length + 1);
           if (dataObject.genomicSection.combinedGenes.length > 0) sortGeneList(dataObject.genomicSection.combinedGenes);
         }
-        if (dataObject.type === 'Gene') {
+        if (dataObject.type === 'Gene') 
+        {
           numberOfResults.value += 1;
         }
       }
@@ -187,7 +190,18 @@ const clearSelectedGenes = () => {
 
 const searchGene = (event: {query: string}) => {
   const loadedGenes = store.state.loadedGenes;
-  let matches: Gene[] = loadedGenes.filter((gene) => gene.symbol.toLowerCase().includes(event.query.toLowerCase()));
+  let matches: Gene[] = [];
+  for (let k of loadedGenes.keys()) 
+  {
+    if (k.toLowerCase().includes(event.query.toLowerCase()))
+    {
+      let match: Object = loadedGenes.get(k);
+      for (let [key, value] of Object.entries(match)) 
+      {
+        matches.push(value.gene);
+      }
+    }
+  }
   geneSuggestions.value = matches;
 };
 
@@ -221,22 +235,74 @@ const getSuggestionDisplay = (item: any) => {
 };
 
 const adjustSelectionWindow = () => {
+  const loadedGenes = store.state.loadedGenes;
   const selectedRegion = store.state.selectedBackboneRegion;
   const selectionStart = selectedRegion.innerSelection?.basePairStart || selectedRegion.baseSelection.basePairStart;
   const selectionStop = selectedRegion.innerSelection?.basePairStop || selectedRegion.baseSelection.basePairStop;
-  // If gene is outside of current window, reset the new window range
-  if (searchedGene.value && (selectionStart > searchedGene.value.start || selectionStop < searchedGene.value.stop)) {
-    // New start and stop will be +/- some multiple of the gene's length (currently 2x)
-    const geneBasePairLength = searchedGene.value.stop - searchedGene.value.start;
-    // Take the max of new start position, and selected region's original start
-    // to avoid jumping to outside of loaded region
-    const newInnerStart = Math.max(Math.floor(searchedGene.value.start
-      - SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), selectedRegion.baseSelection.basePairStart);
-    // Take min of new stop and selected regions original stop
-    const newInnerStop = Math.min(Math.floor(searchedGene.value.stop
-      + SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), selectedRegion.baseSelection.basePairStop);
+
+  // New start and stop will be +/- some multiple of the gene's length (currently 2x)
+  const geneBasePairLength = searchedGene.value.stop - searchedGene.value.start;
+  // Take the max of new start position, and selected region's original start
+  // to avoid jumping to outside of loaded region
+  const newInnerStart = Math.max(Math.floor(searchedGene.value.start
+    - SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), selectedRegion.baseSelection.basePairStart);
+  // Take min of new stop and selected regions original stop
+  const newInnerStop = Math.min(Math.floor(searchedGene.value.stop
+    + SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), selectedRegion.baseSelection.basePairStop);
+    
+  //get orthologs for backbone gene, and determine the relative highest and lowest positioned genes to reset the window
+  const orthologs = loadedGenes.get(searchedGene.value.symbol.toLowerCase());
+  let drawnOrthologs = [];
+  for (let [key, value] of Object.entries(orthologs)) 
+  {
+    if (value.gene.speciesName.toLowerCase() !== searchedGene.value.speciesName.toLowerCase()) 
+    {
+      if (value.visible.length > 0)
+      {
+        drawnOrthologs = drawnOrthologs.concat(value.visible);
+      }
+      else if (value.drawn.length > 0)
+      {
+        drawnOrthologs = drawnOrthologs.concat(value.drawn);
+      }
+    }
+  }
+
+  if (drawnOrthologs.length > 0)
+  {
+    drawnOrthologs.sort((a, b) => a.svgY - b.svgY);
+    const highestOrtholog = drawnOrthologs[0];
+    const lowestOrtholog = drawnOrthologs[drawnOrthologs.length - 1];
+
+    const topOrthologLength = highestOrtholog.sectionStop - highestOrtholog.sectionStart;
+    const bottomOrthologLength = lowestOrtholog.sectionStop - lowestOrtholog.sectionStart;
+
+    const basePairsFromInnerSelection1 = Math.floor((highestOrtholog.svgY - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
+    const basePairStart = Math.max(basePairsFromInnerSelection1 + selectionStart - (topOrthologLength * 5), selectedRegion.baseSelection.basePairStart);
+
+    const basePairsFromInnerSelection2 = Math.floor((lowestOrtholog.svgY - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
+    const basePairStop = Math.min(basePairsFromInnerSelection2 + selectionStart + (bottomOrthologLength * 5), selectedRegion.baseSelection.basePairStop);
+
+    //confirm the searched gene is visible in the result and adjust if not
+    if (newInnerStart > basePairStart && newInnerStop < basePairStop)
+    {
+      store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: basePairStop});
+    }
+    else if (newInnerStart < basePairStart)
+    {
+      newInnerStop > basePairStop ? store.dispatch('setDetailedBasePairRange', { start: newInnerStart, stop: newInnerStop }) : store.dispatch('setDetailedBasePairRange', { start: newInnerStart, stop: basePairStop });
+    }
+    else if (newInnerStop > basePairStop)
+    {
+      newInnerStart < basePairStart ? store.dispatch('setDetailedBasePairRange', { start: newInnerStart, stop: newInnerStop}) : store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: newInnerStop}); 
+    }
+    
+  }
+  else
+  {
     store.dispatch('setDetailedBasePairRange', { start: newInnerStart, stop: newInnerStop});
   }
+  
 };
 </script>
 

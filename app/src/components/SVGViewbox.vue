@@ -71,11 +71,12 @@
 <script setup lang="ts">
 import Track from '@/models/Track';
 import TrackSection from '@/models/TrackSection';
+import Species from '@/models/Species';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import TrackSVG from './TrackSVG.vue';
 import SVGConstants from '@/utils/SVGConstants';
-import BackboneSelection, { SelectedRegion, BasePairRange } from '@/models/BackboneSelection';
+import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import useDialog from '@/composables/useDialog';
 import BackboneTrackSVG from './BackboneTrackSVG.vue';
@@ -303,64 +304,129 @@ const updateDetailsPanel = async () => {
       store.state.selectedBackboneRegion,
     );
 
+    let comparativeSelectionTracks: TrackSet[] = syntenyTracksResults.tracks;
+    let syntenyDataArray: SpeciesSyntenyData[] = syntenyTracksResults?.speciesSyntenyDataArray || [];
+    let allSpeciesGeneMap: Map<string, any> = new Map();
+
+    //Construct the master map of all genes drawn for the backbone and all comparative species
+    syntenyDataArray.forEach((dataArray) => {
+      let speciesName = dataArray.speciesName.toLowerCase();
+      if (allSpeciesGeneMap.size == 0 && dataArray.allGenesMap) 
+      {
+        //if the map is empty, add all genes from the first species
+        allSpeciesGeneMap = new Map(dataArray.allGenesMap as Map<string, any>);
+      } 
+      else if (dataArray.allGenesMap) 
+      {
+        //begin inserting genes from the second species map into the master map
+        dataArray.allGenesMap.forEach((value, key) => {
+          if (!allSpeciesGeneMap.has(key)) 
+          {
+            //if gene is not already in the master map, add it
+            allSpeciesGeneMap.set(key, value);
+          }
+          else
+          {
+            let masterEntry = allSpeciesGeneMap.get(key);
+            let speciesEntry = (dataArray.allGenesMap as Map<string, any>).get(key);
+
+            masterEntry[speciesName] = speciesEntry[speciesName];
+          }
+        });
+      }    
+    });
+
+    //map backbone species genes to the master map
+    tempBackboneGenes.forEach((gene: Gene) => 
+    {
+      let backboneSpeciesName = gene.speciesName?.toLowerCase();
+      const geneSymbol = gene.symbol.toLowerCase();
+      const geneObject = { gene: gene, drawn: [], };
+      const speciesObject = {[backboneSpeciesName as string]: geneObject};
+      let geneMapIndex = allSpeciesGeneMap.get(geneSymbol);
+      if (geneMapIndex)
+      {
+        //if gene is already in the master map, add the backbone species gene to the master map index
+        geneMapIndex[backboneSpeciesName as string] = geneObject;
+      }
+      else
+      {
+        //if gene is not in the master map, add it
+        allSpeciesGeneMap.set(geneSymbol, speciesObject);
+      }
+    });
+
+    store.dispatch('setLoadedGenes', allSpeciesGeneMap);
+
     //if loading by gene initially, we need to find the backbone start of the "highest" positioned ortholog, and the backbone stop of the "lowest" positioned ortholog, then setting the backbone selection to those coords
     if ((loadType == 0) && (store.state.selectedGeneIds.length > 0) && (!geneReload))
     {
+      const loadedGenes = store.state.loadedGenes;
+      const loadSelectedGene = store.state.gene;
+      const loadedGeneSymbol = loadSelectedGene.symbol.toLowerCase();
+      const loadedGeneSpecies = loadSelectedGene.speciesName.toLowerCase();
       const backboneStart = store.state.loadStart;
       const backboneStop = store.state.loadStop;
-      const orthologs: TrackSection[] = [];
 
-      //collect all rendered orthologs for selected gene
-      const geneTracks = syntenyTracksResults.tracks[0].dataTracks[0].track.sections;
-      let selectedIds: number[] = [];
-      selectedIds = [...store.state.selectedGeneIds];
-      geneTracks.sort((a, b) => a.svgY - b.svgY);
-      for (let index = 0; index < geneTracks.length; index++)
+      const orthologs = loadedGenes.get(loadedGeneSymbol);
+      let drawnOrthologs = [];
+      for (let [key, value] of Object.entries(orthologs)) 
       {
-        const section = geneTracks[index];
-        if (section.gene)
+        if (value.gene.speciesName.toLowerCase() !== loadedGeneSpecies) 
         {
-          if (section.gene && selectedIds.includes(section.gene.rgdId))
+          if (value.visible.length > 0)
           {
-            orthologs.push(section);
+            drawnOrthologs = drawnOrthologs.concat(value.visible);
           }
-          else if (section.gene && ((store.state.gene.symbol).toLowerCase() == (section.gene.symbol).toLowerCase()))
+          else if (value.drawn.length > 0)
           {
-            if (!selectedIds.includes(section.gene.rgdId)) 
-            {
-              selectedIds.push(section.gene.rgdId); 
-            }
-            orthologs.push(section);
+            drawnOrthologs = drawnOrthologs.concat(value.drawn);
           }
         }
       }
 
+      const selectionStart = originalSelectedBackboneRegion.innerSelection?.basePairStart || originalSelectedBackboneRegion.baseSelection.basePairStart;
+      const selectionStop = originalSelectedBackboneRegion.innerSelection?.basePairStop || originalSelectedBackboneRegion.baseSelection.basePairStop;
+
+      const geneBasePairLength = loadSelectedGene.stop - loadSelectedGene.start;
+      const newInnerStart = Math.max(Math.floor(loadSelectedGene.start - 3 * geneBasePairLength), originalSelectedBackboneRegion.baseSelection.basePairStart);
+      const newInnerStop = Math.min(Math.floor(loadSelectedGene.stop + 3 * geneBasePairLength), originalSelectedBackboneRegion.baseSelection.basePairStop);
+
       //convert ortholog svgs to backbone coords
-      if (orthologs.length)
+      if (drawnOrthologs.length > 0)
       {
-        let highestOrtholog;
-        let lowestOrtholog;
-        orthologs.sort((a, b) => a.svgY - b.svgY);
-        highestOrtholog = orthologs[0];
-        orthologs.length > 1 ? lowestOrtholog = orthologs[orthologs.length - 1] : lowestOrtholog = highestOrtholog;
+        drawnOrthologs.sort((a, b) => a.svgY - b.svgY);
+        const highestOrtholog = drawnOrthologs[0];
+        const lowestOrtholog = drawnOrthologs[drawnOrthologs.length - 1];
 
         const topOrthologLength = highestOrtholog.sectionStop - highestOrtholog.sectionStart;
         const bottomOrthologLength = lowestOrtholog.sectionStop - lowestOrtholog.sectionStart;
+
         const basePairsFromInnerSelection1 = Math.floor((highestOrtholog.svgY - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
-        const basePairStart = Math.max(basePairsFromInnerSelection1 + originalSelectedBackboneRegion.innerSelection.basePairStart - (topOrthologLength * 5), originalSelectedBackboneRegion.innerSelection.basePairStart);
+        const basePairStart = Math.max(basePairsFromInnerSelection1 + selectionStart - (topOrthologLength * 5), originalSelectedBackboneRegion.baseSelection.basePairStart);
 
         const basePairsFromInnerSelection2 = Math.floor((lowestOrtholog.svgY - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
-        const basePairStop = Math.min(basePairsFromInnerSelection2 + originalSelectedBackboneRegion.innerSelection.basePairStart + (bottomOrthologLength * 5), originalSelectedBackboneRegion.innerSelection.basePairStop);
+        const basePairStop = Math.min(basePairsFromInnerSelection2 + selectionStart + (bottomOrthologLength * 5), originalSelectedBackboneRegion.baseSelection.basePairStop);
 
-        const selection = backboneSelectionTrack.sections[0].generateBackboneSelection(basePairStart, basePairStop, store.state.detailedBasePairToHeightRatio, backboneChromosome);
-        store.dispatch('clearBackboneSelection');
-        store.dispatch('setBackboneSelection', selection);
+        //confirm the searched gene is visible in the result and adjust if not
+        if (newInnerStart > basePairStart && newInnerStop < basePairStop)
+        {
+          store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: basePairStop});
+        }
+        else if (newInnerStart < basePairStart)
+        {
+          newInnerStop > basePairStop ? store.dispatch('setDetailedBasePairRange', { start: newInnerStart, stop: newInnerStop }) : store.dispatch('setDetailedBasePairRange', { start: newInnerStart, stop: basePairStop });
+        }
+        else if (newInnerStop > basePairStop)
+        {
+          newInnerStart < basePairStart ? store.dispatch('setDetailedBasePairRange', { start: newInnerStart, stop: newInnerStop}) : store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: newInnerStop}); 
+        }
         geneReload = true;
         return;
       }
       else
       {
-        const selection = backboneSelectionTrack.sections[0].generateBackboneSelection(backboneStart, backboneStop, store.state.detailedBasePairToHeightRatio, backboneChromosome);
+        const selection = backboneSelectionTrack.sections[0].generateBackboneSelection(newInnerStart, newInnerStop, store.state.detailedBasePairToHeightRatio, backboneChromosome);
         store.dispatch('clearBackboneSelection');
         store.dispatch('setBackboneSelection', selection);
         geneReload = true;
@@ -368,16 +434,8 @@ const updateDetailsPanel = async () => {
       }
     }
 
-    let comparativeSelectionTracks: TrackSet[] = syntenyTracksResults.tracks;
-    let syntenyDataArray: SpeciesSyntenyData[] = syntenyTracksResults?.speciesSyntenyDataArray || [];
-    let allSyntenyGenes: Gene[] = [];
-    syntenyDataArray.forEach((dataArray) => {
-      Array.prototype.push.apply(allSyntenyGenes, dataArray.allGenes ?? []);
-    });
-    store.dispatch('setLoadedGenes', tempBackboneGenes.concat([...allSyntenyGenes]));
-    //store.dispatch('setLoadedGeneSections', tempBackboneTracks.track.sections.concat(syntenyTracksResults.tracks[0].dataTracks[0].track.sections));
-
     const compSpeciesMaps: Number[] = [];
+    const compSpeciesNames: string[] = [];
     for (let index = 0; index < comparativeSelectionTracks.length; index++)
     {
       let track = comparativeSelectionTracks[index];
@@ -385,19 +443,33 @@ const updateDetailsPanel = async () => {
       if (track.speciesTrack.speciesMap)
       {
         compSpeciesMaps.push(track.speciesTrack.speciesMap);
+        compSpeciesNames.push(track.speciesTrack.name);
       }
     }
 
     const backboneGeneOrthologs = await SpeciesApi.getGeneOrthologs(backboneSpecies.defaultMapKey, backboneChromosome.chromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, compSpeciesMaps);
+    const syntenicGeneMaps = [];
 
     // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
     selectionTrackSets.forEach(trackSet => {
       const visibleTrackSet = trackSet.getVisibleRegion(zoomedSelection.basePairStart, zoomedSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold, store.state.selectedBackboneRegion);
       if (visibleTrackSet)
       {
-        detailTrackSets.value.push(visibleTrackSet);
+        if (visibleTrackSet.visibleRegionTrackSet)
+        {
+          detailTrackSets.value.push(visibleTrackSet.visibleRegionTrackSet);
+        }
+        if (visibleTrackSet.geneMap)
+        {
+          syntenicGeneMaps.push(visibleTrackSet.geneMap);
+        }
       }
     });
+
+    if (syntenicGeneMaps.length > 0)
+    {
+      constructLoadedGenes(syntenicGeneMaps, allSpeciesGeneMap, compSpeciesNames);
+    }
 
     if (backboneGeneOrthologs)
     {
@@ -419,7 +491,7 @@ const updateDetailsPanel = async () => {
 
 const generateOrthologLines = (orthologData: any, comparativeMaps: Number[]) => {
   let orthologLines: OrthologLine[] = [];
-  let possibleOrthologs = [];
+  let possibleOrthologs: Object[] = [];
   let backboneGenes = detailTrackSets.value[0].dataTracks[0].track.sections;
   
 
@@ -568,6 +640,71 @@ const createOrthologLine = (backboneGeneSection: any, comparativeGeneSection: an
   return orthologLine;
 };
 
+const constructLoadedGenes = (comparativeSpeciesGeneMapsArray: any, allGenesMap: any, comparativeSpeciesArray: string[]) => {
+  let visibleSpeciesGenesMap: Map<string, any> = new Map();
+  
+
+  comparativeSpeciesArray.forEach( (species: string) => {
+    const speciesName = species.toLowerCase();
+    comparativeSpeciesGeneMapsArray.forEach( (speciesGeneMap: Map<string, any>) => {
+      if (visibleSpeciesGenesMap.size == 0) 
+      {
+        //if the map is empty, add all genes from the first species
+        visibleSpeciesGenesMap = new Map(speciesGeneMap as Map<string, any>);
+        return;
+      } 
+      else
+      {
+        //begin inserting genes from the second species map into the master map
+        speciesGeneMap.forEach((value, key) => {
+          if (!visibleSpeciesGenesMap.has(key)) 
+          {
+            //if gene is not already in the master map, add it
+            visibleSpeciesGenesMap.set(key, value);
+          }
+          else
+          {
+            let masterEntry = visibleSpeciesGenesMap.get(key);
+            let speciesEntry = (speciesGeneMap as Map<string, any>).get(key);
+            
+            if (!masterEntry[speciesName] && speciesEntry[speciesName])
+            {
+              //if the gene is already in the master map, but the species is not, add the species
+              masterEntry[speciesName] = speciesEntry[speciesName];
+            }
+          }
+        });
+      }
+    });
+  });
+
+  //merge the allGenesMap and visible GenesMap so we have accurate positional data for all genes
+  comparativeSpeciesArray.forEach( (species: string) => {
+    const speciesName = species.toLowerCase();
+    visibleSpeciesGenesMap.forEach((value, key) => {
+      if (allGenesMap.has(key)) 
+      {
+        let masterEntry = allGenesMap.get(key);
+        let speciesEntry = value;
+
+        if (speciesEntry[speciesName])
+        {
+          if(speciesEntry[speciesName].drawn.length > 0)
+          {
+            masterEntry[speciesName].visible = speciesEntry[speciesName].drawn;
+          }
+        }
+      }
+      else
+      {
+        //if gene is not already in the master map, add it
+        allGenesMap.set(key, value);
+      }
+    });
+  });
+
+  store.dispatch('setLoadedGenes', allGenesMap);
+};
 
 /**
  * Gets the offset of the X position relative to the backbone species track
@@ -609,19 +746,39 @@ const navigateUp = () => {
 
   // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
   detailTrackSets.value = [];
+  const syntenicGeneMaps = [];
+  
   selectionTrackSets.forEach(trackSet => {
     if (!selectedRegion.innerSelection) return;
+    
 
     const visibleTrackSet = trackSet.getVisibleRegion(selectedRegion.innerSelection.basePairStart, selectedRegion.innerSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold, store.state.selectedBackboneRegion);
     if (visibleTrackSet)
     {
-      detailTrackSets.value.push(visibleTrackSet);
+      if (visibleTrackSet.visibleRegionTrackSet)
+      {
+        detailTrackSets.value.push(visibleTrackSet.visibleRegionTrackSet);
+      }
+      if (visibleTrackSet.geneMap)
+      {
+        syntenicGeneMaps.push(visibleTrackSet.geneMap);
+      }
     }
   });
 
+  if (syntenicGeneMaps.length > 0)
+  {
+    let comparativeSpecies = store.state.comparativeSpecies;
+    const comparativeSpeciesArray = [];
+    const allGenesMap = store.state.loadedGenes; 
+    
+    comparativeSpecies.forEach(species => {comparativeSpeciesArray.push(species.name.toLowerCase());});
+    constructLoadedGenes(syntenicGeneMaps, allGenesMap, comparativeSpeciesArray);
+  }
+
   if (selectedRegion.orthologData)
   {
-    const comparativeSpecies = store.state.comparativeSpecies;
+    let comparativeSpecies = store.state.comparativeSpecies;
     const comparativeSpeciesMaps = [];
     comparativeSpecies.forEach(species => {comparativeSpeciesMaps.push(species.activeMap.key);});
     generateOrthologLines(selectedRegion.orthologData, comparativeSpeciesMaps);
@@ -637,15 +794,34 @@ const navigateDown = () => {
 
   // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
   detailTrackSets.value = [];
+  const syntenicGeneMaps = [];
+
   selectionTrackSets.forEach(trackSet => {
     if (!selectedRegion.innerSelection) return;
 
     const visibleTrackSet = trackSet.getVisibleRegion(selectedRegion.innerSelection.basePairStart, selectedRegion.innerSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold, store.state.selectedBackboneRegion);
     if (visibleTrackSet)
     {
-      detailTrackSets.value.push(visibleTrackSet);
+      if (visibleTrackSet.visibleRegionTrackSet)
+      {
+        detailTrackSets.value.push(visibleTrackSet.visibleRegionTrackSet);
+      }
+      if (visibleTrackSet.geneMap)
+      {
+        syntenicGeneMaps.push(visibleTrackSet.geneMap);
+      }
     }
   });
+
+  if (syntenicGeneMaps.length > 0)
+  {
+    let comparativeSpecies = store.state.comparativeSpecies;
+    const comparativeSpeciesArray = [];
+    const allGenesMap = store.state.loadedGenes; 
+    
+    comparativeSpecies.forEach(species => {comparativeSpeciesArray.push(species.name.toLowerCase());});
+    constructLoadedGenes(syntenicGeneMaps, allGenesMap, comparativeSpeciesArray);
+  }
 
   if (selectedRegion.orthologData)
   {

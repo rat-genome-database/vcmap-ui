@@ -13,39 +13,6 @@
         <div class="col-7 bold">{{Formatter.addCommasToBasePair(store.state.overviewSyntenyThreshold)}}bp</div>
         <div class="col-5">Base Selection:</div>
         <div class="col-7 bold"><span class="clickable-range" @click="openSelectionEditModal">{{selectionRange}}</span></div>
-        <div class="col-7 col-offset-5 selection-btn-row">
-          <Button
-            :disabled="areSelectionButtonsDisabled"
-            v-tooltip.left="'Shrink Selection by 20%'" 
-            icon="pi pi-fast-backward" 
-            class="p-button-success p-button-sm selection-btn" 
-            @click="changeSelectionByPercentage(-20)" />
-          <Button
-            :disabled="areSelectionButtonsDisabled"
-            v-tooltip.left="'Shrink Selection by 10%'" 
-            icon="pi pi-step-backward" 
-            class="p-button-success p-button-sm selection-btn" 
-            @click="changeSelectionByPercentage(-10)" />
-          <Button
-            :disabled="areSelectionButtonsDisabled"
-            v-tooltip.left="'Expand Selection by 10%'" 
-            icon="pi pi-step-forward" 
-            class="p-button-success p-button-sm selection-btn" 
-            @click="changeSelectionByPercentage(10)" />
-          <Button
-            :disabled="areSelectionButtonsDisabled"
-            v-tooltip.left="'Expand Selection by 20%'" 
-            icon="pi pi-fast-forward" 
-            class="p-button-success p-button-sm selection-btn" 
-            @click="changeSelectionByPercentage(20)" />
-          <Button 
-            data-test="clear-selection-btn"
-            :disabled="areSelectionButtonsDisabled"
-            v-tooltip.left="'Clear Selection'" 
-            icon="pi pi-ban" 
-            class="p-button-danger p-button-sm selection-btn" 
-            @click="clearSelection" />
-        </div>
       </div>
     </div>
   </div>
