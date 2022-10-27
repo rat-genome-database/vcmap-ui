@@ -70,8 +70,6 @@
 
 <script setup lang="ts">
 import Track from '@/models/Track';
-import TrackSection from '@/models/TrackSection';
-import Species from '@/models/Species';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import TrackSVG from './TrackSVG.vue';
@@ -191,7 +189,6 @@ const updateOverviewPanel = async () => {
     store.state.overviewSyntenyThreshold,
     SVGConstants.overviewTrackYPosition, // SVG positioning of the overview tracks will start just underneath the header panels with a bit of space in between
     false,
-    store.state.selectedBackboneRegion
  );
  comparativeOverviewTracks = syntenyTrackResults.tracks;
 
@@ -280,7 +277,7 @@ const updateDetailsPanel = async () => {
   tempBackboneGenes.forEach(gene => gene.speciesName = backboneSpecies.name);
   let tempBackboneTracks = createBackboneGeneTrackFromGenesData(tempBackboneGenes, backboneSpecies.name,
     originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop,
-    store.state.detailedBasePairToHeightRatio, true, store.state.detailsSyntenyThreshold, SVGConstants.panelTitleHeight, store.state.selectedBackboneRegion);
+    store.state.detailedBasePairToHeightRatio, true, store.state.detailsSyntenyThreshold, SVGConstants.panelTitleHeight);
 
   if (backboneSelectionTrack != null && tempBackboneTracks != null)
   {
@@ -301,7 +298,6 @@ const updateDetailsPanel = async () => {
       store.state.detailsSyntenyThreshold,
       SVGConstants.panelTitleHeight, // SVG positioning of detailed tracks will start immediately after the header panel
       true,
-      store.state.selectedBackboneRegion,
     );
 
     let comparativeSelectionTracks: TrackSet[] = syntenyTracksResults.tracks;
@@ -365,8 +361,6 @@ const updateDetailsPanel = async () => {
       const loadSelectedGene = store.state.gene;
       const loadedGeneSymbol = loadSelectedGene.symbol.toLowerCase();
       const loadedGeneSpecies = loadSelectedGene.speciesName.toLowerCase();
-      const backboneStart = store.state.loadStart;
-      const backboneStop = store.state.loadStop;
 
       const orthologs = loadedGenes.get(loadedGeneSymbol);
       let drawnOrthologs = [];
@@ -386,7 +380,6 @@ const updateDetailsPanel = async () => {
       }
 
       const selectionStart = originalSelectedBackboneRegion.innerSelection?.basePairStart || originalSelectedBackboneRegion.baseSelection.basePairStart;
-      const selectionStop = originalSelectedBackboneRegion.innerSelection?.basePairStop || originalSelectedBackboneRegion.baseSelection.basePairStop;
 
       const geneBasePairLength = loadSelectedGene.stop - loadSelectedGene.start;
       const newInnerStart = Math.max(Math.floor(loadSelectedGene.start - 3 * geneBasePairLength), originalSelectedBackboneRegion.baseSelection.basePairStart);
@@ -452,7 +445,7 @@ const updateDetailsPanel = async () => {
 
     // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
     selectionTrackSets.forEach(trackSet => {
-      const visibleTrackSet = trackSet.getVisibleRegion(zoomedSelection.basePairStart, zoomedSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold, store.state.selectedBackboneRegion);
+      const visibleTrackSet = trackSet.getVisibleRegion(zoomedSelection.basePairStart, zoomedSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold);
       if (visibleTrackSet)
       {
         if (visibleTrackSet.visibleRegionTrackSet)
@@ -752,7 +745,7 @@ const navigateUp = () => {
     if (!selectedRegion.innerSelection) return;
     
 
-    const visibleTrackSet = trackSet.getVisibleRegion(selectedRegion.innerSelection.basePairStart, selectedRegion.innerSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold, store.state.selectedBackboneRegion);
+    const visibleTrackSet = trackSet.getVisibleRegion(selectedRegion.innerSelection.basePairStart, selectedRegion.innerSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold);
     if (visibleTrackSet)
     {
       if (visibleTrackSet.visibleRegionTrackSet)
@@ -799,7 +792,7 @@ const navigateDown = () => {
   selectionTrackSets.forEach(trackSet => {
     if (!selectedRegion.innerSelection) return;
 
-    const visibleTrackSet = trackSet.getVisibleRegion(selectedRegion.innerSelection.basePairStart, selectedRegion.innerSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold, store.state.selectedBackboneRegion);
+    const visibleTrackSet = trackSet.getVisibleRegion(selectedRegion.innerSelection.basePairStart, selectedRegion.innerSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold);
     if (visibleTrackSet)
     {
       if (visibleTrackSet.visibleRegionTrackSet)

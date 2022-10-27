@@ -2,7 +2,6 @@ import Track from "./Track";
 import DataTrack from "./DataTrack";
 import { createBackboneGeneTrackFromGenesData, createSyntenyTrackFromSpeciesSyntenyData } from "@/utils/TrackBuilder";
 import TrackSection from "./TrackSection";
-import BackboneSelection, { SelectedRegion, BasePairRange } from './BackboneSelection';
 
 
 //track sets are a grouping of a species track and its respective data tracks
@@ -19,7 +18,7 @@ export default class TrackSet
     this.dataTracks = dataTracks;
   }
 
-  public getVisibleRegion(start: number, stop: number, basePairToHeightRatio: number, syntenyThreshold: number, backboneSelection: BackboneSelection)
+  public getVisibleRegion(start: number, stop: number, basePairToHeightRatio: number, syntenyThreshold: number)
   {
     let convertedSpeciesTrack: Track | undefined;
     const convertedDataTracks: DataTrack[] = [];
@@ -56,7 +55,6 @@ export default class TrackSet
               true, // this will always be used on the detailed panel
               syntenyThreshold,
               this.svgY,
-              backboneSelection
             );
 
             convertedDataTracks.push(convertedSpeciesDataTrack);
@@ -73,8 +71,6 @@ export default class TrackSet
         basePairToHeightRatio,
         syntenyThreshold,
         this.svgY,
-        backboneSelection,
-        true
       );
       convertedSpeciesTrack = speciesTracks.speciesTrack;
 
