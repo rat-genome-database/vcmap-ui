@@ -238,7 +238,6 @@ const adjustSelectionWindow = () => {
   const loadedGenes = store.state.loadedGenes;
   const selectedRegion = store.state.selectedBackboneRegion;
   const selectionStart = selectedRegion.innerSelection?.basePairStart || selectedRegion.baseSelection.basePairStart;
-  const selectionStop = selectedRegion.innerSelection?.basePairStop || selectedRegion.baseSelection.basePairStop;
 
   // New start and stop will be +/- some multiple of the gene's length (currently 2x)
   const geneBasePairLength = searchedGene.value.stop - searchedGene.value.start;

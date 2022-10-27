@@ -5,7 +5,6 @@ import DataTrack from "@/models/DataTrack";
 import Gene from "@/models/Gene";
 import Species from "@/models/Species";
 import SyntenicRegion, { SpeciesSyntenyData, SyntenyRegionData } from "@/models/SyntenicRegion";
-import BackboneSelection from '@/models/BackboneSelection';
 import Track from "@/models/Track";
 import TrackSet from "@/models/TrackSet";
 import TrackSection from "@/models/TrackSection";
@@ -39,7 +38,7 @@ export function createBackboneTrack(species: Species, chromosome: Chromosome, st
 /**
  * Creates the synteny tracks for a particular set of comparative species
  */
-export async function createSyntenyTracks(comparativeSpecies: Species[], backboneChr: Chromosome, backboneStart: number, backboneStop: number, basePairToHeightRatio: number, syntenyThreshold: number, startingSVGYPos: number, isComparative: boolean, backboneSelection: BackboneSelection)
+export async function createSyntenyTracks(comparativeSpecies: Species[], backboneChr: Chromosome, backboneStart: number, backboneStop: number, basePairToHeightRatio: number, syntenyThreshold: number, startingSVGYPos: number, isComparative: boolean)
 {
   const speciesSyntenyDataArray =  isComparative ? await SyntenyApi.getSyntenicRegions({
     backboneChromosome: backboneChr,
@@ -58,7 +57,7 @@ export async function createSyntenyTracks(comparativeSpecies: Species[], backbon
 
   const tracks: TrackSet[] = [];
   speciesSyntenyDataArray?.forEach(speciesSyntenyData => {
-    const speciesTracks = createSyntenyTrackFromSpeciesSyntenyData(speciesSyntenyData, backboneStart, backboneStop, basePairToHeightRatio, syntenyThreshold, startingSVGYPos, backboneSelection, isComparative);
+    const speciesTracks = createSyntenyTrackFromSpeciesSyntenyData(speciesSyntenyData, backboneStart, backboneStop, basePairToHeightRatio, syntenyThreshold, startingSVGYPos);
     const speciesTrack = speciesTracks.speciesTrack;
     const geneTrack = speciesTracks.geneTrack;
     const geneMap = speciesTracks.geneMap as Map<string, any>;
@@ -79,7 +78,7 @@ export async function createSyntenyTracks(comparativeSpecies: Species[], backbon
   return {tracks: tracks, speciesSyntenyDataArray: speciesSyntenyDataArray};
 }
 
-export function createSyntenyTrackFromSpeciesSyntenyData(speciesSyntenyData: SpeciesSyntenyData, backboneStart: number, backboneStop: number, basePairToHeightRatio: number, syntenyThreshold: number, startingSVGYPos: number, backboneSelection: BackboneSelection, isComparative: boolean)
+export function createSyntenyTrackFromSpeciesSyntenyData(speciesSyntenyData: SpeciesSyntenyData, backboneStart: number, backboneStop: number, basePairToHeightRatio: number, syntenyThreshold: number, startingSVGYPos: number)
 {
   console.debug(`-- Building synteny track for species: ${speciesSyntenyData.speciesName} / ${speciesSyntenyData.mapName} --`);
   const trackSections = splitLevel1And2RegionsIntoSections(speciesSyntenyData, backboneStart, backboneStop, basePairToHeightRatio, syntenyThreshold);
@@ -100,12 +99,10 @@ export async function createBackboneDataTracks(species: Species, chromosome: Chr
   return genes;
 }
 
-export function createBackboneGeneTrackFromGenesData(genes: Gene[], speciesName: string, startPos: number, stopPos: number,  basePairToHeightRatio: number, isComparative: boolean, syntenyThreshold: number, startingSVGYPos: number, backboneSelection: BackboneSelection)
+export function createBackboneGeneTrackFromGenesData(genes: Gene[], speciesName: string, startPos: number, stopPos: number,  basePairToHeightRatio: number, isComparative: boolean, syntenyThreshold: number, startingSVGYPos: number)
 {
   const sections: TrackSection[] = [];
   let hiddenSections: TrackSection[] = [];
-
-  const topSvgYCutoff = 55;
   
   const threshold = syntenyThreshold * GENES_DATA_TRACK_THRESHOLD_MULTIPLIER;
   for (let index = 0; index < genes.length; index++)

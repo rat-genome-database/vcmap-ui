@@ -117,9 +117,8 @@ import TrackSection from '@/models/TrackSection';
 import { toRefs } from '@vue/reactivity';
 import { useStore } from 'vuex';
 import SVGConstants from '@/utils/SVGConstants';
-import { getMousePosSVG } from '@/utils/SVGHelpers';
 import { key } from '@/store';
-import { sortGeneList, getNewSelectedData, getGeneOrthologIds } from '@/utils/DataPanelHelpers';
+import { sortGeneList, getNewSelectedData } from '@/utils/DataPanelHelpers';
 
 const LEVEL_2_WIDTH_MULTIPLIER = 0.75;
 const LABEL_Y_OFFSET = 3;
@@ -127,7 +126,6 @@ const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
 const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
 
 const store = useStore(key);
-const svg = document.querySelector('svg');
 
 interface Props 
 {

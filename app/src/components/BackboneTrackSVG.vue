@@ -99,7 +99,6 @@ import { toRefs } from '@vue/reactivity';
 import { ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import SVGConstants from '@/utils/SVGConstants';
-import { getMousePosSVG } from '@/utils/SVGHelpers';
 import { key } from '@/store';
 import { Formatter } from '@/utils/Formatter';
 
@@ -109,7 +108,6 @@ const END_LABEL_Y_OFFSET = 7;
 const HIGHLIGHT_COLOR = 'bisque';
 
 const store = useStore(key);
-const svg = document.querySelector('svg');
 
 interface Props
 {
@@ -164,7 +162,6 @@ const onMouseEnter = (event: any, section: TrackSection, type: string) => {
   }
   // Only set selected data if there are no selected genes
   if (store.state.selectedGeneIds.length === 0) {
-    let currentSVGPoint = getMousePosSVG(svg, event);
     const selectedData = new SelectedData(section, type);
     store.dispatch('setSelectedData', [selectedData]);
   }

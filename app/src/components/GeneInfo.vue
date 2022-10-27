@@ -39,7 +39,7 @@ import Gene from '@/models/Gene';
 import { Formatter } from '@/utils/Formatter';
 import { useStore } from 'vuex';
 import { key } from '@/store';
-import { getGeneOrthologIds, getNewSelectedData } from '@/utils/DataPanelHelpers';
+import { getNewSelectedData } from '@/utils/DataPanelHelpers';
 
 const store = useStore(key);
 
