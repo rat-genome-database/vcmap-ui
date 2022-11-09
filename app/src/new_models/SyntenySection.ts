@@ -2,6 +2,7 @@ import BackboneSection from './BackboneSection';
 import SyntenyObject from './SyntenyObject';
 import Species from '../models/Species';
 import Chromosome from "@/models/Chromosome";
+import DatatrackSection from './DatatrackSection';
 
 interface SyntenySectionParams
 {
@@ -12,7 +13,6 @@ interface SyntenySectionParams
   species: Species;
   syntenyObject: SyntenyObject;
 }
-
 
 //This model is used to store data for a syntenic section offbackbone
 export default class SyntenySection
@@ -25,6 +25,7 @@ export default class SyntenySection
   syntenyGaps: SyntenyObject[] = [];                         // synteny gaps occupying this section
   syntenyBlocks: SyntenyObject[] = [];                       // synteny blocks occupying this section
   syntenicRatio: number = 0;                                 // ratio of the length of the section on its original species to the length of the backbone section
+  datatrackSections: DatatrackSection[] = []; // DatatrackSections belonging to this SyntenySection
 
   //species: Species = new Species();                          // species that this section is from
   //chromosome: Chromosome = new Chromosome();                 // chromosome that this section is from
