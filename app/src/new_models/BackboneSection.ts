@@ -1,7 +1,7 @@
 import Species from '../models/Species';
 import Chromosome from "@/models/Chromosome";
 import { VCMapSVGElement } from './VCMapSVGElement';
-import SyntenyObject from './SyntenyObject';
+import SyntenyRegion from './SyntenyRegion';
 import DatatrackSection from './DatatrackSection';
 
 interface BackboneSectionParams
@@ -29,7 +29,7 @@ export default class BackboneSection implements VCMapSVGElement
   syntenicRatio: number = 0;  // ratio of the length of the section on its original species to the length of this backbone section
   //species: Species = new Species();  // species that this section is from
   //chromosome: string = '';  // chromosome that this section is from
-  syntenyObjects: SyntenyObject[] = [];
+  syntenyRegions: SyntenyRegion[] = [];
   datatrackSections: DatatrackSection[] = [];
 
   constructor(params: BackboneSectionParams)
