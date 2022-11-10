@@ -8,7 +8,7 @@ export interface SpeciesMapDTO
 {
   key: number;
   name: string;
-  version: any;
+  version: string | null;
   description: string;
   unit: string;
   rgdId: number;
@@ -16,7 +16,7 @@ export interface SpeciesMapDTO
   speciesTypeKey: number;
   notes: string;
   primaryRefAssembly: boolean;
-  dbsnpVersion: any;
+  dbsnpVersion: string | null;
   rank: number;
   ucscAssemblyId: string;
   refSeqAssemblyAcc: string;
@@ -39,7 +39,7 @@ export function getSpeciesMapFromDTO(dto: SpeciesMapDTO)
 /**
  * Encapsulates all Maps API calls
  */
-export class MapsApi
+export default class MapsApi
 {
   static async getMaps(speciesTypeKey: Number):  Promise<SpeciesMap[]>
   {
