@@ -3,6 +3,7 @@ import Chromosome from "@/models/Chromosome";
 import { VCMapSVGElement } from './VCMapSVGElement';
 import SyntenyRegion from './SyntenyRegion';
 import DatatrackSection from './DatatrackSection';
+import Label from './Label';
 
 interface BackboneSectionParams
 {
@@ -31,6 +32,7 @@ export default class BackboneSection implements VCMapSVGElement
   //chromosome: string = '';  // chromosome that this section is from
   syntenyRegions: SyntenyRegion[] = [];
   datatrackSections: DatatrackSection[] = [];
+  datatrackLables: Label[] = [];
 
   constructor(params: BackboneSectionParams)
   {

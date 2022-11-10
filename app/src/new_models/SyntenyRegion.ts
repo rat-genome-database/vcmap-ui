@@ -3,6 +3,7 @@ import SyntenySection from './SyntenySection';
 import Species from '../models/Species';
 import Chromosome from "@/models/Chromosome";
 import DatatrackSection from './DatatrackSection';
+import Label from './Label';
 
 interface SyntenySectionParams
 {
