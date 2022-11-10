@@ -3,6 +3,7 @@ import SyntenySection from './SyntenySection';
 import Species from '../models/Species';
 import Chromosome from "@/models/Chromosome";
 import DatatrackSection from './DatatrackSection';
+import Label from './Label';
 
 interface SyntenySectionParams
 {
@@ -28,6 +29,8 @@ export default class SyntenyRegion
   backboneSelection: BackboneSection | undefined; // backbone section that this synteny section is aligned to
   //species: Species = new Species();                          // species that this section is from
   //chromosome: Chromosome = new Chromosome();                 // chromosome that this section is from
+  // NOTE: We should evaluate if we want this, if its just a copy of the references to the labels in SyntenyRegion.datatrackSections
+  datatrackLabels: Label[] = [];                               // array of Label objects associated with the datatrackSections
 
   constructor(params: SyntenySectionParams)
   {

@@ -4,6 +4,7 @@ import Species from '../models/Species';
 import Gene from '../models/Gene';
 import Chromosome from "@/models/Chromosome";
 import { VCMapSVGElement } from "./VCMapSVGElement";
+import Label from './Label';
 
 interface DatatrackSectionParams
 {
@@ -29,6 +30,7 @@ export default class DatatrackSection implements VCMapSVGElement
   representation: string = '';
   //chromosome: Chromosome = new Chromosome();   // chromosome that this section is from
   //species: Species = new Species();            // species that this section is from
+  label?: Label;
 
   backboneSection: BackboneSection | undefined;  // backbone section that this datatrack is aligned to
   syntenyRegion: SyntenyRegion | undefined;     // synteny section that this datatrack is aligned to
