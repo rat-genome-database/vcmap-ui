@@ -32,7 +32,8 @@ export default class BackboneSection implements VCMapSVGElement
   //chromosome: string = '';  // chromosome that this section is from
   syntenyRegions: SyntenyRegion[] = [];
   datatrackSections: DatatrackSection[] = [];
-  datatrackLables: Label[] = [];
+  // NOTE: We should evaluate if we want this, if its just a copy of the references to the Labels in BackboneSection.datatrackSections
+  datatrackLables: Label[] = []; // array of the Label objects associated with the datatrackSections
 
   constructor(params: BackboneSectionParams)
   {
