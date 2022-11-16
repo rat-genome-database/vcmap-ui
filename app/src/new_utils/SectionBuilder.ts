@@ -1,8 +1,11 @@
 import Species from '../models/Species';
-import Gene from '../models/Gene';
-import SyntenicRegion, { SpeciesSyntenyData, SyntenicRegionDTO, SyntenyRegionData } from '../models/SyntenicRegion';
+import SyntenicRegion, { SpeciesSyntenyData, SyntenyRegionData } from '../models/SyntenicRegion';
 import Chromosome from '../models/Chromosome';
-
+import BackboneSection from '@/new_models/BackboneSection';
+import SyntenySection from '@/new_models/SyntenySection';
+import SyntenyRegion from '@/new_models/SyntenyRegion';
+import DatatrackSection from '@/new_models/DatatrackSection';
+import SyntenyApi from '../new_api/SyntenyApi';
 
 
 /**
@@ -22,10 +25,35 @@ import Chromosome from '../models/Chromosome';
 export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Species[], backboneChr: Chromosome, backboneStart: number, backboneStop: number, basePairToHeightRatio: number, syntenyThreshold: number, startingSVGYPos: number, isComparative: boolean)
 {
   //Step 1: Get syntenic data for each species
+  const speciesSyntenyDataArray =  isComparative ? await SyntenyApi.getSyntenicRegions({
+    backboneChromosome: backboneChr,
+    start: backboneStart,
+    stop: backboneStop,
+    threshold: syntenyThreshold,
+    includeGenes: 1,
+  }, comparativeSpecies)
 
-  //Step 2: Pass data to block processing pipeline
+  :await SyntenyApi.getSyntenicRegions({
+    backboneChromosome: backboneChr,
+    start: backboneStart,
+    stop: backboneStop,
+    threshold: syntenyThreshold
+  }, comparativeSpecies);
 
-  //Step 3: Capture processed data and return to caller for drawing
+
+  //Step 2: Pass data to block processing pipeline per species
+  if (speciesSyntenyDataArray)
+  {
+    const syntenicRegions = syntenicSectionBuilder(speciesSyntenyDataArray, backboneStart, backboneStop, basePairToHeightRatio, syntenyThreshold);
+
+    //Step 3: Capture processed data and return to caller for drawing
+    return syntenicRegions;
+  }
+  else
+  {
+    console.log("No syntenic data returned for species");
+    return;
+  }
 }
 
 
@@ -33,7 +61,6 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
  * Builds SyntenySections for blocks and gaps, and initiates processing for genes per block/section
  * 
  * @param speciesSyntenyData       list of species and other informational data
- * @param regions                  correlating genomic data for each species   (combine with speciesSyntenyData?)
  * @param backboneStart            backbone start basepair       
  * @param backboneStop             backbone stop basepair
  * @param startingSVGYPos          starting Y position for drawing SVG (always the same?)
@@ -41,35 +68,69 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
  * @param threshold                synteny threshold (unnecessary?)
  * @returns                        processed syntenic regions for each species
  */
-function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, regions: SyntenyRegionData[], backboneStart: number, backboneStop: number, basePairToHeightRatio: number, threshold: number)
+function syntenicSectionBuilder(SyntenyData: SpeciesSyntenyData[], backboneStart: number, backboneStop: number, basePairToHeightRatio: number, threshold: number)
 {
   //Step 1: For each species synteny data, create syntenic sections for each block
+  const processedSyntenicRegions: SyntenyRegion[] = [];
+  for (const speciesSyntenyData of SyntenyData)
+  {
+    const currSpecies = speciesSyntenyData.speciesName;
+    const regionInfo = speciesSyntenyData.regionData;
+    const currSyntenicRegion: SyntenyRegion = new SyntenyRegion({species: currSpecies});
+    
     //Step 1.1: Create syntenic sections for each block - 1:1 mapping returned from API
-
-    //Step 1.2: Record backbone mapping for each block as BackboneSection and store in each section 
+    regionInfo.forEach((region: SyntenyRegionData) => {
+      const blockInfo = region.block;
+      const blockLength = blockInfo.stop - blockInfo.start;
+      const blockRatio = (blockInfo.backboneStop - blockInfo.backboneStart) / blockLength;
+      const blockGaps = region.gaps;
+      const blockGenes = region.genes;
+      
+      //Step 1.2: Record backbone mapping for each block as BackboneSection and store in each section 
       //NOTE: BackboneSection may be drawn or may be used as a data storage method on section models, TBD
+      const blockBackboneSection = new BackboneSection({ start: blockInfo.backboneStart, stop: blockInfo.backboneStop, windowStart: backboneStart, windowStop: backboneStop });
+      const blockSyntenicSection = new SyntenySection({ start: blockInfo.start, stop: blockInfo.stop, backboneSection: blockBackboneSection, type: 'block' });
 
-    //Step 1.3: Convert SyntenicSection data to SVG values
+      //Step 1.3: Convert SyntenicSection data to SVG values
       //NOTE: These values possibly will be self calculated on model creation
 
-    //Step 1.4: Create BlockLabels for each block
+      //Step 1.4: Create BlockLabels for each block
 
+      //Step 2: For each (now processed) block, create syntenic sections for each gap
+      const processedGaps: SyntenySection[] = [];
+      if (blockGaps)
+      {
+        //Step 2.1: Create syntenic sections for each gap - 1:1 mapping returned from API
 
-  //Step 2: For each (now processed) block, create syntenic sections for each gap
-    //Step 2.1: Create syntenic sections for each gap - 1:1 mapping returned from API
+        //Step 2.2: Record threshold level these gaps were returned at
 
-    //Step 2.2: Record threshold level these gaps were returned at
+        //Step 2.3 store processed gap data in block
+        blockGaps.forEach((gap: SyntenicRegion) => {
+          const gapBackboneSection = new BackboneSection({ start: gap.backboneStart, stop: gap.backboneStop, windowStart: backboneStart, windowStop: backboneStop });
+          const gapSyntenicSection = new SyntenySection({ start: gap.start, stop: gap.stop, backboneSection: gapBackboneSection, threshold: threshold, type: 'gap' });
 
-    //Step 2.3 store processed gap data in block
+          currSyntenicRegion.addSyntenyGap(gapSyntenicSection);
+        });
+      }
+        
 
+      //Step 3: For each (now processed) block, create syntenic sections for each gene
+      if (blockGenes)
+      {
+        //Step 3.1: Pass block data and gene data to gene processing pipeline
+        //NOTE: We might want to instead associate block data with gene data, store data in an array, and pass all gene data at once for processing in order to avoid multiple passes of gene data for initial processing and then finding orthologs
+        const processedGeneInfo = syntenicDatatrackBuilder(blockGenes, blockInfo);
+        //Step 3.2: Capture processed gene data and store in block
+        //Step 3.3: Capture returned map of processed genes and add to master map of processed genes
+      }
 
-  //Step 3: For each (now processed) block, create syntenic sections for each gene
-    //Step 3.1: Pass block data and gene data to gene processing pipeline
-      //NOTE: We might want to instead associate block data with gene data, store data in an array, and pass all gene data at once for processing in order to avoid multiple passes of gene data for initial processing and then finding orthologs
+      currSyntenicRegion.addSyntenyBlock(blockSyntenicSection);
+    });
 
-    //Step 3.2: Capture processed gene data and store in block
+    processedSyntenicRegions.push(currSyntenicRegion);
+  }
 
-    //Step 3.3: Capture returned map of processed genes and add to master map of processed genes
+  return processedSyntenicRegions;
 
   //Step 4: Pass block, processed genes, list of orthologs, and master map of processed genes to ortholog processing pipeline
     //Step 4.1: Capture returned ortholog lines and store in block (or on gene/datatrack?)
@@ -86,10 +147,8 @@ function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, regions:
  * @param genomicData             genomic data for current block
  * @param blockInfo               info about block (start, stop, etc)
  * @param blockRatio              ratio of block to backbone
- * @param basePairToHeightRatio   base pair to height ratio/drawn SVG to basepair ratio
- * @param startingSVGYPos         starting Y position for drawing SVG (always the same?)
  */
-function syntenicDatatrackBuilder(genomicData: Object[], blockInfo: Object, blockRatio: number, basePairToHeightRatio: number, startingSVGYPos: number)
+function syntenicDatatrackBuilder(genomicData: Object[], blockInfo: Object)
 {
   //Step 1: For each gene, convert to backbone equivalents using blockInfo and blockRatio
 
