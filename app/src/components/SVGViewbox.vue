@@ -87,6 +87,7 @@ import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
 import { key } from '@/store';
 import { backboneDetailedError, backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError } from '@/utils/VCMapErrors';
 import { createBackboneDataTracks, createBackboneGeneTrackFromGenesData, createBackboneTrack, createSyntenyTracks } from '@/utils/TrackBuilder';
+import { createSyntenicRegionsAndDatatracks,  } from '@/new_utils/SectionBuilder';
 import useOverviewPanelSelection from '@/composables/useOverviewPanelSelection';
 import SpeciesApi from '@/api/SpeciesApi';
 
@@ -288,6 +289,19 @@ const updateDetailsPanel = async () => {
       onError(missingComparativeSpeciesError, missingComparativeSpeciesError.message);
       return;
     }
+
+
+    let newModelData = await createSyntenicRegionsAndDatatracks(
+      store.state.comparativeSpecies,
+      backboneChromosome,
+      originalSelectedBackboneRegion.baseSelection.basePairStart, 
+      originalSelectedBackboneRegion.baseSelection.basePairStop,
+      store.state.detailedBasePairToHeightRatio,
+      store.state.detailsSyntenyThreshold,
+      SVGConstants.panelTitleHeight, // SVG positioning of detailed tracks will start immediately after the header panel
+      true,
+    )
+
 
     let syntenyTracksResults = await createSyntenyTracks(
       store.state.comparativeSpecies,
