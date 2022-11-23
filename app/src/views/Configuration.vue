@@ -2,6 +2,7 @@
   <div class="configuration-header">
     <img alt="VCMap Logo" class="logo" src="../assets/images/vcmap_logo_v2.png">
     <h3 class="header">VCMap</h3><span class="version-label">v{{VERSION}}</span>
+    <a class="rgd-logo" href="https://rgd.mcw.edu/" target="_blank"><img src="../assets/images/rgd_logo.png" alt="RGD logo"></a>
   </div>
   <div>
     <TabView v-model:activeIndex="activeTab">
@@ -797,11 +798,15 @@ $warning-color: #a3852b;
 
 .configuration-header
 {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   .header
   {
     margin-left: 2rem;
+  }
+  .rgd-logo {
+    margin-left: auto;
+    padding-right: 1em;
   }
 }
 
