@@ -24,7 +24,7 @@ import SyntenyApi, { SpeciesSyntenyData, SyntenyRequestParams } from '../new_api
 export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Species[], backboneChr: Chromosome, backboneStart: number, backboneStop: number, basePairToHeightRatio: number, syntenyThreshold: number, startingSVGYPos: number, isComparative: boolean)
 {
   //Step 1: Get syntenic data for each species
-  let syntenyApiParams: SyntenyRequestParams = {
+  const syntenyApiParams: SyntenyRequestParams = {
     backboneChromosome: backboneChr,
     start: backboneStart,
     stop: backboneStop,
