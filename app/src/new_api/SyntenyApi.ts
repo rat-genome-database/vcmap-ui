@@ -128,7 +128,6 @@ export default class SyntenyApi
   {
     try
     {
-      console.debug(`In new api`)
       const syntenyApiCalls: Promise<AxiosResponse<SyntenyResponseDTO[], any>>[] = [];
       const comparativeSpeciesMaps = params.comparativeSpecies.map(s => s.activeMap);
       comparativeSpeciesMaps.forEach(map => {
