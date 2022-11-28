@@ -1,11 +1,10 @@
 import Species from '../models/Species';
-import SyntenicRegion, { SpeciesSyntenyData, SyntenyRegionData } from '../models/SyntenicRegion';
 import Chromosome from '../models/Chromosome';
 import BackboneSection from '@/new_models/BackboneSection';
 import SyntenySection from '@/new_models/SyntenySection';
 import SyntenyRegion from '@/new_models/SyntenyRegion';
 import DatatrackSection from '@/new_models/DatatrackSection';
-import SyntenyApi from '../new_api/SyntenyApi';
+import SyntenyApi, { SpeciesSyntenyData, SyntenyRequestParams } from '../new_api/SyntenyApi';
 
 
 /**
@@ -25,21 +24,23 @@ import SyntenyApi from '../new_api/SyntenyApi';
 export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Species[], backboneChr: Chromosome, backboneStart: number, backboneStop: number, basePairToHeightRatio: number, syntenyThreshold: number, startingSVGYPos: number, isComparative: boolean)
 {
   //Step 1: Get syntenic data for each species
-  const speciesSyntenyDataArray =  isComparative ? await SyntenyApi.getSyntenicRegions({
+  let syntenyApiParams: SyntenyRequestParams = {
     backboneChromosome: backboneChr,
     start: backboneStart,
     stop: backboneStop,
-    threshold: syntenyThreshold,
-    includeGenes: 1,
-  }, comparativeSpecies)
+    optional: {
+      threshold: syntenyThreshold,
+    },
+    comparativeSpecies: comparativeSpecies,
+  };
 
-  :await SyntenyApi.getSyntenicRegions({
-    backboneChromosome: backboneChr,
-    start: backboneStart,
-    stop: backboneStop,
-    threshold: syntenyThreshold
-  }, comparativeSpecies);
+  if (isComparative)
+  {
+    // For detailed panel, get genes...
+    syntenyApiParams.optional.includeGenes = true;
+  }
 
+  const speciesSyntenyDataArray = await SyntenyApi.getSyntenicRegions(syntenyApiParams);
 
   //Step 2: Pass data to block processing pipeline per species
   if (speciesSyntenyDataArray)
@@ -79,7 +80,7 @@ function syntenicSectionBuilder(SyntenyData: SpeciesSyntenyData[], backboneStart
     const currSyntenicRegion: SyntenyRegion = new SyntenyRegion({species: currSpecies});
     
     //Step 1.1: Create syntenic sections for each block - 1:1 mapping returned from API
-    regionInfo.forEach((region: SyntenyRegionData) => {
+    regionInfo.forEach((region) => {
       const blockInfo = region.block;
       const blockLength = blockInfo.stop - blockInfo.start;
       const blockRatio = (blockInfo.backboneStop - blockInfo.backboneStart) / blockLength;
@@ -105,7 +106,7 @@ function syntenicSectionBuilder(SyntenyData: SpeciesSyntenyData[], backboneStart
         //Step 2.2: Record threshold level these gaps were returned at
 
         //Step 2.3 store processed gap data in block
-        blockGaps.forEach((gap: SyntenicRegion) => {
+        blockGaps.forEach((gap) => {
           const gapBackboneSection = new BackboneSection({ start: gap.backboneStart, stop: gap.backboneStop, windowStart: backboneStart, windowStop: backboneStop });
           const gapSyntenicSection = new SyntenySection({ start: gap.start, stop: gap.stop, backboneSection: gapBackboneSection, threshold: threshold, type: 'gap' });
 
