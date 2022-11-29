@@ -69,7 +69,7 @@ export default class SpeciesApi
 
   static async getGenesByRegion(chromosome: String, start: Number, stop: Number, mapKey: Number, speciesName: string):  Promise<any>
   {
-    const res = await httpInstance.get(`/genes/mapped/${chromosome}/${start}/${stop}/${mapKey}`);
+    const res = await httpInstance.get(`/vcmap/genes/mapped/${chromosome}/${start}/${stop}/${mapKey}`);
 
     const geneList: Gene[] = [];
 
