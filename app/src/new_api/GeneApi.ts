@@ -113,7 +113,7 @@ function getOrthologsFromOrthologGeneSetDTO(dto: OrthologGeneSetDTO)
       {
         orthologsByMapKey[mapKey] = [getGeneFromOrthologGeneDTO(orthologGeneDTO)];
       }
-    })
+    });
   }
 
   return orthologsByMapKey;
