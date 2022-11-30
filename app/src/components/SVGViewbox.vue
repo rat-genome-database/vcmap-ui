@@ -302,7 +302,7 @@ const updateDetailsPanel = async () => {
       return;
     }
 
-
+    const createSyntenyTracksStart = Date.now();
     let newModelData = await createSyntenicRegionsAndDatatracks(
       store.state.comparativeSpecies,
       backboneChromosome,
@@ -315,7 +315,7 @@ const updateDetailsPanel = async () => {
     );
 
 
-    const createSyntenyTracksStart = Date.now();
+    
     let syntenyTracksResults = await createSyntenyTracks(
       store.state.comparativeSpecies,
       backboneChromosome,
