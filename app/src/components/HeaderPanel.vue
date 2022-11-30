@@ -10,7 +10,7 @@
         </template>
         <template #icons>
           <div class="icon-container">
-            <a class="rgd-logo" href="https://rgd.mcw.edu/" target="_blank"><img src="../assets/images/rgd_logo.png" alt="RGD logo"></a>
+            <a  href="https://rgd.mcw.edu/" target="_blank"><img class="rgd-logo" src="../assets/images/rgd_logo.png" alt="RGD logo"></a>
             <Button 
               label="New Configuration" 
               class="p-button-info header-btn"
@@ -67,6 +67,7 @@ const goToConfigurationScreen = () => {
   
   .rgd-logo {
     padding-right: 1em;
+    width: 80%;
   }
 }
 </style>
