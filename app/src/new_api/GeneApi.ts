@@ -113,7 +113,7 @@ function getOrthologsFromOrthologGeneSetDTO(dto: OrthologGeneSetDTO)
       {
         orthologsByMapKey[mapKey] = [getGeneFromOrthologGeneDTO(orthologGeneDTO)];
       }
-    })
+    });
   }
 
   return orthologsByMapKey;
@@ -130,7 +130,7 @@ export default class GeneApi
 
   static async getGenesByRegion(chromosome: String, start: Number, stop: Number, mapKey: Number, speciesName: string):  Promise<any>
   {
-    const res = await httpInstance.get<GeneDTO[]>(`/genes/mapped/${chromosome}/${start}/${stop}/${mapKey}`);
+    const res = await httpInstance.get<GeneDTO[]>(`/vcmap/genes/mapped/${chromosome}/${start}/${stop}/${mapKey}`);
     const geneList: Gene[] = res.data.map(dto => getGeneFromGeneDTO(dto, speciesName));
     return geneList;
   }

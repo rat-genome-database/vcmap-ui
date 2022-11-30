@@ -300,7 +300,7 @@ const updateDetailsPanel = async () => {
       store.state.detailsSyntenyThreshold,
       SVGConstants.panelTitleHeight, // SVG positioning of detailed tracks will start immediately after the header panel
       true,
-    )
+    );
 
 
     let syntenyTracksResults = await createSyntenyTracks(

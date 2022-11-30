@@ -1,7 +1,6 @@
 import Species from "@/new_models/Species";
 import SpeciesMap from "@/new_models/SpeciesMap";
 import httpInstance from './httpInstance';
-import { getSpeciesMapFromDTO, SpeciesMapDTO } from "./MapsApi";
 
 /**
  * Expected Species model returned from the RGD Rest API
@@ -11,6 +10,41 @@ interface SpeciesDTO
   name: string;
   speciesTypeKey: number;
   maps: SpeciesMapDTO[];
+}
+
+/**
+ * Expected Map model returned from the RGD Rest API
+ */
+interface SpeciesMapDTO
+{
+  key: number;
+  name: string;
+  version: string | null;
+  description: string;
+  unit: string;
+  rgdId: number;
+  methodKey: number;
+  speciesTypeKey: number;
+  notes: string;
+  primaryRefAssembly: boolean;
+  dbsnpVersion: string | null;
+  rank: number;
+  ucscAssemblyId: string;
+  refSeqAssemblyAcc: string;
+  refSeqAssemblyName: string;
+  source: string;
+}
+ 
+/**
+ * Converts RGD Map model to our internal SpeciesMap model
+ */
+function getSpeciesMapFromDTO(dto: SpeciesMapDTO)
+{
+  return new SpeciesMap({
+    key: dto.key,
+    name: dto.name,
+    primaryRefAssembly: dto.primaryRefAssembly
+  });
 }
 
 /**

@@ -28,20 +28,6 @@ export default class SpeciesApi
     return speciesList;
   }
 
-  static async getMaps(speciesTypeKey: Number):  Promise<MapType[]>
-  {
-    const res = await httpInstance.get(`/lookup/maps/${speciesTypeKey}`);
-    const mapsList: MapType[] = [];
-
-    for (const map in res.data)
-    {
-      const mapInfo = res.data[map];
-      mapsList.push(new MapType({ key: mapInfo.key, name: mapInfo.name, description: mapInfo.description, notes: mapInfo.notes, primaryRefAssembly: mapInfo.primaryRefAssembly }));
-    }
-
-    return mapsList;
-  }
-
   static async getChromosomes(mapKey: Number):  Promise<Chromosome[]>
   {
     const res = await httpInstance.get(`/vcmap/maps/${mapKey}/chromosomes`);
@@ -83,7 +69,7 @@ export default class SpeciesApi
 
   static async getGenesByRegion(chromosome: String, start: Number, stop: Number, mapKey: Number, speciesName: string):  Promise<any>
   {
-    const res = await httpInstance.get(`/genes/mapped/${chromosome}/${start}/${stop}/${mapKey}`);
+    const res = await httpInstance.get(`/vcmap/genes/mapped/${chromosome}/${start}/${stop}/${mapKey}`);
 
     const geneList: Gene[] = [];
 
