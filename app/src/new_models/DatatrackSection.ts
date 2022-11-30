@@ -1,5 +1,5 @@
 import BackboneSection from "./BackboneSection";
-import SyntenyRegion from "./SyntenyRegion";
+import SyntenySection from "./SyntenySection";
 import Species from '../models/Species';
 import Gene from '../models/Gene';
 import Chromosome from "@/models/Chromosome";
@@ -10,8 +10,8 @@ interface DatatrackSectionParams
 {
   start: number;
   stop: number;
-  backboneStart: number;
-  backboneStop: number;
+  backboneSection: BackboneSection;
+  syntenySection: SyntenySection;
   isGene: boolean;
   orthologs?: DatatrackSection[];
 }
@@ -33,16 +33,18 @@ export default class DatatrackSection implements VCMapSVGElement
   label?: Label;
 
   backboneSection: BackboneSection | undefined;  // backbone section that this datatrack is aligned to
-  syntenyRegion: SyntenyRegion | undefined;     // synteny section that this datatrack is aligned to
+  syntenyBlock: SyntenySection | undefined;     // synteny section that this datatrack is aligned to
 
   constructor(params: DatatrackSectionParams)
   {
     this.speciesStart = params.start;
     this.speciesStop = params.stop;
     this.length = this.speciesStop - this.speciesStart;
-    //this.backboneSection.start = params.backboneStart;
-    //this.backboneSection.stop = params.backboneStop;
-    //this.backboneSection.length = this.backboneSection.stop - this.backboneSection.start;
+    this.backboneSection = params.backboneSection;
+
+    this.posY1 = this.backboneSection.posY1;
+    this.posY2 = this.backboneSection.posY2;
+    this.height = this.backboneSection.height;
   }
 }
 

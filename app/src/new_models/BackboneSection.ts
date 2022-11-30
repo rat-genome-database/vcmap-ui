@@ -30,6 +30,7 @@ export default class BackboneSection implements VCMapSVGElement
   stop: number = 0;    // stop basepair of the section for the backbone
   windowStart: number = 0;  // start basepair of the section for the backbone in the detailed view
   windowStop: number = 0;   // stop basepair of the section for the backbone in the detailed view
+  windowRatio: number = 0;  // ratio of the window bp to svg unit height
   length: number = 0;  // length of the section for the backbone
   syntenicRatio: number = 0;  // ratio of the length of the section on its original species to the length of this backbone section
   species: string = '';  // species that this section is from
@@ -65,10 +66,9 @@ export default class BackboneSection implements VCMapSVGElement
     const svgLength = svgStop - svgStart;
     const windowLength = windowStop - windowStart;
     const ratio = windowLength / svgLength;
-    const blockSvgStart = 0;
-    const blockSvgStop = 0;
 
     // Calculate the start and stop SVG positions of this backbone section
+    this.windowRatio = ratio;
     const basepairDiff =  this.start < windowStart ? windowStart - this.start : this.start - windowStart;
     const svgDiff = basepairDiff / ratio;
 

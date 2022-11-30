@@ -11,6 +11,7 @@ interface SyntenySectionParams
 //This model is used to store data for a syntenic section offbackbone
 export default class SyntenyRegion
 {
+  gaplessBlock: SyntenySection | undefined;
   syntenyGaps: SyntenySection[] = [];                         // synteny gaps occupying this section
   syntenyBlocks: SyntenySection[] = [];                       // synteny blocks occupying this section
   datatrackSections: DatatrackSection[] = [];                 // DatatrackSections belonging to this SyntenySection
@@ -25,20 +26,20 @@ export default class SyntenyRegion
     this.species = params.species;
   }
 
-  public addSyntenyGap(syntenyGap: SyntenySection)
+  public addSyntenyGaps(syntenyGap: SyntenySection[])
   {
-    this.syntenyGaps.push(syntenyGap);
+    this.syntenyGaps.length > 0 ? this.syntenyGaps = this.syntenyGaps.concat(syntenyGap) : this.syntenyGaps = syntenyGap;
     this.syntenyGaps.sort((a, b) => a.posY1 - b.posY1);
   }
 
-  public addSyntenyBlock(syntenyBlock: SyntenySection)
+  public addSyntenyBlocks(syntenyBlock: SyntenySection[])
   {
-    this.syntenyBlocks.push(syntenyBlock);
+    this.syntenyBlocks.length > 0 ? this.syntenyBlocks = this.syntenyBlocks.concat(syntenyBlock) : this.syntenyBlocks = syntenyBlock;
     this.syntenyBlocks.sort((a, b) => a.posY1 - b.posY1);
   }
 
-  public addDatatrackSection(type: string, datatrackSection: DatatrackSection)
+  public addDatatrackSections(datatrackSection: DatatrackSection[])
   {
-    this.datatrackSections.push(datatrackSection);
+    this.datatrackSections.length > 0 ? this.datatrackSections = this.datatrackSections.concat(datatrackSection) : this.datatrackSections = datatrackSection;
   }
 }
