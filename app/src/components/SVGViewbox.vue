@@ -38,6 +38,14 @@
       <text class="label small" :x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
     </template>
 
+    <text class="label small" :x="600" :y="SVGConstants.trackLabelYPosition">Test Zone</text>
+
+    <template v-if="detailedSyntenicRegions.length">
+      <template v-for="(syntenicRegion, index) in detailedSyntenicRegions" :key="index">
+        <SectionSVG :region="syntenicRegion as SyntenyRegion" :pos-x="600" :width="SVGConstants.trackWidth"/>
+      </template>
+    </template>
+
     <text class="label medium bold" :x="SVGConstants.selectedBackboneXPosition" :y="SVGConstants.panelTitleYPosition">Detailed</text>
 
      <!-- Navigation buttons -->
@@ -73,6 +81,7 @@ import Track from '@/models/Track';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import TrackSVG from './TrackSVG.vue';
+import SectionSVG from './SectionSVG.vue';
 import SVGConstants from '@/utils/SVGConstants';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 import VCMapDialog from '@/components/VCMapDialog.vue';
@@ -91,6 +100,8 @@ import { createSyntenicRegionsAndDatatracks,  } from '@/new_utils/SectionBuilder
 import useOverviewPanelSelection from '@/composables/useOverviewPanelSelection';
 import SpeciesApi from '@/api/SpeciesApi';
 import { useLogger } from 'vue-logger-plugin';
+import SyntenyRegion from '@/new_models/SyntenyRegion';
+import SyntenySection from '@/new_models/SyntenySection';
 
 const store = useStore(key);
 const $log = useLogger();
@@ -101,6 +112,7 @@ const { startOverviewSelectionY, stopOverviewSelectionY, initOverviewSelection, 
 
 const overviewTrackSets = ref<TrackSet[]>([]); // The currently displayed TrackSets in the Overview panel
 const detailTrackSets = ref<TrackSet[]>([]); // The currently displayed TrackSets in the Detailed panel
+const detailedSyntenicRegions = ref<SyntenyRegion[]>([]); // The currently displayed SyntenicRegions in the detailed panel
 
 let comparativeOverviewTracks: Track[] = []; // Keeps track of current comparative tracks displayed in the overview panel
 let selectionTrackSets: TrackSet[] = []; // The track sets for the entire selected region
@@ -274,6 +286,8 @@ const updateDetailsPanel = async () => {
 
   detailTrackSets.value = [];
   selectionTrackSets = [];
+  detailedSyntenicRegions.value = [];
+
   // Get the range of the inner section that will be shown in the Detailed panel
   const zoomedSelection = originalSelectedBackboneRegion.generateInnerSelection(detailedBasePairRange.start, detailedBasePairRange.stop, store.state.overviewBasePairToHeightRatio);
   // Update the Detailed panel rez to match that region length
@@ -302,20 +316,6 @@ const updateDetailsPanel = async () => {
       return;
     }
 
-    const createSyntenyTracksStart = Date.now();
-    let newModelData = await createSyntenicRegionsAndDatatracks(
-      store.state.comparativeSpecies,
-      backboneChromosome,
-      originalSelectedBackboneRegion.baseSelection.basePairStart, 
-      originalSelectedBackboneRegion.baseSelection.basePairStop,
-      store.state.detailedBasePairToHeightRatio,
-      store.state.detailsSyntenyThreshold,
-      SVGConstants.panelTitleHeight, // SVG positioning of detailed tracks will start immediately after the header panel
-      true,
-    );
-
-
-    
     let syntenyTracksResults = await createSyntenyTracks(
       store.state.comparativeSpecies,
       backboneChromosome,
@@ -359,6 +359,24 @@ const updateDetailsPanel = async () => {
         });
       }    
     });
+
+    let newModelData = await createSyntenicRegionsAndDatatracks(
+      store.state.comparativeSpecies,
+      backboneChromosome,
+      originalSelectedBackboneRegion.baseSelection.basePairStart,
+      originalSelectedBackboneRegion.baseSelection.basePairStop,
+      originalSelectedBackboneRegion.innerSelection.basePairStart,
+      originalSelectedBackboneRegion.innerSelection.basePairStop,
+      store.state.detailedBasePairToHeightRatio,
+      store.state.detailsSyntenyThreshold,
+      true
+    );
+
+    if (newModelData)
+    {
+      console.log('DATA', newModelData);
+      detailedSyntenicRegions.value = newModelData;
+    }
 
     //map backbone species genes to the master map
     tempBackboneGenes.forEach((gene: Gene) => 
