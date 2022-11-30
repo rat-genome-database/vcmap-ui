@@ -90,8 +90,10 @@ import { createBackboneDataTracks, createBackboneGeneTrackFromGenesData, createB
 import { createSyntenicRegionsAndDatatracks,  } from '@/new_utils/SectionBuilder';
 import useOverviewPanelSelection from '@/composables/useOverviewPanelSelection';
 import SpeciesApi from '@/api/SpeciesApi';
+import { useLogger } from 'vue-logger-plugin';
 
 const store = useStore(key);
+const $log = useLogger();
 
 const { showDialog, dialogHeader, dialogMessage, onError, checkSyntenyResultsOnComparativeSpecies } = useDialog();
 const { startDetailedSelectionY, stopDetailedSelectionY, initZoomSelection, updateZoomSelection, completeZoomSelection } = useDetailedPanelZoom(store);
@@ -234,8 +236,9 @@ const updateOverviewPanel = async () => {
     
     store.dispatch('setBackboneSelection', recreatedSelection);
   }
-
-  console.log(`Update overview time: ${(Date.now() - overviewUpdateStart)} ms`);
+  
+  $log.info(`Update overview time: ${(Date.now() - overviewUpdateStart)} ms`);
+ 
 };
 
 const updateDetailsPanel = async () => {
@@ -247,6 +250,12 @@ const updateDetailsPanel = async () => {
   const loadType = store.state.configTab;
   const originalSelectedBackboneRegion = store.state.selectedBackboneRegion;
   const detailedBasePairRange = store.state.detailedBasePairRange;
+
+  // debug timers
+  let timeSyntenyTracks = 0;
+  let timeCreateBackboneTrack = 0;
+  let timeGetOrthologs = 0;
+
   if (detailedBasePairRange.stop - detailedBasePairRange.start <= 0)
   {
     // Clear out our selection TrackSets
@@ -272,13 +281,16 @@ const updateDetailsPanel = async () => {
 
   // Create the backbone track for the entire base selection at the updated Detailed panel resolution
   const backboneSelectionTrack = createBackboneTrack(backboneSpecies, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, store.state.detailedBasePairToHeightRatio);
-
+  
+  const createBackboneTrackStart = Date.now();
   // Create the backbone data tracks for the entire selection at the updated Detailed panel resolution
   let tempBackboneGenes: Gene[] = await createBackboneDataTracks(backboneSpecies, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop) ?? null;
   tempBackboneGenes.forEach(gene => gene.speciesName = backboneSpecies.name);
   let tempBackboneTracks = createBackboneGeneTrackFromGenesData(tempBackboneGenes, backboneSpecies.name,
     originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop,
     store.state.detailedBasePairToHeightRatio, true, store.state.detailsSyntenyThreshold, SVGConstants.panelTitleHeight);
+
+  timeCreateBackboneTrack = Date.now() - createBackboneTrackStart;
 
   if (backboneSelectionTrack != null && tempBackboneTracks != null)
   {
@@ -303,6 +315,7 @@ const updateDetailsPanel = async () => {
     );
 
 
+    const createSyntenyTracksStart = Date.now();
     let syntenyTracksResults = await createSyntenyTracks(
       store.state.comparativeSpecies,
       backboneChromosome,
@@ -313,6 +326,7 @@ const updateDetailsPanel = async () => {
       SVGConstants.panelTitleHeight, // SVG positioning of detailed tracks will start immediately after the header panel
       true,
     );
+    timeSyntenyTracks = Date.now() - createSyntenyTracksStart;
 
     let comparativeSelectionTracks: TrackSet[] = syntenyTracksResults.tracks;
     let syntenyDataArray: SpeciesSyntenyData[] = syntenyTracksResults?.speciesSyntenyDataArray || [];
@@ -453,8 +467,11 @@ const updateDetailsPanel = async () => {
         compSpeciesNames.push(track.speciesTrack.name);
       }
     }
+    
 
+    const getOrthologsStart = Date.now();
     const backboneGeneOrthologs = await SpeciesApi.getGeneOrthologs(backboneSpecies.defaultMapKey, backboneChromosome.chromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, compSpeciesMaps);
+    timeGetOrthologs = Date.now() - getOrthologsStart;
     const syntenicGeneMaps = [];
 
     // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
@@ -492,7 +509,20 @@ const updateDetailsPanel = async () => {
   }
 
   store.dispatch('setIsDetailedPanelUpdating', false);
-  console.log(`Update detailed time: ${(Date.now() - detailedUpdateStart)} ms`);
+  const timeDetailedUpdate= Date.now() - detailedUpdateStart;
+  const timeDetailedUpdateOther = timeDetailedUpdate - (timeGetOrthologs + timeSyntenyTracks + timeCreateBackboneTrack);
+
+  // debug: log performance assessment for updating detailed panel
+  let viewboxDebugReport = {
+    "Update Detailed Time":timeDetailedUpdate + " ms",
+    Details: {
+      "Backbone Tracks": timeCreateBackboneTrack + " ms | " +  ((timeCreateBackboneTrack/timeDetailedUpdate) * 100).toFixed(2) + '%',
+      "Synteny Tracks": timeSyntenyTracks + " ms | " +  ((timeSyntenyTracks/timeDetailedUpdate) * 100).toFixed(2) + '%',
+      "Get Orthologs": timeGetOrthologs + " ms | " +  ((timeGetOrthologs/timeDetailedUpdate) * 100).toFixed(2) + '%',
+      "Misc": timeDetailedUpdateOther + " ms | " +  ((timeDetailedUpdateOther/timeDetailedUpdate) * 100).toFixed(2) + '%',
+    },
+  };
+  $log.debug(JSON.stringify(viewboxDebugReport, null, 2));
 
 };
 

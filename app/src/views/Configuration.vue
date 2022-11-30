@@ -265,6 +265,7 @@ import Map from '@/models/Map';
 import Chromosome from '@/models/Chromosome';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
+import { useLogger } from 'vue-logger-plugin';
 import { VERSION } from '@/version';
 import { Formatter } from '@/utils/Formatter';
 import VCMapDialog from '@/components/VCMapDialog.vue';
@@ -279,6 +280,7 @@ interface ComparativeSpeciesSelection
 
 const router = useRouter();
 const store = useStore(key);
+const $log = useLogger();
 
 const TABS = {
   GENE: 0,
@@ -616,7 +618,7 @@ function saveConfigToStoreAndGoToMainScreen()
   }
   else
   {
-    console.warn('Unknown active tab. State may not be set correctly.');
+    $log.warn('Unknown active tab. State may not be set correctly.');
   }
 
   // Make copies of the selected comparative species/assemblies from our available options and push them onto an array before saving them to the store
@@ -681,7 +683,7 @@ function clearPriorBackboneSelectionIfNecessary()
 
 function onApiError(err: any, userMessage: string)
 {
-  console.error(err);
+  $log.error(err);
   errorMessage.value = userMessage;
   showError.value = true;
 }
