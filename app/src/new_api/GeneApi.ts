@@ -6,56 +6,6 @@ import httpInstance from "./httpInstance";
  */
 interface GeneDTO
 {
-  start: number;
-  stop: number;
-  chromosome: string;
-  mapKey: number;
-  strand: '+' | '-';
-  gene: {
-    key: number;
-    symbol: string;
-    name: string;
-    description: string | null;
-    notes: string | null;
-    rgdId: number;
-    type: string;
-    nomenReviewDate: number;
-    speciesTypeKey: number;
-    refSeqStatus: string;
-    soAccId: string;
-    agrDescription: string | null;
-    mergedDescription: string | null;
-    geneSource: string;
-    ensemblGeneSymbol: string;
-    ensemblGeneType: string;
-    ensemblFullName: string;
-    nomenSource: string;
-    variant: boolean;
-    ncbiAnnotStatus: string | null;
-  }
-}
-
-/**
- * Converts RGD Gene model to our internal Gene model
- */
-function getGeneFromGeneDTO(dto: GeneDTO, speciesName?: string)
-{
-  return new Gene({
-    speciesName: speciesName,
-    symbol: dto.gene.symbol,
-    name: dto.gene.name,
-    rgdId: dto.gene.rgdId,
-    chromosome: dto.chromosome,
-    start: dto.start,
-    stop: dto.stop,
-  });
-}
-
-/**
- * Expected models returned from the RGD gene ortholog Rest API calls
- */
-interface OrthologGeneDTO
-{
   geneRgdId: number;
   geneSymbol: string;
   geneName: string;
@@ -67,20 +17,13 @@ interface OrthologGeneDTO
   strand: '+' | '-';
 }
 
-interface OrthologGeneSetDTO
-{
-  gene: OrthologGeneDTO,
-  orthologs: {
-    [key: string]: OrthologGeneDTO[]
-  }
-}
-
 /**
- * Converts RGD Ortholog Gene model to our internal Gene model
+ * Converts RGD Gene model to our internal Gene model
  */
-function getGeneFromOrthologGeneDTO(dto: OrthologGeneDTO)
+function getGeneFromGeneDTO(dto: GeneDTO, speciesName?: string)
 {
   return new Gene({
+    speciesName: speciesName,
     symbol: dto.geneSymbol,
     name: dto.geneName,
     rgdId: dto.geneRgdId,
@@ -88,6 +31,14 @@ function getGeneFromOrthologGeneDTO(dto: OrthologGeneDTO)
     start: dto.startPos,
     stop: dto.stopPos,
   });
+}
+
+interface OrthologGeneSetDTO
+{
+  gene: GeneDTO,
+  orthologs: {
+    [key: string]: GeneDTO[]
+  }
 }
 
 interface OrthologsPerMap
@@ -107,11 +58,11 @@ function getOrthologsFromOrthologGeneSetDTO(dto: OrthologGeneSetDTO)
     dto.orthologs[mapKey].forEach(orthologGeneDTO => {
       if (orthologsByMapKey.hasOwnProperty(mapKey))
       {
-        orthologsByMapKey[mapKey].push(getGeneFromOrthologGeneDTO(orthologGeneDTO));
+        orthologsByMapKey[mapKey].push(getGeneFromGeneDTO(orthologGeneDTO));
       }
       else
       {
-        orthologsByMapKey[mapKey] = [getGeneFromOrthologGeneDTO(orthologGeneDTO)];
+        orthologsByMapKey[mapKey] = [getGeneFromGeneDTO(orthologGeneDTO)];
       }
     });
   }
@@ -123,14 +74,14 @@ export default class GeneApi
 {
   static async getGenesBySymbol(mapKey: Number, speciesName: string, symbolPrefix: String):  Promise<any>
   {
-    const res = await httpInstance.get<GeneDTO[]>(`/vcmap/genes/map/${mapKey}?symbolPrefix=${symbolPrefix}`);
+    const res = await httpInstance.get<GeneDTO[]>(`/vcmap/genes/${mapKey}?symbolPrefix=${symbolPrefix}`);
     const geneList: Gene[] = res.data.map(dto => getGeneFromGeneDTO(dto, speciesName));
     return geneList;
   }
 
   static async getGenesByRegion(chromosome: String, start: Number, stop: Number, mapKey: Number, speciesName: string):  Promise<any>
   {
-    const res = await httpInstance.get<GeneDTO[]>(`/vcmap/genes/mapped/${chromosome}/${start}/${stop}/${mapKey}`);
+    const res = await httpInstance.get<GeneDTO[]>(`/vcmap/genes/${mapKey}/${chromosome}/${start}/${stop}`);
     const geneList: Gene[] = res.data.map(dto => getGeneFromGeneDTO(dto, speciesName));
     return geneList;
   }
