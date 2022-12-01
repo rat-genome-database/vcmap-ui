@@ -13,6 +13,9 @@ export interface SyntenyRequestParams
   optional: {
     threshold?: number;
     includeGenes?: boolean;
+    includeOrthologs?: boolean;
+    thresholdStart?: number;
+    thresholdEnd?: number;
   };
 }
 
@@ -30,6 +33,7 @@ interface SyntenyGeneDTO
   startPos: number;
   stopPos: number;
   strand: '+' | '-';
+  orthologs: number[] | null;
 }
 
 /**
@@ -38,7 +42,7 @@ interface SyntenyGeneDTO
 interface SyntenyResponseDTO
 {
   genes: SyntenyGeneDTO[],
-  gaps: SyntenyComponent[],
+  gaps?: SyntenyComponent[],
   block: SyntenyComponent,
 }
 
@@ -93,6 +97,7 @@ function getGeneFromDTO(dto: SyntenyGeneDTO, speciesName: string)
     chromosome: dto.chr,
     start: dto.startPos,
     stop: dto.stopPos,
+    orthologs: dto.orthologs ?? [],
   });
 }
 
@@ -133,6 +138,7 @@ export default class SyntenyApi
       comparativeSpeciesMaps.forEach(map => {
         let apiRoute = `/vcmap/synteny/${params.backboneChromosome?.mapKey}/${params.backboneChromosome?.chromosome}/${params.start}/${params.stop}/${map.key}`;
 
+        // Append query params
         let optionCount = 0;
         if (Object.keys(params.optional).length > 0)
         {
@@ -146,6 +152,24 @@ export default class SyntenyApi
           if (params.optional.includeGenes)
           {
             apiRoute += (optionCount > 0) ? `&includeGenes=1` : `includeGenes=1`;
+            optionCount++;
+          }
+
+          if (params.optional.thresholdStart)
+          {
+            apiRoute += (optionCount > 0) ? `&thresholdStart=${params.optional.thresholdStart}` : `thresholdStart=${params.optional.thresholdStart}`;
+            optionCount++;
+          }
+
+          if (params.optional.thresholdEnd)
+          {
+            apiRoute += (optionCount > 0) ? `&thresholdEnd=${params.optional.thresholdEnd}` : `thresholdEnd=${params.optional.thresholdEnd}`;
+            optionCount++;
+          }
+
+          if (params.optional.includeOrthologs)
+          {
+            apiRoute += (optionCount > 0) ? `&includeOrthologs=1` : `includeOrthologs=1`;
             optionCount++;
           }
         }

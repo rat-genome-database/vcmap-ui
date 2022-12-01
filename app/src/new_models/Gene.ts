@@ -7,6 +7,7 @@ interface GeneParams
   chromosome: string;
   start: number;
   stop: number;
+  orthologs?: number[];
 }
 
 export default class Gene
@@ -18,6 +19,7 @@ export default class Gene
   chromosome: string = '';
   start: number = 0;
   stop: number = 0;
+  orthologs: number[] = []; // RGD IDs -- Note: will only be populated if Gene was received from the Synteny API with the includeOrthologs param
 
   constructor(params: GeneParams)
   {
@@ -28,5 +30,6 @@ export default class Gene
     this.chromosome = params.chromosome;
     this.start = params.start;
     this.stop = params.stop;
+    this.orthologs = params.orthologs ?? [];
   }
 }
