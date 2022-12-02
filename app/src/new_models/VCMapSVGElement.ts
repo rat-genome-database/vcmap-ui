@@ -7,4 +7,8 @@ export interface VCMapSVGElement
   height: number;
   shape: string;           // 'rect' or 'line'
   representation: string;  // 'gene' or 'synteny', etc
+  elementColor: string;
+
+  isHovered: boolean;
+  isSelected: boolean;
 }

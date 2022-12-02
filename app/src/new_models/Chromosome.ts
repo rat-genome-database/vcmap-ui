@@ -40,11 +40,11 @@ export default class Chromosome
   chromosome: string = '';
   seqLength: number = 0;
 
-  constructor(params: { mapKey: number, chromosome: string; seqLength: number })
+  constructor(params: { mapKey: number, chromosome: string; seqLength?: number })
   {
     this.mapKey = params.mapKey;
     this.chromosome = params.chromosome;
-    this.seqLength = params.seqLength;
+    this.seqLength = params.seqLength || 0;
   }
 
   static getColor(chromosome: string)
