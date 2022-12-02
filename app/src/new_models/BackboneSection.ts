@@ -25,6 +25,9 @@ export default class BackboneSection implements VCMapSVGElement
   height: number = 0;
   shape: string = '';
   representation: string = '';
+  isHovered: boolean = false;
+  isSelected: boolean = false;
+  elementColor: string = '';
 
   start: number = 0;   // start basepair of the section for the backbone
   stop: number = 0;    // stop basepair of the section for the backbone
