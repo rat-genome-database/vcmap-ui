@@ -45,7 +45,7 @@ interface SyntenyResponseDTO
 /**
  * Block or gap 
  */
-interface SyntenyComponent
+export interface SyntenyComponent
 {
   backboneMapKey: number;
   backboneChromosome: string;
