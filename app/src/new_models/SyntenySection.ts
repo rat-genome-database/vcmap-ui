@@ -1,5 +1,6 @@
 import { VCMapSVGElement } from './VCMapSVGElement';
 import BackboneSection from './BackboneSection';
+import Chromosome from './Chromosome';
 
 interface SyntenySectionParams
 {
@@ -9,6 +10,8 @@ interface SyntenySectionParams
   type: string;
   threshold?: number;
   orientation?: string;
+  chromosome: Chromosome;
+  chainLevel: number;
 }
 
 export default class SyntenySection implements VCMapSVGElement
@@ -21,6 +24,9 @@ export default class SyntenySection implements VCMapSVGElement
   height: number = 0;
   shape: string = '';
   representation: string = '';
+  isHovered: boolean = false;
+  isSelected: boolean = false;
+  elementColor: string = '';
 
   speciesStart: number = 0;  // start basepair of the section on its original species
   speciesStop: number = 0;   // stop basepair of the section on its original species
@@ -30,6 +36,8 @@ export default class SyntenySection implements VCMapSVGElement
   type: string = '';         // type of object this is (synteny, gap, etc)
   backboneSection: BackboneSection;  // backbone section that this datatrack is aligned to
   blockRatio: number = 0;    // ratio of the length of the section on its original species to the length of this backbone section
+  chromosome: Chromosome;    // chromosome that this section is from
+  chainLevel: number = 0;    // level of the chain that this section is on
 
   constructor(params: SyntenySectionParams)
   {
@@ -45,5 +53,15 @@ export default class SyntenySection implements VCMapSVGElement
     this.posY1 = this.backboneSection.posY1;
     this.posY2 = this.backboneSection.posY2;
     this.height = this.backboneSection.height;
+    this.chromosome = params.chromosome;
+    this.chainLevel = params.chainLevel;
+
+    this.elementColor = this.color;
+  }
+
+  public get color()
+  {
+    const color = Chromosome.getColor(this.chromosome.chromosome);
+    return color;
   }
 }

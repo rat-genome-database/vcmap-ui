@@ -12,7 +12,7 @@ interface DatatrackSectionParams
   stop: number;
   backboneSection: BackboneSection;
   syntenySection: SyntenySection;
-  isGene: boolean;
+  type: string;
   orthologs?: DatatrackSection[];
 }
 
@@ -21,6 +21,14 @@ export default class DatatrackSection implements VCMapSVGElement
   speciesStart: number = 0;                    // start basepair of the section on its original species
   speciesStop: number = 0;                     // stop basepair of the section on its original species
   length: number = 0;                          // length of the section on its original species
+  type: string = '';
+  //chromosome: Chromosome = new Chromosome();   // chromosome that this section is from
+  //species: Species = new Species();            // species that this section is from
+  label?: Label;
+  backboneSection: BackboneSection | undefined;  // backbone section that this datatrack is aligned to
+  syntenyBlock: SyntenySection | undefined;     // synteny section that this datatrack is aligned to
+  chainLevel: number = 0;                      // level of the chain that this section is on
+
   posX1: number = 0;
   posX2: number = 0;
   posY1: number = 0;
@@ -28,12 +36,9 @@ export default class DatatrackSection implements VCMapSVGElement
   height: number = 0;
   shape: string = '';
   representation: string = '';
-  //chromosome: Chromosome = new Chromosome();   // chromosome that this section is from
-  //species: Species = new Species();            // species that this section is from
-  label?: Label;
-
-  backboneSection: BackboneSection | undefined;  // backbone section that this datatrack is aligned to
-  syntenyBlock: SyntenySection | undefined;     // synteny section that this datatrack is aligned to
+  isHovered: boolean = false;
+  isSelected: boolean = false;
+  elementColor: string = '';
 
   constructor(params: DatatrackSectionParams)
   {
@@ -41,10 +46,13 @@ export default class DatatrackSection implements VCMapSVGElement
     this.speciesStop = params.stop;
     this.length = this.speciesStop - this.speciesStart;
     this.backboneSection = params.backboneSection;
+    this.type = params.type;
 
     this.posY1 = this.backboneSection.posY1;
     this.posY2 = this.backboneSection.posY2;
     this.height = this.backboneSection.height;
+
+    this.elementColor = '#00000';
   }
 }
 

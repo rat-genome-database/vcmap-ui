@@ -6,12 +6,13 @@ import Label from './Label';
 interface SyntenySectionParams
 {
   species: string;
+  gaplessBlock: SyntenySection;
 }
 
 //This model is used to store data for a syntenic section offbackbone
 export default class SyntenyRegion
 {
-  gaplessBlock: SyntenySection | undefined;
+  gaplessBlock: SyntenySection;
   syntenyGaps: SyntenySection[] = [];                         // synteny gaps occupying this section
   syntenyBlocks: SyntenySection[] = [];                       // synteny blocks occupying this section
   datatrackSections: DatatrackSection[] = [];                 // DatatrackSections belonging to this SyntenySection
@@ -24,6 +25,7 @@ export default class SyntenyRegion
   constructor(params: SyntenySectionParams)
   {
     this.species = params.species;
+    this.gaplessBlock = params.gaplessBlock;
   }
 
   public addSyntenyGaps(syntenyGap: SyntenySection[])
