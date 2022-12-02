@@ -38,11 +38,11 @@
       <text class="label small" :x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
     </template>
 
-    <text class="label small" :x="600" :y="SVGConstants.trackLabelYPosition">Test Zone</text>
+    <text class="label small" :x="700" :y="SVGConstants.trackLabelYPosition">Test Zone</text>
 
     <template v-if="detailedSyntenicRegions.length">
       <template v-for="(syntenicRegion, index) in detailedSyntenicRegions" :key="index">
-        <SectionSVG :region="syntenicRegion as SyntenyRegion" :pos-x="600" :width="SVGConstants.trackWidth"/>
+        <SectionSVG :region="syntenicRegion as SyntenyRegion" :pos-x="700" :width="SVGConstants.trackWidth"/>
       </template>
     </template>
 
@@ -316,6 +316,8 @@ const updateDetailsPanel = async () => {
       return;
     }
 
+    const createSyntenyTracksStart = Date.now();
+
     let syntenyTracksResults = await createSyntenyTracks(
       store.state.comparativeSpecies,
       backboneChromosome,
@@ -326,7 +328,8 @@ const updateDetailsPanel = async () => {
       SVGConstants.panelTitleHeight, // SVG positioning of detailed tracks will start immediately after the header panel
       true,
     );
-    timeSyntenyTracks = Date.now() - createSyntenyTracksStart;
+
+    const timeSyntenyTracks = Date.now() - createSyntenyTracksStart;
 
     let comparativeSelectionTracks: TrackSet[] = syntenyTracksResults.tracks;
     let syntenyDataArray: SpeciesSyntenyData[] = syntenyTracksResults?.speciesSyntenyDataArray || [];
@@ -374,7 +377,6 @@ const updateDetailsPanel = async () => {
 
     if (newModelData)
     {
-      console.log('DATA', newModelData);
       detailedSyntenicRegions.value = newModelData;
     }
 
