@@ -15,11 +15,16 @@
     <text class="label medium bold" :x="SVGConstants.overviewTitleXPosition" :y="SVGConstants.panelTitleYPosition">Overview</text>
     <template v-for="(trackSet, index) in overviewTrackSets" :key="trackSet">
       <TrackSVG v-if="index != 0" show-chromosome show-synteny-on-hover show-start-stop :pos-x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
-      <BackboneTrackSVG v-else show-data-on-hover :pos-x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :track="trackSet.speciesTrack as Track" />
+      <!-- <BackboneTrackSVG v-else show-data-on-hover :pos-x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :track="trackSet.speciesTrack as Track" />
       <text class="label small" :x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :y="SVGConstants.trackLabelYPosition">{{trackSet.speciesTrack.name}}</text>
-      <text class="label small" :x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
+      <text class="label small" :x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text> -->
     </template>
 
+    <template v-if="overviewBackbone">
+      <BackboneSectionSVG show-data-on-hover :backbone="overviewBackbone" />
+      <text class="label small" :x="overviewBackbone.posX1" :y="SVGConstants.trackLabelYPosition">{{overviewBackbone.species?.name}}</text>
+      <text class="label small" :x="overviewBackbone.posX1" :y="SVGConstants.trackMapLabelYPosition">{{overviewBackbone.species?.activeMap.name}}</text>
+    </template>
 
     <!-- Detail panel SVGs ----------------------------------------->
     <template v-for="(trackSet, index) in detailTrackSets" :key="trackSet">
@@ -101,7 +106,9 @@ import useOverviewPanelSelection from '@/composables/useOverviewPanelSelection';
 import SpeciesApi from '@/api/SpeciesApi';
 import { useLogger } from 'vue-logger-plugin';
 import SyntenyRegion from '@/new_models/SyntenyRegion';
-import SyntenySection from '@/new_models/SyntenySection';
+import BackboneSection from '@/new_models/BackboneSection';
+import { createBackboneTrack as createBackboneTrackV2 } from '@/new_utils/BackboneBuilder';
+import BackboneSectionSVG from './BackboneSectionSVG.vue';
 
 const store = useStore(key);
 const $log = useLogger();
@@ -113,8 +120,9 @@ const { startOverviewSelectionY, stopOverviewSelectionY, initOverviewSelection, 
 const overviewTrackSets = ref<TrackSet[]>([]); // The currently displayed TrackSets in the Overview panel
 const detailTrackSets = ref<TrackSet[]>([]); // The currently displayed TrackSets in the Detailed panel
 const detailedSyntenicRegions = ref<SyntenyRegion[]>([]); // The currently displayed SyntenicRegions in the detailed panel
+let overviewBackbone = ref<BackboneSection>();
 
-let comparativeOverviewTracks: Track[] = []; // Keeps track of current comparative tracks displayed in the overview panel
+let comparativeOverviewTracks: TrackSet[] = []; // Keeps track of current comparative tracks displayed in the overview panel
 let selectionTrackSets: TrackSet[] = []; // The track sets for the entire selected region
 let geneReload: boolean = false; //whether or not load by gene reload has occurred
 
@@ -185,6 +193,9 @@ const updateOverviewPanel = async () => {
   // The backbone is the entire chromosome
   store.dispatch('setOverviewResolution', backboneChromosome.seqLength);
   let backboneTrack = createBackboneTrack(backboneSpecies, backboneChromosome, 0, backboneChromosome.seqLength, store.state.overviewBasePairToHeightRatio, SVGConstants.overviewTrackYPosition);
+
+  //
+  overviewBackbone.value = createBackboneTrackV2(backboneSpecies, backboneChromosome, 0, backboneChromosome.seqLength, 'overview');
 
   const backboneTrackSet = new TrackSet(backboneTrack, []);
   overviewTrackSets.value.push(backboneTrackSet);

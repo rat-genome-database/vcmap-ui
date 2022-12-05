@@ -3,7 +3,7 @@ import SyntenySection from "./SyntenySection";
 import Species from '../models/Species';
 import Gene from '../models/Gene';
 import Chromosome from "@/models/Chromosome";
-import { VCMapSVGElement } from "./VCMapSVGElement";
+import { SVGShape, VCMapSVGElement } from "./VCMapSVGElement";
 import Label from './Label';
 
 interface DatatrackSectionParams
@@ -34,7 +34,8 @@ export default class DatatrackSection implements VCMapSVGElement
   posY1: number = 0;
   posY2: number = 0;
   height: number = 0;
-  shape: string = '';
+  width: number = 0;
+  shape: SVGShape = 'rect';
   representation: string = '';
   isHovered: boolean = false;
   isSelected: boolean = false;
