@@ -1,9 +1,13 @@
-import Species from '../models/Species';
-import Chromosome from "@/models/Chromosome";
-import { VCMapSVGElement } from './VCMapSVGElement';
+import { SVGShape, VCMapSVGElement } from './VCMapSVGElement';
 import SyntenyRegion from './SyntenyRegion';
 import DatatrackSection from './DatatrackSection';
 import Label from './Label';
+import SVGConstants, { PANEL_SVG_START, PANEL_SVG_STOP } from '@/utils/SVGConstants';
+import { Formatter } from '@/utils/Formatter';
+import Chromosome from './Chromosome';
+import Species from './Species';
+
+export type RenderType = 'overview' | 'detailed';
 
 interface BackboneSectionParams
 {
@@ -11,8 +15,9 @@ interface BackboneSectionParams
   stop: number;
   windowStart: number;
   windowStop: number;
-  //chromosome: string;
-  //species: string;
+  chromosome?: string;
+  species?: Species;
+  renderType?: RenderType;
 }
 
 export default class BackboneSection implements VCMapSVGElement
@@ -23,7 +28,8 @@ export default class BackboneSection implements VCMapSVGElement
   posY1: number = 0;
   posY2: number = 0;
   height: number = 0;
-  shape: string = '';
+  width: number = 0;
+  shape: SVGShape = 'rect';
   representation: string = '';
   isHovered: boolean = false;
   isSelected: boolean = false;
@@ -36,12 +42,13 @@ export default class BackboneSection implements VCMapSVGElement
   windowRatio: number = 0;  // ratio of the window bp to svg unit height
   length: number = 0;  // length of the section for the backbone
   syntenicRatio: number = 0;  // ratio of the length of the section on its original species to the length of this backbone section
-  species: string = '';  // species that this section is from
+  species?: Species;  // species that this section is from
   chromosome: string = '';  // chromosome that this section is from
   syntenyRegions: SyntenyRegion[] = [];
   datatrackSections: DatatrackSection[] = [];
+  labels: Label[] = [];
   // NOTE: We should evaluate if we want this, if its just a copy of the references to the Labels in BackboneSection.datatrackSections
-  datatrackLables: Label[] = []; // array of the Label objects associated with the datatrackSections
+  datatrackLabels: Label[] = []; // array of the Label objects associated with the datatrackSections
 
   constructor(params: BackboneSectionParams)
   {
@@ -50,10 +57,15 @@ export default class BackboneSection implements VCMapSVGElement
     this.length = this.stop - this.start;
     this.windowStart = params.windowStart;
     this.windowStop = params.windowStop;
+    this.chromosome = params.chromosome ?? '';
+    this.species = params.species;
+    this.elementColor = Chromosome.getColor(this.chromosome);
 
-    this.calculateSVGPosition(this.windowStart, this.windowStop);
-    //this.species = params.species;
-    //this.chromosome = params.chromosome;
+    this.calculateSVGPosition(this.windowStart, this.windowStop, params.renderType);
+    if (params.renderType)
+    {
+      this.createLabels(params.renderType, params.windowStart, params.windowStop);
+    }
   }
 
   /**
@@ -62,10 +74,10 @@ export default class BackboneSection implements VCMapSVGElement
    * @param windowStart 
    * @param windowStop 
    */
-  private calculateSVGPosition(windowStart: number, windowStop: number)
+  private calculateSVGPosition(windowStart: number, windowStop: number, renderType?: RenderType)
   {
-    const svgStart = 55;
-    const svgStop = 425;
+    const svgStart = (renderType === 'overview') ? PANEL_SVG_START + SVGConstants.overviewTrackPadding : PANEL_SVG_START;
+    const svgStop = (renderType === 'overview') ? PANEL_SVG_STOP - SVGConstants.overviewTrackPadding : PANEL_SVG_STOP;
     const svgLength = svgStop - svgStart;
     const windowLength = windowStop - windowStart;
     const ratio = windowLength / svgLength;
@@ -90,6 +102,57 @@ export default class BackboneSection implements VCMapSVGElement
 
     this.posY2 = this.posY1 + ( this.length / ratio );
 
-    this.height = this.posY2 - this.posY1;
+    this.height = Math.abs(this.posY2 - this.posY1);
+
+    // Calculate X positions of this backbone section
+    if (renderType === 'overview')
+    {
+      this.posX1 = SVGConstants.backboneXPosition;
+      this.posX2 = this.posX1 + SVGConstants.trackWidth;
+    }
+    else if (renderType === 'detailed')
+    {
+      this.posX1 = SVGConstants.selectedBackboneXPosition;
+      this.posX2 = this.posX1 + SVGConstants.trackWidth;
+    }
+
+    this.width = Math.abs(this.posX2 - this.posX1);
+  }
+
+  private createLabels(renderType: RenderType, start: number, stop: number)
+  {
+    let startBPLabel: Label;
+    let stopBPLabel: Label;
+
+    if (renderType === 'overview')
+    {
+      startBPLabel = new Label({
+        posX: SVGConstants.backboneXPosition - (SVGConstants.trackWidth / 2 ),
+        posY: this.posY1 - 3,
+        text: Formatter.convertBasePairToLabel(start) ?? ''
+      });
+
+      stopBPLabel = new Label({
+        posX: SVGConstants.backboneXPosition - (SVGConstants.trackWidth / 2 ),
+        posY: this.posY2 + 7,
+        text: Formatter.convertBasePairToLabel(stop) ?? ''
+      });
+    }
+    else
+    {
+      startBPLabel = new Label({
+        posX: SVGConstants.selectedBackboneXPosition - (SVGConstants.trackWidth / 2 ),
+        posY: this.posY1 + 3,
+        text: Formatter.convertBasePairToLabel(start) ?? ''
+      });
+
+      stopBPLabel = new Label({
+        posX: SVGConstants.backboneXPosition - (SVGConstants.trackWidth / 2 ),
+        posY: this.posY2,
+        text: Formatter.convertBasePairToLabel(stop) ?? ''
+      });
+    }
+    
+    this.labels = this.labels.concat([startBPLabel, stopBPLabel]);
   }
 }

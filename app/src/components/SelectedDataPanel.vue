@@ -51,8 +51,8 @@
           <Divider />
         </template>
 
-        <template v-else-if="dataObject?.type === 'geneLabel' || dataObject?.type === 'trackSection'">
-          <template v-if="dataObject?.type === 'trackSection'">
+        <template v-else-if="(dataObject?.type === 'geneLabel' || dataObject?.type === 'trackSection' || dataObject?.type === 'backbone')">
+          <template v-if="(dataObject.type === 'trackSection')">
             <GeneInfo
               :gene="dataObject?.genomicSection.gene ? dataObject?.genomicSection.gene : null"
               :chromosome="dataObject.genomicSection.chromosome"
@@ -60,6 +60,15 @@
               :stop="dataObject.genomicSection.sectionStop"
               :chain-level="dataObject.genomicSection.chainLevel"
               :track-orientation="dataObject.genomicSection.isInverted ? '-' : '+'"
+            />
+          </template>
+          <template v-else-if="(dataObject.type === 'backbone')">
+            <GeneInfo
+              :gene="null"
+              :chromosome="dataObject.genomicSection.chromosome"
+              :start="dataObject.genomicSection.windowStart"
+              :stop="dataObject.genomicSection.windowStop"
+              track-orientation="+"
             />
           </template>
           <template v-else>

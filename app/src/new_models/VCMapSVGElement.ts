@@ -5,10 +5,13 @@ export interface VCMapSVGElement
   posY1: number;
   posY2: number;
   height: number;
-  shape: string;           // 'rect' or 'line'
+  width: number;
+  shape: SVGShape;
   representation: string;  // 'gene' or 'synteny', etc
   elementColor: string;
 
   isHovered: boolean;
   isSelected: boolean;
 }
+
+export type SVGShape = 'rect' | 'line';

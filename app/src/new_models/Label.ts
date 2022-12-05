@@ -10,6 +10,7 @@ export default class Label
   posX: number = 0;
   posY: number = 0;
   text: string = '';
+  isVisible: boolean = true;
 
   constructor(params: LabelParams)
   {

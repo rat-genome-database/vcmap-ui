@@ -1,4 +1,4 @@
-import { VCMapSVGElement } from './VCMapSVGElement';
+import { SVGShape, VCMapSVGElement } from './VCMapSVGElement';
 import BackboneSection from './BackboneSection';
 import Chromosome from './Chromosome';
 
@@ -22,7 +22,8 @@ export default class SyntenySection implements VCMapSVGElement
   posY1: number = 0;
   posY2: number = 0;
   height: number = 0;
-  shape: string = '';
+  width: number = 0;
+  shape: SVGShape = 'rect';
   representation: string = '';
   isHovered: boolean = false;
   isSelected: boolean = false;
