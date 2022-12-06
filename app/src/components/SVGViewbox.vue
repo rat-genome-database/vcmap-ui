@@ -224,12 +224,12 @@ const updateOverviewPanel = async () => {
     //if initially loading by gene, we need to set and process the full backbone range and syntenic blocks to find ortholog positions to later adjust so all are visible in the detail panel
     if (loadType === 0)
     {
-      const selection = backboneTrack.sections[0].generateBackboneSelection(0, backboneChromosome.seqLength, store.state.overviewBasePairToHeightRatio, backboneChromosome);
+      const selection = overviewBackbone.value.generateBackboneSelection(0, backboneChromosome.seqLength, store.state.overviewBasePairToHeightRatio, backboneChromosome);
       store.dispatch('setBackboneSelection', selection);
     }
     else
     {
-      const selection = backboneTrack.sections[0].generateBackboneSelection(backboneStart, backboneStop, store.state.overviewBasePairToHeightRatio, backboneChromosome);
+      const selection = overviewBackbone.value.generateBackboneSelection(backboneStart, backboneStop, store.state.overviewBasePairToHeightRatio, backboneChromosome);
       store.dispatch('setBackboneSelection', selection);
     }
   }
@@ -331,7 +331,6 @@ const updateDetailsPanel = async () => {
       SVGConstants.panelTitleHeight, // SVG positioning of detailed tracks will start immediately after the header panel
       true,
     );
-    console.log(syntenyTracksResults.tracks[0].speciesTrack.sections.filter(s => s.shape === 'line'));
 
     const timeSyntenyTracks = Date.now() - createSyntenyTracksStart;
 
@@ -380,7 +379,6 @@ const updateDetailsPanel = async () => {
 
     if (newModelData)
     {
-      console.log(newModelData);
       detailedSyntenySets.value = newModelData;
     }
 

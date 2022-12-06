@@ -6,6 +6,7 @@ import SVGConstants, { PANEL_SVG_START, PANEL_SVG_STOP } from '@/utils/SVGConsta
 import { Formatter } from '@/utils/Formatter';
 import Chromosome from './Chromosome';
 import Species from './Species';
+import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 
 export type RenderType = 'overview' | 'detailed';
 
@@ -64,6 +65,24 @@ export default class BackboneSection implements VCMapSVGElement
     {
       this.createLabels(params.renderType, params.windowStart, params.windowStop);
     }
+  }
+
+  /**
+   * Creates a BackboneSelection object based on a desired selected region
+   * @param start starting basepair
+   * @param stop stopping basepair
+   * @param basePairToHeightRatio the ratio of bp/svg height units (depends on what panel the track section is rendered in)
+   * @param chromosome backbone chromosome model
+   * @returns a BackboneSelection object containing an inner selection of the same region
+   */
+  public generateBackboneSelection(start: number, stop: number, basePairToHeightRatio: number, chromosome: Chromosome)
+  {
+    const startingSVGY = this.posY1 + (start - this.start) / basePairToHeightRatio;
+    const svgHeight = (stop - start) / basePairToHeightRatio;
+
+    const selection = new BackboneSelection(new SelectedRegion(startingSVGY, svgHeight, start, stop), chromosome);
+    selection.generateInnerSelection(start, stop, basePairToHeightRatio);
+    return selection;
   }
 
   /**

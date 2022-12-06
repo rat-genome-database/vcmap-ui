@@ -75,8 +75,6 @@ export default function useOverviewPanelSelection(store: Store<VCMapState>) {
         stopSVGY = overviewBackbone.posY2;
       }
 
-      console.log('selection', overviewBackbone, startSVGY, stopSVGY, basePairStart, basePairStop);
-
       const selectedBackboneRegion = new BackboneSelection(new SelectedRegion(startSVGY, stopSVGY - startSVGY, basePairStart, basePairStop), store.state.chromosome ?? undefined);
       selectedBackboneRegion.generateInnerSelection(basePairStart, basePairStop, store.state.overviewBasePairToHeightRatio);
       store.dispatch('setBackboneSelection', selectedBackboneRegion);

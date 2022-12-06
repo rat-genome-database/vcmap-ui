@@ -1,5 +1,5 @@
 import SVGConstants from "@/utils/SVGConstants";
-import Chromosome from "./Chromosome";
+import Chromosome from "@/new_models/Chromosome";
 
 export interface BasePairRange
 {

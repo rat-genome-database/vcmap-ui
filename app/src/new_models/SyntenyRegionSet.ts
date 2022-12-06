@@ -58,7 +58,6 @@ export default class SyntenyRegionSet
     });
 
     this.titleLabels = [speciesLabel, mapLabel];
-    console.log('labels', this.order, this.titleLabels);
   }
 
   private setRegionXPositionsBasedOnOrder()
