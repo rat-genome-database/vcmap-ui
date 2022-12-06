@@ -13,17 +13,13 @@
 
     <!-- Overview panel SVGs ------------------------------------------->
     <text class="label medium bold" :x="SVGConstants.overviewTitleXPosition" :y="SVGConstants.panelTitleYPosition">Overview</text>
-    <!-- <template v-for="(trackSet, index) in overviewTrackSets" :key="trackSet">
-      <TrackSVG v-if="index != 0" show-chromosome show-synteny-on-hover show-start-stop :pos-x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
-      <BackboneTrackSVG v-else show-data-on-hover :pos-x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :track="trackSet.speciesTrack as Track" />
-      <text class="label small" :x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :y="SVGConstants.trackLabelYPosition">{{trackSet.speciesTrack.name}}</text>
-      <text class="label small" :x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
-    </template> -->
-
-    <template v-for="(region, index) in overviewSyntenicRegions" :key="index">
-      <SectionSVG show-chromosome show-synteny-on-hover show-start-stop :region="(region as SyntenyRegion)" />
-      <text class="label small" :x="region.gaplessBlock.posX1" :y="SVGConstants.trackLabelYPosition">{{region.species}}</text>
-      <text class="label small" :x="region.gaplessBlock.posX1" :y="SVGConstants.trackMapLabelYPosition">{{region.mapName}}</text>
+    <template v-for="(syntenySet, index) in overviewSyntenySets" :key="index">
+      <template v-for="(region, index) in syntenySet.regions" :key="index">
+        <SectionSVG show-chromosome show-synteny-on-hover show-start-stop :region="(region as SyntenyRegion)" />
+      </template>
+      <template v-for="(label, index) in syntenySet.titleLabels" :key="index">
+        <text class="label small testing" :x="label.posX" :y="label.posY">{{label.text}}</text>
+      </template>
     </template>
 
     <template v-if="overviewBackbone">
@@ -51,9 +47,11 @@
 
     <text class="label small" :x="700" :y="SVGConstants.trackLabelYPosition">Test Zone</text>
 
-    <template v-if="detailedSyntenicRegions.length">
-      <template v-for="(syntenicRegion, index) in detailedSyntenicRegions" :key="index">
-        <SectionSVG show-gene-label show-chromosome :region="syntenicRegion as SyntenyRegion" />
+    <template v-if="detailedSyntenySets.length">
+      <template v-for="(syntenySet, index) in detailedSyntenySets" :key="index">
+        <template v-for="(syntenicRegion, index) in syntenySet.regions" :key="index">
+          <SectionSVG show-gene-label show-chromosome :region="syntenicRegion as SyntenyRegion" />
+        </template>
       </template>
     </template>
 
@@ -76,7 +74,7 @@
 
     <!-- Overview panel selection svg for backbone -->
     <rect v-if="startOverviewSelectionY && stopOverviewSelectionY" 
-      @mouseup.left="completeOverviewSelection(overviewTrackSets as TrackSet[])"
+      @mouseup.left="completeOverviewSelection(overviewBackbone)"
       @mousemove="updateOverviewSelection"
       fill="lightgray"
       fill-opacity="0.4"
@@ -115,6 +113,7 @@ import SyntenyRegion from '@/new_models/SyntenyRegion';
 import BackboneSection from '@/new_models/BackboneSection';
 import { createBackboneTrack as createBackboneTrackV2 } from '@/new_utils/BackboneBuilder';
 import BackboneSectionSVG from './BackboneSectionSVG.vue';
+import SyntenyRegionSet from '@/new_models/SyntenyRegionSet';
 
 const store = useStore(key);
 const $log = useLogger();
@@ -123,13 +122,11 @@ const { showDialog, dialogHeader, dialogMessage, onError, checkSyntenyResultsOnC
 const { startDetailedSelectionY, stopDetailedSelectionY, initZoomSelection, updateZoomSelection, completeZoomSelection } = useDetailedPanelZoom(store);
 const { startOverviewSelectionY, stopOverviewSelectionY, initOverviewSelection, updateOverviewSelection, completeOverviewSelection } = useOverviewPanelSelection(store);
 
-const overviewTrackSets = ref<TrackSet[]>([]); // The currently displayed TrackSets in the Overview panel
 const detailTrackSets = ref<TrackSet[]>([]); // The currently displayed TrackSets in the Detailed panel
-const detailedSyntenicRegions = ref<SyntenyRegion[]>([]); // The currently displayed SyntenicRegions in the detailed panel
+const detailedSyntenySets = ref<SyntenyRegionSet[]>([]); // The currently displayed SyntenicRegions in the detailed panel
 let overviewBackbone = ref<BackboneSection>();
-let overviewSyntenicRegions = ref<SyntenyRegion[]>([]);
+let overviewSyntenySets = ref<SyntenyRegionSet[]>([]);
 
-let comparativeOverviewTracks: TrackSet[] = []; // Keeps track of current comparative tracks displayed in the overview panel
 let selectionTrackSets: TrackSet[] = []; // The track sets for the entire selected region
 let geneReload: boolean = false; //whether or not load by gene reload has occurred
 
@@ -162,7 +159,7 @@ onMounted(async () => {
   }
 
   await attachToProgressLoader('setIsOverviewPanelUpdating', updateOverviewPanel);
-  checkSyntenyResultsOnComparativeSpecies(comparativeOverviewTracks);
+  checkSyntenyResultsOnComparativeSpecies(overviewSyntenySets.value as SyntenyRegionSet[]);
 });
 
 watch(() => store.state.detailedBasePairRange, () => {
@@ -185,27 +182,21 @@ const updateOverviewPanel = async () => {
   if (backboneSpecies == null || backboneChromosome == null || backboneStart == null || backboneStop == null)
   {
     onError(backboneOverviewError, backboneOverviewError.message);
-    overviewTrackSets.value = [];
+    overviewSyntenySets.value = [];
     return;
   }
 
   if (backboneStop - backboneStart <= 0)
   {
     onError(noRegionLengthError, noRegionLengthError.message);
-    overviewTrackSets.value = [];
+    overviewSyntenySets.value = [];
     return;
   }
 
-  overviewTrackSets.value = [];
+  overviewSyntenySets.value = [];
   // The backbone is the entire chromosome
   store.dispatch('setOverviewResolution', backboneChromosome.seqLength);
-  let backboneTrack = createBackboneTrack(backboneSpecies, backboneChromosome, 0, backboneChromosome.seqLength, store.state.overviewBasePairToHeightRatio, SVGConstants.overviewTrackYPosition);
-
-  //
   overviewBackbone.value = createBackboneTrackV2(backboneSpecies, backboneChromosome, 0, backboneChromosome.seqLength, 'overview');
-
-  // const backboneTrackSet = new TrackSet(backboneTrack, []);
-  // overviewTrackSets.value.push(backboneTrackSet);
 
   if (store.state.comparativeSpecies.length === 0)
   {
@@ -213,27 +204,7 @@ const updateOverviewPanel = async () => {
     return;
   }
 
-  let syntenyTrackResults = await createSyntenyTracks(
-    store.state.comparativeSpecies,
-    backboneChromosome,
-    0,
-    backboneChromosome.seqLength, 
-    store.state.overviewBasePairToHeightRatio,
-    store.state.overviewSyntenyThreshold,
-    SVGConstants.overviewTrackYPosition, // SVG positioning of the overview tracks will start just underneath the header panels with a bit of space in between
-    false,
- );
-
- comparativeOverviewTracks = syntenyTrackResults.tracks;
-
-  for (let index = 0; index < comparativeOverviewTracks.length; index++)
-  {
-    const comparativeTrackSet = comparativeOverviewTracks[index];
-    overviewTrackSets.value.push(comparativeTrackSet);
-  }
-
-  //
-  overviewSyntenicRegions.value = await createSyntenicRegionsAndDatatracks(
+  overviewSyntenySets.value = await createSyntenicRegionsAndDatatracks(
     store.state.comparativeSpecies,
     backboneChromosome,
     0,
@@ -244,7 +215,6 @@ const updateOverviewPanel = async () => {
     false,
   );
 
-
   // Set the backbone selection to the start and stop positions selected on the config screen if a selection doesn't already exist
   // (the backbone should have just 1 [0] section)
   const prevBackboneSelection = store.state.selectedBackboneRegion;
@@ -253,12 +223,12 @@ const updateOverviewPanel = async () => {
     //if initially loading by gene, we need to set and process the full backbone range and syntenic blocks to find ortholog positions to later adjust so all are visible in the detail panel
     if (loadType === 0)
     {
-      const selection = backboneTrack.sections[0].generateBackboneSelection(0, backboneChromosome.seqLength, store.state.overviewBasePairToHeightRatio, backboneChromosome);
+      const selection = overviewBackbone.value.generateBackboneSelection(0, backboneChromosome.seqLength, store.state.overviewBasePairToHeightRatio, backboneChromosome);
       store.dispatch('setBackboneSelection', selection);
     }
     else
     {
-      const selection = backboneTrack.sections[0].generateBackboneSelection(backboneStart, backboneStop, store.state.overviewBasePairToHeightRatio, backboneChromosome);
+      const selection = overviewBackbone.value.generateBackboneSelection(backboneStart, backboneStop, store.state.overviewBasePairToHeightRatio, backboneChromosome);
       store.dispatch('setBackboneSelection', selection);
     }
   }
@@ -318,7 +288,7 @@ const updateDetailsPanel = async () => {
 
   detailTrackSets.value = [];
   selectionTrackSets = [];
-  detailedSyntenicRegions.value = [];
+  detailedSyntenySets.value = [];
 
   // Get the range of the inner section that will be shown in the Detailed panel
   const zoomedSelection = originalSelectedBackboneRegion.generateInnerSelection(detailedBasePairRange.start, detailedBasePairRange.stop, store.state.overviewBasePairToHeightRatio);
@@ -360,7 +330,6 @@ const updateDetailsPanel = async () => {
       SVGConstants.panelTitleHeight, // SVG positioning of detailed tracks will start immediately after the header panel
       true,
     );
-    console.log(syntenyTracksResults.tracks[0].speciesTrack.sections.filter(s => s.shape === 'line'));
 
     const timeSyntenyTracks = Date.now() - createSyntenyTracksStart;
 
@@ -409,8 +378,7 @@ const updateDetailsPanel = async () => {
 
     if (newModelData)
     {
-      console.log(newModelData);
-      detailedSyntenicRegions.value = newModelData;
+      detailedSyntenySets.value = newModelData;
     }
 
     //map backbone species genes to the master map
