@@ -1,17 +1,22 @@
-import TrackSection from "./TrackSection";
 import OrthologLine from "./OrthologLine";
 import Gene from "./Gene";
 import BackboneSection from "@/new_models/BackboneSection";
+import SyntenySection from "@/new_models/SyntenySection";
+import DatatrackSection from "@/new_models/DatatrackSection";
+
+// TODO: These types could probably use some refactoring
+export type SelectedDataType = 'trackSection' | 'Gene' | 'geneLabel' | 'backbone';
+type GenomicSectionType = BackboneSection | SyntenySection | OrthologLine | Gene | DatatrackSection;
 
 /**
  * Model that represents the Selected Data that will appear when Selected Data Panel
  */
 export default class SelectedData
 {
-  genomicSection: BackboneSection | TrackSection | OrthologLine | Gene;
-  type: string;
+  genomicSection: GenomicSectionType;
+  type: SelectedDataType;
 
-  constructor(section: BackboneSection | TrackSection | OrthologLine | Gene, type: string)
+  constructor(section: GenomicSectionType, type: SelectedDataType)
   {
     this.genomicSection = section;
     this.type = type;

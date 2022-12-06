@@ -39,6 +39,7 @@ export default class SyntenySection implements VCMapSVGElement
   blockRatio: number = 0;    // ratio of the length of the section on its original species to the length of this backbone section
   chromosome: Chromosome;    // chromosome that this section is from
   chainLevel: number = 0;    // level of the chain that this section is on
+  isInverted: boolean = false;
 
   constructor(params: SyntenySectionParams)
   {
@@ -51,18 +52,19 @@ export default class SyntenySection implements VCMapSVGElement
     this.backboneSection = params.backboneSection;
     this.blockRatio = this.backboneSection.length / this.length;
 
+    // This synteny section adopts the Y positions of its respective backbone section
     this.posY1 = this.backboneSection.posY1;
     this.posY2 = this.backboneSection.posY2;
     this.height = this.backboneSection.height;
+    
     this.chromosome = params.chromosome;
     this.chainLevel = params.chainLevel;
 
-    this.elementColor = this.color;
-  }
+    if (this.type === 'gap')
+    {
+      this.shape = 'line';
+    }
 
-  public get color()
-  {
-    const color = Chromosome.getColor(this.chromosome.chromosome);
-    return color;
+    this.elementColor = Chromosome.getColor(this.chromosome.chromosome);
   }
 }
