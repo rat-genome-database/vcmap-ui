@@ -127,7 +127,6 @@ const detailedSyntenySets = ref<SyntenyRegionSet[]>([]); // The currently displa
 let overviewBackbone = ref<BackboneSection>();
 let overviewSyntenySets = ref<SyntenyRegionSet[]>([]);
 
-let comparativeOverviewTracks: TrackSet[] = []; // Keeps track of current comparative tracks displayed in the overview panel
 let selectionTrackSets: TrackSet[] = []; // The track sets for the entire selected region
 let geneReload: boolean = false; //whether or not load by gene reload has occurred
 
@@ -160,7 +159,7 @@ onMounted(async () => {
   }
 
   await attachToProgressLoader('setIsOverviewPanelUpdating', updateOverviewPanel);
-  checkSyntenyResultsOnComparativeSpecies(comparativeOverviewTracks);
+  checkSyntenyResultsOnComparativeSpecies(overviewSyntenySets.value as SyntenyRegionSet[]);
 });
 
 watch(() => store.state.detailedBasePairRange, () => {
