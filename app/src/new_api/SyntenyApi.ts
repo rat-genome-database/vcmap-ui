@@ -1,4 +1,4 @@
-import httpInstance from '@/api/httpInstance';
+import httpInstance from '@/new_api/httpInstance';
 import Chromosome from '@/new_models/Chromosome';
 import Species from '@/new_models/Species';
 import Gene from '@/new_models/Gene';

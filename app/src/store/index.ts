@@ -1,13 +1,14 @@
 import { ActionContext, createStore, Store } from 'vuex';
 import VuexPersistence from 'vuex-persist';
-import Species from '@/models/Species';
-import Chromosome from '@/models/Chromosome';
+import Species from '@/new_models/Species';
+import Chromosome from '@/new_models/Chromosome';
 import TrackSection from '@/models/TrackSection';
-import Gene from '@/models/Gene';
+import Gene from '@/new_models/Gene';
 import BackboneSelection, { BasePairRange, SelectedRegion } from '@/models/BackboneSelection';
 import SVGConstants from '@/utils/SVGConstants';
 import SelectedData from '@/models/SelectedData';
 import { InjectionKey } from 'vue';
+import { createLogger } from 'vuex';
 
 export const key: InjectionKey<Store<VCMapState>> = Symbol();
 
@@ -251,7 +252,7 @@ export default createStore({
     }
   },
 
-  plugins: [
-    vuexLocal.plugin
-  ]
+  plugins: process.env.NODE_ENV !== 'production'
+    ? [vuexLocal.plugin, createLogger()] // Only use Vuex logger in development
+    : [vuexLocal.plugin]
 });

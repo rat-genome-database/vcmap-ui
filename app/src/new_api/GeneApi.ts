@@ -55,8 +55,8 @@ function getOrthologsFromOrthologGeneSetDTO(dto: OrthologGeneSetDTO)
   const orthologsByMapKey: OrthologsPerMap = {};
   for (const mapKey in dto)
   {
-    dto.orthologs[mapKey].forEach(orthologGeneDTO => {
-      if (orthologsByMapKey.hasOwnProperty(mapKey))
+    dto.orthologs[mapKey]?.forEach(orthologGeneDTO => {
+      if (mapKey in orthologsByMapKey)
       {
         orthologsByMapKey[mapKey].push(getGeneFromGeneDTO(orthologGeneDTO));
       }
@@ -72,21 +72,21 @@ function getOrthologsFromOrthologGeneSetDTO(dto: OrthologGeneSetDTO)
 
 export default class GeneApi
 {
-  static async getGenesBySymbol(mapKey: Number, speciesName: string, symbolPrefix: String):  Promise<any>
+  static async getGenesBySymbol(mapKey: Number, speciesName: string, symbolPrefix: String)
   {
     const res = await httpInstance.get<GeneDTO[]>(`/vcmap/genes/${mapKey}?symbolPrefix=${symbolPrefix}`);
     const geneList: Gene[] = res.data.map(dto => getGeneFromGeneDTO(dto, speciesName));
     return geneList;
   }
 
-  static async getGenesByRegion(chromosome: String, start: Number, stop: Number, mapKey: Number, speciesName: string):  Promise<any>
+  static async getGenesByRegion(chromosome: String, start: Number, stop: Number, mapKey: Number, speciesName: string)
   {
     const res = await httpInstance.get<GeneDTO[]>(`/vcmap/genes/${mapKey}/${chromosome}/${start}/${stop}`);
     const geneList: Gene[] = res.data.map(dto => getGeneFromGeneDTO(dto, speciesName));
     return geneList;
   }
 
-  static async getGeneOrthologs(mapKey: Number, chromosome: String, start: Number, stop: Number, compMapKeys: Number[]):  Promise<any>
+  static async getGeneOrthologs(mapKey: Number, chromosome: String, start: Number, stop: Number, compMapKeys: Number[])
   {
     let mapKeyString = '';
     for (let index = 0; index < compMapKeys.length; index++)
