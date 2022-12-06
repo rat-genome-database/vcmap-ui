@@ -1,36 +1,47 @@
 <template>
-  <!-- SVG definitions -->
-  <defs>
-    <linearGradient id="selectedStripes" gradientUnits="userSpaceOnUse"
-      x2="5" spreadMethod="repeat" gradientTransform="rotate(-45)">
-      <stop offset="0" stop-color="gray"/>
-      <stop offset="0.40" stop-color="gray"/>
-      <stop offset="0.40" stop-color="lightgray"/>
-      <stop offset="1.0" stop-color="lightgray"/>
-    </linearGradient>
-  </defs>
 
-  <!-- SVG content -->
   <template v-for="(blockSection, index) in region.syntenyBlocks" :key="index">
     <rect
-      @mouseenter="onMouseEnter($event, blockSection, 'block')"
-      @mouseleave="onMouseLeave($event, blockSection, 'block')"
+      @mouseenter="onMouseEnter(blockSection, 'trackSection')"
+      @mouseleave="onMouseLeave(blockSection)"
       :y="blockSection.posY1"
-      :x="posX"
-      :width="width"
+      :x="blockSection.posX1"
+      :width="blockSection.width"
       :height="blockSection.height"
       :fill="getSectionFill(blockSection)"
       :fill-opacity="1"
     />
+
+    <!-- Chromosome Label -->
+    <text v-if="(showChromosome && blockSection.height > 15)"
+      class="chromosome-label"
+      :x="blockSection.posX1 + (blockSection.width / 2)"
+      :y="blockSection.posY1 + (blockSection.height / 2)"
+      dominant-baseline="middle"
+      text-anchor="middle">
+      {{blockSection.chromosome.chromosome}}
+    </text>
+
+    <!-- Syntenic Lines -->
+    <template v-if="showSyntenyOnHover">
+      <line v-if="blockSection.isHovered"
+        class="section connection-line"
+        :x1="blockSection.posX1 + blockSection.width" :x2="SVGConstants.backboneXPosition" 
+        :y1="blockSection.posY1" :y2="(blockSection.isInverted) ? blockSection.posY2 : blockSection.posY1" />
+      <line v-if="blockSection.isHovered"
+        class="section connection-line"
+        :x1="blockSection.posX1 + blockSection.width" :x2="SVGConstants.backboneXPosition" 
+        :y1="blockSection.posY2" :y2="(blockSection.isInverted) ? blockSection.posY1 : blockSection.posY2" />
+    </template>
   </template>
 
   <template v-for="(datatrack, index) in region.datatrackSections" :key="index">
     <rect
-      @mouseenter="onMouseEnter($event, datatrack, 'gene')"
-      @mouseleave="onMouseLeave($event, datatrack, 'gene')"
+      @mouseenter="onMouseEnter(datatrack, 'Gene')"
+      @mouseleave="onMouseLeave(datatrack)"
       :y="datatrack.posY1"
-      :x="posX + 50"
-      :width="width/2"
+      :x="datatrack.posX1"
+      :width="datatrack.width"
       :height="datatrack.height"
       :fill="getSectionFill(datatrack)"
       :fill-opacity=".7"
@@ -40,7 +51,7 @@
   <template v-for="(gapSection, index) in region.syntenyGaps" :key="index">
     <line
       class="section gap"
-      :x1="posX + (width / 2)" :x2="posX + (width / 2)" 
+      :x1="gapSection.posX1" :x2="gapSection.posX2" 
       :y1="gapSection.posY1" :y2="gapSection.posY2" />
     />
   </template>
@@ -49,17 +60,16 @@
 
 
 <script lang="ts" setup>
-import { watch, onMounted} from 'vue';
-import SelectedData from '@/models/SelectedData';
+import SelectedData, { SelectedDataType } from '@/models/SelectedData';
 import OrthologLine from '@/models/OrthologLine';
 import SyntenyRegion from '@/new_models/SyntenyRegion';
 import SyntenySection from '@/new_models/SyntenySection';
 import DatatrackSection from '@/new_models/DatatrackSection';
 import { toRefs } from '@vue/reactivity';
 import { useStore } from 'vuex';
-import SVGConstants from '@/utils/SVGConstants';
 import { key } from '@/store';
 import { sortGeneList, getNewSelectedData } from '@/utils/DataPanelHelpers';
+import SVGConstants from '@/utils/SVGConstants';
 
 const LEVEL_2_WIDTH_MULTIPLIER = 0.75;
 const LABEL_Y_OFFSET = 3;
@@ -74,17 +84,15 @@ interface Props
   showStartStop?: boolean;
   showChromosome?: boolean;
   showGeneLabel?: boolean;
-  posX: number;
-  width: number;
   lines?: OrthologLine[] | undefined;
-  region?: SyntenyRegion;
+  region: SyntenyRegion;
 }
 const props = defineProps<Props>();
 
 //Converts each property in this object to its own reactive prop
 toRefs(props);
 
-const onMouseEnter = (event: any, section: SyntenySection | DatatrackSection, type: string) => {
+const onMouseEnter = (section: SyntenySection | DatatrackSection, type: SelectedDataType) => {
   section.isHovered = true;
   
   // If there are selected genes, don't update the selected data panel
@@ -94,7 +102,7 @@ const onMouseEnter = (event: any, section: SyntenySection | DatatrackSection, ty
   }
 };
 
-const onMouseLeave = (event: any, section: SyntenySection | DatatrackSection) => {
+const onMouseLeave = (section: SyntenySection | DatatrackSection) => {
   if (section)
   {
     section.isHovered = false;
@@ -198,14 +206,58 @@ const onClick = (event: any, section: DatatrackSection, type: string) => {
   }
 };
 
-
 </script>
 
 <style lang="scss" scoped>
+.label.small
+{
+  font: normal 8px sans-serif;
 
-.section.gap
+  &:hover
+  {
+    cursor: pointer;
+  }
+}
+
+.chromosome-label
+{
+  font: normal 12px sans-serif;
+  fill: #4c4b4b;
+}
+
+.ortholog-line
 {
   stroke-width: 1;
-  stroke: black;
+  &:hover
+  {
+    stroke-width: 2.5;
+  }
+}
+
+.section
+{
+  stroke-width: 0;
+  &.gap
+  {
+    stroke-width: 1;
+    stroke: black;
+  }
+
+  &.connection-line
+  {
+    stroke-width: 1;
+    stroke: black;
+    stroke-dasharray: 4;
+  }
+
+  &.level-2
+  {
+    filter: brightness(60%);
+  }
+
+  &:hover
+  {
+    cursor: pointer;
+  }
 }
 </style>

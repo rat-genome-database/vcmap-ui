@@ -17,7 +17,8 @@ interface BackboneSectionParams
   windowStop: number;
   chromosome?: string;
   species?: Species;
-  renderType?: RenderType;
+  renderType: RenderType;
+  createLabels?: boolean;
 }
 
 export default class BackboneSection implements VCMapSVGElement
@@ -41,14 +42,11 @@ export default class BackboneSection implements VCMapSVGElement
   windowStop: number = 0;   // stop basepair of the section for the backbone in the detailed view
   windowRatio: number = 0;  // ratio of the window bp to svg unit height
   length: number = 0;  // length of the section for the backbone
-  syntenicRatio: number = 0;  // ratio of the length of the section on its original species to the length of this backbone section
   species?: Species;  // species that this section is from
   chromosome: string = '';  // chromosome that this section is from
   syntenyRegions: SyntenyRegion[] = [];
-  datatrackSections: DatatrackSection[] = [];
-  labels: Label[] = [];
-  // NOTE: We should evaluate if we want this, if its just a copy of the references to the Labels in BackboneSection.datatrackSections
-  datatrackLabels: Label[] = []; // array of the Label objects associated with the datatrackSections
+  datatrackSections: DatatrackSection[] = []; // TODO: Determine if we need this here or not
+  labels: Label[] = []; // BP labels for the backbone section
 
   constructor(params: BackboneSectionParams)
   {
@@ -62,7 +60,7 @@ export default class BackboneSection implements VCMapSVGElement
     this.elementColor = Chromosome.getColor(this.chromosome);
 
     this.calculateSVGPosition(this.windowStart, this.windowStop, params.renderType);
-    if (params.renderType)
+    if (params.renderType && params.createLabels)
     {
       this.createLabels(params.renderType, params.windowStart, params.windowStop);
     }

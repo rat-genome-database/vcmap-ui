@@ -5,7 +5,7 @@
     <!-- Outside panel -->
     <rect class="panel" x="0" width="800" :height="SVGConstants.viewboxHeight" />
     <!-- Inner panels -->
-    <rect class="panel selectable" :class="{'is-loading': arePanelsLoading}" x="0" @mousedown.left="initOverviewSelection" @mousemove="updateOverviewSelection" @mouseup.left="completeOverviewSelection(overviewTrackSets as TrackSet[])" :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.viewboxHeight" />
+    <rect class="panel selectable" :class="{'is-loading': arePanelsLoading}" x="0" @mousedown.left="initOverviewSelection" @mousemove="updateOverviewSelection" @mouseup.left="completeOverviewSelection(overviewBackbone)" :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.viewboxHeight" />
     <rect class="panel selectable" :class="{'is-loading': arePanelsLoading}" @mousedown.left="initZoomSelection" @mousemove="updateZoomSelection" @mouseup.left="completeZoomSelection" :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.viewboxHeight" />
     <!-- Title panels -->
     <rect class="panel" x="0" :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.panelTitleHeight" />
@@ -13,11 +13,17 @@
 
     <!-- Overview panel SVGs ------------------------------------------->
     <text class="label medium bold" :x="SVGConstants.overviewTitleXPosition" :y="SVGConstants.panelTitleYPosition">Overview</text>
-    <template v-for="(trackSet, index) in overviewTrackSets" :key="trackSet">
+    <!-- <template v-for="(trackSet, index) in overviewTrackSets" :key="trackSet">
       <TrackSVG v-if="index != 0" show-chromosome show-synteny-on-hover show-start-stop :pos-x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
-      <!-- <BackboneTrackSVG v-else show-data-on-hover :pos-x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :track="trackSet.speciesTrack as Track" />
+      <BackboneTrackSVG v-else show-data-on-hover :pos-x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :track="trackSet.speciesTrack as Track" />
       <text class="label small" :x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :y="SVGConstants.trackLabelYPosition">{{trackSet.speciesTrack.name}}</text>
-      <text class="label small" :x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text> -->
+      <text class="label small" :x="getOverviewPanelTrackXOffset(index) + SVGConstants.backboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
+    </template> -->
+
+    <template v-for="(region, index) in overviewSyntenicRegions" :key="index">
+      <SectionSVG show-chromosome show-synteny-on-hover show-start-stop :region="(region as SyntenyRegion)" />
+      <text class="label small" :x="region.gaplessBlock.posX1" :y="SVGConstants.trackLabelYPosition">{{region.species}}</text>
+      <text class="label small" :x="region.gaplessBlock.posX1" :y="SVGConstants.trackMapLabelYPosition">{{region.mapName}}</text>
     </template>
 
     <template v-if="overviewBackbone">
@@ -47,7 +53,7 @@
 
     <template v-if="detailedSyntenicRegions.length">
       <template v-for="(syntenicRegion, index) in detailedSyntenicRegions" :key="index">
-        <SectionSVG :region="syntenicRegion as SyntenyRegion" :pos-x="700" :width="SVGConstants.trackWidth"/>
+        <SectionSVG show-gene-label show-chromosome :region="syntenicRegion as SyntenyRegion" />
       </template>
     </template>
 
@@ -121,6 +127,7 @@ const overviewTrackSets = ref<TrackSet[]>([]); // The currently displayed TrackS
 const detailTrackSets = ref<TrackSet[]>([]); // The currently displayed TrackSets in the Detailed panel
 const detailedSyntenicRegions = ref<SyntenyRegion[]>([]); // The currently displayed SyntenicRegions in the detailed panel
 let overviewBackbone = ref<BackboneSection>();
+let overviewSyntenicRegions = ref<SyntenyRegion[]>([]);
 
 let comparativeOverviewTracks: TrackSet[] = []; // Keeps track of current comparative tracks displayed in the overview panel
 let selectionTrackSets: TrackSet[] = []; // The track sets for the entire selected region
@@ -197,8 +204,8 @@ const updateOverviewPanel = async () => {
   //
   overviewBackbone.value = createBackboneTrackV2(backboneSpecies, backboneChromosome, 0, backboneChromosome.seqLength, 'overview');
 
-  const backboneTrackSet = new TrackSet(backboneTrack, []);
-  overviewTrackSets.value.push(backboneTrackSet);
+  // const backboneTrackSet = new TrackSet(backboneTrack, []);
+  // overviewTrackSets.value.push(backboneTrackSet);
 
   if (store.state.comparativeSpecies.length === 0)
   {
@@ -216,6 +223,7 @@ const updateOverviewPanel = async () => {
     SVGConstants.overviewTrackYPosition, // SVG positioning of the overview tracks will start just underneath the header panels with a bit of space in between
     false,
  );
+
  comparativeOverviewTracks = syntenyTrackResults.tracks;
 
   for (let index = 0; index < comparativeOverviewTracks.length; index++)
@@ -224,10 +232,23 @@ const updateOverviewPanel = async () => {
     overviewTrackSets.value.push(comparativeTrackSet);
   }
 
+  //
+  overviewSyntenicRegions.value = await createSyntenicRegionsAndDatatracks(
+    store.state.comparativeSpecies,
+    backboneChromosome,
+    0,
+    backboneChromosome.seqLength,
+    0,
+    backboneChromosome.seqLength,
+    store.state.overviewSyntenyThreshold,
+    false,
+  );
+
+
   // Set the backbone selection to the start and stop positions selected on the config screen if a selection doesn't already exist
   // (the backbone should have just 1 [0] section)
   const prevBackboneSelection = store.state.selectedBackboneRegion;
-  if (backboneTrack.sections.length > 0 && prevBackboneSelection.baseSelection.svgHeight === 0)
+  if (overviewBackbone.value != null && prevBackboneSelection.baseSelection.svgHeight === 0)
   {
     //if initially loading by gene, we need to set and process the full backbone range and syntenic blocks to find ortholog positions to later adjust so all are visible in the detail panel
     if (loadType === 0)
@@ -339,6 +360,7 @@ const updateDetailsPanel = async () => {
       SVGConstants.panelTitleHeight, // SVG positioning of detailed tracks will start immediately after the header panel
       true,
     );
+    console.log(syntenyTracksResults.tracks[0].speciesTrack.sections.filter(s => s.shape === 'line'));
 
     const timeSyntenyTracks = Date.now() - createSyntenyTracksStart;
 
@@ -381,13 +403,13 @@ const updateDetailsPanel = async () => {
       originalSelectedBackboneRegion.baseSelection.basePairStop,
       originalSelectedBackboneRegion.innerSelection.basePairStart,
       originalSelectedBackboneRegion.innerSelection.basePairStop,
-      store.state.detailedBasePairToHeightRatio,
       store.state.detailsSyntenyThreshold,
       true
     );
 
     if (newModelData)
     {
+      console.log(newModelData);
       detailedSyntenicRegions.value = newModelData;
     }
 

@@ -1,12 +1,15 @@
-import Species from '../models/Species';
+import Species from '@/new_models/Species';
 import Chromosome from '@/new_models/Chromosome';
-import BackboneSection from '@/new_models/BackboneSection';
+import BackboneSection, { RenderType } from '@/new_models/BackboneSection';
 import SyntenySection from '@/new_models/SyntenySection';
 import SyntenyRegion from '@/new_models/SyntenyRegion';
 import DatatrackSection from '@/new_models/DatatrackSection';
 import SyntenyApi, { SpeciesSyntenyData, SyntenyRequestParams, SyntenyComponent } from '../new_api/SyntenyApi';
 import Gene from '@/new_models/Gene';
 
+
+const GENES_DATA_TRACK_THRESHOLD_MULTIPLIER = 5;
+const GAPS_THRESHOLD_MULTIPLIER = 10;
 
 /**
  * This function retrieves syntenic data and initiates the processing pipeline to create syntenic regions. 
@@ -18,12 +21,11 @@ import Gene from '@/new_models/Gene';
  * @param backboneStop          backbone stop basepair
  * @param windowStart           window start basepair
  * @param windowStop            window stop basepair
- * @param basePairToHeightRatio base pair to height ratio/drawn SVG to basepair ratio
  * @param syntenyThreshold      synteny threshold for querying synteny data NOTE: this could become a range for cached requerying
  * @param isComparative         whether or not to draw comparative data NOTE: worth separating into two functions for overview and detailed panel (or datatracks and no datatracks)
  * @returns                     processed syntenic regions for each species
  */
-export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Species[], backboneChr: Chromosome, backboneStart: number, backboneStop: number, windowStart: number, windowStop: number, basePairToHeightRatio: number, syntenyThreshold: number, isComparative: boolean)
+export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Species[], backboneChr: Chromosome, backboneStart: number, backboneStop: number, windowStart: number, windowStop: number, syntenyThreshold: number, isComparative: boolean)
 {
   //Step 1: Get syntenic data for each species
   const syntenyApiParams: SyntenyRequestParams = {
@@ -47,7 +49,7 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
   //Step 2: Pass data to block processing pipeline per species
   if (speciesSyntenyDataArray)
   {
-    const syntenicRegions = syntenicSectionBuilder(speciesSyntenyDataArray, windowStart, windowStop, basePairToHeightRatio, syntenyThreshold);
+    const syntenicRegions = syntenicSectionBuilder(speciesSyntenyDataArray, windowStart, windowStop, syntenyThreshold, (isComparative) ? 'detailed' : 'overview');
 
     //Step 3: Capture processed data and return to caller for drawing
     return syntenicRegions;
@@ -55,7 +57,7 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
   else
   {
     console.log("No syntenic data returned for species");
-    return;
+    return [];
   }
 }
 
@@ -63,21 +65,21 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
 /**
  * Builds SyntenySections for blocks and gaps, and initiates processing for genes per block/section
  * 
- * @param speciesSyntenyData       list of species and other informational data
- * @param backboneStart            backbone start basepair       
- * @param backboneStop             backbone stop basepair
- * @param startingSVGYPos          starting Y position for drawing SVG (always the same?)
- * @param basePairToHeightRatio    base pair to height ratio/drawn SVG to basepair ratio
+ * @param allSyntenyData           list of species and other informational data
+ * @param windowStart              backbone start basepair       
+ * @param windowStop               backbone stop basepair
  * @param threshold                synteny threshold (unnecessary?)
+ * @param renderType               overview or detailed
  * @returns                        processed syntenic regions for each species
  */
-function syntenicSectionBuilder(SyntenyData: SpeciesSyntenyData[], windowStart: number,  windowStop: number, basePairToHeightRatio: number, threshold: number)
+function syntenicSectionBuilder(allSyntenyData: SpeciesSyntenyData[], windowStart: number,  windowStop: number, threshold: number, renderType: 'overview' | 'detailed')
 {
   //Step 1: For each species synteny data, create syntenic sections for each block
   const processedSyntenicRegions: SyntenyRegion[] = [];
-  for (const speciesSyntenyData of SyntenyData)
-  {
+
+  allSyntenyData.forEach((speciesSyntenyData, index) => {
     const currSpecies = speciesSyntenyData.speciesName;
+    const currMap = speciesSyntenyData.mapName;
     const regionInfo = speciesSyntenyData.regionData;
     
     //Step 1.1: Create syntenic sections for each block - 1:1 mapping returned from API
@@ -91,10 +93,24 @@ function syntenicSectionBuilder(SyntenyData: SpeciesSyntenyData[], windowStart: 
 
       //Step 1.2: Record backbone mapping for each block as BackboneSection and store in each section 
       //NOTE: BackboneSection may be drawn or may be used as a data storage method on section models, TBD
-      const blockBackboneSection = new BackboneSection({ start: blockInfo.backboneStart, stop: blockInfo.backboneStop, windowStart: windowStart, windowStop: windowStop });
-      const blockSyntenicSection = new SyntenySection({ start: blockInfo.start, stop: blockInfo.stop, backboneSection: blockBackboneSection, type: 'block', orientation: blockInfo.orientation, chromosome: new Chromosome({chromosome: blockInfo.chromosome, mapKey: blockInfo.mapKey}), chainLevel: blockInfo.chainLevel });
+      const blockBackboneSection = new BackboneSection({
+        start: blockInfo.backboneStart, 
+        stop: blockInfo.backboneStop, 
+        windowStart: windowStart, 
+        windowStop: windowStop,
+        renderType: renderType,
+      });
+      const blockSyntenicSection = new SyntenySection({
+        start: blockInfo.start, 
+        stop: blockInfo.stop, 
+        backboneSection: blockBackboneSection, 
+        type: 'block', 
+        orientation: blockInfo.orientation, 
+        chromosome: new Chromosome({chromosome: blockInfo.chromosome, mapKey: blockInfo.mapKey}), 
+        chainLevel: blockInfo.chainLevel,
+      });
 
-      const currSyntenicRegion: SyntenyRegion = new SyntenyRegion({ species: currSpecies, gaplessBlock: blockSyntenicSection });
+      const currSyntenicRegion = new SyntenyRegion({ species: currSpecies, mapName: currMap, gaplessBlock: blockSyntenicSection, order: index + 1, renderType: renderType });
       //Step 1.3: Convert SyntenicSection data to SVG values
       //NOTE: These values possibly will be self calculated on model creation
 
@@ -102,7 +118,7 @@ function syntenicSectionBuilder(SyntenyData: SpeciesSyntenyData[], windowStart: 
 
       //filter gap sizes to only include gaps that are larger than the threshold
       const gaps = blockGaps.filter(g => { 
-        return g.stop - g.start >= threshold *10 && g.chainLevel == blockInfo.chainLevel ; 
+        return (g.stop - g.start) >= (threshold * GAPS_THRESHOLD_MULTIPLIER) && g.chainLevel === blockInfo.chainLevel; 
       });
       //Step 2: For each (now processed) block, create syntenic sections for each gap
       if (gaps.length > 0)
@@ -113,7 +129,7 @@ function syntenicSectionBuilder(SyntenyData: SpeciesSyntenyData[], windowStart: 
         //Step 2.2: Record threshold level these gaps were returned at
 
         //Step 2.3 store processed gap data in block
-        const processedBlockAndGaps = splitBlockWithGaps(blockSyntenicSection, gaps, threshold);
+        const processedBlockAndGaps = splitBlockWithGaps(blockSyntenicSection, gaps, threshold, renderType);
         currSyntenicRegion.addSyntenyGaps(processedBlockAndGaps.processedGaps);
         currSyntenicRegion.addSyntenyBlocks(processedBlockAndGaps.processedBlocks);
       }
@@ -125,11 +141,11 @@ function syntenicSectionBuilder(SyntenyData: SpeciesSyntenyData[], windowStart: 
         
 
       //Step 3: For each (now processed) block, create syntenic sections for each gene
-      if (blockGenes)
+      if (blockGenes && blockGenes.length > 0)
       {
         //Step 3.1: Pass block data and gene data to gene processing pipeline
         //NOTE: We might want to instead associate block data with gene data, store data in an array, and pass all gene data at once for processing in order to avoid multiple passes of gene data for initial processing and then finding orthologs
-        const processedGeneInfo = syntenicDatatrackBuilder(blockGenes, blockSyntenicSection, blockRatio, windowStart, windowStop);
+        const processedGeneInfo = syntenicDatatrackBuilder(blockGenes, blockSyntenicSection, blockRatio, windowStart, windowStop, renderType);
         currSyntenicRegion.addDatatrackSections(processedGeneInfo);
         //Step 3.2: Capture processed gene data and store in block
         //Step 3.3: Capture returned map of processed genes and add to master map of processed genes
@@ -139,7 +155,7 @@ function syntenicSectionBuilder(SyntenyData: SpeciesSyntenyData[], windowStart: 
       currSyntenicRegion.gaplessBlock = blockSyntenicSection;
       processedSyntenicRegions.push(currSyntenicRegion);
     });
-  }
+  });
 
   return processedSyntenicRegions;
 
@@ -158,7 +174,7 @@ function syntenicSectionBuilder(SyntenyData: SpeciesSyntenyData[], windowStart: 
  * @param genomicData             genomic data for current block
  * @param blockInfo               info about block (start, stop, etc)
  */
-function syntenicDatatrackBuilder(genomicData: SyntenyComponent[] | Gene[], syntenyBlock: SyntenySection, blockRatio: number, windowStart: number, windowStop: number)
+function syntenicDatatrackBuilder(genomicData: SyntenyComponent[] | Gene[], syntenyBlock: SyntenySection, blockRatio: number, windowStart: number, windowStop: number, renderType: RenderType)
 {
   //Step 1: For each gene, convert to backbone equivalents using blockInfo and blockRatio
   const processedGenomicData: DatatrackSection[] = [];
@@ -167,7 +183,7 @@ function syntenicDatatrackBuilder(genomicData: SyntenyComponent[] | Gene[], synt
     const backboneEquivalents = convertSyntenicDataToBackboneData(genomicElement, syntenyBlock, blockRatio);
 
     //Create gene backbone section
-    const geneBackboneSection = new BackboneSection({ start: backboneEquivalents.backboneStart, stop: backboneEquivalents.backboneStop, windowStart: windowStart, windowStop: windowStop });
+    const geneBackboneSection = new BackboneSection({ start: backboneEquivalents.backboneStart, stop: backboneEquivalents.backboneStop, windowStart: windowStart, windowStop: windowStop, renderType });
 
     //Create DatatrackSection for each gene
     const geneDatatrackSection = new DatatrackSection({ start: genomicElement.start, stop: genomicElement.stop, backboneSection: geneBackboneSection, syntenySection: syntenyBlock, type: 'gene', });
@@ -220,7 +236,7 @@ function updateCachedData()
  * @param block 
  * @param gaps 
  */
-function splitBlockWithGaps(block: SyntenySection, gaps: SyntenyComponent[], threshold: number)
+function splitBlockWithGaps(block: SyntenySection, gaps: SyntenyComponent[], threshold: number, renderType: RenderType)
 {
   let lastProcessedSection: SyntenySection | null = null;
   const processedGaps: SyntenySection[] = [];
@@ -233,11 +249,11 @@ function splitBlockWithGaps(block: SyntenySection, gaps: SyntenyComponent[], thr
     if (index === 0 && (gapStart <= blockStart))
     {
       // Block starts off with a gap
-      const gapBackboneSection = new BackboneSection({ start: gap.backboneStart, stop: gap.backboneStop, windowStart: block.backboneSection.windowStart, windowStop: block.backboneSection.windowStop });
+      const gapBackboneSection = new BackboneSection({ start: gap.backboneStart, stop: gap.backboneStop, windowStart: block.backboneSection.windowStart, windowStop: block.backboneSection.windowStop, renderType: renderType });
       const gapSyntenicSection = new SyntenySection({ start: gap.start, stop: gap.stop, backboneSection: gapBackboneSection, threshold: threshold, type: 'gap', chromosome: new Chromosome({chromosome: gap.chromosome, mapKey: gap.mapKey}), chainLevel: gap.chainLevel, });
       processedGaps.push(gapSyntenicSection);
 
-      const blockBackboneSection = new BackboneSection({ start: gap.backboneStop, stop: block.backboneSection.stop, windowStart: block.backboneSection.windowStart, windowStop: block.backboneSection.windowStop });
+      const blockBackboneSection = new BackboneSection({ start: gap.backboneStop, stop: block.backboneSection.stop, windowStart: block.backboneSection.windowStart, windowStop: block.backboneSection.windowStop, renderType: renderType });
       const blockSyntenicSection = new SyntenySection({ start: gap.stop, stop: block.speciesStart, backboneSection: blockBackboneSection, threshold: threshold, type: 'block', chromosome: new Chromosome({chromosome: block.chromosome.chromosome, mapKey: block.chromosome.mapKey}), chainLevel: gap.chainLevel, });
       processedBlocks.push(blockSyntenicSection);
       lastProcessedSection = blockSyntenicSection;
@@ -245,10 +261,10 @@ function splitBlockWithGaps(block: SyntenySection, gaps: SyntenyComponent[], thr
     else if (index === 0)
     {
       //First gap start not before block start, so create block section and then gap section
-      const blockBackboneSection = new BackboneSection({ start: block.backboneSection.start, stop: gap.backboneStart, windowStart: block.backboneSection.windowStart, windowStop: block.backboneSection.windowStop });
+      const blockBackboneSection = new BackboneSection({ start: block.backboneSection.start, stop: gap.backboneStart, windowStart: block.backboneSection.windowStart, windowStop: block.backboneSection.windowStop, renderType: renderType });
       const blockSyntenicSection = new SyntenySection({ start: block.speciesStart, stop: gap.start, backboneSection: blockBackboneSection, type: 'block', orientation: block.orientation, chromosome: new Chromosome({chromosome: gap.chromosome, mapKey: gap.mapKey}), chainLevel: block.chainLevel, });
 
-      const gapBackboneSection = new BackboneSection({ start: gap.backboneStart, stop: gap.backboneStop, windowStart: block.backboneSection.windowStart, windowStop: block.backboneSection.windowStop });
+      const gapBackboneSection = new BackboneSection({ start: gap.backboneStart, stop: gap.backboneStop, windowStart: block.backboneSection.windowStart, windowStop: block.backboneSection.windowStop, renderType: renderType });
       const gapSyntenicSection = new SyntenySection({ start: gap.start, stop: gap.stop, backboneSection: gapBackboneSection, threshold: threshold, type: 'gap', chromosome: new Chromosome({chromosome: gap.chromosome, mapKey: gap.mapKey}), chainLevel: gap.chainLevel });
 
       processedBlocks.push(blockSyntenicSection);
@@ -259,10 +275,10 @@ function splitBlockWithGaps(block: SyntenySection, gaps: SyntenyComponent[], thr
     else if (lastProcessedSection && gap.backboneStart >= lastProcessedSection.backboneSection.stop)
     {
       //Next gap start is after last processed section stop, so create block section and then gap section
-      const blockBackboneSection = new BackboneSection({ start: lastProcessedSection.backboneSection.stop, stop: gap.backboneStart, windowStart: block.backboneSection.windowStart, windowStop: block.backboneSection.windowStop });
+      const blockBackboneSection = new BackboneSection({ start: lastProcessedSection.backboneSection.stop, stop: gap.backboneStart, windowStart: block.backboneSection.windowStart, windowStop: block.backboneSection.windowStop, renderType: renderType });
       const blockSyntenicSection = new SyntenySection({ start: lastProcessedSection.speciesStop, stop: gap.start, backboneSection: blockBackboneSection, type: 'block', orientation: block.orientation, chromosome: new Chromosome({chromosome: gap.chromosome, mapKey: gap.mapKey}), chainLevel: block.chainLevel, });
 
-      const gapBackboneSection = new BackboneSection({ start: gap.backboneStart, stop: gap.backboneStop, windowStart: block.backboneSection.windowStart, windowStop: block.backboneSection.windowStop });
+      const gapBackboneSection = new BackboneSection({ start: gap.backboneStart, stop: gap.backboneStop, windowStart: block.backboneSection.windowStart, windowStop: block.backboneSection.windowStop, renderType: renderType });
       const gapSyntenicSection = new SyntenySection({ start: gap.start, stop: gap.stop, backboneSection: gapBackboneSection, threshold: threshold, type: 'gap', chromosome: new Chromosome({chromosome: gap.chromosome, mapKey: gap.mapKey}), chainLevel: gap.chainLevel, });
 
       processedBlocks.push(blockSyntenicSection);
@@ -279,10 +295,10 @@ function splitBlockWithGaps(block: SyntenySection, gaps: SyntenyComponent[], thr
         return;
       }
 
-      const blockBackboneSection = new BackboneSection({ start: lastGap.backboneSection.stop, stop: gap.backboneStart, windowStart: block.backboneSection.windowStart, windowStop: block.backboneSection.windowStop });
+      const blockBackboneSection = new BackboneSection({ start: lastGap.backboneSection.stop, stop: gap.backboneStart, windowStart: block.backboneSection.windowStart, windowStop: block.backboneSection.windowStop, renderType: renderType });
       const blockSyntenicSection = new SyntenySection({ start: lastGap.speciesStop, stop: gap.start, backboneSection: blockBackboneSection, type: 'block', orientation: block.orientation, chromosome: new Chromosome({chromosome: gap.chromosome, mapKey: gap.mapKey}), chainLevel: block.chainLevel, });
 
-      const gapBackboneSection = new BackboneSection({ start: gap.backboneStart, stop: gap.backboneStop, windowStart: block.backboneSection.windowStart, windowStop: block.backboneSection.windowStop });
+      const gapBackboneSection = new BackboneSection({ start: gap.backboneStart, stop: gap.backboneStop, windowStart: block.backboneSection.windowStart, windowStop: block.backboneSection.windowStop, renderType: renderType });
       const gapSyntenicSection = new SyntenySection({ start: gap.start, stop: gap.stop, backboneSection: gapBackboneSection, threshold: threshold, type: 'gap', chromosome: new Chromosome({chromosome: gap.chromosome, mapKey: gap.mapKey}), chainLevel: gap.chainLevel, });
 
       processedBlocks.push(blockSyntenicSection);
@@ -293,7 +309,7 @@ function splitBlockWithGaps(block: SyntenySection, gaps: SyntenyComponent[], thr
   const finalGap = gaps[gaps.length - 1];
   if (finalGap.backboneStop < block.backboneSection.stop)
   {
-    const blockBackboneSection = new BackboneSection({ start: finalGap.backboneStop, stop: block.backboneSection.stop, windowStart: block.backboneSection.windowStart, windowStop: block.backboneSection.windowStop });
+    const blockBackboneSection = new BackboneSection({ start: finalGap.backboneStop, stop: block.backboneSection.stop, windowStart: block.backboneSection.windowStart, windowStop: block.backboneSection.windowStop, renderType: renderType });
     const blockSyntenicSection = new SyntenySection({ start: finalGap.stop, stop: block.backboneSection.stop, backboneSection: blockBackboneSection, type: 'block', orientation: block.orientation, chromosome: new Chromosome({chromosome: finalGap.chromosome, mapKey: finalGap.mapKey}), chainLevel: block.chainLevel, });
 
     processedBlocks.push(blockSyntenicSection);
