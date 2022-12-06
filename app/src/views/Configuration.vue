@@ -152,7 +152,7 @@
                   :options="backboneAssemblies" 
                   :disabled="!backboneSpecies"
                   @change="setChromosomeOptions($event.value)"
-                  :optionLabel="(assembly: Map) => assembly.primaryRefAssembly ? `${assembly.name} (primary)` : assembly.name" 
+                  :optionLabel="(assembly: SpeciesMap) => assembly.primaryRefAssembly ? `${assembly.name} (primary)` : assembly.name" 
                   placeholder="Backbone Assembly" />
               </div>
             </div>
@@ -258,11 +258,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
-import SpeciesApi from '@/api/SpeciesApi';
-import Species from '@/models/Species';
-import Gene from '@/models/Gene';
-import Map from '@/models/Map';
-import Chromosome from '@/models/Chromosome';
+import SpeciesApi from '@/new_api/SpeciesApi';
+import GeneApi from '@/new_api/GeneApi';
+import ChromosomeApi from '@/new_api/ChromosomeApi';
+import Species from '@/new_models/Species';
+import Gene from '@/new_models/Gene';
+import SpeciesMap from '@/new_models/SpeciesMap';
+import Chromosome from '@/new_models/Chromosome';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import { useLogger } from 'vue-logger-plugin';
@@ -292,8 +294,8 @@ const activeTab = ref(TABS.GENE);
 const speciesOptions = ref<Species[]>([]);
 const backboneSpecies = ref<Species | null>(null);
 const isLoadingSpecies = ref(false);
-const backboneAssembly = ref<Map | null>(null);
-const backboneAssemblies = ref<Map[]>([]);
+const backboneAssembly = ref<SpeciesMap | null>(null);
+const backboneAssemblies = ref<SpeciesMap[]>([]);
 
 const geneSuggestions = ref<Gene[]>([]);
 const backboneGene = ref<Gene | null>(null);
@@ -356,7 +358,7 @@ async function searchGene(event: {query: string})
   isLoadingGene.value = true;
   try
   {
-    const matches = await SpeciesApi.getGenesBySymbol(backboneSpecies.value.activeMap.key, backboneSpecies.value.name, event.query);
+    const matches = await GeneApi.getGenesBySymbol(backboneSpecies.value.activeMap.key, backboneSpecies.value.name, event.query);
     geneSuggestions.value = matches;
   }
   catch (err: any)
@@ -394,7 +396,7 @@ function setAssemblyOptions(species: Species | null)
   setChromosomeOptions(backboneAssembly.value);
 }
 
-async function setChromosomeOptions(map: Map | null)
+async function setChromosomeOptions(map: SpeciesMap | null)
 {
   // Clear out all fields that rely on chromosome selection
   chromosomeOptions.value = [];
@@ -415,7 +417,7 @@ async function setChromosomeOptions(map: Map | null)
   isLoadingChromosome.value = true;
   try
   {
-    const chromosomes = await SpeciesApi.getChromosomes(map.key);
+    const chromosomes = await ChromosomeApi.getChromosomes(map.key);
     chromosomeOptions.value = chromosomes;
   }
   catch (err: any)
@@ -447,7 +449,7 @@ async function setGeneChromosomeAndDefaultStartAndStopPositions(gene: Gene | nul
   {
     try
     {
-      geneChromosome.value = await SpeciesApi.getChromosomeInfo(gene.chromosome, backboneSpecies.value.activeMap.key);
+      geneChromosome.value = await ChromosomeApi.getChromosomeInfo(gene.chromosome, backboneSpecies.value.activeMap.key);
     }
     catch (err: any)
     {
@@ -510,7 +512,7 @@ async function prepopulateConfigOptions()
   isLoadingChromosome.value = true;
   try
   {
-    chromosomeOptions.value = await SpeciesApi.getChromosomes(backboneAssembly.value.key);
+    chromosomeOptions.value = await ChromosomeApi.getChromosomes(backboneAssembly.value.key);
   }
   catch (err: any)
   {
@@ -560,7 +562,7 @@ async function prepopulateConfigOptions()
     if (!store.state.chromosome && backboneSpecies.value != null)
     {
       // If chromosome not present in the store, set it based on the gene
-      const chromosome = await SpeciesApi.getChromosomeInfo(prevGene.chromosome, backboneAssembly.value.key);
+      const chromosome = await ChromosomeApi.getChromosomeInfo(prevGene.chromosome, backboneAssembly.value.key);
       backboneChromosome.value = chromosome;
     }
     geneChromosome.value = backboneChromosome.value;
@@ -720,7 +722,7 @@ function getAssemblyOptionsForSpecies(index: number)
   return [];
 }
 
-function getAssemblyOptionLabel(assembly: Map)
+function getAssemblyOptionLabel(assembly: SpeciesMap)
 {
   return assembly.primaryRefAssembly ? `${assembly.name} (primary)` : assembly.name;
 }

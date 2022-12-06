@@ -5,7 +5,7 @@ export default class Species
   activeMap: SpeciesMap;
   typeKey: number = 0;
   name: string = '';
-  defaultMapKey: number | undefined;
+  defaultMapKey: number = 0;
   maps: SpeciesMap[] = [];
 
   constructor(params: {typeKey: number, name: string, defaultMapKey?: number, maps: SpeciesMap[]})
@@ -22,6 +22,7 @@ export default class Species
     else
     {
       this.activeMap = this.maps[0];
+      this.defaultMapKey = this.maps[0].key;
     }
   }
 

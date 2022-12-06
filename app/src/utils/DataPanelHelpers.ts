@@ -1,4 +1,4 @@
-import Gene from '@/models/Gene';
+import Gene from '@/new_models/Gene';
 import SelectedData from '@/models/SelectedData';
 import { Store } from "vuex";
 import { VCMapState } from "@/store";

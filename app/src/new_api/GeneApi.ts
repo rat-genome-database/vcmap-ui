@@ -56,7 +56,7 @@ function getOrthologsFromOrthologGeneSetDTO(dto: OrthologGeneSetDTO)
   for (const mapKey in dto)
   {
     dto.orthologs[mapKey].forEach(orthologGeneDTO => {
-      if (orthologsByMapKey.hasOwnProperty(mapKey))
+      if (mapKey in orthologsByMapKey)
       {
         orthologsByMapKey[mapKey].push(getGeneFromGeneDTO(orthologGeneDTO));
       }

@@ -1,5 +1,5 @@
 import OrthologLine from "./OrthologLine";
-import Gene from "./Gene";
+import Gene from "@/new_models/Gene";
 import BackboneSection from "@/new_models/BackboneSection";
 import SyntenySection from "@/new_models/SyntenySection";
 import DatatrackSection from "@/new_models/DatatrackSection";
