@@ -41,7 +41,7 @@ interface SyntenyGeneDTO
  */
 interface SyntenyResponseDTO
 {
-  genes: SyntenyGeneDTO[],
+  genes?: SyntenyGeneDTO[],
   gaps?: SyntenyComponent[],
   block: SyntenyComponent,
 }
@@ -103,11 +103,10 @@ function getGeneFromDTO(dto: SyntenyGeneDTO, speciesName: string)
 
 function getSpeciesSyntenyDataFromDTO(dtoArray: SyntenyResponseDTO[], comparativeSpecies: Species)
 {
-  const speciesSyntenyData: SpeciesSyntenyData[] = [];
   const regions: SyntenyRegionData[] = [];
   dtoArray.forEach(dto => {
     const genes: Gene[] = [];
-    dto.genes.forEach((geneDTO: any) => {
+    dto.genes?.forEach((geneDTO: any) => {
       genes.push(getGeneFromDTO(geneDTO, comparativeSpecies.name));
     });
 
