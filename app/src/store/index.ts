@@ -8,6 +8,7 @@ import BackboneSelection, { BasePairRange, SelectedRegion } from '@/models/Backb
 import SVGConstants from '@/utils/SVGConstants';
 import SelectedData from '@/models/SelectedData';
 import { InjectionKey } from 'vue';
+import { createLogger } from 'vuex';
 
 export const key: InjectionKey<Store<VCMapState>> = Symbol();
 
@@ -251,7 +252,7 @@ export default createStore({
     }
   },
 
-  plugins: [
-    vuexLocal.plugin
-  ]
+  plugins: process.env.NODE_ENV !== 'production'
+    ? [vuexLocal.plugin, createLogger()] // Only use Vuex logger in development
+    : [vuexLocal.plugin]
 });
