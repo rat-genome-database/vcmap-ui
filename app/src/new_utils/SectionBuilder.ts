@@ -6,6 +6,7 @@ import SyntenyRegion from '@/new_models/SyntenyRegion';
 import DatatrackSection from '@/new_models/DatatrackSection';
 import SyntenyApi, { SpeciesSyntenyData, SyntenyRequestParams, SyntenyComponent } from '../new_api/SyntenyApi';
 import Gene from '@/new_models/Gene';
+import SyntenyRegionSet from '@/new_models/SyntenyRegionSet';
 
 
 const GENES_DATA_TRACK_THRESHOLD_MULTIPLIER = 5;
@@ -75,9 +76,10 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
 function syntenicSectionBuilder(allSyntenyData: SpeciesSyntenyData[], windowStart: number,  windowStop: number, threshold: number, renderType: 'overview' | 'detailed')
 {
   //Step 1: For each species synteny data, create syntenic sections for each block
-  const processedSyntenicRegions: SyntenyRegion[] = [];
-
+  const syntenyRegionSets: SyntenyRegionSet[] = [];
   allSyntenyData.forEach((speciesSyntenyData, index) => {
+    const processedSyntenicRegions: SyntenyRegion[] = [];
+
     const currSpecies = speciesSyntenyData.speciesName;
     const currMap = speciesSyntenyData.mapName;
     const regionInfo = speciesSyntenyData.regionData;
@@ -110,7 +112,7 @@ function syntenicSectionBuilder(allSyntenyData: SpeciesSyntenyData[], windowStar
         chainLevel: blockInfo.chainLevel,
       });
 
-      const currSyntenicRegion = new SyntenyRegion({ species: currSpecies, mapName: currMap, gaplessBlock: blockSyntenicSection, order: index + 1, renderType: renderType });
+      const currSyntenicRegion = new SyntenyRegion({ species: currSpecies, mapName: currMap, gaplessBlock: blockSyntenicSection });
       //Step 1.3: Convert SyntenicSection data to SVG values
       //NOTE: These values possibly will be self calculated on model creation
 
@@ -155,9 +157,11 @@ function syntenicSectionBuilder(allSyntenyData: SpeciesSyntenyData[], windowStar
       currSyntenicRegion.gaplessBlock = blockSyntenicSection;
       processedSyntenicRegions.push(currSyntenicRegion);
     });
+
+    syntenyRegionSets.push(new SyntenyRegionSet(currSpecies, currMap, processedSyntenicRegions, index + 1, renderType));
   });
 
-  return processedSyntenicRegions;
+  return syntenyRegionSets;
 
   //Step 4: Pass block, processed genes, list of orthologs, and master map of processed genes to ortholog processing pipeline
     //Step 4.1: Capture returned ortholog lines and store in block (or on gene/datatrack?)
