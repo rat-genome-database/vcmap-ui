@@ -98,7 +98,7 @@ import useDialog from '@/composables/useDialog';
 import BackboneTrackSVG from './BackboneTrackSVG.vue';
 import TrackSet from '@/models/TrackSet';
 import OrthologLine from '@/models/OrthologLine';
-import Gene from '@/models/Gene';
+import Gene from '@/new_models/Gene';
 import { SpeciesSyntenyData } from '@/models/SyntenicRegion';
 import SelectedData from '@/models/SelectedData';
 import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
