@@ -1,6 +1,6 @@
 interface GeneParams
 {
-  speciesName?: string;
+  speciesName: string;
   symbol: string;
   name: string;
   rgdId: number;
@@ -12,7 +12,7 @@ interface GeneParams
 
 export default class Gene
 {
-  speciesName?: string;
+  speciesName: string;
   symbol: string = '';
   name: string = '';
   rgdId: number = 0;

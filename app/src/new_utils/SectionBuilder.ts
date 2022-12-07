@@ -43,6 +43,7 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
   {
     // For detailed panel, get genes...
     syntenyApiParams.optional.includeGenes = true;
+    syntenyApiParams.optional.includeOrthologs = true;
   }
 
   const speciesSyntenyDataArray = await SyntenyApi.getSyntenicRegions(syntenyApiParams);
@@ -51,7 +52,7 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
   if (speciesSyntenyDataArray)
   {
     const syntenicRegions = syntenicSectionBuilder(speciesSyntenyDataArray, windowStart, windowStop, syntenyThreshold, (isComparative) ? 'detailed' : 'overview');
-
+    console.log(speciesSyntenyDataArray);
     //Step 3: Capture processed data and return to caller for drawing
     return syntenicRegions;
   }
@@ -190,7 +191,7 @@ function syntenicDatatrackBuilder(genomicData: SyntenyComponent[] | Gene[], synt
     const geneBackboneSection = new BackboneSection({ start: backboneEquivalents.backboneStart, stop: backboneEquivalents.backboneStop, windowStart: windowStart, windowStop: windowStop, renderType });
 
     //Create DatatrackSection for each gene
-    const geneDatatrackSection = new DatatrackSection({ start: genomicElement.start, stop: genomicElement.stop, backboneSection: geneBackboneSection, syntenySection: syntenyBlock, type: 'gene', });
+    const geneDatatrackSection = new DatatrackSection({ start: genomicElement.start, stop: genomicElement.stop, backboneSection: geneBackboneSection, type: 'gene', });
     processedGenomicData.push(geneDatatrackSection);
   });
 
