@@ -9,7 +9,7 @@ interface SyntenySectionParams
   backboneSection: BackboneSection;
   type: string;
   threshold?: number;
-  orientation?: string;
+  orientation: '+' | '-';
   chromosome: Chromosome;
   chainLevel: number;
 }
@@ -32,8 +32,8 @@ export default class SyntenySection implements VCMapSVGElement
   speciesStart: number = 0;  // start basepair of the section on its original species
   speciesStop: number = 0;   // stop basepair of the section on its original species
   length: number = 0;        // length of the section on its original species
-  threshold?: number = 0;     // threshold level this object was created at
-  orientation?: string = '';  // orientation of the synteny block
+  threshold?: number = 0;    // threshold level this object was created at
+  orientation: '+' | '-' = '+';   // orientation of the synteny block
   type: string = '';         // type of object this is (synteny, gap, etc)
   backboneSection: BackboneSection;  // backbone section that this datatrack is aligned to
   blockRatio: number = 0;    // ratio of the length of the section on its original species to the length of this backbone section
@@ -47,7 +47,8 @@ export default class SyntenySection implements VCMapSVGElement
     this.speciesStop = params.stop;
     this.length = this.speciesStop - this.speciesStart;
     this.threshold = params.threshold || 0;
-    this.orientation = params.orientation || '';
+    this.orientation = params.orientation;
+    this.isInverted = (params.orientation === '-');
     this.type = params.type;
     this.backboneSection = params.backboneSection;
     this.blockRatio = this.backboneSection.length / this.length;
