@@ -4,6 +4,8 @@ import Label from "./Label";
 import SyntenyRegion from "./SyntenyRegion";
 import SyntenySection from "./SyntenySection";
 
+const LEVEL_2_WIDTH_MULTIPLIER = 0.75;
+
 function getOverviewPanelXPosition(order: number)
 {
   return (order * -80) + SVGConstants.backboneXPosition;
@@ -104,7 +106,15 @@ export default class SyntenyRegionSet
         section.posX1 = getDetailedPanelXPositionForSynteny(this.order);
       }
 
-      section.posX2 = section.posX1 + SVGConstants.trackWidth;
+      let trackWidth = SVGConstants.trackWidth;
+      // Level 2 blocks should appear slimmer
+      if (section.chainLevel === 2)
+      {
+        section.posX1 = section.posX1 + ((SVGConstants.trackWidth * (1 - LEVEL_2_WIDTH_MULTIPLIER)) / 2);
+        trackWidth = trackWidth * LEVEL_2_WIDTH_MULTIPLIER;
+      }
+
+      section.posX2 = section.posX1 + trackWidth;
       section.width = Math.abs(section.posX2 - section.posX1);
     });
   }
