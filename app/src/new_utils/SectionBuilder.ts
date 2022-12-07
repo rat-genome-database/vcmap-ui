@@ -53,7 +53,7 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
   if (speciesSyntenyDataArray)
   {
     const syntenicRegions = syntenicSectionBuilder(speciesSyntenyDataArray, windowStart, windowStop, syntenyThreshold, (isComparative) ? 'detailed' : 'overview', masterGeneMap);
-    console.log(speciesSyntenyDataArray);
+    
     //Step 3: Capture processed data and return to caller for drawing
     return syntenicRegions;
   }
@@ -218,7 +218,7 @@ function syntenicDatatrackBuilder(genomicData: Gene[], syntenyBlock: SyntenySect
       if (geneOrthologs && geneOrthologs.length > 0)
       {
         const orthologLines: OrthologLine[] = orthologLineBuilder(geneOrthologs, masterGeneMap, currSpecies, geneDatatrackSection);
-        //console.log(orthologLines);
+        
         if (orthologLines)
         {
           orthologLines.forEach((orthologLine: OrthologLine) => {
@@ -242,18 +242,36 @@ function syntenicDatatrackBuilder(genomicData: Gene[], syntenyBlock: SyntenySect
 function convertSyntenicDataToBackboneData(genomicObject: SyntenyComponent | Gene, blockInfo: SyntenySection, blockRatio: number)
 {
   //First calculate the difference between the start of the block and the start of the gene
-  const geneStartDiff = genomicObject.start - blockInfo.speciesStart;
+  if (blockInfo.orientation == '-')
+  {
+    const geneStopDiff = blockInfo.speciesStop - genomicObject.stop;
 
-  //Convert the difference to backbone equivalents
-  const geneStartBackboneDiff = geneStartDiff * blockRatio;
-  const geneBackboneStart = blockInfo.backboneSection.start + geneStartBackboneDiff;
+    //Convert the difference to backbone equivalents
+    const geneStartBackboneDiff = geneStopDiff * blockRatio;
+    const geneBackboneStart = blockInfo.backboneSection.start + geneStartBackboneDiff;
 
-  //Calculate height and stop of gene in backbone equivalents
-  const geneLength = genomicObject.stop - genomicObject.start;
-  const geneBackboneLength = geneLength * blockRatio;
-  const geneBackboneStop = geneBackboneStart + geneBackboneLength;
+    //Calculate height and stop of gene in backbone equivalents
+    const geneLength = genomicObject.stop - genomicObject.start;
+    const geneBackboneLength = geneLength * blockRatio;
+    const geneBackboneStop = geneBackboneStart - geneBackboneLength;
 
-  return { backboneStart: geneBackboneStart, backboneStop: geneBackboneStop, backboneDiff: geneStartBackboneDiff, };
+    return { backboneStart: geneBackboneStart, backboneStop: geneBackboneStop, backboneDiff: geneStartBackboneDiff, };
+  }
+  else
+  {
+    const geneStartDiff = genomicObject.start - blockInfo.speciesStart;
+
+    //Convert the difference to backbone equivalents
+    const geneStartBackboneDiff = geneStartDiff * blockRatio;
+    const geneBackboneStart = blockInfo.backboneSection.start + geneStartBackboneDiff;
+
+    //Calculate height and stop of gene in backbone equivalents
+    const geneLength = genomicObject.stop - genomicObject.start;
+    const geneBackboneLength = geneLength * blockRatio;
+    const geneBackboneStop = geneBackboneStart + geneBackboneLength;
+
+    return { backboneStart: geneBackboneStart, backboneStop: geneBackboneStop, backboneDiff: geneStartBackboneDiff, };
+  }
 }
 
 

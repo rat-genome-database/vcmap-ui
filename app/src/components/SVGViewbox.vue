@@ -308,7 +308,7 @@ const updateDetailsPanel = async () => {
   tempBackboneGenes.forEach(gene => gene.speciesName = backboneSpecies.name);
 
   const backboneDatatrackInfo = backboneDatatrackBuilder(tempBackboneGenes, overviewBackbone.value, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, );
-  console.log('GENES', backboneDatatrackInfo);
+  
   const masterGeneMap = backboneDatatrackInfo.masterGeneMap;
   const detailedBackboneAndGenes = backboneDatatrackInfo.backboneSection;
 
@@ -391,7 +391,6 @@ const updateDetailsPanel = async () => {
     if (newModelData)
     {
       detailedSyntenySets.value = newModelData.syntenyRegionSets;
-      console.log(newModelData);
     }
 
     //map backbone species genes to the master map
@@ -556,7 +555,7 @@ const updateDetailsPanel = async () => {
       "Misc": timeDetailedUpdateOther + " ms | " +  ((timeDetailedUpdateOther/timeDetailedUpdate) * 100).toFixed(2) + '%',
     },
   };
-  $log.debug(JSON.stringify(viewboxDebugReport, null, 2));
+  //$log.debug(JSON.stringify(viewboxDebugReport, null, 2));
 
 };
 
