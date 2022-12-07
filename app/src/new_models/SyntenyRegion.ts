@@ -2,6 +2,7 @@ import BackboneSection from './BackboneSection';
 import SyntenySection from './SyntenySection';
 import DatatrackSection from './DatatrackSection';
 import Label from './Label';
+import OrthologLine from './OrthologLine';
 
 interface SyntenyRegionParams
 {
@@ -17,6 +18,7 @@ export default class SyntenyRegion
   syntenyGaps: SyntenySection[] = [];                         // synteny gaps occupying this region
   syntenyBlocks: SyntenySection[] = [];                       // synteny blocks occupying this region
   datatrackSections: DatatrackSection[] = [];                 // DatatrackSections belonging to this SyntenyRegion
+  orthologLines: OrthologLine[] = [];                         // OrthologLines belonging to this SyntenyRegion
   backboneSection: BackboneSection | undefined;               // backbone section that this synteny region is aligned to
   species: string = '';                                       // species that this region is from
   mapName: string = '';
@@ -46,5 +48,10 @@ export default class SyntenyRegion
   public addDatatrackSections(datatrackSection: DatatrackSection[])
   {
     this.datatrackSections.length > 0 ? this.datatrackSections = this.datatrackSections.concat(datatrackSection) : this.datatrackSections = datatrackSection;
+  }
+
+  public addOrthologLines(orthologLine: OrthologLine[])
+  {
+    this.orthologLines.length > 0 ? this.orthologLines = this.orthologLines.concat(orthologLine) : this.orthologLines = orthologLine;
   }
 }

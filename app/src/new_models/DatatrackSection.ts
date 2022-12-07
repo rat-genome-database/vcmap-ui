@@ -63,4 +63,5 @@ export class GeneDatatrack extends DatatrackSection
   }
 
   orthologs: Gene[] = [];  // orthologs of this gene
+  gene: Gene | undefined // gene that this datatrack represents
 }
