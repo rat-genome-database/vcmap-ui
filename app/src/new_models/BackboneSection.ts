@@ -53,7 +53,7 @@ export default class BackboneSection implements VCMapSVGElement
   {
     this.start = params.start;
     this.stop = params.stop;
-    this.length = this.stop - this.start;
+    this.length = Math.abs(this.stop - this.start);
     this.windowStart = params.windowStart;
     this.windowStop = params.windowStop;
     this.chromosome = params.chromosome ?? '';

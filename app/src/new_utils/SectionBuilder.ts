@@ -90,8 +90,8 @@ function syntenicSectionBuilder(allSyntenyData: SpeciesSyntenyData[], windowStar
     //Step 1.1: Create syntenic sections for each block - 1:1 mapping returned from API
     regionInfo.forEach((region) => {
       const blockInfo = region.block;
-      const blockLength = blockInfo.stop - blockInfo.start;
-      const blockRatio = (blockInfo.backboneStop - blockInfo.backboneStart) / blockLength;
+      const blockLength = Math.abs(blockInfo.stop - blockInfo.start);
+      const blockRatio = (Math.abs(blockInfo.backboneStop - blockInfo.backboneStart)) / blockLength;
       const blockGaps = region.gaps;
       const blockGenes = region.genes;
       
@@ -255,7 +255,7 @@ function convertSyntenicDataToBackboneData(genomicObject: SyntenyComponent | Gen
     const geneBackboneLength = geneLength * blockRatio;
     const geneBackboneStop = geneBackboneStart - geneBackboneLength;
 
-    return { backboneStart: geneBackboneStart, backboneStop: geneBackboneStop, backboneDiff: geneStartBackboneDiff, };
+    return { backboneStart: Math.ceil(geneBackboneStart), backboneStop: Math.ceil(geneBackboneStop), };
   }
   else
   {
@@ -270,7 +270,7 @@ function convertSyntenicDataToBackboneData(genomicObject: SyntenyComponent | Gen
     const geneBackboneLength = geneLength * blockRatio;
     const geneBackboneStop = geneBackboneStart + geneBackboneLength;
 
-    return { backboneStart: geneBackboneStart, backboneStop: geneBackboneStop, backboneDiff: geneStartBackboneDiff, };
+    return { backboneStart: Math.ceil(geneBackboneStart), backboneStop: Math.ceil(geneBackboneStop), };
   }
 }
 
