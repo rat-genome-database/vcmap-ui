@@ -1,7 +1,8 @@
 <template>
 
-  <template v-for="(blockSection, index) in region.syntenyBlocks" :key="index">
+  <template v-for="(blockSection, index) in level1Blocks" :key="index">
     <rect
+      class="block-section"
       @mouseenter="onMouseEnter(blockSection, 'trackSection')"
       @mouseleave="onMouseLeave(blockSection)"
       :y="blockSection.posY1"
@@ -12,31 +13,36 @@
       :fill-opacity="1"
     />
 
-    <!-- Chromosome Label -->
-    <text v-if="(showChromosome && blockSection.height > 15)"
-      class="chromosome-label"
-      :x="blockSection.posX1 + (blockSection.width / 2)"
-      :y="blockSection.posY1 + (blockSection.height / 2)"
-      dominant-baseline="middle"
-      text-anchor="middle">
-      {{blockSection.chromosome.chromosome}}
-    </text>
+    <ChromosomeLabelSVG v-if="showChromosome" :synteny-section="blockSection" />
+  </template>
 
-    <!-- Syntenic Lines -->
-    <template v-if="showSyntenyOnHover">
-      <line v-if="blockSection.isHovered"
-        class="section connection-line"
-        :x1="blockSection.posX1 + blockSection.width" :x2="SVGConstants.backboneXPosition" 
-        :y1="blockSection.posY1" :y2="(blockSection.isInverted) ? blockSection.posY2 : blockSection.posY1" />
-      <line v-if="blockSection.isHovered"
-        class="section connection-line"
-        :x1="blockSection.posX1 + blockSection.width" :x2="SVGConstants.backboneXPosition" 
-        :y1="blockSection.posY2" :y2="(blockSection.isInverted) ? blockSection.posY1 : blockSection.posY2" />
-    </template>
+  <GapSVG v-for="(gapSection,index) in level1Gaps" :key="index" :gap-section="gapSection" />
+
+  <template v-for="(blockSection, index) in level2Blocks" :key="index">
+    <rect
+      class="level-2 block-section"
+      @mouseenter="onMouseEnter(blockSection, 'trackSection')"
+      @mouseleave="onMouseLeave(blockSection)"
+      :y="blockSection.posY1"
+      :x="blockSection.posX1"
+      :width="blockSection.width"
+      :height="blockSection.height"
+      :fill="getSectionFill(blockSection)"
+      :fill-opacity="1"
+    />
+
+    <ChromosomeLabelSVG v-if="showChromosome" :synteny-section="blockSection" />
+  </template>
+
+  <GapSVG v-for="(gapSection,index) in level2Gaps" :key="index" :gap-section="gapSection" />
+
+  <template v-if="showSyntenyOnHover">
+    <SyntenyLinesSVG v-for="(blockSection, index) in region.syntenyBlocks" :key="index" :synteny-section="blockSection" />
   </template>
 
   <template v-for="(datatrack, index) in region.datatrackSections" :key="index">
     <rect
+      class="block-section"
       @mouseenter="onMouseEnter(datatrack, 'Gene')"
       @mouseleave="onMouseLeave(datatrack)"
       :y="datatrack.posY1"
@@ -45,14 +51,6 @@
       :height="datatrack.height"
       :fill="getSectionFill(datatrack)"
       :fill-opacity=".7"
-    />
-  </template>
-
-  <template v-for="(gapSection, index) in region.syntenyGaps" :key="index">
-    <line
-      class="section gap"
-      :x1="gapSection.posX1" :x2="gapSection.posX2" 
-      :y1="gapSection.posY1" :y2="gapSection.posY2" />
     />
   </template>
   
@@ -65,20 +63,21 @@ import OrthologLine from '@/models/OrthologLine';
 import SyntenyRegion from '@/new_models/SyntenyRegion';
 import SyntenySection from '@/new_models/SyntenySection';
 import DatatrackSection from '@/new_models/DatatrackSection';
-import { toRefs } from '@vue/reactivity';
+import { computed, toRefs } from '@vue/reactivity';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import { sortGeneList, getNewSelectedData } from '@/utils/DataPanelHelpers';
-import SVGConstants from '@/utils/SVGConstants';
+import { VCMapSVGElement } from '@/new_models/VCMapSVGElement';
+import ChromosomeLabelSVG from './ChromosomeLabelSVG.vue';
+import SyntenyLinesSVG from './SyntenyLinesSVG.vue';
+import GapSVG from './GapSVG.vue';
 
-const LEVEL_2_WIDTH_MULTIPLIER = 0.75;
-const LABEL_Y_OFFSET = 3;
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
 const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
 
 const store = useStore(key);
 
-interface Props 
+interface Props
 {
   showSyntenyOnHover?: boolean;
   showStartStop?: boolean;
@@ -92,6 +91,19 @@ const props = defineProps<Props>();
 //Converts each property in this object to its own reactive prop
 toRefs(props);
 
+const level1Blocks = computed(() => {
+  return props.region.syntenyBlocks.filter(b => b.chainLevel === 1);
+});
+const level2Blocks = computed(() => {
+  return props.region.syntenyBlocks.filter(b => b.chainLevel === 2);
+});
+const level1Gaps = computed(() => {
+  return props.region.syntenyGaps.filter(g => g.chainLevel === 1);
+});
+const level2Gaps = computed(() => {
+  return props.region.syntenyGaps.filter(g => g.chainLevel === 2);
+});
+
 const onMouseEnter = (section: SyntenySection | DatatrackSection, type: SelectedDataType) => {
   section.isHovered = true;
   
@@ -102,7 +114,7 @@ const onMouseEnter = (section: SyntenySection | DatatrackSection, type: Selected
   }
 };
 
-const onMouseLeave = (section: SyntenySection | DatatrackSection) => {
+const onMouseLeave = (section: VCMapSVGElement) => {
   if (section)
   {
     section.isHovered = false;
@@ -114,7 +126,7 @@ const onMouseLeave = (section: SyntenySection | DatatrackSection) => {
   }
 };
 
-const getSectionFill = (section: SyntenySection | DatatrackSection) => {
+const getSectionFill = (section: VCMapSVGElement) => {
   if (section.isSelected) {return SELECTED_HIGHLIGHT_COLOR;}
   if (section.isHovered) {return HOVER_HIGHLIGHT_COLOR;}
   return section.elementColor;
@@ -219,12 +231,6 @@ const onClick = (event: any, section: DatatrackSection, type: string) => {
   }
 }
 
-.chromosome-label
-{
-  font: normal 12px sans-serif;
-  fill: #4c4b4b;
-}
-
 .ortholog-line
 {
   stroke-width: 1;
@@ -234,30 +240,13 @@ const onClick = (event: any, section: DatatrackSection, type: string) => {
   }
 }
 
-.section
+.level-2
 {
-  stroke-width: 0;
-  &.gap
-  {
-    stroke-width: 1;
-    stroke: black;
-  }
+  filter: brightness(60%);
+}
 
-  &.connection-line
-  {
-    stroke-width: 1;
-    stroke: black;
-    stroke-dasharray: 4;
-  }
-
-  &.level-2
-  {
-    filter: brightness(60%);
-  }
-
-  &:hover
-  {
-    cursor: pointer;
-  }
+.block-section:hover
+{
+  cursor: pointer;
 }
 </style>

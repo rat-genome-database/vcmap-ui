@@ -82,7 +82,8 @@ function syntenicSectionBuilder(allSyntenyData: SpeciesSyntenyData[], windowStar
 
     const currSpecies = speciesSyntenyData.speciesName;
     const currMap = speciesSyntenyData.mapName;
-    const regionInfo = speciesSyntenyData.regionData;
+    // Only process level 1 and level 2 blocks
+    const regionInfo = speciesSyntenyData.regionData.filter(r => r.block.chainLevel === 1 || r.block.chainLevel === 2);
     
     //Step 1.1: Create syntenic sections for each block - 1:1 mapping returned from API
     regionInfo.forEach((region) => {
