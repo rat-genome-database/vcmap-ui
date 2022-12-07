@@ -111,7 +111,7 @@ import SpeciesApi from '@/api/SpeciesApi';
 import { useLogger } from 'vue-logger-plugin';
 import SyntenyRegion from '@/new_models/SyntenyRegion';
 import BackboneSection from '@/new_models/BackboneSection';
-import { createBackboneTrack as createBackboneTrackV2 } from '@/new_utils/BackboneBuilder';
+import { createBackboneTrack as createBackboneTrackV2, backboneDatatrackBuilder } from '@/new_utils/BackboneBuilder';
 import BackboneSectionSVG from './BackboneSectionSVG.vue';
 import SyntenyRegionSet from '@/new_models/SyntenyRegionSet';
 
@@ -204,7 +204,8 @@ const updateOverviewPanel = async () => {
     return;
   }
 
-  overviewSyntenySets.value = await createSyntenicRegionsAndDatatracks(
+  const emptyMap = new Map<number, any>();
+  const overviewSyntenyData = await createSyntenicRegionsAndDatatracks(
     store.state.comparativeSpecies,
     backboneChromosome,
     0,
@@ -213,7 +214,10 @@ const updateOverviewPanel = async () => {
     backboneChromosome.seqLength,
     store.state.overviewSyntenyThreshold,
     false,
+    emptyMap,
   );
+
+  overviewSyntenySets.value = overviewSyntenyData.syntenyRegionSets;
 
   // Set the backbone selection to the start and stop positions selected on the config screen if a selection doesn't already exist
   // (the backbone should have just 1 [0] section)
@@ -302,6 +306,13 @@ const updateDetailsPanel = async () => {
   // Create the backbone data tracks for the entire selection at the updated Detailed panel resolution
   let tempBackboneGenes: Gene[] = await createBackboneDataTracks(backboneSpecies, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop) ?? null;
   tempBackboneGenes.forEach(gene => gene.speciesName = backboneSpecies.name);
+
+  const backboneDatatrackInfo = backboneDatatrackBuilder(tempBackboneGenes, overviewBackbone.value, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, );
+  console.log('GENES', backboneDatatrackInfo);
+  const masterGeneMap = backboneDatatrackInfo.masterGeneMap;
+  const detailedBackboneAndGenes = backboneDatatrackInfo.backboneSection;
+
+
   let tempBackboneTracks = createBackboneGeneTrackFromGenesData(tempBackboneGenes, backboneSpecies.name,
     originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop,
     store.state.detailedBasePairToHeightRatio, true, store.state.detailsSyntenyThreshold, SVGConstants.panelTitleHeight);
@@ -373,12 +384,14 @@ const updateDetailsPanel = async () => {
       originalSelectedBackboneRegion.innerSelection.basePairStart,
       originalSelectedBackboneRegion.innerSelection.basePairStop,
       store.state.detailsSyntenyThreshold,
-      true
+      true,
+      masterGeneMap
     );
 
     if (newModelData)
     {
-      detailedSyntenySets.value = newModelData;
+      detailedSyntenySets.value = newModelData.syntenyRegionSets;
+      console.log(newModelData);
     }
 
     //map backbone species genes to the master map

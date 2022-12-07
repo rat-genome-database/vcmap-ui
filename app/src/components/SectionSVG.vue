@@ -1,5 +1,15 @@
 <template>
 
+    <!-- Syntenic Lines -->
+    <template v-for="(line, index) in region.orthologLines" :key="index">
+    <line
+      class="ortholog-line"
+      :stroke="(line.isSelected ? SELECTED_HIGHLIGHT_COLOR : 'lightgray')"
+      :x1="line.posX1" :x2="line.posX2"
+      :y1="line.posY1" :y2="line.posY2" 
+    />
+  </template>
+  
   <template v-for="(blockSection, index) in region.syntenyBlocks" :key="index">
     <rect
       @mouseenter="onMouseEnter(blockSection, 'trackSection')"
@@ -21,19 +31,9 @@
       text-anchor="middle">
       {{blockSection.chromosome.chromosome}}
     </text>
-
-    <!-- Syntenic Lines -->
-    <template v-if="showSyntenyOnHover">
-      <line v-if="blockSection.isHovered"
-        class="section connection-line"
-        :x1="blockSection.posX1 + blockSection.width" :x2="SVGConstants.backboneXPosition" 
-        :y1="blockSection.posY1" :y2="(blockSection.isInverted) ? blockSection.posY2 : blockSection.posY1" />
-      <line v-if="blockSection.isHovered"
-        class="section connection-line"
-        :x1="blockSection.posX1 + blockSection.width" :x2="SVGConstants.backboneXPosition" 
-        :y1="blockSection.posY2" :y2="(blockSection.isInverted) ? blockSection.posY1 : blockSection.posY2" />
-    </template>
   </template>
+
+    <!-- Genes -->
 
   <template v-for="(datatrack, index) in region.datatrackSections" :key="index">
     <rect
