@@ -11,7 +11,6 @@ interface DatatrackSectionParams
   start: number;
   stop: number;
   backboneSection: BackboneSection;
-  syntenySection: SyntenySection;
   type: string;
   orthologs?: DatatrackSection[];
 }
@@ -26,7 +25,6 @@ export default class DatatrackSection implements VCMapSVGElement
   //species: Species = new Species();            // species that this section is from
   label?: Label;
   backboneSection: BackboneSection | undefined;  // backbone section that this datatrack is aligned to
-  syntenyBlock: SyntenySection | undefined;     // synteny section that this datatrack is aligned to
   chainLevel: number = 0;                      // level of the chain that this section is on
 
   posX1: number = 0;
@@ -65,4 +63,5 @@ export class GeneDatatrack extends DatatrackSection
   }
 
   orthologs: Gene[] = [];  // orthologs of this gene
+  gene: Gene | undefined // gene that this datatrack represents
 }

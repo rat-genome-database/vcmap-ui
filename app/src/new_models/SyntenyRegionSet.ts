@@ -1,6 +1,7 @@
 import SVGConstants from "@/utils/SVGConstants";
 import DatatrackSection from "./DatatrackSection";
 import Label from "./Label";
+import OrthologLine from "./OrthologLine";
 import SyntenyRegion from "./SyntenyRegion";
 import SyntenySection from "./SyntenySection";
 
@@ -69,7 +70,7 @@ export default class SyntenyRegionSet
       this.regions.forEach(region => {
         this.setSyntenyBlockXPositions(region.syntenyBlocks);
         this.setSyntenyGapXPositions(region.syntenyGaps);
-        this.setDatatrackSectionXPositions(region.datatrackSections);
+        this.setDatatrackSectionXPositions(region.datatrackSections, region.orthologLines);
       });
     }
   }
@@ -119,7 +120,7 @@ export default class SyntenyRegionSet
     });
   }
 
-  private setDatatrackSectionXPositions(sections: DatatrackSection[])
+  private setDatatrackSectionXPositions(sections: DatatrackSection[], lines: OrthologLine[])
   {
     sections.forEach(section => {
       if (this.renderType === 'overview')
@@ -133,6 +134,17 @@ export default class SyntenyRegionSet
 
       section.posX2 = section.posX1 + SVGConstants.dataTrackWidth;
       section.width = Math.abs(section.posX2 - section.posX1);
+    });
+
+    lines.forEach(line => {
+      if (this.renderType === 'overview')
+      {
+        line.posX2 = getOverviewPanelXPosition(this.order);
+      }
+      else if (this.renderType === 'detailed')
+      {
+        line.posX2 = getDetailedPanelXPositionForDatatracks(this.order);
+      }
     });
   }
 }

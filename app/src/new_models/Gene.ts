@@ -12,7 +12,7 @@ interface GeneParams
 
 export default class Gene
 {
-  speciesName?: string;
+  speciesName: string;
   symbol: string = '';
   name: string = '';
   rgdId: number = 0;
@@ -23,7 +23,7 @@ export default class Gene
 
   constructor(params: GeneParams)
   {
-    this.speciesName = params.speciesName;
+    params.speciesName ? this.speciesName = params.speciesName : this.speciesName = '';
     this.symbol = params.symbol;
     this.name = params.name;
     this.rgdId = params.rgdId;

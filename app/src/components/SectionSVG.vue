@@ -1,4 +1,13 @@
 <template>
+    <!-- Syntenic Lines -->
+  <template v-for="(line, index) in region.orthologLines" :key="index">
+    <line
+      class="ortholog-line"
+      :stroke="(line.isSelected ? SELECTED_HIGHLIGHT_COLOR : 'lightgray')"
+      :x1="line.posX1" :x2="line.posX2"
+      :y1="line.posY1" :y2="line.posY2" 
+    />
+  </template>
 
   <template v-for="(blockSection, index) in level1Blocks" :key="index">
     <rect
@@ -39,6 +48,8 @@
   <template v-if="showSyntenyOnHover">
     <SyntenyLinesSVG v-for="(blockSection, index) in region.syntenyBlocks" :key="index" :synteny-section="blockSection" />
   </template>
+
+    <!-- Genes -->
 
   <template v-for="(datatrack, index) in region.datatrackSections" :key="index">
     <rect
