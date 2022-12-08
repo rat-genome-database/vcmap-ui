@@ -10,7 +10,6 @@ import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 
 export type RenderType = 'overview' | 'detailed';
 
-const DataTrack_X_OFFSET = 10;
 
 interface BackboneSectionParams
 {
@@ -48,8 +47,8 @@ export default class BackboneSection implements VCMapSVGElement
   species?: Species;  // species that this section is from
   chromosome: string = '';  // chromosome that this section is from
   syntenyRegions: SyntenyRegion[] = [];
-  datatrackSections: DatatrackSection[] = []; // Holds backbone datatracks
   labels: Label[] = []; // BP labels for the backbone section
+  renderType: RenderType = 'overview';
 
   constructor(params: BackboneSectionParams)
   {
@@ -61,23 +60,13 @@ export default class BackboneSection implements VCMapSVGElement
     this.chromosome = params.chromosome ?? '';
     this.species = params.species;
     this.elementColor = Chromosome.getColor(this.chromosome);
+    this.renderType = params.renderType;
 
-    this.calculateSVGPosition(this.windowStart, this.windowStop, params.renderType);
-    if (params.renderType && params.createLabels)
+    this.calculateYPositions(this.windowStart, this.windowStop, this.renderType);
+    if (this.renderType && params.createLabels)
     {
       this.createLabels(params.renderType, params.windowStart, params.windowStop);
     }
-  }
-
-  public addDatatracks(sections: DatatrackSection[])
-  {
-    sections.forEach(section => {
-      section.posX1 = this.posX2 + DataTrack_X_OFFSET;
-      section.posX2 = section.posX1 + SVGConstants.dataTrackWidth;
-      section.width = SVGConstants.dataTrackWidth;
-    });
-
-    this.datatrackSections = sections;
   }
 
   /**
@@ -104,7 +93,7 @@ export default class BackboneSection implements VCMapSVGElement
    * @param windowStart 
    * @param windowStop 
    */
-  private calculateSVGPosition(windowStart: number, windowStop: number, renderType?: RenderType)
+  private calculateYPositions(windowStart: number, windowStop: number, renderType?: RenderType)
   {
     const svgStart = (renderType === 'overview') ? PANEL_SVG_START + SVGConstants.overviewTrackPadding : PANEL_SVG_START;
     const svgStop = (renderType === 'overview') ? PANEL_SVG_STOP - SVGConstants.overviewTrackPadding : PANEL_SVG_STOP;
@@ -133,20 +122,6 @@ export default class BackboneSection implements VCMapSVGElement
     this.posY2 = this.posY1 + ( this.length / ratio );
 
     this.height = Math.abs(this.posY2 - this.posY1);
-
-    // Calculate X positions of this backbone section
-    if (renderType === 'overview')
-    {
-      this.posX1 = SVGConstants.backboneXPosition;
-      this.posX2 = this.posX1 + SVGConstants.trackWidth;
-    }
-    else if (renderType === 'detailed')
-    {
-      this.posX1 = SVGConstants.selectedBackboneXPosition;
-      this.posX2 = this.posX1 + SVGConstants.trackWidth;
-    }
-
-    this.width = Math.abs(this.posX2 - this.posX1);
   }
 
   private createLabels(renderType: RenderType, start: number, stop: number)
@@ -184,16 +159,5 @@ export default class BackboneSection implements VCMapSVGElement
     }
     
     this.labels = this.labels.concat([startBPLabel, stopBPLabel]);
-  }
-
-  /**
-   * Returns a smaller version of the BackboneSection with no datatracks on it. Helps performance
-   * when storing it as SelectedData in local storage.
-   */
-  public toSelectedData()
-  {
-    const copy = JSON.parse(JSON.stringify(this)) as BackboneSection;
-    copy.datatrackSections = [];
-    return copy;
   }
 }
