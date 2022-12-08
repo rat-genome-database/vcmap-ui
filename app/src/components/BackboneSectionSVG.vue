@@ -134,7 +134,7 @@ const onMouseEnter = (event: any, section: BackboneSection) => {
   // Only set selected data if there are no selected genes
   if (store.state.selectedGeneIds.length === 0)
   {
-    const selectedData = new SelectedData(section.toSelectedData(), 'backbone');
+    const selectedData = new SelectedData(section, 'backbone');
     store.dispatch('setSelectedData', [selectedData]);
   }
 };

@@ -3,6 +3,7 @@ import Chromosome from "@/new_models/Chromosome";
 import Species from "@/new_models/Species";
 import Gene from "@/new_models/Gene";
 import DatatrackSection from "@/new_models/DatatrackSection";
+import BackboneSet from "@/new_models/BackboneSet";
 
 /**
  * Creates the backbone track model and sets the viewbox height based on the size of the backbone track
@@ -39,6 +40,10 @@ export function backboneDatatrackBuilder(genomicData: Gene[], backboneSection: B
     masterGeneMap.set(genomicElement.rgdId, { [currSpecies]: { drawn: [{gene: geneDatatrackSection, svgY: geneBackboneSection.posY1, svgX: geneBackboneSection.posX1 ?? 370 }]} });
   });
 
-  backboneSection.addDatatracks(processedGenomicData);
-  return { backboneSection, masterGeneMap };
+  return { backboneSection, masterGeneMap, backboneDatatracks: processedGenomicData };
+}
+
+export function createBackboneSet(backbone: BackboneSection, datatracks?: DatatrackSection[])
+{
+  return new BackboneSet(backbone, datatracks ?? []);
 }
