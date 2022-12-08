@@ -1,10 +1,18 @@
 import BackboneSection from "./BackboneSection";
-import SyntenySection from "./SyntenySection";
-import Species from '../models/Species';
 import Gene from '../models/Gene';
-import Chromosome from "@/models/Chromosome";
 import { SVGShape, VCMapSVGElement } from "./VCMapSVGElement";
 import Label from './Label';
+
+export interface LoadedSpeciesGenes
+{
+  [speciesName:string]: {
+    drawn: {
+      gene: DatatrackSection,
+      svgY: number;
+      svgX: number;
+    }[];
+  };
+}
 
 interface DatatrackSectionParams
 {
