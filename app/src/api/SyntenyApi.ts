@@ -182,7 +182,7 @@ export default class SyntenyApi
         if (result.status === 'fulfilled')
         {
           const singleSpeciesSyntenyData = getSpeciesSyntenyDataFromDTO(result.value.data, params.comparativeSpecies[index]);
-          console.debug(`Syntenic regions found for mapKey '${singleSpeciesSyntenyData.mapKey}', threshold: '${params.optional.threshold}': ${singleSpeciesSyntenyData.regionData.length}`);
+          console.debug(`[DEBUG] Syntenic regions found: ${singleSpeciesSyntenyData.regionData.length} [mapKey: '${singleSpeciesSyntenyData.mapKey}', threshold: '${params.optional.threshold}']`);
           speciesSyntenyData.push(singleSpeciesSyntenyData);
         }
         else

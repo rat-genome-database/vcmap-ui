@@ -118,19 +118,15 @@ export default createStore({
       state.detailedBasePairRange = range;
     },
     overviewBasePairToHeightRatio(state: VCMapState, ratio: number) {
-      console.debug(`Setting overview panel bp resolution to ${ratio} bp/unit`);
       state.overviewBasePairToHeightRatio = ratio;
     },
     overviewSyntenyThreshold(state: VCMapState, threshold: number) {
-      console.debug(`Setting overview panel synteny threshold to ${threshold}bp`);
       state.overviewSyntenyThreshold = threshold;
     },
     detailedBasePairToHeightRatio(state: VCMapState, ratio: number) {
-      console.debug(`Setting details panel bp resolution to ${ratio} bp/unit`);
       state.detailedBasePairToHeightRatio = ratio;
     },
     detailsSyntenyThreshold(state: VCMapState, threshold: number) {
-      console.debug(`Setting details panel synteny threshold to ${threshold}bp`);
       state.detailsSyntenyThreshold = threshold;
     },
     configTab(state: VCMapState, tab: number) {
