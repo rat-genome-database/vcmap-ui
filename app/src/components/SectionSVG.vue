@@ -1,6 +1,6 @@
 <template>
     <!-- Syntenic Lines -->
-  <template v-for="(line, index) in region.orthologLines" :key="index">
+  <template v-for="(line, index) in orthologLines" :key="index">
     <line
       class="ortholog-line"
       :stroke="(line.isSelected ? SELECTED_HIGHLIGHT_COLOR : 'lightgray')"
@@ -45,13 +45,12 @@
 
   <GapSVG v-for="(gapSection,index) in level2Gaps" :key="index" :gap-section="gapSection" />
 
-  <template v-if="showSyntenyOnHover">
+  <template v-if="region && showSyntenyOnHover">
     <SyntenyLinesSVG v-for="(blockSection, index) in region.syntenyBlocks" :key="index" :synteny-section="blockSection" />
   </template>
 
-    <!-- Genes -->
-
-  <template v-for="(datatrack, index) in region.datatrackSections" :key="index">
+  <!-- Genes -->
+  <template v-for="(datatrack, index) in datatracks" :key="index">
     <rect
       class="block-section"
       @mouseenter="onMouseEnter(datatrack, 'Gene')"
@@ -94,25 +93,32 @@ interface Props
   showStartStop?: boolean;
   showChromosome?: boolean;
   showGeneLabel?: boolean;
-  lines?: OrthologLine[] | undefined;
-  region: SyntenyRegion;
+  lines?: OrthologLine[];
+  region?: SyntenyRegion;
+  datatrackSections?: DatatrackSection[];
 }
 const props = defineProps<Props>();
 
 //Converts each property in this object to its own reactive prop
 toRefs(props);
 
+const orthologLines = computed(() => {
+  return props.region?.orthologLines ?? [];
+});
 const level1Blocks = computed(() => {
-  return props.region.syntenyBlocks.filter(b => b.chainLevel === 1);
+  return props.region?.syntenyBlocks.filter(b => b.chainLevel === 1) ?? [];
 });
 const level2Blocks = computed(() => {
-  return props.region.syntenyBlocks.filter(b => b.chainLevel === 2);
+  return props.region?.syntenyBlocks.filter(b => b.chainLevel === 2) ?? [];
 });
 const level1Gaps = computed(() => {
-  return props.region.syntenyGaps.filter(g => g.chainLevel === 1);
+  return props.region?.syntenyGaps.filter(g => g.chainLevel === 1) ?? [];
 });
 const level2Gaps = computed(() => {
-  return props.region.syntenyGaps.filter(g => g.chainLevel === 2);
+  return props.region?.syntenyGaps.filter(g => g.chainLevel === 2) ?? [];
+});
+const datatracks = computed(() => {
+  return (props.region) ? props.region.datatrackSections : props.datatrackSections;
 });
 
 const onMouseEnter = (section: SyntenySection | DatatrackSection, type: SelectedDataType) => {

@@ -43,7 +43,7 @@ export default class DatatrackSection implements VCMapSVGElement
   {
     this.speciesStart = params.start;
     this.speciesStop = params.stop;
-    this.length = this.speciesStop - this.speciesStart;
+    this.length = Math.abs(this.speciesStop - this.speciesStart);
     this.backboneSection = params.backboneSection;
     this.type = params.type;
 

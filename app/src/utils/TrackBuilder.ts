@@ -118,7 +118,7 @@ export function createBackboneGeneTrackFromGenesData(genes: Gene[], speciesName:
     const blockStartOffset = (gene.start - startPos ) / basePairToHeightRatio;
     const geneSvgY = blockStartOffset + startingSVGYPos;
 
-    if ( geneSize < threshold)
+    if (geneSize < threshold)
     {
       const hiddenTrackSection = new TrackSection({
         start: gene.start,
