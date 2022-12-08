@@ -5,6 +5,12 @@ import Gene from "@/new_models/Gene";
 import DatatrackSection from "@/new_models/DatatrackSection";
 import BackboneSet from "@/new_models/BackboneSet";
 
+export interface ProcessedGenomicData
+{
+  datatracks: DatatrackSection[],
+  genes: Gene[],
+}
+
 /**
  * Creates the backbone track model and sets the viewbox height based on the size of the backbone track
  */
@@ -28,22 +34,24 @@ export function backboneDatatrackBuilder(genomicData: Gene[], backboneSection: B
 {
   const masterGeneMap = new Map<number, any>();
 
-  const processedGenomicData: DatatrackSection[] = [];
+  const processedGenomicData: ProcessedGenomicData = {
+    datatracks: [],
+    genes: genomicData,
+  };
   genomicData.forEach((genomicElement: Gene) => {
     const currSpecies = genomicElement.speciesName.toLowerCase();
     const geneBackboneSection = new BackboneSection({ start: genomicElement.start, stop: genomicElement.stop, windowStart: windowStart, windowStop: windowStop, renderType: 'detailed' });
     const geneDatatrackSection = new DatatrackSection({ start: genomicElement.start, stop: genomicElement.stop, backboneSection: geneBackboneSection, type: 'gene', });
-    geneDatatrackSection.posX1 = 370;
 
-    processedGenomicData.push(geneDatatrackSection);
+    processedGenomicData.datatracks.push(geneDatatrackSection);
     // Map structure is { rgdId: { species: { gene: Gene, drawn: [{ svgY: number, svgX: number }] } } }
     masterGeneMap.set(genomicElement.rgdId, { [currSpecies]: { drawn: [{gene: geneDatatrackSection, svgY: geneBackboneSection.posY1, svgX: geneBackboneSection.posX1 ?? 370 }]} });
   });
 
-  return { backboneSection, masterGeneMap, backboneDatatracks: processedGenomicData };
+  return { backboneSection, masterGeneMap, processedGenomicData };
 }
 
-export function createBackboneSet(backbone: BackboneSection, datatracks?: DatatrackSection[])
+export function createBackboneSet(backbone: BackboneSection, genomicData?: ProcessedGenomicData)
 {
-  return new BackboneSet(backbone, datatracks ?? []);
+  return new BackboneSet(backbone, genomicData);
 }
