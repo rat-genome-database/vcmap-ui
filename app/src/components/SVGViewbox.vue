@@ -20,22 +20,6 @@
     </template>
 
     <!-- Detail panel SVGs ----------------------------------------->
-    <!-- <template v-for="(trackSet, index) in detailTrackSets" :key="trackSet">
-      <TrackSVG v-if="index != 0" show-chromosome :pos-x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
-      <BackboneTrackSVG v-else is-detailed show-data-on-hover :pos-x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :track="trackSet.speciesTrack as Track" />
-
-      <template v-if="trackSet.dataTracks.length > 0">
-        <template v-for="dataTrack, index2 in trackSet.dataTracks" :key="dataTrack.name">
-          <TrackSVG v-if="dataTrack.isDisplayed" gene-data-track show-gene-label :pos-x="getDetailedPanelTrackXOffset(index, 'datatrack', index2 + 1) + SVGConstants.selectedBackboneXPosition" :width="SVGConstants.dataTrackWidth" :lines="dataTrack.orthologLines as OrthologLine[] ?? []" :track="dataTrack.track as Track" />
-        </template>
-      </template>
-    </template>
-
-    <template v-for="(trackSet, index) in detailTrackSets" :key="trackSet">
-      <text class="label small" :x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackLabelYPosition">{{trackSet.speciesTrack.name}}</text>
-      <text class="label small" :x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
-    </template> -->
-
     <template v-if="detailedBackboneSet">
       <BackboneSetSVG show-data-on-hover :backbone-set="detailedBackboneSet" />
     </template>
@@ -108,7 +92,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
-import { Store, useStore } from 'vuex';
+import { useStore } from 'vuex';
 import SectionSVG from './SectionSVG.vue';
 import SVGConstants from '@/utils/SVGConstants';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
@@ -120,7 +104,7 @@ import Gene from '@/new_models/Gene';
 import { SpeciesSyntenyData } from '@/models/SyntenicRegion';
 import SelectedData from '@/models/SelectedData';
 import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
-import { key, VCMapState } from '@/store';
+import { key } from '@/store';
 import { backboneDetailedError, backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError } from '@/utils/VCMapErrors';
 import { createSyntenicRegionsAndDatatracks,  } from '@/new_utils/SectionBuilder';
 import useOverviewPanelSelection from '@/composables/useOverviewPanelSelection';
@@ -131,6 +115,7 @@ import BackboneSetSVG from './BackboneSetSVG.vue';
 import SyntenyRegionSet from '@/new_models/SyntenyRegionSet';
 import GeneApi from '@/api/GeneApi';
 import BackboneSet from '@/new_models/BackboneSet';
+import { LoadedSpeciesGenes } from '@/new_models/DatatrackSection';
 
 const store = useStore(key);
 const $log = useLogger();
@@ -140,7 +125,7 @@ const { startDetailedSelectionY, stopDetailedSelectionY, initZoomSelection, upda
 const { startOverviewSelectionY, stopOverviewSelectionY, initOverviewSelection, updateOverviewSelection, completeOverviewSelection } = useOverviewPanelSelection(store);
 
 const detailTrackSets = ref<TrackSet[]>([]); // The currently displayed TrackSets in the Detailed panel
-const detailedSyntenySets = ref<SyntenyRegionSet[]>([]); // The currently displayed SyntenicRegions in the detailed panel
+let detailedSyntenySets = ref<SyntenyRegionSet[]>([]); // The currently displayed SyntenicRegions in the detailed panel
 let overviewBackboneSet = ref<BackboneSet>();
 let detailedBackboneSet = ref<BackboneSet>();
 let overviewSyntenySets = ref<SyntenyRegionSet[]>([]);
@@ -224,7 +209,7 @@ const updateOverviewPanel = async () => {
   }
 
   // TODO: Do we need masterGeneMap for the overview?
-  const emptyMap = new Map<number, any>();
+  const emptyMap = new Map<number, LoadedSpeciesGenes>();
   const overviewSyntenyData = await createSyntenicRegionsAndDatatracks(
     store.state.comparativeSpecies,
     backboneChromosome,
@@ -297,21 +282,23 @@ const updateDetailsPanel = async () => {
   if (detailedBasePairRange.stop - detailedBasePairRange.start <= 0)
   {
     // Clear out our selection TrackSets
-    selectionTrackSets = [];
-    detailTrackSets.value = [];
+    //selectionTrackSets = [];
+    //detailTrackSets.value = [];
+    detailedSyntenySets.value = [];
     return;
   }
 
   if (backboneSpecies == null || backboneChromosome == null)
   {
     onError(backboneDetailedError, backboneDetailedError.message);
-    selectionTrackSets = [];
-    detailTrackSets.value = [];
+    //selectionTrackSets = [];
+    //detailTrackSets.value = [];
+    detailedSyntenySets.value = [];
     return;
   }
 
-  detailTrackSets.value = [];
-  selectionTrackSets = [];
+  //detailTrackSets.value = [];
+  //selectionTrackSets = [];
   detailedSyntenySets.value = [];
 
   // Get the range of the inner section that will be shown in the Detailed panel
@@ -525,7 +512,7 @@ const updateDetailsPanel = async () => {
     timeGetOrthologs = Date.now() - getOrthologsStart;
     const syntenicGeneMaps = [];
 
-    adjustVisibleSetsBasedOnZoom(zoomedSelection, store, syntenicGeneMaps);
+    adjustDetailedVisibleSetsBasedOnZoom(zoomedSelection);
 
     if (syntenicGeneMaps.length > 0)
     {
@@ -804,27 +791,33 @@ const getDetailedPanelTrackXOffset = (trackNumber: number, trackType: string, da
   return offset;
 };
 
-const adjustVisibleSetsBasedOnZoom = (zoomedSelection: SelectedRegion, store: Store<VCMapState>, syntenicGeneMaps: any[]) => {
+const adjustDetailedVisibleSetsBasedOnZoom = (zoomedSelection: SelectedRegion) => {
   // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
   if (detailedBackboneSet.value)
   {
-    detailedBackboneSet.value.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop);
+    const updatedMasterGeneMap = detailedBackboneSet.value.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop);
+    if (updatedMasterGeneMap)
+    {
+      detailedSyntenySets.value.forEach(set => {
+        set.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop, updatedMasterGeneMap);
+      });
+    }
   }
 
-  selectionTrackSets.forEach(trackSet => {
-    const visibleTrackSet = trackSet.getVisibleRegion(zoomedSelection.basePairStart, zoomedSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold);
-    if (visibleTrackSet)
-    {
-      if (visibleTrackSet.visibleRegionTrackSet)
-      {
-        detailTrackSets.value.push(visibleTrackSet.visibleRegionTrackSet);
-      }
-      if (visibleTrackSet.geneMap)
-      {
-        syntenicGeneMaps.push(visibleTrackSet.geneMap);
-      }
-    }
-  });
+  // selectionTrackSets.forEach(trackSet => {
+  //   const visibleTrackSet = trackSet.getVisibleRegion(zoomedSelection.basePairStart, zoomedSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold);
+  //   if (visibleTrackSet)
+  //   {
+  //     if (visibleTrackSet.visibleRegionTrackSet)
+  //     {
+  //       detailTrackSets.value.push(visibleTrackSet.visibleRegionTrackSet);
+  //     }
+  //     if (visibleTrackSet.geneMap)
+  //     {
+  //       syntenicGeneMaps.push(visibleTrackSet.geneMap);
+  //     }
+  //   }
+  // });
 };
 
 const navigateUp = () => {
@@ -834,51 +827,48 @@ const navigateUp = () => {
   // Adjust the inner selection on the selected region
   selectedRegion.moveInnerSelectionUp(store.state.overviewBasePairToHeightRatio);
 
-  // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
-  detailTrackSets.value = [];
-  const syntenicGeneMaps = [];
+  //const syntenicGeneMaps = [];
 
   if (selectedRegion.innerSelection)
   {
-    detailedBackboneSet.value?.adjustVisibleSet(selectedRegion.innerSelection.basePairStart, selectedRegion.innerSelection.basePairStop);
-    // TODO: Loop through detailed SyntenyRegionSets and set visible regions
+    adjustDetailedVisibleSetsBasedOnZoom(selectedRegion.innerSelection)
   }
   
-  selectionTrackSets.forEach(trackSet => {
-    if (!selectedRegion.innerSelection) return;
+  // selectionTrackSets.forEach(trackSet => {
+  //   if (!selectedRegion.innerSelection) return;
     
 
-    const visibleTrackSet = trackSet.getVisibleRegion(selectedRegion.innerSelection.basePairStart, selectedRegion.innerSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold);
-    if (visibleTrackSet)
-    {
-      if (visibleTrackSet.visibleRegionTrackSet)
-      {
-        detailTrackSets.value.push(visibleTrackSet.visibleRegionTrackSet);
-      }
-      if (visibleTrackSet.geneMap)
-      {
-        syntenicGeneMaps.push(visibleTrackSet.geneMap);
-      }
-    }
-  });
+  //   const visibleTrackSet = trackSet.getVisibleRegion(selectedRegion.innerSelection.basePairStart, selectedRegion.innerSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold);
+  //   if (visibleTrackSet)
+  //   {
+  //     if (visibleTrackSet.visibleRegionTrackSet)
+  //     {
+  //       detailTrackSets.value.push(visibleTrackSet.visibleRegionTrackSet);
+  //     }
+  //     if (visibleTrackSet.geneMap)
+  //     {
+  //       syntenicGeneMaps.push(visibleTrackSet.geneMap);
+  //     }
+  //   }
+  // });
 
-  if (syntenicGeneMaps.length > 0)
-  {
-    let comparativeSpecies = store.state.comparativeSpecies;
-    const comparativeSpeciesArray = [];
-    const allGenesMap = store.state.loadedGenes; 
+  // if (syntenicGeneMaps.length > 0)
+  // {
+  //   let comparativeSpecies = store.state.comparativeSpecies;
+  //   const comparativeSpeciesArray = [];
+  //   const allGenesMap = store.state.loadedGenes; 
     
-    comparativeSpecies.forEach(species => {comparativeSpeciesArray.push(species.name.toLowerCase());});
-    constructLoadedGenes(syntenicGeneMaps, allGenesMap, comparativeSpeciesArray);
-  }
+  //   comparativeSpecies.forEach(species => {comparativeSpeciesArray.push(species.name.toLowerCase());});
+  //   constructLoadedGenes(syntenicGeneMaps, allGenesMap, comparativeSpeciesArray);
+  // }
 
-  if (selectedRegion.orthologData)
-  {
-    let comparativeSpecies = store.state.comparativeSpecies;
-    const comparativeSpeciesMaps = [];
-    comparativeSpecies.forEach(species => {comparativeSpeciesMaps.push(species.activeMap.key);});
-    generateOrthologLines(selectedRegion.orthologData, comparativeSpeciesMaps);
-  }
+  // if (selectedRegion.orthologData)
+  // {
+  //   let comparativeSpecies = store.state.comparativeSpecies;
+  //   const comparativeSpeciesMaps = [];
+  //   comparativeSpecies.forEach(species => {comparativeSpeciesMaps.push(species.activeMap.key);});
+  //   generateOrthologLines(selectedRegion.orthologData, comparativeSpeciesMaps);
+  // }
 };
 
 const navigateDown = () => {
@@ -890,48 +880,47 @@ const navigateDown = () => {
 
   // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
   detailTrackSets.value = [];
-  const syntenicGeneMaps = [];
+  //const syntenicGeneMaps = [];
 
   if (selectedRegion.innerSelection)
   {
-    detailedBackboneSet.value?.adjustVisibleSet(selectedRegion.innerSelection.basePairStart, selectedRegion.innerSelection.basePairStop);
-    // TODO: Loop through detailed SyntenyRegionSets and set visible regions
+    adjustDetailedVisibleSetsBasedOnZoom(selectedRegion.innerSelection);
   }
 
-  selectionTrackSets.forEach(trackSet => {
-    if (!selectedRegion.innerSelection) return;
+  // selectionTrackSets.forEach(trackSet => {
+  //   if (!selectedRegion.innerSelection) return;
 
-    const visibleTrackSet = trackSet.getVisibleRegion(selectedRegion.innerSelection.basePairStart, selectedRegion.innerSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold);
-    if (visibleTrackSet)
-    {
-      if (visibleTrackSet.visibleRegionTrackSet)
-      {
-        detailTrackSets.value.push(visibleTrackSet.visibleRegionTrackSet);
-      }
-      if (visibleTrackSet.geneMap)
-      {
-        syntenicGeneMaps.push(visibleTrackSet.geneMap);
-      }
-    }
-  });
+  //   const visibleTrackSet = trackSet.getVisibleRegion(selectedRegion.innerSelection.basePairStart, selectedRegion.innerSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold);
+  //   if (visibleTrackSet)
+  //   {
+  //     if (visibleTrackSet.visibleRegionTrackSet)
+  //     {
+  //       detailTrackSets.value.push(visibleTrackSet.visibleRegionTrackSet);
+  //     }
+  //     if (visibleTrackSet.geneMap)
+  //     {
+  //       syntenicGeneMaps.push(visibleTrackSet.geneMap);
+  //     }
+  //   }
+  // });
 
-  if (syntenicGeneMaps.length > 0)
-  {
-    let comparativeSpecies = store.state.comparativeSpecies;
-    const comparativeSpeciesArray = [];
-    const allGenesMap = store.state.loadedGenes; 
+  // if (syntenicGeneMaps.length > 0)
+  // {
+  //   let comparativeSpecies = store.state.comparativeSpecies;
+  //   const comparativeSpeciesArray = [];
+  //   const allGenesMap = store.state.loadedGenes; 
     
-    comparativeSpecies.forEach(species => {comparativeSpeciesArray.push(species.name.toLowerCase());});
-    constructLoadedGenes(syntenicGeneMaps, allGenesMap, comparativeSpeciesArray);
-  }
+  //   comparativeSpecies.forEach(species => {comparativeSpeciesArray.push(species.name.toLowerCase());});
+  //   constructLoadedGenes(syntenicGeneMaps, allGenesMap, comparativeSpeciesArray);
+  // }
 
-  if (selectedRegion.orthologData)
-  {
-    const comparativeSpecies = store.state.comparativeSpecies;
-    const comparativeSpeciesMaps = [];
-    comparativeSpecies.forEach(species => {comparativeSpeciesMaps.push(species.activeMap.key);});
-    generateOrthologLines(selectedRegion.orthologData, comparativeSpeciesMaps);
-  }
+  // if (selectedRegion.orthologData)
+  // {
+  //   const comparativeSpecies = store.state.comparativeSpecies;
+  //   const comparativeSpeciesMaps = [];
+  //   comparativeSpecies.forEach(species => {comparativeSpeciesMaps.push(species.activeMap.key);});
+  //   generateOrthologLines(selectedRegion.orthologData, comparativeSpeciesMaps);
+  // }
 };
 
 const isNavigationUpDisabled = computed(() => {

@@ -1,5 +1,8 @@
+import { SpeciesSyntenyData } from "@/api/SyntenyApi";
+import { syntenicSectionBuilder } from "@/new_utils/SectionBuilder";
 import SVGConstants from "@/utils/SVGConstants";
-import DatatrackSection from "./DatatrackSection";
+import DatatrackSection, { LoadedSpeciesGenes } from "./DatatrackSection";
+import { GenomicSet } from "./GenomicSet";
 import Label from "./Label";
 import OrthologLine from "./OrthologLine";
 import SyntenyRegion from "./SyntenyRegion";
@@ -25,27 +28,42 @@ function getDetailedPanelXPositionForDatatracks(order: number)
 /**
  * Model for representing a set of SyntenyRegions for the same species and map
  */
-export default class SyntenyRegionSet
+export default class SyntenyRegionSet extends GenomicSet
 {
-  speciesName: string = '';
-  mapName: string = '';
   regions: SyntenyRegion[] = [];
   order: number = 1;
   renderType: 'overview' | 'detailed' = 'overview';
-  titleLabels: Label[] = [];
+  speciesSyntenyData: SpeciesSyntenyData; // Raw synteny data for the species represented by this SyntenyRegionSet
+  threshold: number; // The synteny threshold that was used to create this SyntenyRegionSet
 
-  constructor(speciesName: string, mapName: string, regions: SyntenyRegion[], order: number, renderType: 'overview' | 'detailed')
+  constructor(speciesName: string, mapName: string, regions: SyntenyRegion[], order: number, renderType: 'overview' | 'detailed', speciesSyntenyData: SpeciesSyntenyData, threshold: number)
   {
-    this.speciesName = speciesName;
-    this.mapName = mapName;
+    super(speciesName, mapName);
     this.regions = regions;
     this.order = order;
     this.renderType = renderType;
+    this.speciesSyntenyData = speciesSyntenyData;
+    this.threshold = threshold;
     this.setRegionXPositionsBasedOnOrder();
     this.createTitleLabels();
   }
 
-  private createTitleLabels()
+  public adjustVisibleSet(backboneStart: number, backboneStop: number, masterGeneMap: Map<number, LoadedSpeciesGenes>)
+  {
+    const syntenyRegionData = syntenicSectionBuilder(
+      this.speciesSyntenyData,
+      backboneStart,
+      backboneStop,
+      this.threshold,
+      this.renderType,
+      this.order,
+      masterGeneMap,
+    );
+
+    this.regions = syntenyRegionData.regions;
+  }
+
+  protected createTitleLabels()
   {
     const speciesLabel = new Label({
       posX: (this.renderType === 'overview') ? getOverviewPanelXPosition(this.order) : getDetailedPanelXPositionForSynteny(this.order),

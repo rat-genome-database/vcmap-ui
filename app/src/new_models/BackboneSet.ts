@@ -2,6 +2,7 @@ import { backboneDatatrackBuilder, ProcessedGenomicData } from "@/new_utils/Back
 import SVGConstants from "@/utils/SVGConstants";
 import BackboneSection from "./BackboneSection";
 import DatatrackSection from "./DatatrackSection";
+import { GenomicSet } from "./GenomicSet";
 import Label from "./Label";
 
 
@@ -10,18 +11,15 @@ const DataTrack_X_OFFSET = 10;
 /**
  * Model for representing a set of Backbone sections and its datatrack sections
  */
-export default class BackboneSet
+export default class BackboneSet extends GenomicSet
 {
-  speciesName?: string;
-  mapName?: string;
   backbone: BackboneSection;
   datatracks: DatatrackSection[];
-  titleLabels: Label[] = [];
 
   constructor(backboneSection: BackboneSection, processedGenomicData?: ProcessedGenomicData)
   {
-    this.speciesName = backboneSection.species?.name;
-    this.mapName = backboneSection.species?.activeMap.name;
+    super(backboneSection.species?.name, backboneSection.species?.activeMap.name);
+
     this.backbone = backboneSection;
     this.datatracks = processedGenomicData?.datatracks ?? [];
     if (this.datatracks.length > 0 && processedGenomicData)
@@ -33,7 +31,7 @@ export default class BackboneSet
     this.setDatatrackXPositions();
   }
 
-  public adjustVisibleSet(backboneStart: number, backboneStop: number, )
+  public adjustVisibleSet(backboneStart: number, backboneStop: number)
   {
     if (backboneStart < this.backbone.start || backboneStop > this.backbone.stop)
     {
@@ -51,7 +49,26 @@ export default class BackboneSet
       const datatrackInfo = backboneDatatrackBuilder(this.backbone.backboneGenes, this.backbone, backboneStart, backboneStop);
       this.datatracks = datatrackInfo.processedGenomicData.datatracks;
       this.setDatatrackXPositions();
+
+      return datatrackInfo.masterGeneMap;
     }
+  }
+
+  protected createTitleLabels()
+  {
+    const speciesLabel = new Label({
+      posX: this.backbone.posX1,
+      posY: SVGConstants.trackLabelYPosition,
+      text: this.speciesName ?? 'Unknown',
+    });
+
+    const mapLabel = new Label({
+      posX: this.backbone.posX1,
+      posY: SVGConstants.trackMapLabelYPosition,
+      text: this.mapName ?? 'Unknown',
+    });
+
+    this.titleLabels = [speciesLabel, mapLabel];
   }
 
   private setBackboneXPositions()
@@ -78,22 +95,5 @@ export default class BackboneSet
       section.posX2 = section.posX1 + SVGConstants.dataTrackWidth;
       section.width = SVGConstants.dataTrackWidth;
     });
-  }
-
-  private createTitleLabels()
-  {
-    const speciesLabel = new Label({
-      posX: this.backbone.posX1,
-      posY: SVGConstants.trackLabelYPosition,
-      text: this.speciesName ?? 'Unknown',
-    });
-
-    const mapLabel = new Label({
-      posX: this.backbone.posX1,
-      posY: SVGConstants.trackMapLabelYPosition,
-      text: this.mapName ?? 'Unknown',
-    });
-
-    this.titleLabels = [speciesLabel, mapLabel];
   }
 }

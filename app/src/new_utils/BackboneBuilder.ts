@@ -2,7 +2,7 @@ import BackboneSection, { RenderType } from "@/new_models/BackboneSection";
 import Chromosome from "@/new_models/Chromosome";
 import Species from "@/new_models/Species";
 import Gene from "@/new_models/Gene";
-import DatatrackSection from "@/new_models/DatatrackSection";
+import DatatrackSection, { LoadedSpeciesGenes } from "@/new_models/DatatrackSection";
 import BackboneSet from "@/new_models/BackboneSet";
 
 export interface ProcessedGenomicData
@@ -32,7 +32,7 @@ export function createBackboneSection(species: Species, chromosome: Chromosome, 
 
 export function backboneDatatrackBuilder(genomicData: Gene[], backboneSection: BackboneSection, windowStart: number, windowStop: number,)
 {
-  const masterGeneMap = new Map<number, any>();
+  const masterGeneMap = new Map<number, LoadedSpeciesGenes>();
 
   const processedGenomicData: ProcessedGenomicData = {
     datatracks: [],
