@@ -13,19 +13,14 @@
       <template v-for="(region, index) in syntenySet.regions" :key="index">
         <SectionSVG show-chromosome show-synteny-on-hover show-start-stop :region="(region as SyntenyRegion)" />
       </template>
-      <template v-for="(label, index) in syntenySet.titleLabels" :key="index">
-        <text class="label small testing" :x="label.posX" :y="label.posY">{{label.text}}</text>
-      </template>
     </template>
 
     <template v-if="overviewBackbone">
       <BackboneSectionSVG show-data-on-hover :backbone="overviewBackbone" />
-      <text class="label small" :x="overviewBackbone.posX1" :y="SVGConstants.trackLabelYPosition">{{overviewBackbone.species?.name}}</text>
-      <text class="label small" :x="overviewBackbone.posX1" :y="SVGConstants.trackMapLabelYPosition">{{overviewBackbone.species?.activeMap.name}}</text>
     </template>
 
     <!-- Detail panel SVGs ----------------------------------------->
-    <template v-for="(trackSet, index) in detailTrackSets" :key="trackSet">
+    <!-- <template v-for="(trackSet, index) in detailTrackSets" :key="trackSet">
       <TrackSVG v-if="index != 0" show-chromosome :pos-x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :width="SVGConstants.trackWidth" :track="trackSet.speciesTrack as Track" />
       <BackboneTrackSVG v-else is-detailed show-data-on-hover :pos-x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :track="trackSet.speciesTrack as Track" />
 
@@ -39,15 +34,17 @@
     <template v-for="(trackSet, index) in detailTrackSets" :key="trackSet">
       <text class="label small" :x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackLabelYPosition">{{trackSet.speciesTrack.name}}</text>
       <text class="label small" :x="getDetailedPanelTrackXOffset(index, 'track') + SVGConstants.selectedBackboneXPosition" :y="SVGConstants.trackMapLabelYPosition">{{trackSet.speciesTrack.mapName}}</text>
+    </template> -->
+
+    <template v-if="detailedBackbone">
+      <BackboneSectionSVG is-detailed show-data-on-hover :backbone="detailedBackbone" />
+      <SectionSVG v-if="(detailedBackbone.datatrackSections.length > 0)" :datatrack-sections="detailedBackbone.datatrackSections" />
     </template>
 
     <template v-if="detailedSyntenySets.length">
       <template v-for="(syntenySet, index) in detailedSyntenySets" :key="index">
         <template v-for="(syntenicRegion, index) in syntenySet.regions" :key="index">
           <SectionSVG show-gene-label show-chromosome :region="syntenicRegion as SyntenyRegion" />
-        </template>
-        <template v-for="(label, index) in syntenySet.titleLabels" :key="index">
-          <text class="label small testing" :x="label.posX" :y="label.posY">{{label.text}} (test)</text>
         </template>
       </template>
     </template>
@@ -58,7 +55,30 @@
     <text class="label medium bold" :x="SVGConstants.overviewTitleXPosition" :y="SVGConstants.panelTitleYPosition">Overview</text>
     <text class="label medium bold" :x="SVGConstants.selectedBackboneXPosition" :y="SVGConstants.panelTitleYPosition">Detailed</text>
 
-     <!-- Navigation buttons -->
+    <!-- SyntenyRegionSet Title Labels -->
+    <template v-for="(syntenySet, index) in overviewSyntenySets" :key="index">
+      <template v-for="(label, index) in syntenySet.titleLabels" :key="index">
+        <text class="label small" :x="label.posX" :y="label.posY">{{label.text}}</text>
+      </template>
+    </template>
+    <template v-if="overviewBackbone">
+      <text class="label small" :x="overviewBackbone.posX1" :y="SVGConstants.trackLabelYPosition">{{overviewBackbone.species?.name}}</text>
+      <text class="label small" :x="overviewBackbone.posX1" :y="SVGConstants.trackMapLabelYPosition">{{overviewBackbone.species?.activeMap.name}}</text>
+    </template>
+    <template v-if="detailedBackbone">
+      <BackboneSectionSVG is-detailed show-data-on-hover :backbone="detailedBackbone" />
+      <text class="label small" :x="detailedBackbone.posX1" :y="SVGConstants.trackLabelYPosition">{{detailedBackbone.species?.name}}</text>
+      <text class="label small" :x="detailedBackbone.posX1" :y="SVGConstants.trackMapLabelYPosition">{{detailedBackbone.species?.activeMap.name}}</text>
+    </template>
+    <template v-if="detailedSyntenySets.length">
+      <template v-for="(syntenySet, index) in detailedSyntenySets" :key="index">
+        <template v-for="(label, index) in syntenySet.titleLabels" :key="index">
+          <text class="label small" :x="label.posX" :y="label.posY">{{label.text}} (test)</text>
+        </template>
+      </template>
+    </template>
+
+    <!-- Navigation buttons -->
     <rect class="navigation-btn" :class="{'disabled': isNavigationUpDisabled }" @click="navigateUp" :x="SVGConstants.overviewPanelWidth" :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
     <rect class="navigation-btn" :class="{'disabled': isNavigationDownDisabled }" @click="navigateDown" :x="SVGConstants.overviewPanelWidth" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
     <image class="nav-btn-img" href="../../node_modules/primeicons/raw-svg/chevron-up.svg" @click="navigateUp" :x="SVGConstants.overviewPanelWidth + (SVGConstants.detailsPanelWidth / 2)" :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
@@ -105,16 +125,17 @@ import SelectedData from '@/models/SelectedData';
 import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
 import { key } from '@/store';
 import { backboneDetailedError, backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError } from '@/utils/VCMapErrors';
-import { createBackboneDataTracks, createBackboneGeneTrackFromGenesData, createBackboneTrack, createSyntenyTracks } from '@/utils/TrackBuilder';
+import { createSyntenyTracks } from '@/utils/TrackBuilder';
 import { createSyntenicRegionsAndDatatracks,  } from '@/new_utils/SectionBuilder';
 import useOverviewPanelSelection from '@/composables/useOverviewPanelSelection';
 import SpeciesApi from '@/api/SpeciesApi';
 import { useLogger } from 'vue-logger-plugin';
 import SyntenyRegion from '@/new_models/SyntenyRegion';
 import BackboneSection from '@/new_models/BackboneSection';
-import { createBackboneTrack as createBackboneTrackV2, backboneDatatrackBuilder } from '@/new_utils/BackboneBuilder';
+import { createBackboneSection, backboneDatatrackBuilder } from '@/new_utils/BackboneBuilder';
 import BackboneSectionSVG from './BackboneSectionSVG.vue';
 import SyntenyRegionSet from '@/new_models/SyntenyRegionSet';
+import GeneApi from '@/new_api/GeneApi';
 
 const store = useStore(key);
 const $log = useLogger();
@@ -126,6 +147,7 @@ const { startOverviewSelectionY, stopOverviewSelectionY, initOverviewSelection, 
 const detailTrackSets = ref<TrackSet[]>([]); // The currently displayed TrackSets in the Detailed panel
 const detailedSyntenySets = ref<SyntenyRegionSet[]>([]); // The currently displayed SyntenicRegions in the detailed panel
 let overviewBackbone = ref<BackboneSection>();
+let detailedBackbone = ref<BackboneSection>();
 let overviewSyntenySets = ref<SyntenyRegionSet[]>([]);
 
 let selectionTrackSets: TrackSet[] = []; // The track sets for the entire selected region
@@ -197,7 +219,7 @@ const updateOverviewPanel = async () => {
   overviewSyntenySets.value = [];
   // The backbone is the entire chromosome
   store.dispatch('setOverviewResolution', backboneChromosome.seqLength);
-  overviewBackbone.value = createBackboneTrackV2(backboneSpecies, backboneChromosome, 0, backboneChromosome.seqLength, 'overview');
+  overviewBackbone.value = createBackboneSection(backboneSpecies, backboneChromosome, 0, backboneChromosome.seqLength, 'overview');
 
   if (store.state.comparativeSpecies.length === 0)
   {
@@ -205,6 +227,7 @@ const updateOverviewPanel = async () => {
     return;
   }
 
+  // TODO: Do we need masterGeneMap for the overview?
   const emptyMap = new Map<number, any>();
   const overviewSyntenyData = await createSyntenicRegionsAndDatatracks(
     store.state.comparativeSpecies,
@@ -300,29 +323,26 @@ const updateDetailsPanel = async () => {
   // Update the Detailed panel rez to match that region length
   store.dispatch('setDetailsResolution', zoomedSelection.basePairStop - zoomedSelection.basePairStart);
 
-  // Create the backbone track for the entire base selection at the updated Detailed panel resolution
-  const backboneSelectionTrack = createBackboneTrack(backboneSpecies, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, store.state.detailedBasePairToHeightRatio);
-  
   const createBackboneTrackStart = Date.now();
+  // Create the backbone track for the entire base selection at the updated Detailed panel resolution
+  detailedBackbone.value = createBackboneSection(backboneSpecies, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, 'detailed');
   // Create the backbone data tracks for the entire selection at the updated Detailed panel resolution
-  let tempBackboneGenes: Gene[] = await createBackboneDataTracks(backboneSpecies, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop) ?? null;
-  tempBackboneGenes.forEach(gene => gene.speciesName = backboneSpecies.name);
+  const tempBackboneGenes: Gene[] = await GeneApi.getGenesByRegion(backboneChromosome.chromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, backboneSpecies.activeMap.key, backboneSpecies.name);
 
-  const backboneDatatrackInfo = backboneDatatrackBuilder(tempBackboneGenes, overviewBackbone.value, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, );
+  // TODO: Is backboneDatatrackBuilder meant to use overviewBackbone or detailedBackbone? (was overview, changed to detailed to test)
+  const backboneDatatrackInfo = backboneDatatrackBuilder(tempBackboneGenes, detailedBackbone.value, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, );
   
   const masterGeneMap = backboneDatatrackInfo.masterGeneMap;
-  const detailedBackboneAndGenes = backboneDatatrackInfo.backboneSection;
 
-
-  let tempBackboneTracks = createBackboneGeneTrackFromGenesData(tempBackboneGenes, backboneSpecies.name,
-    originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop,
-    store.state.detailedBasePairToHeightRatio, true, store.state.detailsSyntenyThreshold, SVGConstants.panelTitleHeight);
+  // let tempBackboneTracks = createBackboneGeneTrackFromGenesData(tempBackboneGenes, backboneSpecies.name,
+  //   originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop,
+  //   store.state.detailedBasePairToHeightRatio, true, store.state.detailsSyntenyThreshold, SVGConstants.panelTitleHeight);
 
   timeCreateBackboneTrack = Date.now() - createBackboneTrackStart;
 
-  if (backboneSelectionTrack != null && tempBackboneTracks != null)
+  if (detailedBackbone.value != null && detailedBackbone.value.datatrackSections.length > 0)
   {
-    selectionTrackSets.push(new TrackSet(backboneSelectionTrack, [tempBackboneTracks]));
+    //selectionTrackSets.push(new TrackSet(backboneSelectionTrack, [tempBackboneTracks]));
 
     if (store.state.comparativeSpecies.length === 0)
     {
@@ -343,7 +363,7 @@ const updateDetailsPanel = async () => {
       true,
     );
 
-    const timeSyntenyTracks = Date.now() - createSyntenyTracksStart;
+    timeSyntenyTracks = Date.now() - createSyntenyTracksStart;
 
     let comparativeSelectionTracks: TrackSet[] = syntenyTracksResults.tracks;
     let syntenyDataArray: SpeciesSyntenyData[] = syntenyTracksResults?.speciesSyntenyDataArray || [];
@@ -377,22 +397,19 @@ const updateDetailsPanel = async () => {
       }    
     });
 
-    let newModelData = await createSyntenicRegionsAndDatatracks(
+    const detailedSyntenyData = await createSyntenicRegionsAndDatatracks(
       store.state.comparativeSpecies,
       backboneChromosome,
       originalSelectedBackboneRegion.baseSelection.basePairStart,
       originalSelectedBackboneRegion.baseSelection.basePairStop,
-      originalSelectedBackboneRegion.innerSelection.basePairStart,
-      originalSelectedBackboneRegion.innerSelection.basePairStop,
+      originalSelectedBackboneRegion.innerSelection?.basePairStart ?? originalSelectedBackboneRegion.baseSelection.basePairStart,
+      originalSelectedBackboneRegion.innerSelection?.basePairStop ?? originalSelectedBackboneRegion.baseSelection.basePairStop,
       store.state.detailsSyntenyThreshold,
       true,
       masterGeneMap
     );
 
-    if (newModelData)
-    {
-      detailedSyntenySets.value = newModelData.syntenyRegionSets;
-    }
+    detailedSyntenySets.value = detailedSyntenyData.syntenyRegionSets;
 
     //map backbone species genes to the master map
     tempBackboneGenes.forEach((gene: Gene) => 
@@ -481,7 +498,7 @@ const updateDetailsPanel = async () => {
       }
       else
       {
-        const selection = backboneSelectionTrack.sections[0].generateBackboneSelection(newInnerStart, newInnerStop, store.state.detailedBasePairToHeightRatio, backboneChromosome);
+        const selection = detailedBackbone.value.generateBackboneSelection(newInnerStart, newInnerStop, store.state.detailedBasePairToHeightRatio, backboneChromosome);
         store.dispatch('clearBackboneSelection');
         store.dispatch('setBackboneSelection', selection);
         geneReload = true;
@@ -538,8 +555,9 @@ const updateDetailsPanel = async () => {
   else
   {
     // Could not create TrackSets for the backbone or its data tracks -> clear out all detailed panel TrackSets
-    selectionTrackSets = [];
-    detailTrackSets.value = [];
+    // selectionTrackSets = [];
+    // detailTrackSets.value = [];
+    detailedSyntenySets.value = [];
   }
 
   store.dispatch('setIsDetailedPanelUpdating', false);
@@ -556,8 +574,7 @@ const updateDetailsPanel = async () => {
       "Misc": timeDetailedUpdateOther + " ms | " +  ((timeDetailedUpdateOther/timeDetailedUpdate) * 100).toFixed(2) + '%',
     },
   };
-  //$log.debug(JSON.stringify(viewboxDebugReport, null, 2));
-
+  $log.debug(JSON.stringify(viewboxDebugReport, null, 2));
 };
 
 const generateOrthologLines = (orthologData: any, comparativeMaps: Number[]) => {
@@ -775,18 +792,6 @@ const constructLoadedGenes = (comparativeSpeciesGeneMapsArray: any, allGenesMap:
   });
 
   store.dispatch('setLoadedGenes', allGenesMap);
-};
-
-/**
- * Gets the offset of the X position relative to the backbone species track
- */
-const getOverviewPanelTrackXOffset = (trackNumber: number) => {
-  let totalTracks = trackNumber;
-  let offset = 0;
-
-  totalTracks == 0 ? offset = 0 : offset = (totalTracks * -80);
-
-  return offset;
 };
 
 const getDetailedPanelTrackXOffset = (trackNumber: number, trackType: string, dataTrackNum?: number) => {

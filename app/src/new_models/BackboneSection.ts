@@ -10,6 +10,8 @@ import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 
 export type RenderType = 'overview' | 'detailed';
 
+const DataTrack_X_OFFSET = 10;
+
 interface BackboneSectionParams
 {
   start: number;
@@ -46,7 +48,7 @@ export default class BackboneSection implements VCMapSVGElement
   species?: Species;  // species that this section is from
   chromosome: string = '';  // chromosome that this section is from
   syntenyRegions: SyntenyRegion[] = [];
-  datatrackSections: DatatrackSection[] = []; // TODO: Determine if we need this here or not
+  datatrackSections: DatatrackSection[] = []; // Holds backbone datatracks
   labels: Label[] = []; // BP labels for the backbone section
 
   constructor(params: BackboneSectionParams)
@@ -65,6 +67,17 @@ export default class BackboneSection implements VCMapSVGElement
     {
       this.createLabels(params.renderType, params.windowStart, params.windowStop);
     }
+  }
+
+  public addDatatracks(sections: DatatrackSection[])
+  {
+    sections.forEach(section => {
+      section.posX1 = this.posX2 + DataTrack_X_OFFSET;
+      section.posX2 = section.posX1 + SVGConstants.dataTrackWidth;
+      section.width = SVGConstants.dataTrackWidth;
+    });
+
+    this.datatrackSections = sections;
   }
 
   /**
@@ -159,17 +172,28 @@ export default class BackboneSection implements VCMapSVGElement
     {
       startBPLabel = new Label({
         posX: SVGConstants.selectedBackboneXPosition - (SVGConstants.trackWidth / 2 ),
-        posY: this.posY1 + 3,
+        posY: this.posY1 + 10,
         text: Formatter.convertBasePairToLabel(start) ?? ''
       });
 
       stopBPLabel = new Label({
-        posX: SVGConstants.backboneXPosition - (SVGConstants.trackWidth / 2 ),
-        posY: this.posY2,
+        posX: SVGConstants.selectedBackboneXPosition - (SVGConstants.trackWidth / 2 ),
+        posY: this.posY2 - 10,
         text: Formatter.convertBasePairToLabel(stop) ?? ''
       });
     }
     
     this.labels = this.labels.concat([startBPLabel, stopBPLabel]);
+  }
+
+  /**
+   * Returns a smaller version of the BackboneSection with no datatracks on it. Helps performance
+   * when storing it as SelectedData in local storage.
+   */
+  public toSelectedData()
+  {
+    const copy = JSON.parse(JSON.stringify(this)) as BackboneSection;
+    copy.datatrackSections = [];
+    return copy;
   }
 }

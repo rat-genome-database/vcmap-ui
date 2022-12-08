@@ -1,14 +1,13 @@
 import BackboneSection, { RenderType } from "@/new_models/BackboneSection";
 import Chromosome from "@/new_models/Chromosome";
 import Species from "@/new_models/Species";
-import { SyntenyComponent } from "@/new_api/SyntenyApi";
 import Gene from "@/new_models/Gene";
 import DatatrackSection from "@/new_models/DatatrackSection";
 
 /**
  * Creates the backbone track model and sets the viewbox height based on the size of the backbone track
  */
-export function createBackboneTrack(species: Species, chromosome: Chromosome, startPos: number, stopPos: number, renderType: RenderType)
+export function createBackboneSection(species: Species, chromosome: Chromosome, startPos: number, stopPos: number, renderType: RenderType)
 {
   const backbone = new BackboneSection({
     chromosome: chromosome.chromosome,
@@ -40,6 +39,6 @@ export function backboneDatatrackBuilder(genomicData: Gene[], backboneSection: B
     masterGeneMap.set(genomicElement.rgdId, { [currSpecies]: { drawn: [{gene: geneDatatrackSection, svgY: geneBackboneSection.posY1, svgX: geneBackboneSection.posX1 ?? 370 }]} });
   });
 
-  backboneSection.datatrackSections = processedGenomicData;
+  backboneSection.addDatatracks(processedGenomicData);
   return { backboneSection, masterGeneMap };
 }

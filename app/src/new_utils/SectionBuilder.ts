@@ -60,7 +60,10 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
   else
   {
     console.log("No syntenic data returned for species");
-    return [];
+    return {
+      syntenyRegionSets: ([] as SyntenyRegionSet[]),
+      masterGeneMap: new Map<number, any>()
+    };
   }
 }
 
@@ -287,7 +290,7 @@ function orthologLineBuilder(orthologs: number[], masterProcessedGenes: Map<numb
         if (species !== processedSpecies)
         {
           const backboneGene = masterGene[species].drawn[0].gene;
-          const orthologLine = new OrthologLine({ backboneGene: backboneGene, comparativeGene: currGene, posX1: backboneGene.posX1, posY1: backboneGene.posY1, posX2: currGene.posX1, posY2: currGene.posY1 });
+          const orthologLine = new OrthologLine({ backboneGene: backboneGene, comparativeGene: currGene, posX1: backboneGene.posX2, posY1: backboneGene.posY1, posX2: currGene.posX1, posY2: currGene.posY1 });
           orthologLines.push(orthologLine);
         }
       }

@@ -14,8 +14,7 @@ function getOverviewPanelXPosition(order: number)
 
 function getDetailedPanelXPositionForSynteny(order: number)
 {
-  // TODO: Remove the 100 at the end after testing detailed synteny set rendering
-  return (order * 120) + SVGConstants.selectedBackboneXPosition + 100;
+  return (order * 120) + SVGConstants.selectedBackboneXPosition;
 }
 
 function getDetailedPanelXPositionForDatatracks(order: number)
