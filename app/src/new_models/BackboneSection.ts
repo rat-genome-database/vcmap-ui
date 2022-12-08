@@ -1,12 +1,12 @@
 import { SVGShape, VCMapSVGElement } from './VCMapSVGElement';
 import SyntenyRegion from './SyntenyRegion';
-import DatatrackSection from './DatatrackSection';
 import Label from './Label';
 import SVGConstants, { PANEL_SVG_START, PANEL_SVG_STOP } from '@/utils/SVGConstants';
 import { Formatter } from '@/utils/Formatter';
 import Chromosome from './Chromosome';
 import Species from './Species';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
+import Gene from '@/new_models/Gene';
 
 export type RenderType = 'overview' | 'detailed';
 
@@ -49,6 +49,10 @@ export default class BackboneSection implements VCMapSVGElement
   syntenyRegions: SyntenyRegion[] = [];
   labels: Label[] = []; // BP labels for the backbone section
   renderType: RenderType = 'overview';
+  hasLabels: boolean = false;
+  backboneGenes?: Gene[]; // All Genes that fit within this backbone section
+  visiblePosY1: number = 0; // svg Y position of windowStart
+  visiblePosY2: number = 0; // svg Y position of windowStop
 
   constructor(params: BackboneSectionParams)
   {
@@ -61,11 +65,35 @@ export default class BackboneSection implements VCMapSVGElement
     this.species = params.species;
     this.elementColor = Chromosome.getColor(this.chromosome);
     this.renderType = params.renderType;
+    this.hasLabels = params.createLabels ?? false;
 
-    this.calculateYPositions(this.windowStart, this.windowStop, this.renderType);
-    if (this.renderType && params.createLabels)
+    this.calculateYPositions();
+    if (this.hasLabels)
     {
-      this.createLabels(params.renderType, params.windowStart, params.windowStop);
+      this.createLabels();
+    }
+  }
+
+  public setBackboneGenes(backboneGenes: Gene[])
+  {
+    this.backboneGenes = backboneGenes;
+  }
+
+  /**
+   * Change the windowStart, windowStop of the backbone and regenerate SVG Y positions.
+   * windowStart and windowStop are analagous to the inner selection start/stop.
+   * 
+   * @param windowStart number (bp)
+   * @param windowStop number (bp)
+   */
+  public changeWindowStartAndStop(windowStart: number, windowStop: number)
+  {
+    this.windowStart = windowStart;
+    this.windowStop = windowStop;
+    this.calculateYPositions();
+    if (this.hasLabels)
+    {
+      this.createLabels();
     }
   }
 
@@ -93,28 +121,28 @@ export default class BackboneSection implements VCMapSVGElement
    * @param windowStart 
    * @param windowStop 
    */
-  private calculateYPositions(windowStart: number, windowStop: number, renderType?: RenderType)
+  private calculateYPositions()
   {
-    const svgStart = (renderType === 'overview') ? PANEL_SVG_START + SVGConstants.overviewTrackPadding : PANEL_SVG_START;
-    const svgStop = (renderType === 'overview') ? PANEL_SVG_STOP - SVGConstants.overviewTrackPadding : PANEL_SVG_STOP;
+    const svgStart = this.getWindowSVGStart();
+    const svgStop = this.getWindowSVGStop();
     const svgLength = svgStop - svgStart;
-    const windowLength = windowStop - windowStart;
+    const windowLength = Math.abs(this.windowStop - this.windowStart);
     const ratio = windowLength / svgLength;
 
     // Calculate the start and stop SVG positions of this backbone section
     this.windowRatio = ratio;
-    const basepairDiff =  this.start < windowStart ? windowStart - this.start : this.start - windowStart;
+    const basepairDiff =  this.start < this.windowStart ? this.windowStart - this.start : this.start - this.windowStart;
     const svgDiff = basepairDiff / ratio;
 
-    if (this.start < windowStart)
+    if (this.start < this.windowStart)
     {
       this.posY1 = svgStart - svgDiff;
     }
-    else if (this.start > windowStart)
+    else if (this.start > this.windowStart)
     {
       this.posY1 = svgStart + svgDiff;
     }
-    else if (this.start === windowStart)
+    else if (this.start === this.windowStart)
     {
       this.posY1 = svgStart;
     }
@@ -124,40 +152,50 @@ export default class BackboneSection implements VCMapSVGElement
     this.height = Math.abs(this.posY2 - this.posY1);
   }
 
-  private createLabels(renderType: RenderType, start: number, stop: number)
+  private createLabels()
   {
     let startBPLabel: Label;
     let stopBPLabel: Label;
 
-    if (renderType === 'overview')
+    if (this.renderType === 'overview')
     {
       startBPLabel = new Label({
         posX: SVGConstants.backboneXPosition - (SVGConstants.trackWidth / 2 ),
-        posY: this.posY1 - 3,
-        text: Formatter.convertBasePairToLabel(start) ?? ''
+        posY: this.getWindowSVGStart() - 3,
+        text: Formatter.convertBasePairToLabel(this.windowStart) ?? ''
       });
 
       stopBPLabel = new Label({
         posX: SVGConstants.backboneXPosition - (SVGConstants.trackWidth / 2 ),
-        posY: this.posY2 + 7,
-        text: Formatter.convertBasePairToLabel(stop) ?? ''
+        posY: this.getWindowSVGStop() + 7,
+        text: Formatter.convertBasePairToLabel(this.windowStop) ?? ''
       });
     }
     else
     {
       startBPLabel = new Label({
         posX: SVGConstants.selectedBackboneXPosition - (SVGConstants.trackWidth / 2 ),
-        posY: this.posY1 + 10,
-        text: Formatter.convertBasePairToLabel(start) ?? ''
+        posY: this.getWindowSVGStart() + 10,
+        text: Formatter.convertBasePairToLabel(this.windowStart) ?? ''
       });
 
       stopBPLabel = new Label({
         posX: SVGConstants.selectedBackboneXPosition - (SVGConstants.trackWidth / 2 ),
-        posY: this.posY2 - 10,
-        text: Formatter.convertBasePairToLabel(stop) ?? ''
+        posY: this.getWindowSVGStop() - 10,
+        text: Formatter.convertBasePairToLabel(this.windowStop) ?? ''
       });
     }
     
-    this.labels = this.labels.concat([startBPLabel, stopBPLabel]);
+    this.labels = [startBPLabel, stopBPLabel];
+  }
+
+  private getWindowSVGStart()
+  {
+    return (this.renderType === 'overview') ? PANEL_SVG_START + SVGConstants.overviewTrackPadding : PANEL_SVG_START;
+  }
+
+  private getWindowSVGStop()
+  {
+    return (this.renderType === 'overview') ? PANEL_SVG_STOP - SVGConstants.overviewTrackPadding : PANEL_SVG_STOP;
   }
 }

@@ -108,7 +108,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
-import { useStore } from 'vuex';
+import { Store, useStore } from 'vuex';
 import SectionSVG from './SectionSVG.vue';
 import SVGConstants from '@/utils/SVGConstants';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
@@ -120,7 +120,7 @@ import Gene from '@/new_models/Gene';
 import { SpeciesSyntenyData } from '@/models/SyntenicRegion';
 import SelectedData from '@/models/SelectedData';
 import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
-import { key } from '@/store';
+import { key, VCMapState } from '@/store';
 import { backboneDetailedError, backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError } from '@/utils/VCMapErrors';
 import { createSyntenicRegionsAndDatatracks,  } from '@/new_utils/SectionBuilder';
 import useOverviewPanelSelection from '@/composables/useOverviewPanelSelection';
@@ -326,7 +326,7 @@ const updateDetailsPanel = async () => {
   const tempBackboneGenes: Gene[] = await GeneApi.getGenesByRegion(backboneChromosome.chromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, backboneSpecies.activeMap.key, backboneSpecies.name);
 
   const backboneDatatrackInfo = backboneDatatrackBuilder(tempBackboneGenes, detailedBackbone, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, );
-  detailedBackboneSet.value = createBackboneSet(detailedBackbone, backboneDatatrackInfo.backboneDatatracks);
+  detailedBackboneSet.value = createBackboneSet(detailedBackbone, backboneDatatrackInfo.processedGenomicData);
   const masterGeneMap = backboneDatatrackInfo.masterGeneMap;
 
   // let tempBackboneTracks = createBackboneGeneTrackFromGenesData(tempBackboneGenes, backboneSpecies.name,
@@ -497,7 +497,7 @@ const updateDetailsPanel = async () => {
       }
       else
       {
-        const selection = detailedBackbone.value.generateBackboneSelection(newInnerStart, newInnerStop, store.state.detailedBasePairToHeightRatio, backboneChromosome);
+        const selection = detailedBackboneSet.value.backbone.generateBackboneSelection(newInnerStart, newInnerStop, store.state.detailedBasePairToHeightRatio, backboneChromosome);
         store.dispatch('clearBackboneSelection');
         store.dispatch('setBackboneSelection', selection);
         geneReload = true;
@@ -525,21 +525,7 @@ const updateDetailsPanel = async () => {
     timeGetOrthologs = Date.now() - getOrthologsStart;
     const syntenicGeneMaps = [];
 
-    // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
-    selectionTrackSets.forEach(trackSet => {
-      const visibleTrackSet = trackSet.getVisibleRegion(zoomedSelection.basePairStart, zoomedSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold);
-      if (visibleTrackSet)
-      {
-        if (visibleTrackSet.visibleRegionTrackSet)
-        {
-          detailTrackSets.value.push(visibleTrackSet.visibleRegionTrackSet);
-        }
-        if (visibleTrackSet.geneMap)
-        {
-          syntenicGeneMaps.push(visibleTrackSet.geneMap);
-        }
-      }
-    });
+    adjustVisibleSetsBasedOnZoom(zoomedSelection, store, syntenicGeneMaps);
 
     if (syntenicGeneMaps.length > 0)
     {
@@ -818,6 +804,29 @@ const getDetailedPanelTrackXOffset = (trackNumber: number, trackType: string, da
   return offset;
 };
 
+const adjustVisibleSetsBasedOnZoom = (zoomedSelection: SelectedRegion, store: Store<VCMapState>, syntenicGeneMaps: any[]) => {
+  // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
+  if (detailedBackboneSet.value)
+  {
+    detailedBackboneSet.value.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop);
+  }
+
+  selectionTrackSets.forEach(trackSet => {
+    const visibleTrackSet = trackSet.getVisibleRegion(zoomedSelection.basePairStart, zoomedSelection.basePairStop, store.state.detailedBasePairToHeightRatio, store.state.detailsSyntenyThreshold);
+    if (visibleTrackSet)
+    {
+      if (visibleTrackSet.visibleRegionTrackSet)
+      {
+        detailTrackSets.value.push(visibleTrackSet.visibleRegionTrackSet);
+      }
+      if (visibleTrackSet.geneMap)
+      {
+        syntenicGeneMaps.push(visibleTrackSet.geneMap);
+      }
+    }
+  });
+};
+
 const navigateUp = () => {
   if (isNavigationUpDisabled.value) return;
 
@@ -828,6 +837,12 @@ const navigateUp = () => {
   // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
   detailTrackSets.value = [];
   const syntenicGeneMaps = [];
+
+  if (selectedRegion.innerSelection)
+  {
+    detailedBackboneSet.value?.adjustVisibleSet(selectedRegion.innerSelection.basePairStart, selectedRegion.innerSelection.basePairStop);
+    // TODO: Loop through detailed SyntenyRegionSets and set visible regions
+  }
   
   selectionTrackSets.forEach(trackSet => {
     if (!selectedRegion.innerSelection) return;
@@ -876,6 +891,12 @@ const navigateDown = () => {
   // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
   detailTrackSets.value = [];
   const syntenicGeneMaps = [];
+
+  if (selectedRegion.innerSelection)
+  {
+    detailedBackboneSet.value?.adjustVisibleSet(selectedRegion.innerSelection.basePairStart, selectedRegion.innerSelection.basePairStop);
+    // TODO: Loop through detailed SyntenyRegionSets and set visible regions
+  }
 
   selectionTrackSets.forEach(trackSet => {
     if (!selectedRegion.innerSelection) return;
