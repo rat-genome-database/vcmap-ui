@@ -107,16 +107,13 @@
 </template>
 
 <script setup lang="ts">
-import Track from '@/models/Track';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useStore } from 'vuex';
-import TrackSVG from './TrackSVG.vue';
 import SectionSVG from './SectionSVG.vue';
 import SVGConstants from '@/utils/SVGConstants';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import useDialog from '@/composables/useDialog';
-import BackboneTrackSVG from './BackboneTrackSVG.vue';
 import TrackSet from '@/models/TrackSet';
 import OrthologLine from '@/models/OrthologLine';
 import Gene from '@/new_models/Gene';
@@ -125,17 +122,15 @@ import SelectedData from '@/models/SelectedData';
 import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
 import { key } from '@/store';
 import { backboneDetailedError, backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError } from '@/utils/VCMapErrors';
-import { createSyntenyTracks } from '@/utils/TrackBuilder';
 import { createSyntenicRegionsAndDatatracks,  } from '@/new_utils/SectionBuilder';
 import useOverviewPanelSelection from '@/composables/useOverviewPanelSelection';
-import SpeciesApi from '@/api/SpeciesApi';
 import { useLogger } from 'vue-logger-plugin';
 import SyntenyRegion from '@/new_models/SyntenyRegion';
 import BackboneSection from '@/new_models/BackboneSection';
 import { createBackboneSection, backboneDatatrackBuilder } from '@/new_utils/BackboneBuilder';
 import BackboneSectionSVG from './BackboneSectionSVG.vue';
 import SyntenyRegionSet from '@/new_models/SyntenyRegionSet';
-import GeneApi from '@/new_api/GeneApi';
+import GeneApi from '@/api/GeneApi';
 
 const store = useStore(key);
 const $log = useLogger();
@@ -350,20 +345,20 @@ const updateDetailsPanel = async () => {
       return;
     }
 
-    const createSyntenyTracksStart = Date.now();
-
-    let syntenyTracksResults = await createSyntenyTracks(
-      store.state.comparativeSpecies,
-      backboneChromosome,
-      originalSelectedBackboneRegion.baseSelection.basePairStart, 
-      originalSelectedBackboneRegion.baseSelection.basePairStop,
-      store.state.detailedBasePairToHeightRatio,
-      store.state.detailsSyntenyThreshold,
-      SVGConstants.panelTitleHeight, // SVG positioning of detailed tracks will start immediately after the header panel
-      true,
-    );
-
-    timeSyntenyTracks = Date.now() - createSyntenyTracksStart;
+    
+    ///////////////////////////////////////////////////////////////////////////////
+    // TODO: Can Remove???
+    let syntenyTracksResults = { tracks: [], speciesSyntenyDataArray: [] }
+    // let syntenyTracksResults = await createSyntenyTracks(
+    //   store.state.comparativeSpecies,
+    //   backboneChromosome,
+    //   originalSelectedBackboneRegion.baseSelection.basePairStart, 
+    //   originalSelectedBackboneRegion.baseSelection.basePairStop,
+    //   store.state.detailedBasePairToHeightRatio,
+    //   store.state.detailsSyntenyThreshold,
+    //   SVGConstants.panelTitleHeight, // SVG positioning of detailed tracks will start immediately after the header panel
+    //   true,
+    // );
 
     let comparativeSelectionTracks: TrackSet[] = syntenyTracksResults.tracks;
     let syntenyDataArray: SpeciesSyntenyData[] = syntenyTracksResults?.speciesSyntenyDataArray || [];
@@ -396,7 +391,10 @@ const updateDetailsPanel = async () => {
         });
       }    
     });
+    /////////////////////////////////////////////////////////////////////////////////
 
+
+    const createSyntenyTracksStart = Date.now();
     const detailedSyntenyData = await createSyntenicRegionsAndDatatracks(
       store.state.comparativeSpecies,
       backboneChromosome,
@@ -410,6 +408,7 @@ const updateDetailsPanel = async () => {
     );
 
     detailedSyntenySets.value = detailedSyntenyData.syntenyRegionSets;
+    timeSyntenyTracks = Date.now() - createSyntenyTracksStart;
 
     //map backbone species genes to the master map
     tempBackboneGenes.forEach((gene: Gene) => 
@@ -521,7 +520,8 @@ const updateDetailsPanel = async () => {
     
 
     const getOrthologsStart = Date.now();
-    const backboneGeneOrthologs = await SpeciesApi.getGeneOrthologs(backboneSpecies.defaultMapKey, backboneChromosome.chromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, compSpeciesMaps);
+    //const backboneGeneOrthologs = await SpeciesApi.getGeneOrthologs(backboneSpecies.defaultMapKey, backboneChromosome.chromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, compSpeciesMaps);
+    const backboneGeneOrthologs = null;
     timeGetOrthologs = Date.now() - getOrthologsStart;
     const syntenicGeneMaps = [];
 
@@ -578,9 +578,14 @@ const updateDetailsPanel = async () => {
 };
 
 const generateOrthologLines = (orthologData: any, comparativeMaps: Number[]) => {
+  if (detailTrackSets.value[0] == null)
+  {
+    return;
+  }
+
   let orthologLines: OrthologLine[] = [];
   let possibleOrthologs: Object[] = [];
-  let backboneGenes = detailTrackSets.value[0].dataTracks[0].track.sections;
+  let backboneGenes = detailTrackSets.value[0].dataTracks[0].track.sections ?? [];
   
 
   backboneGenes.forEach(backboneGene => {

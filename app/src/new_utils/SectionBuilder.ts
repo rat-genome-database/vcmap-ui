@@ -4,7 +4,7 @@ import BackboneSection, { RenderType } from '@/new_models/BackboneSection';
 import SyntenySection from '@/new_models/SyntenySection';
 import SyntenyRegion from '@/new_models/SyntenyRegion';
 import DatatrackSection from '@/new_models/DatatrackSection';
-import SyntenyApi, { SpeciesSyntenyData, SyntenyRequestParams, SyntenyComponent } from '../new_api/SyntenyApi';
+import SyntenyApi, { SpeciesSyntenyData, SyntenyRequestParams, SyntenyComponent } from '@/api/SyntenyApi';
 import Gene from '@/new_models/Gene';
 import SyntenyRegionSet from '@/new_models/SyntenyRegionSet';
 import OrthologLine from '@/new_models/OrthologLine';
