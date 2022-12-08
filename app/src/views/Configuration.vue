@@ -258,9 +258,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
-import SpeciesApi from '@/new_api/SpeciesApi';
-import GeneApi from '@/new_api/GeneApi';
-import ChromosomeApi from '@/new_api/ChromosomeApi';
+import SpeciesApi from '@/api/SpeciesApi';
+import GeneApi from '@/api/GeneApi';
+import ChromosomeApi from '@/api/ChromosomeApi';
 import Species from '@/new_models/Species';
 import Gene from '@/new_models/Gene';
 import SpeciesMap from '@/new_models/SpeciesMap';

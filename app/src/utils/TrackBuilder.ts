@@ -1,5 +1,4 @@
-import SpeciesApi from "@/api/SpeciesApi";
-import SyntenyApi from "@/api/SyntenyApi";
+import GeneApi from "@/api/GeneApi";
 import Chromosome from "@/models/Chromosome";
 import DataTrack from "@/models/DataTrack";
 import Gene from "@/models/Gene";
@@ -38,45 +37,45 @@ export function createBackboneTrack(species: Species, chromosome: Chromosome, st
 /**
  * Creates the synteny tracks for a particular set of comparative species
  */
-export async function createSyntenyTracks(comparativeSpecies: Species[], backboneChr: Chromosome, backboneStart: number, backboneStop: number, basePairToHeightRatio: number, syntenyThreshold: number, startingSVGYPos: number, isComparative: boolean)
-{
-  const speciesSyntenyDataArray =  isComparative ? await SyntenyApi.getSyntenicRegions({
-    backboneChromosome: backboneChr,
-    start: backboneStart,
-    stop: backboneStop,
-    threshold: syntenyThreshold,
-    includeGenes: 1,
-  }, comparativeSpecies)
+// export async function createSyntenyTracks(comparativeSpecies: Species[], backboneChr: Chromosome, backboneStart: number, backboneStop: number, basePairToHeightRatio: number, syntenyThreshold: number, startingSVGYPos: number, isComparative: boolean)
+// {
+//   const speciesSyntenyDataArray =  isComparative ? await SyntenyApi.getSyntenicRegions({
+//     backboneChromosome: backboneChr,
+//     start: backboneStart,
+//     stop: backboneStop,
+//     threshold: syntenyThreshold,
+//     includeGenes: 1,
+//   }, comparativeSpecies)
 
-  :await SyntenyApi.getSyntenicRegions({
-    backboneChromosome: backboneChr,
-    start: backboneStart,
-    stop: backboneStop,
-    threshold: syntenyThreshold
-  }, comparativeSpecies);
+//   :await SyntenyApi.getSyntenicRegions({
+//     backboneChromosome: backboneChr,
+//     start: backboneStart,
+//     stop: backboneStop,
+//     threshold: syntenyThreshold
+//   }, comparativeSpecies);
 
-  const tracks: TrackSet[] = [];
-  speciesSyntenyDataArray?.forEach(speciesSyntenyData => {
-    const speciesTracks = createSyntenyTrackFromSpeciesSyntenyData(speciesSyntenyData, backboneStart, backboneStop, basePairToHeightRatio, syntenyThreshold, startingSVGYPos);
-    const speciesTrack = speciesTracks.speciesTrack;
-    const geneTrack = speciesTracks.geneTrack;
-    const geneMap = speciesTracks.geneMap as Map<string, any>;
+//   const tracks: TrackSet[] = [];
+//   speciesSyntenyDataArray?.forEach(speciesSyntenyData => {
+//     const speciesTracks = createSyntenyTrackFromSpeciesSyntenyData(speciesSyntenyData, backboneStart, backboneStop, basePairToHeightRatio, syntenyThreshold, startingSVGYPos);
+//     const speciesTrack = speciesTracks.speciesTrack;
+//     const geneTrack = speciesTracks.geneTrack;
+//     const geneMap = speciesTracks.geneMap as Map<string, any>;
 
-    if (geneMap.size > 0)
-    {
-      speciesSyntenyData.allGenesMap = geneMap;
-    }
+//     if (geneMap.size > 0)
+//     {
+//       speciesSyntenyData.allGenesMap = geneMap;
+//     }
     
-    const geneDataTrack = new DataTrack('Genes', geneTrack.name + ' Detailed Genes', geneTrack, 'red');
-    geneDataTrack.setIsComparativeView(true);
-    geneDataTrack.isDisplayed = true;
+//     const geneDataTrack = new DataTrack('Genes', geneTrack.name + ' Detailed Genes', geneTrack, 'red');
+//     geneDataTrack.setIsComparativeView(true);
+//     geneDataTrack.isDisplayed = true;
 
-    const trackSet = new TrackSet(speciesTrack, [geneDataTrack]);
-    tracks.push(trackSet);
-  });
+//     const trackSet = new TrackSet(speciesTrack, [geneDataTrack]);
+//     tracks.push(trackSet);
+//   });
 
-  return {tracks: tracks, speciesSyntenyDataArray: speciesSyntenyDataArray};
-}
+//   return {tracks: tracks, speciesSyntenyDataArray: speciesSyntenyDataArray};
+// }
 
 export function createSyntenyTrackFromSpeciesSyntenyData(speciesSyntenyData: SpeciesSyntenyData, backboneStart: number, backboneStop: number, basePairToHeightRatio: number, syntenyThreshold: number, startingSVGYPos: number)
 {
@@ -95,7 +94,7 @@ export function createSyntenyTrackFromSpeciesSyntenyData(speciesSyntenyData: Spe
  */
 export async function createBackboneDataTracks(species: Species, chromosome: Chromosome, startPos: number, stopPos: number)
 {
-  const genes = await SpeciesApi.getGenesByRegion(chromosome.chromosome, startPos, stopPos, species.defaultMapKey, species.name);
+  const genes = await GeneApi.getGenesByRegion(chromosome.chromosome, startPos, stopPos, species.defaultMapKey, species.name);
   return genes;
 }
 

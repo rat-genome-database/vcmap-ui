@@ -130,7 +130,7 @@ import BackboneSection from '@/new_models/BackboneSection';
 import { createBackboneSection, backboneDatatrackBuilder } from '@/new_utils/BackboneBuilder';
 import BackboneSectionSVG from './BackboneSectionSVG.vue';
 import SyntenyRegionSet from '@/new_models/SyntenyRegionSet';
-import GeneApi from '@/new_api/GeneApi';
+import GeneApi from '@/api/GeneApi';
 
 const store = useStore(key);
 const $log = useLogger();
