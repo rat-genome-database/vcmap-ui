@@ -69,7 +69,6 @@
 
 <script lang="ts" setup>
 import SelectedData, { SelectedDataType } from '@/models/SelectedData';
-import OrthologLine from '@/models/OrthologLine';
 import SyntenyRegion from '@/new_models/SyntenyRegion';
 import SyntenySection from '@/new_models/SyntenySection';
 import DatatrackSection from '@/new_models/DatatrackSection';
@@ -93,9 +92,7 @@ interface Props
   showStartStop?: boolean;
   showChromosome?: boolean;
   showGeneLabel?: boolean;
-  lines?: OrthologLine[];
-  region?: SyntenyRegion;
-  datatrackSections?: DatatrackSection[];
+  region: SyntenyRegion;
 }
 const props = defineProps<Props>();
 
@@ -103,22 +100,22 @@ const props = defineProps<Props>();
 toRefs(props);
 
 const orthologLines = computed(() => {
-  return props.region?.orthologLines ?? [];
+  return props.region.orthologLines ?? [];
 });
 const level1Blocks = computed(() => {
-  return props.region?.syntenyBlocks.filter(b => b.chainLevel === 1) ?? [];
+  return props.region.syntenyBlocks.filter(b => b.chainLevel === 1);
 });
 const level2Blocks = computed(() => {
-  return props.region?.syntenyBlocks.filter(b => b.chainLevel === 2) ?? [];
+  return props.region.syntenyBlocks.filter(b => b.chainLevel === 2);
 });
 const level1Gaps = computed(() => {
-  return props.region?.syntenyGaps.filter(g => g.chainLevel === 1) ?? [];
+  return props.region.syntenyGaps.filter(g => g.chainLevel === 1);
 });
 const level2Gaps = computed(() => {
-  return props.region?.syntenyGaps.filter(g => g.chainLevel === 2) ?? [];
+  return props.region.syntenyGaps.filter(g => g.chainLevel === 2);
 });
 const datatracks = computed(() => {
-  return (props.region) ? props.region.datatrackSections : props.datatrackSections;
+  return props.region.datatrackSections;
 });
 
 const onMouseEnter = (section: SyntenySection | DatatrackSection, type: SelectedDataType) => {

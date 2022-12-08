@@ -16,7 +16,7 @@
     </template>
 
     <template v-if="overviewBackboneSet">
-      <BackboneSectionSVG show-data-on-hover :backbone="overviewBackboneSet.backbone" />
+      <BackboneSetSVG show-data-on-hover :backbone-set="overviewBackboneSet" />
     </template>
 
     <!-- Detail panel SVGs ----------------------------------------->
@@ -37,8 +37,7 @@
     </template> -->
 
     <template v-if="detailedBackboneSet">
-      <BackboneSectionSVG is-detailed show-data-on-hover :backbone="detailedBackboneSet.backbone" />
-      <SectionSVG v-if="(detailedBackboneSet.datatracks.length > 0)" :datatrack-sections="detailedBackboneSet.datatracks" />
+      <BackboneSetSVG show-data-on-hover :backbone-set="detailedBackboneSet" />
     </template>
 
     <template v-if="detailedSyntenySets.length">
@@ -127,9 +126,8 @@ import { createSyntenicRegionsAndDatatracks,  } from '@/new_utils/SectionBuilder
 import useOverviewPanelSelection from '@/composables/useOverviewPanelSelection';
 import { useLogger } from 'vue-logger-plugin';
 import SyntenyRegion from '@/new_models/SyntenyRegion';
-import BackboneSection from '@/new_models/BackboneSection';
 import { createBackboneSection, backboneDatatrackBuilder, createBackboneSet } from '@/new_utils/BackboneBuilder';
-import BackboneSectionSVG from './BackboneSectionSVG.vue';
+import BackboneSetSVG from './BackboneSetSVG.vue';
 import SyntenyRegionSet from '@/new_models/SyntenyRegionSet';
 import GeneApi from '@/api/GeneApi';
 import BackboneSet from '@/new_models/BackboneSet';
