@@ -143,7 +143,6 @@ toRefs(props);
 const selectedRegion = ref(new BackboneSelection(new SelectedRegion(0,0,0,0), store.state.chromosome ?? undefined));
 
 watch(() => store.state.selectedBackboneRegion, (newVal: BackboneSelection, oldVal: BackboneSelection) => {
-  console.log('in watch', isDetailed);
   // Watch for possible clear out of the selected backbone region
   if (!isDetailed.value && oldVal.baseSelection.svgHeight > 0 && newVal.baseSelection.svgHeight === 0)
   {
