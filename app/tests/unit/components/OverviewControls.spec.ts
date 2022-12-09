@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import OverviewControls from '@/components/OverviewControls.vue';
-import Species from '@/new_models/Species';
-import Map from '@/new_models/SpeciesMap';
+import Species from '@/models/Species';
+import Map from '@/models/SpeciesMap';
 import { VCMapState } from '@/store';
 import { ActionTree, Store } from 'vuex';
 import Chromosome from '@/models/Chromosome';

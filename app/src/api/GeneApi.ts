@@ -1,4 +1,4 @@
-import Gene from "@/new_models/Gene";
+import Gene from "@/models/Gene";
 import httpInstance from "./httpInstance";
 
 /**

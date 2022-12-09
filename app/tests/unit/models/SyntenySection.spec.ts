@@ -1,8 +1,8 @@
-import BackboneSection from "@/new_models/BackboneSection";
-import Chromosome from "@/new_models/Chromosome";
-import Species from "@/new_models/Species";
-import SpeciesMap from "@/new_models/SpeciesMap";
-import SyntenySection from "@/new_models/SyntenySection";
+import BackboneSection from "@/models/BackboneSection";
+import Chromosome from "@/models/Chromosome";
+import Species from "@/models/Species";
+import SpeciesMap from "@/models/SpeciesMap";
+import SyntenySection from "@/models/SyntenySection";
 
 const testBackboneSection = new BackboneSection({
   start: 100,

@@ -6,7 +6,7 @@ import { Formatter } from '@/utils/Formatter';
 import Chromosome from './Chromosome';
 import Species from './Species';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
-import Gene from '@/new_models/Gene';
+import Gene from '@/models/Gene';
 
 export type RenderType = 'overview' | 'detailed';
 

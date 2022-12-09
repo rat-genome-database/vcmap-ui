@@ -73,14 +73,14 @@
 <script lang="ts" setup>
 import { watch, onMounted} from 'vue';
 import SelectedData, { SelectedDataType } from '@/models/SelectedData';
-import SyntenyRegion from '@/new_models/SyntenyRegion';
-import SyntenySection from '@/new_models/SyntenySection';
-import DatatrackSection from '@/new_models/DatatrackSection';
+import SyntenyRegion from '@/models/SyntenyRegion';
+import SyntenySection from '@/models/SyntenySection';
+import DatatrackSection from '@/models/DatatrackSection';
 import { computed, toRefs } from '@vue/reactivity';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import { sortGeneList, getNewSelectedData } from '@/utils/DataPanelHelpers';
-import { VCMapSVGElement } from '@/new_models/VCMapSVGElement';
+import { VCMapSVGElement } from '@/models/VCMapSVGElement';
 import ChromosomeLabelSVG from './ChromosomeLabelSVG.vue';
 import SyntenyLinesSVG from './SyntenyLinesSVG.vue';
 import GapSVG from './GapSVG.vue';

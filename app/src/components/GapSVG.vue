@@ -6,7 +6,7 @@
 </template>
 
 <script lang="ts" setup>
-import SyntenySection from '@/new_models/SyntenySection';
+import SyntenySection from '@/models/SyntenySection';
 
 interface Props
 {

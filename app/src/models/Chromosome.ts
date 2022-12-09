@@ -1,7 +1,7 @@
 /**
  * Colors are based on the UCSC color palette: https://nanx.me/ggsci/reference/pal_ucscgb.html (the 2nd 'pastel' colored one)
  */
-const CHROMOSOME_COLOR_MAP: {[key: string]: string} = {
+ const CHROMOSOME_COLOR_MAP: {[key: string]: string} = {
   '1': '#ff7e76',
   '2': '#fec27e',
   '3': '#fde083',
@@ -34,23 +34,17 @@ const CHROMOSOME_COLOR_MAP: {[key: string]: string} = {
 
 const UNMAPPED_CHROMOSOME_COLOR = '#a52a2a'; // brown
 
-export class ChromosomeDTO
+export default class Chromosome
 {
   mapKey: number = 0;
   chromosome: string = '';
   seqLength: number = 0;
-  gapLength: number = 0;
-  gapCount: number = 0;
-  contigCount: number = 0;
-  ordinalNumber: number = 0;
-}
 
-export default class Chromosome extends ChromosomeDTO
-{
-  constructor(dto: ChromosomeDTO)
+  constructor(params: { mapKey: number, chromosome: string; seqLength?: number })
   {
-    super();
-    Object.assign(this, dto);
+    this.mapKey = params.mapKey;
+    this.chromosome = params.chromosome;
+    this.seqLength = params.seqLength || 0;
   }
 
   static getColor(chromosome: string)

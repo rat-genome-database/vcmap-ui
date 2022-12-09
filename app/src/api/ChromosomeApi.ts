@@ -1,4 +1,4 @@
-import Chromosome from "@/new_models/Chromosome";
+import Chromosome from "@/models/Chromosome";
 import httpInstance from './httpInstance';
 
 /**
