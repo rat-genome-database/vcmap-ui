@@ -13,7 +13,7 @@
     <rect
       class="block-section"
       @mouseenter="onMouseEnter(blockSection, 'trackSection')"
-      @mouseleave="onMouseLeave(blockSection)"
+      @mouseleave="onMouseLeave(blockSection, 'trackSection')"
       @click="onClick($event, blockSection, 'trackSection')"
       :y="blockSection.posY1"
       :x="blockSection.posX1"
@@ -32,7 +32,7 @@
     <rect
       class="level-2 block-section"
       @mouseenter="onMouseEnter(blockSection, 'trackSection')"
-      @mouseleave="onMouseLeave(blockSection)"
+      @mouseleave="onMouseLeave(blockSection, 'trackSection')"
       @click="onClick($event, blockSection, 'trackSection')"
       :y="blockSection.posY1"
       :x="blockSection.posX1"
@@ -56,7 +56,7 @@
     <rect
       class="block-section"
       @mouseenter="onMouseEnter(datatrack, 'Gene')"
-      @mouseleave="onMouseLeave(datatrack)"
+      @mouseleave="onMouseLeave(datatrack, 'Gene')"
       @click="onClick($event, datatrack, 'Gene')"
       :y="datatrack.posY1"
       :x="datatrack.posX1"
@@ -138,9 +138,18 @@ const onMouseEnter = (section: SyntenySection | DatatrackSection, type: Selected
     const selectedData = new SelectedData(section, type);
     store.dispatch('setSelectedData', [selectedData]);
   }
+
+  if (type === 'Gene') 
+  {
+    const geneSection: DatatrackSection = section as DatatrackSection;
+    if (geneSection?.gene)
+    {
+      highlightGeneLines(geneSection?.gene.rgdId);
+    }
+  }
 };
 
-const onMouseLeave = (section: VCMapSVGElement) => {
+const onMouseLeave = (section: VCMapSVGElement, type: SelectedDataType) => {
   if (section)
   {
     section.isHovered = false;
@@ -149,6 +158,15 @@ const onMouseLeave = (section: VCMapSVGElement) => {
   // Only reset data onMouseLeave if there isn't a selected gene
   if (store.state.selectedGeneIds.length === 0) {
     store.dispatch('setSelectedData', null);
+  }
+
+  if (type === 'Gene') 
+  {
+    const geneSection: DatatrackSection = section as DatatrackSection;
+    if (geneSection?.gene)
+    {
+      highlightGeneLines(geneSection?.gene.rgdId);
+    }
   }
 };
 
@@ -160,7 +178,7 @@ const getSectionFill = (section: VCMapSVGElement) => {
 
 const highlightSelections = (selectedGeneIds: number[]) => {
   // Look through the sections and highlight based on selected genes
-  props.region.datatrackSections.forEach((section) => {
+  datatracks.value.forEach((section) => {
     if (section.gene == null)
     {
       return;
@@ -177,7 +195,7 @@ const highlightSelections = (selectedGeneIds: number[]) => {
   });
   // Highlight the line if needed, and make sure genes highlighted too
   // (this ensures backbone and comparitive genes are highlighted, regardless of which is clicked)
-  props.lines?.forEach((line) => {
+  orthologLines.value?.forEach((line) => {
     if (selectedGeneIds.includes(line.backboneGene.gene?.rgdId || -1) ||
         selectedGeneIds.includes(line.comparativeGene.gene?.rgdId || -1)) 
     {
@@ -254,6 +272,21 @@ const onClick = (event: any, section: DatatrackSection, type: string) => {
     store.dispatch('setSelectedData', newSelectedData);
   }
 };
+
+const highlightGeneLines = (sectionId: number,) => {
+  orthologLines.value?.forEach((line) => {
+    if (line.comparativeGene.gene?.rgdId == sectionId ||
+        line.backboneGene.gene?.rgdId == sectionId)
+    {
+      line.isSelected ? line.isSelected = false : line.isSelected = true;
+    } 
+    else 
+    {
+      line.isSelected = false;
+    }
+  });
+}
+
 
 </script>
 
