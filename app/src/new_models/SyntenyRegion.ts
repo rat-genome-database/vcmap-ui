@@ -1,7 +1,7 @@
 import BackboneSection from './BackboneSection';
 import SyntenySection from './SyntenySection';
 import DatatrackSection from './DatatrackSection';
-import Label from './Label';
+import Label, { GeneLabel } from './Label';
 import OrthologLine from './OrthologLine';
 
 interface SyntenyRegionParams

@@ -25,6 +25,8 @@ export default class Label
 export class GeneLabel extends Label
 {
   gene: Gene;
+  isVisible: boolean = false;
+  combinedLabels: GeneLabel[] = [];
 
   constructor(params: LabelParams, gene: Gene)
   {

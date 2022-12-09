@@ -116,6 +116,7 @@ import SyntenyRegionSet from '@/new_models/SyntenyRegionSet';
 import GeneApi from '@/api/GeneApi';
 import BackboneSet from '@/new_models/BackboneSet';
 import { LoadedSpeciesGenes } from '@/new_models/DatatrackSection';
+import { mergeGeneLabels } from '@/new_utils/GeneLabelMerger';
 
 const store = useStore(key);
 const $log = useLogger();
@@ -394,6 +395,12 @@ const updateDetailsPanel = async () => {
       masterGeneMap
     );
 
+    // process gene labels
+    detailedSyntenyData.syntenyRegionSets.forEach((regionSet) => {
+      regionSet.regions.forEach((region) => {
+        mergeGeneLabels(region.datatrackLabels);
+      });
+    })
     detailedSyntenySets.value = detailedSyntenyData.syntenyRegionSets;
     timeSyntenyTracks = Date.now() - createSyntenyTracksStart;
 

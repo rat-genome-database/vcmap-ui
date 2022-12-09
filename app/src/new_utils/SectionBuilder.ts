@@ -168,6 +168,15 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
       const processedGeneInfo = syntenicDatatrackBuilder(blockGenes, blockSyntenicSection, blockRatio, windowStart, windowStop, true, renderType, masterGeneMap);
       currSyntenicRegion.addDatatrackSections(processedGeneInfo.genomicData);
       currSyntenicRegion.addOrthologLines(processedGeneInfo.orthologLines);
+      currSyntenicRegion.datatrackLabels = [];
+      for (let i = 0; i < processedGeneInfo.genomicData.length; i++)
+      {
+        const geneData = processedGeneInfo.genomicData[i];
+        if (geneData.label)
+        {
+          currSyntenicRegion.datatrackLabels.push(geneData.label);
+        }
+      }
       //Step 3.2: Capture processed gene data and store in block
       //Step 3.3: Capture returned map of processed genes and add to master map of processed genes
     }
