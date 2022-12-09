@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import OverviewControls from '@/components/OverviewControls.vue';
-import Species from '@/models/Species';
-import Map from '@/models/Map';
+import Species from '@/new_models/Species';
+import Map from '@/new_models/SpeciesMap';
 import { key, VCMapState } from '@/store';
 import { ActionTree, createStore, Store } from 'vuex';
 import Chromosome from '@/models/Chromosome';
@@ -13,7 +13,7 @@ describe('OverviewControls', () => {
   let store: Store<VCMapState>;
   let actions: ActionTree<VCMapState, VCMapState>;
   const state = {
-    species: new Species({ typeKey: 1, name: 'Test Species', defaultMapKey: 1, maps: [new Map({ key: 1, primaryRefAssembly: true, description: '', notes: '', name: 'GRCh38'})]}),
+    species: new Species({ typeKey: 1, name: 'Test Species', defaultMapKey: 1, maps: [new Map({ key: 1, primaryRefAssembly: true, name: 'GRCh38'})]}),
     chromosome: new Chromosome({ chromosome: '1', mapKey: 38, seqLength: 1000000, gapCount: 5, gapLength: 10000, contigCount: 100, ordinalNumber: 1 }),
     startPos: 1,
     stopPos: 10000,

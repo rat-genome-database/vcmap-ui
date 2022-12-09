@@ -11,7 +11,7 @@ import Gene from '@/new_models/Gene';
 export type RenderType = 'overview' | 'detailed';
 
 
-interface BackboneSectionParams
+export interface BackboneSectionParams
 {
   start: number;
   stop: number;
@@ -51,8 +51,6 @@ export default class BackboneSection implements VCMapSVGElement
   renderType: RenderType = 'overview';
   hasLabels: boolean = false;
   backboneGenes?: Gene[]; // All Genes that fit within this backbone section
-  visiblePosY1: number = 0; // svg Y position of windowStart
-  visiblePosY2: number = 0; // svg Y position of windowStop
 
   constructor(params: BackboneSectionParams)
   {

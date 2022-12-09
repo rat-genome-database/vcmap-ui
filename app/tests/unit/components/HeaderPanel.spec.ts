@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import HeaderPanel from '@/components/HeaderPanel.vue';
-import Species from '@/models/Species';
-import Map from '@/models/Map';
+import Species from '@/new_models/Species';
+import Map from '@/new_models/SpeciesMap';
 import { createStore } from 'vuex';
 import { ExternalComponentsHandler } from '@/utils/ExternalComponentsHandler';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
@@ -9,7 +9,7 @@ import { key } from '@/store';
 
 const mockStore = createStore({
   state: {
-    species: new Species({ typeKey: 1, name: 'Test Species', defaultMapKey: 1, maps: [new Map({ key: 1, primaryRefAssembly: true, description: '', notes: '', name: 'GRCh38'})]}),
+    species: new Species({ typeKey: 1, name: 'Test Species', defaultMapKey: 1, maps: [new Map({ key: 1, primaryRefAssembly: true, name: 'GRCh38'})]}),
     chromosome: null,
     startPos: 0,
     stopPos: 0,
@@ -17,8 +17,8 @@ const mockStore = createStore({
     loadStop: null,
     gene: null,
     comparativeSpecies: [
-      new Species({ typeKey: 2, name: 'Test Species 2', defaultMapKey: 2, maps: [new Map({ key: 2, primaryRefAssembly: true, description: '', notes: '', name: 'GRCh37'})] }), 
-      new Species({ typeKey: 3, name: 'Test Species 3', defaultMapKey: 3, maps: [new Map({ key: 3, primaryRefAssembly: true, description: '', notes: '', name: 'GRCh36'})] })
+      new Species({ typeKey: 2, name: 'Test Species 2', defaultMapKey: 2, maps: [new Map({ key: 2, primaryRefAssembly: true, name: 'GRCh37'})] }), 
+      new Species({ typeKey: 3, name: 'Test Species 3', defaultMapKey: 3, maps: [new Map({ key: 3, primaryRefAssembly: true, name: 'GRCh36'})] })
     ],
     loadedGeneSections: [],
     selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),

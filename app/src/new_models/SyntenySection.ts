@@ -2,12 +2,14 @@ import { SVGShape, VCMapSVGElement } from './VCMapSVGElement';
 import BackboneSection from './BackboneSection';
 import Chromosome from './Chromosome';
 
+type SyntenySectionType = 'block' | 'gap';
+
 interface SyntenySectionParams
 {
   start: number;
   stop: number;
   backboneSection: BackboneSection;
-  type: string;
+  type: SyntenySectionType;
   threshold?: number;
   orientation: '+' | '-';
   chromosome: Chromosome;
@@ -34,7 +36,7 @@ export default class SyntenySection implements VCMapSVGElement
   length: number = 0;        // length of the section on its original species
   threshold?: number = 0;    // threshold level this object was created at
   orientation: '+' | '-' = '+';   // orientation of the synteny block
-  type: string = '';         // type of object this is (synteny, gap, etc)
+  type: SyntenySectionType = 'block';         // type of object this is (synteny, gap, etc)
   backboneSection: BackboneSection;  // backbone section that this datatrack is aligned to
   blockRatio: number = 0;    // ratio of the length of the section on its original species to the length of this backbone section
   chromosome: Chromosome;    // chromosome that this section is from

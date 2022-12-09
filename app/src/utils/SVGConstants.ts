@@ -19,5 +19,6 @@ const constants = {
 
 export const PANEL_SVG_START = constants.panelTitleHeight;
 export const PANEL_SVG_STOP = constants.viewboxHeight - constants.navigationButtonHeight;
+export const PANEL_HEIGHT = PANEL_SVG_STOP - PANEL_SVG_START;
 
 export default constants;
