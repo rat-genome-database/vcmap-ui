@@ -1,5 +1,5 @@
 import BackboneSection from "./BackboneSection";
-import Gene from '../models/Gene';
+import Gene from './Gene';
 import { SVGShape, VCMapSVGElement } from "./VCMapSVGElement";
 import Label from './Label';
 
@@ -20,7 +20,8 @@ interface DatatrackSectionParams
   stop: number;
   backboneSection: BackboneSection;
   type: string;
-  orthologs?: DatatrackSection[];
+  orthologs?: number[];
+  gene?: Gene;
 }
 
 export default class DatatrackSection implements VCMapSVGElement
@@ -34,6 +35,9 @@ export default class DatatrackSection implements VCMapSVGElement
   label?: Label;
   backboneSection: BackboneSection | undefined;  // backbone section that this datatrack is aligned to
   chainLevel: number = 0;                      // level of the chain that this section is on
+  
+  orthologs: number[] = [];  // orthologs ids of this gene
+  gene: Gene | undefined // gene that this datatrack represents
 
   posX1: number = 0;
   posX2: number = 0;
@@ -46,6 +50,7 @@ export default class DatatrackSection implements VCMapSVGElement
   isHovered: boolean = false;
   isSelected: boolean = false;
   elementColor: string = '';
+
 
   constructor(params: DatatrackSectionParams)
   {
@@ -60,6 +65,10 @@ export default class DatatrackSection implements VCMapSVGElement
     this.height = this.backboneSection.height;
 
     this.elementColor = '#00000';
+
+    if (params.gene) this.gene = params.gene;
+    if (params.orthologs) this.orthologs = params.orthologs;
+
   }
 }
 
@@ -70,6 +79,5 @@ export class GeneDatatrack extends DatatrackSection
     super(params);
   }
 
-  orthologs: Gene[] = [];  // orthologs of this gene
-  gene: Gene | undefined // gene that this datatrack represents
+
 }

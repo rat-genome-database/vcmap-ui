@@ -14,6 +14,7 @@
       class="block-section"
       @mouseenter="onMouseEnter(blockSection, 'trackSection')"
       @mouseleave="onMouseLeave(blockSection)"
+      @click="onClick($event, blockSection, 'trackSection')"
       :y="blockSection.posY1"
       :x="blockSection.posX1"
       :width="blockSection.width"
@@ -32,6 +33,7 @@
       class="level-2 block-section"
       @mouseenter="onMouseEnter(blockSection, 'trackSection')"
       @mouseleave="onMouseLeave(blockSection)"
+      @click="onClick($event, blockSection, 'trackSection')"
       :y="blockSection.posY1"
       :x="blockSection.posX1"
       :width="blockSection.width"
@@ -55,6 +57,7 @@
       class="block-section"
       @mouseenter="onMouseEnter(datatrack, 'Gene')"
       @mouseleave="onMouseLeave(datatrack)"
+      @click="onClick($event, datatrack, 'Gene')"
       :y="datatrack.posY1"
       :x="datatrack.posX1"
       :width="datatrack.width"
@@ -68,6 +71,7 @@
 
 
 <script lang="ts" setup>
+import { watch, onMounted} from 'vue';
 import SelectedData, { SelectedDataType } from '@/models/SelectedData';
 import SyntenyRegion from '@/new_models/SyntenyRegion';
 import SyntenySection from '@/new_models/SyntenySection';
@@ -98,6 +102,14 @@ const props = defineProps<Props>();
 
 //Converts each property in this object to its own reactive prop
 toRefs(props);
+
+watch(() => store.state.selectedGeneIds, () => {
+  highlightSelections(store.state.selectedGeneIds);
+});
+
+onMounted(() => {
+  highlightSelections(store.state.selectedGeneIds);
+});
 
 const orthologLines = computed(() => {
   return props.region.orthologLines ?? [];
@@ -148,27 +160,33 @@ const getSectionFill = (section: VCMapSVGElement) => {
 
 const highlightSelections = (selectedGeneIds: number[]) => {
   // Look through the sections and highlight based on selected genes
-  /* props.track.sections.forEach((section) => {
-    if (checkSectionForGene(section, selectedGeneIds)) {
+  datatracks.value.forEach((section) => {
+    if (section.gene.rgdId in selectedGeneIds) 
+    {
       section.isSelected = true;
-    } else {
+    } 
+    else 
+    {
       section.isSelected = false;
     }
-  }); */
+  });
   // Highlight the line if needed, and make sure genes highlighted too
   // (this ensures backbone and comparitive genes are highlighted, regardless of which is clicked)
   props.lines?.forEach((line) => {
     if (selectedGeneIds.includes(line.backboneGene.gene?.rgdId || -1) ||
-        selectedGeneIds.includes(line.comparativeGene.gene?.rgdId || -1)) {
+        selectedGeneIds.includes(line.comparativeGene.gene?.rgdId || -1)) 
+    {
       line.isSelected = true;
       line.backboneGene.isSelected = true;
       line.comparativeGene.isSelected = true;
-    } else {
+    } 
+    else 
+    {
       line.isSelected = false;
     }
   });
 
-  // After selecting the sections, check if we should use alt labels
+  /* // After selecting the sections, check if we should use alt labels
   props.track.geneLabels.forEach((label) => {
     // Only consider geneLabels that are already visible anyway
     if (label.isVisible) {
@@ -184,7 +202,7 @@ const highlightSelections = (selectedGeneIds: number[]) => {
       }
       label.section.showAltLabel = useAltLabel;
     }
-  });
+  }); */
 };
 
 const onClick = (event: any, section: DatatrackSection, type: string) => {
