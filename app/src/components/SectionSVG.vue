@@ -160,8 +160,13 @@ const getSectionFill = (section: VCMapSVGElement) => {
 
 const highlightSelections = (selectedGeneIds: number[]) => {
   // Look through the sections and highlight based on selected genes
-  datatracks.value.forEach((section) => {
-    if (section.gene.rgdId in selectedGeneIds) 
+  props.region.datatrackSections.forEach((section) => {
+    if (section.gene == null)
+    {
+      return;
+    }
+
+    if (selectedGeneIds.includes(section.gene.rgdId)) 
     {
       section.isSelected = true;
     } 
