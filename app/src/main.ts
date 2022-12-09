@@ -19,6 +19,6 @@ const app = createApp(App)
   .use(store, key)
   .use(router);
 
-  ExternalComponentsHandler.registerAll(app);
+ExternalComponentsHandler.registerAll(app);
 
 app.mount('#app');
