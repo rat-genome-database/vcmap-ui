@@ -432,7 +432,11 @@ const updateDetailsPanel = async () => {
       const loadedGeneSymbol = loadSelectedGene.symbol.toLowerCase();
       const loadedGeneSpecies = loadSelectedGene.speciesName.toLowerCase();
 
-      const orthologs = loadedGenes.get(loadedGeneSymbol);
+      const loadedGeneId =  loadSelectedGene.rgdId;
+      const loadedGeneInfo = loadedGenes.get(loadedGeneId);
+
+
+      /* const orthologs = loadedGenes.get(loadedGeneSymbol);
       let drawnOrthologs = [];
       for (let [key, value] of Object.entries(orthologs)) 
       {
@@ -447,7 +451,7 @@ const updateDetailsPanel = async () => {
             drawnOrthologs = drawnOrthologs.concat(value.drawn);
           }
         }
-      }
+      } */
 
       const selectionStart = originalSelectedBackboneRegion.innerSelection?.basePairStart || originalSelectedBackboneRegion.baseSelection.basePairStart;
 
@@ -455,7 +459,13 @@ const updateDetailsPanel = async () => {
       const newInnerStart = Math.max(Math.floor(loadSelectedGene.start - 3 * geneBasePairLength), originalSelectedBackboneRegion.baseSelection.basePairStart);
       const newInnerStop = Math.min(Math.floor(loadSelectedGene.stop + 3 * geneBasePairLength), originalSelectedBackboneRegion.baseSelection.basePairStop);
 
-      //convert ortholog svgs to backbone coords
+      const selection = detailedBackboneSet.value.backbone.generateBackboneSelection(newInnerStart, newInnerStop, store.state.detailedBasePairToHeightRatio, backboneChromosome);
+      store.dispatch('clearBackboneSelection');
+      store.dispatch('setBackboneSelection', selection);
+
+      geneReload = true;
+      return;
+      /* //convert ortholog svgs to backbone coords
       if (drawnOrthologs.length > 0)
       {
         drawnOrthologs.sort((a, b) => a.svgY - b.svgY);
@@ -494,7 +504,7 @@ const updateDetailsPanel = async () => {
         store.dispatch('setBackboneSelection', selection);
         geneReload = true;
         return;
-      }
+      } */
     }
 
     const compSpeciesMaps: Number[] = [];
