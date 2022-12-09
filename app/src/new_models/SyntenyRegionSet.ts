@@ -1,5 +1,5 @@
 import { SpeciesSyntenyData } from "@/api/SyntenyApi";
-import { syntenicSectionBuilder } from "@/new_utils/SectionBuilder";
+import { syntenicSectionBuilder } from "@/utils/SectionBuilder";
 import SVGConstants from "@/utils/SVGConstants";
 import DatatrackSection, { LoadedSpeciesGenes } from "./DatatrackSection";
 import { GenomicSet } from "./GenomicSet";
