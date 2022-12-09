@@ -144,7 +144,7 @@ const onMouseEnter = (section: SyntenySection | DatatrackSection, type: Selected
     const geneSection: DatatrackSection = section as DatatrackSection;
     if (geneSection?.gene)
     {
-      highlightGeneLines(geneSection?.gene.rgdId);
+      highlightGeneLines(geneSection?.gene.rgdId, 'enter');
     }
   }
 };
@@ -165,7 +165,7 @@ const onMouseLeave = (section: VCMapSVGElement, type: SelectedDataType) => {
     const geneSection: DatatrackSection = section as DatatrackSection;
     if (geneSection?.gene)
     {
-      highlightGeneLines(geneSection?.gene.rgdId);
+      highlightGeneLines(geneSection?.gene.rgdId, 'exit');
     }
   }
 };
@@ -273,17 +273,21 @@ const onClick = (event: any, section: DatatrackSection, type: string) => {
   }
 };
 
-const highlightGeneLines = (sectionId: number,) => {
+const highlightGeneLines = (sectionId: number, type: string) => {
+  const dataPanelSelected = store.state.selectedGeneIds.includes(sectionId);
   orthologLines.value?.forEach((line) => {
     if (line.comparativeGene.gene?.rgdId == sectionId ||
         line.backboneGene.gene?.rgdId == sectionId)
     {
-      line.isSelected ? line.isSelected = false : line.isSelected = true;
+      if (type == 'enter')
+      {
+        line.isSelected = true;
+      }
+      else if (type == 'exit' && !dataPanelSelected)
+      {
+        line.isSelected = false;
+      }
     } 
-    else 
-    {
-      line.isSelected = false;
-    }
   });
 }
 
