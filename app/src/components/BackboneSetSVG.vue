@@ -35,7 +35,7 @@
   <!-- Datatracks -->
   <template v-for="(datatrack, index) in datatracks" :key="index">
     <rect
-      class="block-section"
+      class="section clickable"
       @mouseenter="onMouseEnter(datatrack, 'Gene')"
       @mouseleave="onMouseLeave(datatrack)"
       @click="onClick($event, datatrack, 'Gene')"
@@ -316,6 +316,10 @@ const highlightSelections = (selectedGeneIds: number[]) => {
   {
     stroke-width: 1;
     stroke: black;
+  }
+  &.clickable
+  {
+    cursor: pointer;
   }
 }
 
