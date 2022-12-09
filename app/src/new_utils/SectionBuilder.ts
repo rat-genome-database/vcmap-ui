@@ -3,11 +3,12 @@ import Chromosome from '@/new_models/Chromosome';
 import BackboneSection, { RenderType } from '@/new_models/BackboneSection';
 import SyntenySection from '@/new_models/SyntenySection';
 import SyntenyRegion from '@/new_models/SyntenyRegion';
-import DatatrackSection, { LoadedSpeciesGenes } from '@/new_models/DatatrackSection';
+import DatatrackSection, { GeneDatatrack, LoadedSpeciesGenes } from '@/new_models/DatatrackSection';
 import SyntenyApi, { SpeciesSyntenyData, SyntenyRequestParams, SyntenyComponent } from '@/api/SyntenyApi';
 import Gene from '@/new_models/Gene';
 import SyntenyRegionSet from '@/new_models/SyntenyRegionSet';
 import OrthologLine from '@/new_models/OrthologLine';
+import { GeneLabel } from '@/new_models/Label';
 
 const GENES_DATA_TRACK_THRESHOLD_MULTIPLIER = 5;
 const GAPS_THRESHOLD_MULTIPLIER = 10;
@@ -190,7 +191,7 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
 function syntenicDatatrackBuilder(genomicData: Gene[], syntenyBlock: SyntenySection, blockRatio: number, windowStart: number, windowStop: number, isGene: boolean, renderType: RenderType, masterGeneMap: Map<number, LoadedSpeciesGenes>)
 {
   //Step 1: For each gene, convert to backbone equivalents using blockInfo and blockRatio
-  const processedGenomicData: DatatrackSection[] = [];
+  const processedGenomicData: GeneDatatrack[] = [];
   const processedOrthologs: OrthologLine[] = [];
   if (isGene)
   {
@@ -203,7 +204,7 @@ function syntenicDatatrackBuilder(genomicData: Gene[], syntenyBlock: SyntenySect
       const geneBackboneSection = new BackboneSection({ start: backboneEquivalents.backboneStart, stop: backboneEquivalents.backboneStop, windowStart: windowStart, windowStop: windowStop, renderType });
 
       //Create DatatrackSection for each gene
-      const geneDatatrackSection = new DatatrackSection({ start: genomicElement.start, stop: genomicElement.stop, backboneSection: geneBackboneSection, type: 'gene', });
+      const geneDatatrackSection = new GeneDatatrack({ start: genomicElement.start, stop: genomicElement.stop, backboneSection: geneBackboneSection, type: 'gene'}, genomicElement);
 
       const existingId = masterGeneMap.get(genomicElement.rgdId);
       if (existingId)
@@ -234,15 +235,14 @@ function syntenicDatatrackBuilder(genomicData: Gene[], syntenyBlock: SyntenySect
           });
         }
       }
-
+      const geneLabel = new GeneLabel({posX: 0, posY: (geneDatatrackSection.posY1 + geneDatatrackSection.posY2) / 2, text: geneDatatrackSection.gene.symbol}, geneDatatrackSection.gene);
+      geneDatatrackSection.label = geneLabel;
       processedGenomicData.push(geneDatatrackSection);
     });
   }
 
   processedGenomicData.sort((a, b) => a.speciesStart - b.speciesStart);
   return { genomicData: processedGenomicData, masterGeneMap: masterGeneMap, orthologLines: processedOrthologs };
-
-  //Step 4: Create DatatrackLabels for each gene
 
   //Step 4: Capture gene as processed in a map to return for finding ortholog
 }

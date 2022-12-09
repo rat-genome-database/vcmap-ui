@@ -150,6 +150,11 @@ export default class SyntenyRegionSet extends GenomicSet
       }
 
       section.posX2 = section.posX1 + SVGConstants.dataTrackWidth;
+      // set the label x position if there is one
+      if (section.label)
+      {
+        section.label.posX = section.posX2;
+      }
       section.width = Math.abs(section.posX2 - section.posX1);
     });
 

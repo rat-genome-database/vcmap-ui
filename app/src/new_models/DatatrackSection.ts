@@ -1,5 +1,5 @@
 import BackboneSection from "./BackboneSection";
-import Gene from '../models/Gene';
+import Gene from '../new_models/Gene';
 import { SVGShape, VCMapSVGElement } from "./VCMapSVGElement";
 import Label from './Label';
 
@@ -65,11 +65,12 @@ export default class DatatrackSection implements VCMapSVGElement
 
 export class GeneDatatrack extends DatatrackSection
 {
-  constructor(params: DatatrackSectionParams)
+  constructor(params: DatatrackSectionParams, gene: Gene)
   {
     super(params);
+    this.gene = gene;
   }
 
   orthologs: Gene[] = [];  // orthologs of this gene
-  gene: Gene | undefined // gene that this datatrack represents
+  gene: Gene // gene that this datatrack represents
 }

@@ -62,6 +62,14 @@
       :fill="getSectionFill(datatrack)"
       :fill-opacity=".7"
     />
+    <text v-if="(datatrack.label)"
+      class="label small"
+      :x="datatrack.label.posX"
+      :y="(datatrack.label.posY + 5)"
+      dominant-baseline="middle"
+      text-anchor="start">
+        {{datatrack.label.text}}
+    </text>
   </template>
   
 </template>
