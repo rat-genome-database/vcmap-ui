@@ -394,7 +394,12 @@ const updateDetailsPanel = async () => {
       masterGeneMap
     );
 
+    //TODO
+    //Create a combined single array of all region ortholog lines in order to draw after regions for proper overlapping
+
     detailedSyntenySets.value = detailedSyntenyData.syntenyRegionSets;
+
+
     timeSyntenyTracks = Date.now() - createSyntenyTracksStart;
 
     //map backbone species genes to the master map
@@ -417,7 +422,7 @@ const updateDetailsPanel = async () => {
       }
     });
 
-    store.dispatch('setLoadedGenes', allSpeciesGeneMap);
+    store.dispatch('setLoadedGenes', masterGeneMap);
 
     //if loading by gene initially, we need to find the backbone start of the "highest" positioned ortholog, and the backbone stop of the "lowest" positioned ortholog, then setting the backbone selection to those coords
     if ((loadType == 0) && (store.state.selectedGeneIds.length > 0) && (!geneReload))
@@ -801,6 +806,7 @@ const adjustDetailedVisibleSetsBasedOnZoom = (zoomedSelection: SelectedRegion) =
       detailedSyntenySets.value.forEach(set => {
         set.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop, updatedMasterGeneMap);
       });
+      store.dispatch('setLoadedGenes', updatedMasterGeneMap);
     }
   }
 

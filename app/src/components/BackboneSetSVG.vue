@@ -5,6 +5,7 @@
     class="section"
     @mouseenter="onMouseEnter(backbone, 'backbone')"
     @mouseleave="onMouseLeave(backbone)"
+    @click="onClick($event, backbone, 'trackSection')"
     :fill="backbone.isHovered && showDataOnHover ? HOVER_HIGHLIGHT_COLOR : backbone.elementColor"
     :x="backbone.posX1" :y="backbone.posY1"
     :width="backbone.width"
@@ -37,6 +38,8 @@
       class="block-section"
       @mouseenter="onMouseEnter(datatrack, 'Gene')"
       @mouseleave="onMouseLeave(datatrack)"
+      @click="onClick($event, datatrack, 'Gene')"
+
       :y="datatrack.posY1"
       :x="datatrack.posX1"
       :width="datatrack.width"
@@ -101,8 +104,9 @@
 <script lang="ts" setup>
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 import SelectedData, { SelectedDataType } from '@/models/SelectedData';
+import { sortGeneList, getNewSelectedData } from '@/utils/DataPanelHelpers';
 import { computed, toRefs } from '@vue/reactivity';
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { useStore } from 'vuex';
 import SVGConstants from '@/utils/SVGConstants';
 import { key } from '@/store';
@@ -154,6 +158,14 @@ watch(() => store.state.selectedBackboneRegion, (newVal: BackboneSelection, oldV
   }
 }, { deep: true });
 
+watch(() => store.state.selectedGeneIds, () => {
+  highlightSelections(store.state.selectedGeneIds);
+});
+
+onMounted(() => {
+  highlightSelections(store.state.selectedGeneIds);
+});
+
 const onMouseEnter = (section: BackboneSection | DatatrackSection, type: SelectedDataType) => {
   
   if (section)
@@ -185,6 +197,98 @@ const getSectionFill = (section: VCMapSVGElement) => {
   if (section.isSelected) {return SELECTED_HIGHLIGHT_COLOR;}
   if (section.isHovered) {return HOVER_HIGHLIGHT_COLOR;}
   return section.elementColor;
+};
+
+const onClick = (event: any, section: DatatrackSection, type: string) => {
+  if (!section.gene?.rgdId) {
+    return;
+  }
+  // If clicked section already selected, just reset the selectedGeneId state
+  if (store.state.selectedGeneIds.includes(section.gene?.rgdId || -1)) {
+    store.dispatch('setSelectedGeneIds', []);
+    store.dispatch('setSelectedData', null);
+    return;
+  }
+
+  // If shift key is held, we'll just add to the selections, otherwise, reset first
+  let geneIds: number[] = event.shiftKey ? [...store.state.selectedGeneIds] : [];
+
+  // Get the list of genes to build the selected data, if this is a gene label, we
+  // add all the combined genes to the selected data panel
+  // Otherwise if its a track section, we'll add the hidden genes
+  let newSelectedData: SelectedData[] = [];
+  const geneSectionList = type === 'geneLabel' ? [section, ...(section.combinedGenes || [])] : [section, ...(section.hiddenGenes || [])];
+  if (geneSectionList && geneSectionList.length > 0) {
+    // If this is a geneLabel, we're going to set all combined genes as "selected"
+    geneSectionList.forEach((section) => geneIds.push(section.gene.rgdId));
+    // Alphabetically sort the combined/hidden gene lists (LOC genes at end of list)
+    sortGeneList(geneSectionList);
+    // Set the new selected data from gene list
+    geneSectionList.forEach((section) => {
+      if (section.gene) {
+        const newData = getNewSelectedData(store, section.gene);
+        const geneAndOrthologs = newData.selectedData;
+        const newGeneIds = newData.rgdIds;
+        newSelectedData.push(...geneAndOrthologs);
+        geneIds.push(...newGeneIds);
+      }
+    });
+  }
+
+  store.dispatch('setSelectedGeneIds', geneIds || []);
+  if (event.shiftKey) {
+    const selectedDataArray = [...(store.state.selectedData || []), ...newSelectedData];
+    store.dispatch('setSelectedData', selectedDataArray);
+  } else {
+    store.dispatch('setSelectedData', newSelectedData);
+  }
+};
+
+const highlightSelections = (selectedGeneIds: number[]) => {
+  // Look through the sections and highlight based on selected genes
+  datatracks.value.forEach((section) => {
+    if (section.gene.rgdId in selectedGeneIds) 
+    {
+      section.isSelected = true;
+    } 
+    else 
+    {
+      section.isSelected = false;
+    }
+  });
+  // Highlight the line if needed, and make sure genes highlighted too
+  // (this ensures backbone and comparitive genes are highlighted, regardless of which is clicked)
+  props.lines?.forEach((line) => {
+    if (selectedGeneIds.includes(line.backboneGene.gene?.rgdId || -1) ||
+        selectedGeneIds.includes(line.comparativeGene.gene?.rgdId || -1)) 
+    {
+      line.isSelected = true;
+      line.backboneGene.isSelected = true;
+      line.comparativeGene.isSelected = true;
+    } 
+    else 
+    {
+      line.isSelected = false;
+    }
+  });
+
+  /* // After selecting the sections, check if we should use alt labels
+  props.track.geneLabels.forEach((label) => {
+    // Only consider geneLabels that are already visible anyway
+    if (label.isVisible) {
+      // If the main gene for this section is selected, we'll use the normal label
+      let useAltLabel = false;
+      if (selectedGeneIds.includes(label.section.gene.rgdId)) {
+        useAltLabel = false;
+      } else { // Otherwise if any selected ids exist in the alt labels, we'll use an alt label
+        const altLabelIds = label.section.altLabels.map((label) => label.rgdId);
+        if (selectedGeneIds.some((id) => altLabelIds.includes(id))) {
+          useAltLabel = true;
+        }
+      }
+      label.section.showAltLabel = useAltLabel;
+    }
+  }); */
 };
 </script>
 

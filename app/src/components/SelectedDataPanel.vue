@@ -38,15 +38,15 @@
         </div>
       </div>
     </template>
+    
     <div class="gene-data">
-
       <template v-for="dataObject in props.selectedData" :key="dataObject">
         <template v-if="dataObject?.type === 'Gene'">
           <GeneInfo
-            :gene="dataObject.genomicSection"
-            :chromosome="dataObject.genomicSection.chromosome"
-            :start="dataObject.genomicSection.start"
-            :stop="dataObject.genomicSection.stop"
+            :gene="dataObject.genomicSection.gene"
+            :chromosome="dataObject.genomicSection.chromosome ? dataObject.genomicSection.chromosome : dataObject.genomicSection.gene.chromosome"
+            :start="dataObject.genomicSection.speciesStart"
+            :stop="dataObject.genomicSection.speciesStop"
           />
           <Divider />
         </template>
@@ -55,9 +55,9 @@
           <template v-if="(dataObject.type === 'trackSection')">
             <GeneInfo
               :gene="dataObject?.genomicSection.gene ? dataObject?.genomicSection.gene : null"
-              :chromosome="dataObject.genomicSection.chromosome"
-              :start="dataObject.genomicSection.sectionStart"
-              :stop="dataObject.genomicSection.sectionStop"
+              :chromosome="dataObject.genomicSection.chromosome.chromosome"
+              :start="dataObject.genomicSection.speciesStart"
+              :stop="dataObject.genomicSection.speciesStop"
               :chain-level="dataObject.genomicSection.chainLevel"
               :track-orientation="dataObject.genomicSection.isInverted ? '-' : '+'"
             />
@@ -199,15 +199,26 @@ const clearSelectedGenes = () => {
 
 const searchGene = (event: {query: string}) => {
   const loadedGenes = store.state.loadedGenes;
+  const loadedGeneSymbols = store.getters.masterGeneMapBySymbol;
+  
   let matches: Gene[] = [];
-  for (let k of loadedGenes.keys()) 
+  for (let k of loadedGeneSymbols.keys()) 
   {
     if (k.toLowerCase().includes(event.query.toLowerCase()))
     {
-      let match: Object = loadedGenes.get(k);
-      for (let [key, value] of Object.entries(match)) 
+      const rgdIds = loadedGeneSymbols.get(k);
+      for (let rgdId of rgdIds) 
       {
-        matches.push(value.gene);
+        const currSpecies = loadedGenes.get(rgdId);
+
+        for (const object in currSpecies) 
+        {
+          const geneEntry = currSpecies[object];
+          geneEntry.drawn.forEach(element => {
+            matches.push(element.gene.gene);
+          });
+        }
+
       }
     }
   }
@@ -215,14 +226,13 @@ const searchGene = (event: {query: string}) => {
 };
 
 const searchSVG = (event: any) => {
-  store.dispatch('setGene', event.value);
   const newData = getNewSelectedData(store, event.value);
   store.dispatch('setSelectedGeneIds', newData.rgdIds || []);
   store.dispatch('setSelectedData', newData.selectedData);
   // Only adjust window of the searched gene is on backbone
-  if (event.value && event.value.speciesName === store.state.species?.name) {
+  /* if (event.value && event.value.speciesName === store.state.species?.name) {
     adjustSelectionWindow();
-  }
+  } */
 };
 
 const selectAndSearchSVG = (event: any) => {
@@ -233,9 +243,9 @@ const selectAndSearchSVG = (event: any) => {
     store.dispatch('setGene', searchedGene.value);
     store.dispatch('setSelectedGeneIds', newData.rgdIds || []);
     store.dispatch('setSelectedData', newData.selectedData);
-    if (searchedGene.value && searchedGene.value.speciesName === store.state.species?.name) {
+    /* if (searchedGene.value && searchedGene.value.speciesName === store.state.species?.name) {
       adjustSelectionWindow();
-    }
+    } */
   }
 };
 

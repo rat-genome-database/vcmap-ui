@@ -53,7 +53,7 @@ interface Props
   trackOrientation?: string;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
 const selectGene = (gene: Gene) => {
   const newData = getNewSelectedData(store, gene);
