@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import Zoom from '@/components/Zoom.vue';
-import { key, VCMapState } from '@/store';
-import { ActionTree, createStore, Store } from 'vuex';
+import { VCMapState } from '@/store';
+import { ActionTree, Store } from 'vuex';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 import { TestUtils } from '../../utils/TestUtils';
 
@@ -9,32 +9,7 @@ describe('Zoom', () => {
 
   let store: Store<VCMapState>;
   let actions: ActionTree<VCMapState, VCMapState>;
-  const state = {
-    species: null,
-    chromosomeNum: null,
-    chromosome: null,
-    startPos: 0,
-    stopPos: 0,
-    loadStart: null,
-    loadStop: null,
-    loadedGeneSections: [],
-    gene: null,
-    comparativeSpecies: [],
-    selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
-    zoom: 1,
-    overviewBasePairToHeightRatio: 1000,
-    overviewSyntenyThreshold: 0,
-    detailedBasePairToHeightRatio: 1000,
-    detailsSyntenyThreshold: 0,
-    backboneDataTracks: [],
-    configTab: 0,
-    selectedGeneIds: [],
-    selectedData: null,
-    loadedGenes: [],
-    detailedBasePairRange: { start: 0, stop: 0 },
-    isDetailedPanelUpdating: false,
-    isOverviewPanelUpdating: false,
-  };
+  const state: Partial<VCMapState> = {};
 
   beforeEach(() => {
     actions = {
@@ -43,23 +18,16 @@ describe('Zoom', () => {
 
     state.selectedBackboneRegion = new BackboneSelection(new SelectedRegion(0, 0, 0, 100));
     state.selectedBackboneRegion.generateInnerSelection(0, 100, 1);
-    store = createStore({
-      state,
-      actions
-    });
+    store = TestUtils.initStore(state, actions);
   });
 
   it('slider updates when zoom level changes due to manual zoom selection', async () => {
     const wrapper = mount(Zoom, {
-      global: {
-        ...TestUtils.getGlobalMountingOptions({
-          includeExternalComponents: true,
-          includeDirectives: true,
-        }),
-        provide: {
-          [key as symbol]: store
-        }
-      },
+      global: TestUtils.getGlobalMountingOptions({
+        includeExternalComponents: true,
+        includeDirectives: true,
+        useStore: store,
+      }),
     });
 
     const zoomLevelLabel = wrapper.get('[data-test="zoom-level-label"]');

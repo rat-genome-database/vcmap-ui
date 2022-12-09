@@ -1,8 +1,9 @@
 import { shallowMount } from '@vue/test-utils';
 import GeneInfo from '@/components/GeneInfo.vue';
 import Gene from '@/new_models/Gene';
-import { ExternalComponentsHandler } from '@/utils/ExternalComponentsHandler';
 import { TestUtils } from '../../utils/TestUtils';
+
+const mockStore = TestUtils.initStore({});
 
 describe('GeneInfo', () => {
 
@@ -27,6 +28,7 @@ describe('GeneInfo', () => {
       },
       global: TestUtils.getGlobalMountingOptions({
         includeExternalComponents: true,
+        useStore: mockStore,
       }),
     });
 
@@ -47,6 +49,7 @@ describe('GeneInfo', () => {
       },
       global: TestUtils.getGlobalMountingOptions({
         includeExternalComponents: true,
+        useStore: mockStore,
       }),
     });
 
