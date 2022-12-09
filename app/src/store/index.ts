@@ -9,6 +9,7 @@ import SVGConstants from '@/utils/SVGConstants';
 import SelectedData from '@/models/SelectedData';
 import { InjectionKey } from 'vue';
 import { createLogger } from 'vuex';
+import { LoadedSpeciesGenes } from '@/new_models/DatatrackSection';
 
 export const key: InjectionKey<Store<VCMapState>> = Symbol();
 
@@ -23,7 +24,7 @@ export interface VCMapState
   gene: Gene | null; // backbone gene
 
   comparativeSpecies: Species[];
-  loadedGenes: Map<string, any> | Gene[];
+  loadedGenes: Map<number, any> | null;
   loadedGeneSections: TrackSection[];
 
   selectedBackboneRegion: BackboneSelection;
@@ -59,7 +60,7 @@ export default createStore({
     gene: null,
 
     comparativeSpecies: [],
-    loadedGenes: [],
+    loadedGenes: null,
     loadedGeneSections: [],
 
     selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
@@ -105,8 +106,8 @@ export default createStore({
     comparativeSpecies (state: VCMapState, speciesArray: Species[]) {
       state.comparativeSpecies = speciesArray;
     },
-    loadedGenes (state: VCMapState, loadedGenesArray: Gene[]) {
-      state.loadedGenes = loadedGenesArray;
+    loadedGenes (state: VCMapState, loadedGenesMap: Map<number, any>) {
+      state.loadedGenes = loadedGenesMap;
     },
     loadedGeneSections (state: VCMapState, loadedGeneSections: TrackSection[]) {
       state.loadedGeneSections = loadedGeneSections;
@@ -245,6 +246,45 @@ export default createStore({
     },
     setBackboneOrthologData(context: ActionContext<VCMapState, VCMapState>, orthologs: any) {
       context.commit('backboneOrthologs', orthologs);
+    }
+  },
+
+  getters:
+  {
+    masterGeneMapBySymbol: (state: VCMapState,) => {
+      const masterGeneMap = state.loadedGenes;
+      const mapBySymbol = new Map<string, any>();
+
+      if (masterGeneMap == null)
+      {
+        return mapBySymbol;
+      }
+
+     for (const [key, value] of masterGeneMap.entries())
+     {
+        const rgdId = key;
+        const currSpecies = value;
+        
+        for (const object in currSpecies)
+        {
+          const geneEntry = currSpecies[object];
+          const geneSymbol = geneEntry.drawn[0].gene.gene?.symbol;
+          if (geneSymbol)
+          {
+            const currId = mapBySymbol.get(geneSymbol);
+            if (currId != null)
+            {
+              mapBySymbol.set(geneSymbol, currId.concat(rgdId));
+            }
+            else
+            {
+              mapBySymbol.set(geneSymbol, [rgdId]);
+            }
+          }
+        }
+      }
+
+      return mapBySymbol;
     }
   },
 
