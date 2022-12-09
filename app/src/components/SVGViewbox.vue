@@ -98,7 +98,6 @@ import SVGConstants from '@/utils/SVGConstants';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import useDialog from '@/composables/useDialog';
-import TrackSet from '@/models/TrackSet';
 import Gene from '@/new_models/Gene';
 import SelectedData from '@/models/SelectedData';
 import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
@@ -122,13 +121,11 @@ const { showDialog, dialogHeader, dialogMessage, onError, checkSyntenyResultsOnC
 const { startDetailedSelectionY, stopDetailedSelectionY, initZoomSelection, updateZoomSelection, completeZoomSelection } = useDetailedPanelZoom(store);
 const { startOverviewSelectionY, stopOverviewSelectionY, initOverviewSelection, updateOverviewSelection, completeOverviewSelection } = useOverviewPanelSelection(store);
 
-const detailTrackSets = ref<TrackSet[]>([]); // The currently displayed TrackSets in the Detailed panel
 let detailedSyntenySets = ref<SyntenyRegionSet[]>([]); // The currently displayed SyntenicRegions in the detailed panel
 let overviewBackboneSet = ref<BackboneSet>();
 let detailedBackboneSet = ref<BackboneSet>();
 let overviewSyntenySets = ref<SyntenyRegionSet[]>([]);
 
-let selectionTrackSets: TrackSet[] = []; // The track sets for the entire selected region
 let geneReload: boolean = false; //whether or not load by gene reload has occurred
 
 
@@ -642,7 +639,7 @@ const navigateUp = () => {
 
   if (selectedRegion.innerSelection)
   {
-    adjustDetailedVisibleSetsBasedOnZoom(selectedRegion.innerSelection)
+    adjustDetailedVisibleSetsBasedOnZoom(selectedRegion.innerSelection);
   }
 };
 
@@ -652,9 +649,6 @@ const navigateDown = () => {
   const selectedRegion = store.state.selectedBackboneRegion;
   // Adjust the inner selection on the selected region
   selectedRegion.moveInnerSelectionDown(store.state.overviewBasePairToHeightRatio);
-
-  // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
-  detailTrackSets.value = [];
 
   if (selectedRegion.innerSelection)
   {
