@@ -3,6 +3,7 @@ import SelectedData from '@/models/SelectedData';
 import { Store } from "vuex";
 import { VCMapState } from "@/store";
 import TrackSection from '@/models/TrackSection';
+import DatatrackSection from '@/new_models/DatatrackSection';
 // Util methods to help process and update selection info
 export function getGeneOrthologIds(store: Store<VCMapState>, gene: Gene) {
   const geneOrthologs = store.state.selectedBackboneRegion.orthologData.get(gene.symbol);
@@ -13,55 +14,14 @@ export function getGeneOrthologIds(store: Store<VCMapState>, gene: Gene) {
   return geneOrthologIds;
 }
 
-export function getNewSelectedData(store: Store<VCMapState>, gene: Gene): {rgdIds: number[], selectedData: SelectedData[]} {
-  const loadedGenes = store.state.loadedGenes as Map<string, any> ;
-  const backboneSpecies = store.state.species?.name || '';
-  const geneSpecies = gene.speciesName || '';
+export function getNewSelectedData(store: Store<VCMapState>, gene: Gene): {rgdIds: number[], selectedData: SelectedData[] } {
   const comparativeSpecies = store.state.comparativeSpecies;
   const compSpeciesNameMap = new Map<Number, string>();
+
   comparativeSpecies.forEach((species: any) => compSpeciesNameMap.set(species.activeMap.key, species.name));
-  let geneOrthologs: any;
-  let selectedData: SelectedData[];
-  let rgdIds: number[];
-  // If the selected gene is on the backbone, just search the ortholog data and set the new data
-  if (geneSpecies === backboneSpecies) 
-  {
-    geneOrthologs = store.state.selectedBackboneRegion.orthologData.get(gene.symbol);
-    selectedData = [new SelectedData(gene, 'Gene')];
-    rgdIds = [gene.rgdId, ...getGeneOrthologIds(store, gene)];
-  } 
-  else 
-  { 
-    // otherwise we'll search the ortholog data if there's an ortholog matching this gene
-    // get the mapKey from the selected gene
-    const mapKey = [...compSpeciesNameMap].filter(entry => entry[1] === geneSpecies).map(entry => entry[0]);
-    // Check if there is a backone ortholog
-    const orthologResult = getOrthologsFromComparativeSpecies(store, gene, mapKey[0]);
-    geneOrthologs = orthologResult.orthologData;
-    const backboneSymbol = orthologResult.backboneSymbol;
-    // Check if we have the backbone gene loaded
-    let backboneGene = backboneSymbol ? loadedGenes.get(backboneSymbol.toLowerCase()) : null;
-    if (backboneGene)
-    {
-      backboneGene.has(backboneSpecies.toLowerCase()) ? backboneGene = backboneGene[backboneSpecies.toLowerCase()] : backboneGene = null;
-    }
-    // If the backbone gene is loaded, set that selected data, otherwise, just set the selected gene
-    selectedData = backboneGene ? [new SelectedData(backboneGene.gene, 'Gene')] : [new SelectedData(gene, 'Gene')];
-    rgdIds = backboneGene ? [backboneGene.rgdId, ...getGeneOrthologIds(store, backboneGene)] : [gene.rgdId];
-  }
-  // Go through the ortholog data for the backbone gene if it exists,
-  // and update the selected data object with the ortholog genes
-  if (geneOrthologs) {
-    const geneKeys = Object.keys(geneOrthologs);
-    for (let i = 0; i < geneKeys.length; i++) {
-      const ortholog = new Gene({
-        ...geneOrthologs[geneKeys[i]][0],
-        speciesName: compSpeciesNameMap.get(parseInt(geneKeys[i], 10))
-      });
-      selectedData.push(new SelectedData(ortholog, 'Gene'));
-    }
-  }
-  return {rgdIds: rgdIds, selectedData: selectedData} ;
+ 
+  const allOrthologInfo = getGeneOrthologData(store, gene);
+  return {rgdIds: allOrthologInfo.rgdIds, selectedData: allOrthologInfo.selectedData};
 }
 
 export function sortGeneList(geneList: TrackSection[]) {
@@ -89,6 +49,10 @@ export function sortGeneList(geneList: TrackSection[]) {
 
 function getOrthologsFromComparativeSpecies(store: Store<VCMapState>, gene: Gene, mapKey: Number) {
   const orthologData = store.state.selectedBackboneRegion.orthologData;
+  const drawnGeneData = store.state.loadedGenes;
+
+  const currGeneInfo = drawnGeneData?.get(gene.rgdId);
+
   // Iterate through the entries in the orthologData map
   const backboneOrthologKey = [...orthologData.entries()]
       // Filter for an ortholog matching the selected gene's symbol
@@ -110,4 +74,42 @@ function getOrthologsFromComparativeSpecies(store: Store<VCMapState>, gene: Gene
 
   // return the symbol for the backbone gene and the ortholog data
   return {backboneSymbol: backboneOrthologKey[0], orthologData: orthologData.get(backboneOrthologKey[0])};
+}
+
+
+function getGeneOrthologData(store: Store<VCMapState>, gene: Gene) 
+{
+  const drawnGeneData = store.state.loadedGenes;
+  const currGeneInfo = drawnGeneData?.get(gene.rgdId);
+  const geneSpecies = gene.speciesName.toLowerCase();
+
+  const selectedData: SelectedData[] = [];
+  const rgdIds: number[] = [];
+
+  if (!currGeneInfo) return {rgdIds: rgdIds, selectedData: selectedData };
+
+  selectedData.push(new SelectedData(currGeneInfo[geneSpecies].drawn[0].gene, 'Gene'));
+  rgdIds.push(gene.rgdId);
+  // If the gene has orthologs, add them to the selected data
+  if (gene.orthologs.length > 0)
+  {
+    gene.orthologs.forEach((ortholog: number) => {
+      const currOrthologInfo = drawnGeneData?.get(ortholog);
+      if (currOrthologInfo)
+      {
+        for (const species in currOrthologInfo)
+        {
+          if (species !== geneSpecies)
+          {
+            currOrthologInfo[species].drawn.forEach((orthologGene: any) => {
+              selectedData.push(new SelectedData(orthologGene.gene, 'Gene'));
+              rgdIds.push(orthologGene.gene.gene.rgdId);
+            });
+          }
+        }
+      }
+    });
+  }
+  
+  return {rgdIds: rgdIds, selectedData: selectedData};
 }
