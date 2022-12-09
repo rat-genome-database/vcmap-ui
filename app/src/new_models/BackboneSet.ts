@@ -1,4 +1,4 @@
-import { backboneDatatrackBuilder, ProcessedGenomicData } from "@/new_utils/BackboneBuilder";
+import { backboneDatatrackBuilder, ProcessedGenomicData } from "@/utils/BackboneBuilder";
 import SVGConstants from "@/utils/SVGConstants";
 import BackboneSection from "./BackboneSection";
 import DatatrackSection from "./DatatrackSection";

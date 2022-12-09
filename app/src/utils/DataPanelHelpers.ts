@@ -2,7 +2,6 @@ import Gene from '@/new_models/Gene';
 import SelectedData from '@/models/SelectedData';
 import { Store } from "vuex";
 import { VCMapState } from "@/store";
-import TrackSection from '@/models/TrackSection';
 import DatatrackSection from '@/new_models/DatatrackSection';
 // Util methods to help process and update selection info
 export function getGeneOrthologIds(store: Store<VCMapState>, gene: Gene) {
@@ -24,7 +23,7 @@ export function getNewSelectedData(store: Store<VCMapState>, gene: Gene): {rgdId
   return {rgdIds: allOrthologInfo.rgdIds, selectedData: allOrthologInfo.selectedData};
 }
 
-export function sortGeneList(geneList: TrackSection[]) {
+export function sortGeneList(geneList: DatatrackSection[]) {
   // for combined or hiddent gene lists, sort LOC
   // genes to end of list, otherwise sort alphabetically
   geneList.sort((geneA, geneB) => {
