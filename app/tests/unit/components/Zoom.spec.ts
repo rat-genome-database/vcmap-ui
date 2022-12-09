@@ -2,8 +2,8 @@ import { mount } from '@vue/test-utils';
 import Zoom from '@/components/Zoom.vue';
 import { key, VCMapState } from '@/store';
 import { ActionTree, createStore, Store } from 'vuex';
-import { ExternalComponentsHandler } from '@/utils/ExternalComponentsHandler';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
+import { TestUtils } from '../../utils/TestUtils';
 
 describe('Zoom', () => {
 
@@ -52,9 +52,10 @@ describe('Zoom', () => {
   it('slider updates when zoom level changes due to manual zoom selection', async () => {
     const wrapper = mount(Zoom, {
       global: {
-        plugins: ExternalComponentsHandler.getPlugins(),
-        components: ExternalComponentsHandler.getComponents(),
-        directives: ExternalComponentsHandler.getDirectives(),
+        ...TestUtils.getGlobalMountingOptions({
+          includeExternalComponents: true,
+          includeDirectives: true,
+        }),
         provide: {
           [key as symbol]: store
         }

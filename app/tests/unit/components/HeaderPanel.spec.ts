@@ -3,9 +3,9 @@ import HeaderPanel from '@/components/HeaderPanel.vue';
 import Species from '@/new_models/Species';
 import Map from '@/new_models/SpeciesMap';
 import { createStore } from 'vuex';
-import { ExternalComponentsHandler } from '@/utils/ExternalComponentsHandler';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 import { key } from '@/store';
+import { TestUtils } from '../../utils/TestUtils';
 
 const mockStore = createStore({
   state: {
@@ -49,11 +49,13 @@ describe('HeaderPanel', () => {
 
     const wrapper = mount(HeaderPanel, {
       global: {
-        plugins: ExternalComponentsHandler.getPlugins(),
-        components: ExternalComponentsHandler.getComponents(),
-        directives: ExternalComponentsHandler.getDirectives(),
+        ...TestUtils.getGlobalMountingOptions({
+          includeExternalComponents: true,
+          includeDirectives: true,
+          includeLogger: true,
+        }),
         provide: {
-          [key as symbol]: mockStore
+          [key as symbol]: mockStore,
         }
       }
     });

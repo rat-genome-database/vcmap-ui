@@ -1,6 +1,8 @@
 import { shallowMount } from '@vue/test-utils';
 import GeneInfo from '@/components/GeneInfo.vue';
 import Gene from '@/new_models/Gene';
+import { ExternalComponentsHandler } from '@/utils/ExternalComponentsHandler';
+import { TestUtils } from '../../utils/TestUtils';
 
 describe('GeneInfo', () => {
 
@@ -22,7 +24,10 @@ describe('GeneInfo', () => {
         chromosome: '1',
         start: 0,
         stop: 10000,
-      }
+      },
+      global: TestUtils.getGlobalMountingOptions({
+        includeExternalComponents: true,
+      }),
     });
 
     const geneText = wrapper.get('[data-test="gene-name"]');
@@ -39,7 +44,10 @@ describe('GeneInfo', () => {
         chromosome: '1',
         start: 0,
         stop: 10000,
-      }
+      },
+      global: TestUtils.getGlobalMountingOptions({
+        includeExternalComponents: true,
+      }),
     });
 
     const chromosomeText = wrapper.get('[data-test="chromosome-name"]');

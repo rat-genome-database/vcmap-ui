@@ -5,9 +5,8 @@ import Map from '@/new_models/SpeciesMap';
 import { key, VCMapState } from '@/store';
 import { ActionTree, createStore, Store } from 'vuex';
 import Chromosome from '@/models/Chromosome';
-import { ExternalComponentsHandler } from '@/utils/ExternalComponentsHandler';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
-
+import { TestUtils } from '../../utils/TestUtils';
 
 describe('OverviewControls', () => {
   let store: Store<VCMapState>;
@@ -51,9 +50,11 @@ describe('OverviewControls', () => {
   it('renders backbone species name from store', async () => {
     const wrapper = mount(OverviewControls, {
       global: {
-        plugins: ExternalComponentsHandler.getPlugins(),
-        components: ExternalComponentsHandler.getComponents(),
-        directives: ExternalComponentsHandler.getDirectives(),
+        ...TestUtils.getGlobalMountingOptions({
+          includeDirectives: true,
+          includeExternalComponents: true,
+          includeLogger: true,
+        }),
         provide: {
           [key as symbol]: store
         }
