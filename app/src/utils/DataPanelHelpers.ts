@@ -2,8 +2,6 @@ import Gene from '@/new_models/Gene';
 import SelectedData from '@/models/SelectedData';
 import { Store } from "vuex";
 import { VCMapState } from "@/store";
-import TrackSection from '@/models/TrackSection';
-import DatatrackSection from '@/new_models/DatatrackSection';
 // Util methods to help process and update selection info
 export function getGeneOrthologIds(store: Store<VCMapState>, gene: Gene) {
   const geneOrthologs = store.state.selectedBackboneRegion.orthologData.get(gene.symbol);
@@ -24,28 +22,28 @@ export function getNewSelectedData(store: Store<VCMapState>, gene: Gene): {rgdId
   return {rgdIds: allOrthologInfo.rgdIds, selectedData: allOrthologInfo.selectedData};
 }
 
-export function sortGeneList(geneList: TrackSection[]) {
-  // for combined or hiddent gene lists, sort LOC
-  // genes to end of list, otherwise sort alphabetically
-  geneList.sort((geneA, geneB) => {
-    const isGeneALOC = geneA.gene?.symbol.startsWith('LOC') || false;
-    const isGeneBLOC = geneB.gene?.symbol.startsWith('LOC') || false;
-    if (isGeneALOC && isGeneBLOC) {
-      const geneASymbol = geneA.gene?.symbol.toLowerCase() || '';
-      const geneBSymbol = geneB.gene?.symbol.toLowerCase() || '';
-      return (geneASymbol < geneBSymbol) ? -1 : (geneASymbol > geneBSymbol) ? 1 : 0;
-    }
-    else if (isGeneALOC) {
-      return 1;
-    }
-    else if (isGeneBLOC) {
-      return -1;
-    }
-    const geneASymbol = geneA.gene?.symbol.toLowerCase() || '';
-    const geneBSymbol = geneB.gene?.symbol.toLowerCase() || '';
-    return (geneASymbol < geneBSymbol) ? -1 : (geneASymbol > geneBSymbol) ? 1 : 0;
-  });
-}
+// export function sortGeneList(geneList: TrackSection[]) {
+//   // for combined or hiddent gene lists, sort LOC
+//   // genes to end of list, otherwise sort alphabetically
+//   geneList.sort((geneA, geneB) => {
+//     const isGeneALOC = geneA.gene?.symbol.startsWith('LOC') || false;
+//     const isGeneBLOC = geneB.gene?.symbol.startsWith('LOC') || false;
+//     if (isGeneALOC && isGeneBLOC) {
+//       const geneASymbol = geneA.gene?.symbol.toLowerCase() || '';
+//       const geneBSymbol = geneB.gene?.symbol.toLowerCase() || '';
+//       return (geneASymbol < geneBSymbol) ? -1 : (geneASymbol > geneBSymbol) ? 1 : 0;
+//     }
+//     else if (isGeneALOC) {
+//       return 1;
+//     }
+//     else if (isGeneBLOC) {
+//       return -1;
+//     }
+//     const geneASymbol = geneA.gene?.symbol.toLowerCase() || '';
+//     const geneBSymbol = geneB.gene?.symbol.toLowerCase() || '';
+//     return (geneASymbol < geneBSymbol) ? -1 : (geneASymbol > geneBSymbol) ? 1 : 0;
+//   });
+// }
 
 function getOrthologsFromComparativeSpecies(store: Store<VCMapState>, gene: Gene, mapKey: Number) {
   const orthologData = store.state.selectedBackboneRegion.orthologData;

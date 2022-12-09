@@ -69,7 +69,6 @@ export namespace TestUtils
         gene: null,
         comparativeSpecies: [],
 
-        loadedGeneSections: [],
         selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
         detailedBasePairRange: { start: 0, stop: 0 },
 
@@ -81,7 +80,7 @@ export namespace TestUtils
         configTab: 0,
 
         selectedData: null,
-        loadedGenes: [],
+        loadedGenes: null,
         selectedGeneIds: [],
 
         isDetailedPanelUpdating: false,

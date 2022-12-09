@@ -2,14 +2,12 @@ import { ActionContext, createStore, Store } from 'vuex';
 import VuexPersistence from 'vuex-persist';
 import Species from '@/new_models/Species';
 import Chromosome from '@/new_models/Chromosome';
-import TrackSection from '@/models/TrackSection';
 import Gene from '@/new_models/Gene';
 import BackboneSelection, { BasePairRange, SelectedRegion } from '@/models/BackboneSelection';
 import SVGConstants from '@/utils/SVGConstants';
 import SelectedData from '@/models/SelectedData';
 import { InjectionKey } from 'vue';
 import { createLogger } from 'vuex';
-import { LoadedSpeciesGenes } from '@/new_models/DatatrackSection';
 
 export const key: InjectionKey<Store<VCMapState>> = Symbol();
 
@@ -25,7 +23,6 @@ export interface VCMapState
 
   comparativeSpecies: Species[];
   loadedGenes: Map<number, any> | null;
-  loadedGeneSections: TrackSection[];
 
   selectedBackboneRegion: BackboneSelection;
 
@@ -61,7 +58,6 @@ export default createStore({
 
     comparativeSpecies: [],
     loadedGenes: null,
-    loadedGeneSections: [],
 
     selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
 
@@ -108,9 +104,6 @@ export default createStore({
     },
     loadedGenes (state: VCMapState, loadedGenesMap: Map<number, any>) {
       state.loadedGenes = loadedGenesMap;
-    },
-    loadedGeneSections (state: VCMapState, loadedGeneSections: TrackSection[]) {
-      state.loadedGeneSections = loadedGeneSections;
     },
     selectedBackboneRegion ( state: VCMapState, selection: BackboneSelection) {
       state.selectedBackboneRegion = selection;
@@ -200,9 +193,6 @@ export default createStore({
     },
     setLoadedGenes(context: ActionContext<VCMapState, VCMapState>, loadedGenes: Gene[]) {
       context.commit('loadedGenes', loadedGenes);
-    },
-    setLoadedGeneSections(context: ActionContext<VCMapState, VCMapState>, loadedGeneSections: TrackSection[]) {
-      context.commit('loadedGeneSections', loadedGeneSections);
     },
     setIsDetailedPanelUpdating(context: ActionContext<VCMapState, VCMapState>, isUpdating: boolean) {
       context.commit('isDetailedPanelUpdating', isUpdating);
