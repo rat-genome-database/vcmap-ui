@@ -41,7 +41,7 @@ export function backboneDatatrackBuilder(genomicData: Gene[], backboneSection: B
   genomicData.forEach((genomicElement: Gene) => {
     const currSpecies = genomicElement.speciesName.toLowerCase();
     const geneBackboneSection = new BackboneSection({ start: genomicElement.start, stop: genomicElement.stop, windowStart: windowStart, windowStop: windowStop, renderType: 'detailed' });
-    const geneDatatrackSection = new DatatrackSection({ start: genomicElement.start, stop: genomicElement.stop, backboneSection: geneBackboneSection, type: 'gene', });
+    const geneDatatrackSection = new DatatrackSection({ start: genomicElement.start, stop: genomicElement.stop, backboneSection: geneBackboneSection, gene: genomicElement, orthologs: genomicElement.orthologs, type: 'gene', });
 
     processedGenomicData.datatracks.push(geneDatatrackSection);
     // Map structure is { rgdId: { species: { gene: Gene, drawn: [{ svgY: number, svgX: number }] } } }

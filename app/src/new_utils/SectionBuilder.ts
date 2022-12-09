@@ -203,7 +203,7 @@ function syntenicDatatrackBuilder(genomicData: Gene[], syntenyBlock: SyntenySect
       const geneBackboneSection = new BackboneSection({ start: backboneEquivalents.backboneStart, stop: backboneEquivalents.backboneStop, windowStart: windowStart, windowStop: windowStop, renderType });
 
       //Create DatatrackSection for each gene
-      const geneDatatrackSection = new DatatrackSection({ start: genomicElement.start, stop: genomicElement.stop, backboneSection: geneBackboneSection, type: 'gene', });
+      const geneDatatrackSection = new DatatrackSection({ start: genomicElement.start, stop: genomicElement.stop, backboneSection: geneBackboneSection, type: 'gene', orthologs: genomicElement.orthologs, gene: genomicElement });
 
       const existingId = masterGeneMap.get(genomicElement.rgdId);
       if (existingId)
