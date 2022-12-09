@@ -1,32 +1,42 @@
-import TrackSection from './TrackSection';
+import Datatracksection from './DatatrackSection';
+import { SVGShape, VCMapSVGElement } from "./VCMapSVGElement";
 
 interface OrthologLineParams
 {
-  backboneY: number;
-  comparativeX: number;
-  comparativeY: number;
+  posX1: number;  //backbone gene x
+  posX2: number;  //comparative gene x
+  posY1: number;  //backbone gene y
+  posY2: number;  //comparative gene y
 
-  backboneGene: TrackSection;
-  comparativeGene: TrackSection;
+  backboneGene: Datatracksection;
+  comparativeGene: Datatracksection;
 }
 
-export default class OrthologLine
+export default class OrthologLine implements VCMapSVGElement
 {
-  backboneGeneY: number;
-  comparativeGeneX: number;
-  comparativeGeneY: number;
-  backboneGene: TrackSection;
-  comparativeGene: TrackSection;
+  backboneGene: Datatracksection;
+  comparativeGene: Datatracksection;
+
+  posX1: number = 0;
+  posX2: number = 0;
+  posY1: number = 0;
+  posY2: number = 0;
+  height: number = 0;
+  width: number = 0;
+  shape: SVGShape = 'rect';
+  representation: string = '';
+  isHovered: boolean = false;
   isSelected: boolean = false;
+  elementColor: string = '';
 
   constructor(params: OrthologLineParams)
   {
-    this.backboneGeneY = params.backboneY;
-    this.comparativeGeneX = params.comparativeX;
-    this.comparativeGeneY = params.comparativeY;
     this.backboneGene = params.backboneGene;
     this.comparativeGene = params.comparativeGene;
+
+    this.posX1 = params.posX1;
+    this.posX2 = params.posX2;
+    this.posY1 = params.posY1;
+    this.posY2 = params.posY2;
   }
 }
-
-

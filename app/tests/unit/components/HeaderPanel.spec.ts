@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import HeaderPanel from '@/components/HeaderPanel.vue';
-import Species from '@/new_models/Species';
-import Map from '@/new_models/SpeciesMap';
+import Species from '@/models/Species';
+import Map from '@/models/SpeciesMap';
 import { TestUtils } from '../../utils/TestUtils';
 
 const mockStore = TestUtils.initStore({

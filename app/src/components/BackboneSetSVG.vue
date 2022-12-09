@@ -111,10 +111,10 @@ import { useStore } from 'vuex';
 import SVGConstants from '@/utils/SVGConstants';
 import { key } from '@/store';
 import { Formatter } from '@/utils/Formatter';
-import BackboneSection from '@/new_models/BackboneSection';
-import BackboneSet from '@/new_models/BackboneSet';
-import DatatrackSection from '@/new_models/DatatrackSection';
-import { VCMapSVGElement } from '@/new_models/VCMapSVGElement';
+import BackboneSection from '@/models/BackboneSection';
+import BackboneSet from '@/models/BackboneSet';
+import DatatrackSection from '@/models/DatatrackSection';
+import { VCMapSVGElement } from '@/models/VCMapSVGElement';
 
 const INNER_SELECTION_EXTRA_WIDTH = 4;
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';

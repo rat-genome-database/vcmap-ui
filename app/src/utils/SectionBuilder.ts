@@ -1,13 +1,13 @@
-import Species from '@/new_models/Species';
-import Chromosome from '@/new_models/Chromosome';
-import BackboneSection, { RenderType } from '@/new_models/BackboneSection';
-import SyntenySection from '@/new_models/SyntenySection';
-import SyntenyRegion from '@/new_models/SyntenyRegion';
-import DatatrackSection, { LoadedSpeciesGenes } from '@/new_models/DatatrackSection';
+import Species from '@/models/Species';
+import Chromosome from '@/models/Chromosome';
+import BackboneSection, { RenderType } from '@/models/BackboneSection';
+import SyntenySection from '@/models/SyntenySection';
+import SyntenyRegion from '@/models/SyntenyRegion';
+import DatatrackSection, { LoadedSpeciesGenes } from '@/models/DatatrackSection';
 import SyntenyApi, { SpeciesSyntenyData, SyntenyRequestParams, SyntenyComponent } from '@/api/SyntenyApi';
-import Gene from '@/new_models/Gene';
-import SyntenyRegionSet from '@/new_models/SyntenyRegionSet';
-import OrthologLine from '@/new_models/OrthologLine';
+import Gene from '@/models/Gene';
+import SyntenyRegionSet from '@/models/SyntenyRegionSet';
+import OrthologLine from '@/models/OrthologLine';
 
 const GENES_DATA_TRACK_THRESHOLD_MULTIPLIER = 5;
 const GAPS_THRESHOLD_MULTIPLIER = 10;

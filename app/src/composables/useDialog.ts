@@ -1,4 +1,4 @@
-import SyntenyRegionSet from '@/new_models/SyntenyRegionSet';
+import SyntenyRegionSet from '@/models/SyntenyRegionSet';
 import { ref } from 'vue';
 import { useLogger } from 'vue-logger-plugin';
 

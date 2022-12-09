@@ -1,6 +1,6 @@
-import BackboneSection, { BackboneSectionParams } from "@/new_models/BackboneSection";
-import Species from "@/new_models/Species";
-import SpeciesMap from "@/new_models/SpeciesMap";
+import BackboneSection, { BackboneSectionParams } from "@/models/BackboneSection";
+import Species from "@/models/Species";
+import SpeciesMap from "@/models/SpeciesMap";
 import { Formatter } from "@/utils/Formatter";
 import SVGConstants, { PANEL_HEIGHT, PANEL_SVG_START, PANEL_SVG_STOP } from "@/utils/SVGConstants";
 

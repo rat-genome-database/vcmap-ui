@@ -1,9 +1,9 @@
-import BackboneSection, { RenderType } from "@/new_models/BackboneSection";
-import Chromosome from "@/new_models/Chromosome";
-import Species from "@/new_models/Species";
-import Gene from "@/new_models/Gene";
-import DatatrackSection, { LoadedSpeciesGenes } from "@/new_models/DatatrackSection";
-import BackboneSet from "@/new_models/BackboneSet";
+import BackboneSection, { RenderType } from "@/models/BackboneSection";
+import Chromosome from "@/models/Chromosome";
+import Species from "@/models/Species";
+import Gene from "@/models/Gene";
+import DatatrackSection, { LoadedSpeciesGenes } from "@/models/DatatrackSection";
+import BackboneSet from "@/models/BackboneSet";
 
 export interface ProcessedGenomicData
 {

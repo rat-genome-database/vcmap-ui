@@ -1,5 +1,5 @@
-import Species from "@/new_models/Species";
-import SpeciesMap from "@/new_models/SpeciesMap";
+import Species from "@/models/Species";
+import SpeciesMap from "@/models/SpeciesMap";
 import httpInstance from './httpInstance';
 
 /**

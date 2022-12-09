@@ -1,8 +1,8 @@
-import Gene from '@/new_models/Gene';
+import Gene from '@/models/Gene';
 import SelectedData from '@/models/SelectedData';
 import { Store } from "vuex";
 import { VCMapState } from "@/store";
-import DatatrackSection from '@/new_models/DatatrackSection';
+import DatatrackSection from '@/models/DatatrackSection';
 // Util methods to help process and update selection info
 export function getGeneOrthologIds(store: Store<VCMapState>, gene: Gene) {
   const geneOrthologs = store.state.selectedBackboneRegion.orthologData.get(gene.symbol);

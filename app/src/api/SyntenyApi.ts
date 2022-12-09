@@ -1,7 +1,7 @@
 import httpInstance from '@/api/httpInstance';
-import Chromosome from '@/new_models/Chromosome';
-import Species from '@/new_models/Species';
-import Gene from '@/new_models/Gene';
+import Chromosome from '@/models/Chromosome';
+import Species from '@/models/Species';
+import Gene from '@/models/Gene';
 import { AxiosResponse } from 'axios';
 
 export interface SyntenyRequestParams

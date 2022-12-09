@@ -1,6 +1,6 @@
 import { shallowMount } from '@vue/test-utils';
 import GeneInfo from '@/components/GeneInfo.vue';
-import Gene from '@/new_models/Gene';
+import Gene from '@/models/Gene';
 import { TestUtils } from '../../utils/TestUtils';
 
 const mockStore = TestUtils.initStore({});

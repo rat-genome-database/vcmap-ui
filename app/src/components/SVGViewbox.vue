@@ -98,7 +98,7 @@ import SVGConstants from '@/utils/SVGConstants';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import useDialog from '@/composables/useDialog';
-import Gene from '@/new_models/Gene';
+import Gene from '@/models/Gene';
 import SelectedData from '@/models/SelectedData';
 import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
 import { key } from '@/store';
@@ -106,13 +106,13 @@ import { backboneDetailedError, backboneOverviewError, missingComparativeSpecies
 import { createSyntenicRegionsAndDatatracks,  } from '@/utils/SectionBuilder';
 import useOverviewPanelSelection from '@/composables/useOverviewPanelSelection';
 import { useLogger } from 'vue-logger-plugin';
-import SyntenyRegion from '@/new_models/SyntenyRegion';
+import SyntenyRegion from '@/models/SyntenyRegion';
 import { createBackboneSection, backboneDatatrackBuilder, createBackboneSet } from '@/utils/BackboneBuilder';
 import BackboneSetSVG from './BackboneSetSVG.vue';
-import SyntenyRegionSet from '@/new_models/SyntenyRegionSet';
+import SyntenyRegionSet from '@/models/SyntenyRegionSet';
 import GeneApi from '@/api/GeneApi';
-import BackboneSet from '@/new_models/BackboneSet';
-import { LoadedSpeciesGenes } from '@/new_models/DatatrackSection';
+import BackboneSet from '@/models/BackboneSet';
+import { LoadedSpeciesGenes } from '@/models/DatatrackSection';
 
 const store = useStore(key);
 const $log = useLogger();

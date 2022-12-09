@@ -1,8 +1,8 @@
 import OrthologLine from "./OrthologLine";
-import Gene from "@/new_models/Gene";
-import BackboneSection from "@/new_models/BackboneSection";
-import SyntenySection from "@/new_models/SyntenySection";
-import DatatrackSection from "@/new_models/DatatrackSection";
+import Gene from "@/models/Gene";
+import BackboneSection from "@/models/BackboneSection";
+import SyntenySection from "@/models/SyntenySection";
+import DatatrackSection from "@/models/DatatrackSection";
 
 // TODO: These types could probably use some refactoring
 export type SelectedDataType = 'trackSection' | 'Gene' | 'geneLabel' | 'backbone';
