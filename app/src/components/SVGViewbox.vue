@@ -31,15 +31,7 @@
         </template>
         <template v-for="(label, index) in syntenySet.datatrackLabels" :key="index">
           <template v-if="label.isVisible">
-            <text
-              class="label small"
-              :x="(label.posX + 5)"
-              :y="(label.posY)"
-              dominant-baseline="middle"
-              text-anchor="start"
-            >
-                {{label.text}}
-            </text>
+            <GeneLabelSVG :label="(label as GeneLabel)"/>
           </template>
         </template>
       </template>
@@ -110,6 +102,7 @@ import SectionSVG from './SectionSVG.vue';
 import SVGConstants from '@/utils/SVGConstants';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 import VCMapDialog from '@/components/VCMapDialog.vue';
+import GeneLabelSVG from '@/components/GeneLabelSVG.vue';
 import useDialog from '@/composables/useDialog';
 import TrackSet from '@/models/TrackSet';
 import OrthologLine from '@/models/OrthologLine';
