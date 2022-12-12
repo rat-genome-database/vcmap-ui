@@ -360,13 +360,6 @@ const updateDetailsPanel = async () => {
       masterGeneMap
     );
 
-
-    // process gene labels
-    for (let setIdx = 0; setIdx < detailedSyntenyData.syntenyRegionSets.length; setIdx++)
-    {
-      const regionSet = detailedSyntenyData.syntenyRegionSets[setIdx];
-      mergeGeneLabels(regionSet.datatrackLabels as GeneLabel[]);
-    }
     detailedSyntenySets.value = detailedSyntenyData.syntenyRegionSets;
 
     timeSyntenyTracks = Date.now() - createSyntenyTracksStart;

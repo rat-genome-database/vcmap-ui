@@ -186,7 +186,7 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
   });
 
   const syntenyRegionSet = new SyntenyRegionSet(currSpecies, currMap, processedSyntenicRegions, setOrder, renderType, speciesSyntenyData, threshold);
-  syntenyRegionSet.setGeneLabels(allGeneLabels);
+  syntenyRegionSet.datatrackLabels = allGeneLabels;
   return syntenyRegionSet;
 }
 

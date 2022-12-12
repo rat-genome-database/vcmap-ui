@@ -3,10 +3,11 @@ import { syntenicSectionBuilder } from "@/utils/SectionBuilder";
 import SVGConstants from "@/utils/SVGConstants";
 import DatatrackSection, { LoadedSpeciesGenes } from "./DatatrackSection";
 import { GenomicSet } from "./GenomicSet";
-import Label from "./Label";
+import Label, { GeneLabel } from "./Label";
 import OrthologLine from "./OrthologLine";
 import SyntenyRegion from "./SyntenyRegion";
 import SyntenySection from "./SyntenySection";
+import { mergeGeneLabels } from "@/utils/GeneLabelMerger";
 
 const LEVEL_2_WIDTH_MULTIPLIER = 0.75;
 
@@ -47,6 +48,7 @@ export default class SyntenyRegionSet extends GenomicSet
     this.threshold = threshold;
     this.setRegionXPositionsBasedOnOrder();
     this.createTitleLabels();
+    this.processGeneLabels();
   }
 
   public adjustVisibleSet(backboneStart: number, backboneStop: number, masterGeneMap: Map<number, LoadedSpeciesGenes>)
@@ -62,6 +64,8 @@ export default class SyntenyRegionSet extends GenomicSet
     );
 
     this.regions = syntenyRegionData.regions;
+    // TODO: adjusting gene labels seesm to slow things down a lot here, so should address this at some point
+    this.processGeneLabels();
   }
 
   protected createTitleLabels()
@@ -171,8 +175,18 @@ export default class SyntenyRegionSet extends GenomicSet
     });
   }
 
-  public setGeneLabels<Type extends Label[]>(labels: Type)
+  public processGeneLabels()
   {
-    this.datatrackLabels = labels;
+    const allLabels: any[] = [];
+    this.regions.forEach((region: SyntenyRegion) => {
+      region.datatrackSections.forEach((section) => {
+        if (section.label)
+        {
+          allLabels.push(section.label);
+        }
+      });
+    });
+    this.datatrackLabels = allLabels;
+    mergeGeneLabels(this.datatrackLabels as GeneLabel[]);
   }
 }
