@@ -23,15 +23,15 @@ export function getNewSelectedData(store: Store<VCMapState>, gene: Gene): {rgdId
   return {rgdIds: allOrthologInfo.rgdIds, selectedData: allOrthologInfo.selectedData};
 }
 
-export function sortGeneList(geneList: DatatrackSection[]) {
+export function sortGeneList(geneList: Gene[]) {
   // for combined or hiddent gene lists, sort LOC
   // genes to end of list, otherwise sort alphabetically
   geneList.sort((geneA, geneB) => {
-    const isGeneALOC = geneA.gene?.symbol.startsWith('LOC') || false;
-    const isGeneBLOC = geneB.gene?.symbol.startsWith('LOC') || false;
+    const isGeneALOC = geneA.symbol.startsWith('LOC') || false;
+    const isGeneBLOC = geneB.symbol.startsWith('LOC') || false;
     if (isGeneALOC && isGeneBLOC) {
-      const geneASymbol = geneA.gene?.symbol.toLowerCase() || '';
-      const geneBSymbol = geneB.gene?.symbol.toLowerCase() || '';
+      const geneASymbol = geneA.symbol.toLowerCase() || '';
+      const geneBSymbol = geneB.symbol.toLowerCase() || '';
       return (geneASymbol < geneBSymbol) ? -1 : (geneASymbol > geneBSymbol) ? 1 : 0;
     }
     else if (isGeneALOC) {
@@ -40,8 +40,8 @@ export function sortGeneList(geneList: DatatrackSection[]) {
     else if (isGeneBLOC) {
       return -1;
     }
-    const geneASymbol = geneA.gene?.symbol.toLowerCase() || '';
-    const geneBSymbol = geneB.gene?.symbol.toLowerCase() || '';
+    const geneASymbol = geneA.symbol.toLowerCase() || '';
+    const geneBSymbol = geneB.symbol.toLowerCase() || '';
     return (geneASymbol < geneBSymbol) ? -1 : (geneASymbol > geneBSymbol) ? 1 : 0;
   });
 }

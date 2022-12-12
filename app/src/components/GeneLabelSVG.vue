@@ -15,8 +15,9 @@
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import { GeneLabel } from '@/models/Label';
-import { Gene } from '@/models/Gene';
-import { sortGeneList } from '@/utils/DataPanelHelpers';
+import Gene from '@/models/Gene';
+import SelectedData from '@/models/SelectedData';
+import { getNewSelectedData, sortGeneList } from '@/utils/DataPanelHelpers';
 
 const store = useStore(key);
 
@@ -46,19 +47,31 @@ const getLabelText = (label: GeneLabel) => {
 const onGeneLabelClick = (event: any, label: GeneLabel) => {
   if (store.state.selectedGeneIds.includes(label.gene.rgdId))
   {
-    store.dispatch('setSelectedGenedIs', []);
+    store.dispatch('setSelectedGeneIds', []);
     store.dispatch('setSelectedData', null);
   }
   const geneIds: number[] = event.shiftKey ? [...store.state.selectedGeneIds] : [];
 
   const combinedGenes = label.combinedLabels.map((label) => label.gene);
   const geneList = [label.gene, ...combinedGenes];
-  // sortGeneList(geneList);
+  let newSelectedData: SelectedData[] = [];
+  sortGeneList(geneList);
   geneList.forEach((gene: Gene) => {
-    geneIds.push(gene.rgdId);
+    const newData = getNewSelectedData(store, gene);
+    const geneAndOrthologs = newData.selectedData;
+    const newGeneIds = newData.rgdIds;
+    newSelectedData.push(...geneAndOrthologs);
+    geneIds.push(...newGeneIds);
   });
 
   store.dispatch('setSelectedGeneIds', geneIds || []);
+  if (event.shiftKey)
+  {
+    const selectedDataArray = [...(store.state.selectedData || []), ...newSelectedData];
+    store.dispatch('setSelectedData', selectedDataArray);
+  } else {
+    store.dispatch('setSelectedData', newSelectedData);
+  }
 
 }
 </script>

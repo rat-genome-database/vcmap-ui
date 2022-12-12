@@ -213,26 +213,13 @@ const onClick = (event: any, section: DatatrackSection | BackboneSection, type: 
   // If shift key is held, we'll just add to the selections, otherwise, reset first
   let geneIds: number[] = event.shiftKey ? [...store.state.selectedGeneIds] : [];
 
-  // Get the list of genes to build the selected data, if this is a gene label, we
-  // add all the combined genes to the selected data panel
-  // Otherwise if its a track section, we'll add the hidden genes
   let newSelectedData: SelectedData[] = [];
-  const geneSectionList = type === 'geneLabel' ? [section, ...(section.combinedGenes || [])] : [section, ...(section.hiddenGenes || [])];
-  if (geneSectionList && geneSectionList.length > 0) {
-    // If this is a geneLabel, we're going to set all combined genes as "selected"
-    geneSectionList.forEach((section) => geneIds.push(section.gene.rgdId));
-    // Alphabetically sort the combined/hidden gene lists (LOC genes at end of list)
-    sortGeneList(geneSectionList);
-    // Set the new selected data from gene list
-    geneSectionList.forEach((section) => {
-      if (section.gene) {
-        const newData = getNewSelectedData(store, section.gene);
-        const geneAndOrthologs = newData.selectedData;
-        const newGeneIds = newData.rgdIds;
-        newSelectedData.push(...geneAndOrthologs);
-        geneIds.push(...newGeneIds);
-      }
-    });
+  if (section.gene) {
+    const newData = getNewSelectedData(store, section.gene);
+    const geneAndOrthologs = newData.selectedData;
+    const newGeneIds = newData.rgdIds;
+    newSelectedData.push(...geneAndOrthologs);
+    geneIds.push(...newGeneIds);
   }
 
   store.dispatch('setSelectedGeneIds', geneIds || []);
