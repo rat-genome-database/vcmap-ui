@@ -1,14 +1,4 @@
 <template>
-    <!-- Syntenic Lines -->
-  <template v-for="(line, index) in orthologLines" :key="index">
-    <line
-      class="ortholog-line"
-      :stroke="(line.isSelected ? SELECTED_HIGHLIGHT_COLOR : 'lightgray')"
-      :x1="line.posX1" :x2="line.posX2"
-      :y1="line.posY1" :y2="line.posY2" 
-    />
-  </template>
-
   <template v-for="(blockSection, index) in level1Blocks" :key="index">
     <rect
       class="block-section"
@@ -111,9 +101,6 @@ onMounted(() => {
   highlightSelections(store.state.selectedGeneIds);
 });
 
-const orthologLines = computed(() => {
-  return props.region.orthologLines ?? [];
-});
 const level1Blocks = computed(() => {
   return props.region.syntenyBlocks.filter(b => b.chainLevel === 1);
 });
@@ -195,7 +182,7 @@ const highlightSelections = (selectedGeneIds: number[]) => {
   });
   // Highlight the line if needed, and make sure genes highlighted too
   // (this ensures backbone and comparitive genes are highlighted, regardless of which is clicked)
-  orthologLines.value?.forEach((line) => {
+  props.region.orthologLines.forEach((line) => {
     if (selectedGeneIds.includes(line.backboneGene.gene?.rgdId || -1) ||
         selectedGeneIds.includes(line.comparativeGene.gene?.rgdId || -1)) 
     {
@@ -275,7 +262,7 @@ const onClick = (event: any, section: DatatrackSection, type: string) => {
 
 const highlightGeneLines = (sectionId: number, type: string) => {
   const dataPanelSelected = store.state.selectedGeneIds.includes(sectionId);
-  orthologLines.value?.forEach((line) => {
+  props.region.orthologLines.forEach((line) => {
     if (line.comparativeGene.gene?.rgdId == sectionId ||
         line.backboneGene.gene?.rgdId == sectionId)
     {
