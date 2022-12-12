@@ -6,7 +6,7 @@
     dominant-baseline="middle"
     text-anchor="start"
   >
-    {{label.text}}
+    {{getLabelText(label)}}
   </text>
 </template>
 
@@ -19,4 +19,11 @@ interface Props
 }
 defineProps<Props>();
 
+const getLabelText = (label: GeneLabel) => {
+
+  const numCombinedGenes = label.combinedLabels.length;
+  const geneSymbolText = numCombinedGenes > 9 ? label.text.substring(0, 4) : label.text.substring(0, 5);
+  const labelText = `${geneSymbolText}...(${numCombinedGenes})`;
+  return labelText;
+}
 </script>
