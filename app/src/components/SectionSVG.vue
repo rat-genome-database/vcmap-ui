@@ -276,7 +276,7 @@ const highlightGeneLines = (sectionId: number, type: string) => {
       }
     } 
   });
-}
+};
 
 
 </script>

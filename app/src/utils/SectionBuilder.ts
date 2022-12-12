@@ -9,7 +9,6 @@ import Gene from '@/models/Gene';
 import SyntenyRegionSet from '@/models/SyntenyRegionSet';
 import OrthologLine from '@/models/OrthologLine';
 
-const GENES_DATA_TRACK_THRESHOLD_MULTIPLIER = 5;
 const GAPS_THRESHOLD_MULTIPLIER = 10;
 
 /**
@@ -295,7 +294,14 @@ function orthologLineBuilder(orthologs: number[], masterProcessedGenes: Map<numb
         if (species !== processedSpecies)
         {
           const backboneGene = masterGene[species].drawn[0].gene;
-          const orthologLine = new OrthologLine({ backboneGene: backboneGene, comparativeGene: currGene, posX1: backboneGene.posX2, posY1: backboneGene.posY1, posX2: currGene.posX1, posY2: currGene.posY1 });
+          const orthologLine = new OrthologLine({
+            backboneGene: backboneGene, 
+            comparativeGene: currGene, 
+            posX1: backboneGene.posX2, 
+            posY1: backboneGene.posY1 + (backboneGene.height / 2), 
+            posX2: currGene.posX1, 
+            posY2: currGene.posY1 + (currGene.height / 2),
+          });
           orthologLines.push(orthologLine);
         }
       }

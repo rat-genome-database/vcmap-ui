@@ -62,12 +62,12 @@
 import { Formatter } from '@/utils/Formatter';
 import { computed, ref } from 'vue';
 import { useStore } from 'vuex';
-import { useLogger } from 'vue-logger-plugin'
+import { useLogger } from 'vue-logger-plugin';
 import { key } from '@/store';
 import VCMapDialog from './VCMapDialog.vue';
 
 const store = useStore(key);
-const $log = useLogger()
+const $log = useLogger();
 
 let showEditModal = ref(false);
 let startPosition = ref(store.state.selectedBackboneRegion.baseSelection.basePairStart);
