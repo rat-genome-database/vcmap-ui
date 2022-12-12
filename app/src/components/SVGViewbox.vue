@@ -229,6 +229,8 @@ const updateOverviewPanel = async () => {
   const overviewBackbone = createBackboneSection(backboneSpecies, backboneChromosome, 0, backboneChromosome.seqLength, 'overview');
   overviewBackboneSet.value = createBackboneSet(overviewBackbone);
 
+  const overviewBackboneCreationTime = Date.now();
+
   if (store.state.comparativeSpecies.length === 0)
   {
     onError(missingComparativeSpeciesError, missingComparativeSpeciesError.message);
@@ -250,6 +252,8 @@ const updateOverviewPanel = async () => {
   );
 
   overviewSyntenySets.value = overviewSyntenyData.syntenyRegionSets;
+
+  const overviewSyntenyTrackCreationTime = Date.now();
 
   // Set the backbone selection to the start and stop positions selected on the config screen if a selection doesn't already exist
   // (the backbone should have just 1 [0] section)
@@ -286,9 +290,13 @@ const updateOverviewPanel = async () => {
     
     store.dispatch('setBackboneSelection', recreatedSelection);
   }
-  
-  $log.info(`Update overview time: ${(Date.now() - overviewUpdateStart)} ms`);
- 
+
+  const overviewCreateBackboneSelectionTime = Date.now();
+  logPerformanceReport('Update Overview Time', (overviewCreateBackboneSelectionTime - overviewUpdateStart), {
+    'Create Backbone Track': (overviewBackboneCreationTime - overviewUpdateStart),
+    'Create Synteny Tracks': (overviewSyntenyTrackCreationTime - overviewBackboneCreationTime),
+    'Create Backbone Selection': (overviewCreateBackboneSelectionTime - overviewSyntenyTrackCreationTime)
+  });
 };
 
 const updateDetailsPanel = async () => {
@@ -304,6 +312,7 @@ const updateDetailsPanel = async () => {
   // debug timers
   let timeSyntenyTracks = 0;
   let timeCreateBackboneTrack = 0;
+  let timeAdjustVisibleRegion = 0;
 
   if (detailedBasePairRange.stop - detailedBasePairRange.start <= 0)
   {
@@ -390,7 +399,9 @@ const updateDetailsPanel = async () => {
       return;
     }
 
+    const adjustVisibleRegionStart = Date.now();
     adjustDetailedVisibleSetsBasedOnZoom(zoomedSelection);
+    timeAdjustVisibleRegion = Date.now() - adjustVisibleRegionStart;
   }
   else
   {
@@ -400,18 +411,14 @@ const updateDetailsPanel = async () => {
 
   store.dispatch('setIsDetailedPanelUpdating', false);
   const timeDetailedUpdate= Date.now() - detailedUpdateStart;
-  const timeDetailedUpdateOther = timeDetailedUpdate - (timeSyntenyTracks + timeCreateBackboneTrack);
+  const timeDetailedUpdateOther = timeDetailedUpdate - (timeSyntenyTracks + timeCreateBackboneTrack + timeAdjustVisibleRegion);
 
-  // debug: log performance assessment for updating detailed panel
-  let viewboxDebugReport = {
-    "Update Detailed Time":timeDetailedUpdate + " ms",
-    Details: {
-      "Backbone Tracks": timeCreateBackboneTrack + " ms | " +  ((timeCreateBackboneTrack/timeDetailedUpdate) * 100).toFixed(2) + '%',
-      "Synteny Tracks": timeSyntenyTracks + " ms | " +  ((timeSyntenyTracks/timeDetailedUpdate) * 100).toFixed(2) + '%',
-      "Misc": timeDetailedUpdateOther + " ms | " +  ((timeDetailedUpdateOther/timeDetailedUpdate) * 100).toFixed(2) + '%',
-    },
-  };
-  $log.debug(JSON.stringify(viewboxDebugReport, null, 2));
+  logPerformanceReport('Update Detailed Time', timeDetailedUpdate, {
+    'Create Backbone Track': timeCreateBackboneTrack,
+    'Create Synteny Tracks': timeSyntenyTracks,
+    'Adjust Visible Region': timeAdjustVisibleRegion,
+    'Misc': timeDetailedUpdateOther,
+  });
 };
 
 const adjustDetailedVisibleSetsBasedOnZoom = (zoomedSelection: SelectedRegion) => {
@@ -494,6 +501,22 @@ const isNavigationDownDisabled = computed(() => {
 
   return false;
 });
+
+function logPerformanceReport(title: string, totalTimeMillis: number, detailedTimeReportObject: { [key:string]: number} )
+{
+  const performanceReport: any = {
+    [title]: totalTimeMillis + ' ms',
+    Details: {}
+  };
+
+  for (const detailTitle in detailedTimeReportObject)
+  {
+    performanceReport.Details[detailTitle] = detailedTimeReportObject[detailTitle] + ' ms | ' + ((detailedTimeReportObject[detailTitle] / totalTimeMillis * 100).toFixed(2) + '%');
+  }
+
+  $log.debug(JSON.stringify(performanceReport, null, 2));
+}
+
 </script>
 
 <style lang="scss" scoped>
