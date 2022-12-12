@@ -199,7 +199,7 @@ const getSectionFill = (section: VCMapSVGElement) => {
   return section.elementColor;
 };
 
-const onClick = (event: any, section: DatatrackSection, type: string) => {
+const onClick = (event: any, section: DatatrackSection | BackboneSection, type: string) => {
   if (!section.gene?.rgdId) {
     return;
   }
@@ -259,21 +259,6 @@ const highlightSelections = (selectedGeneIds: number[]) => {
     else 
     {
       section.isSelected = false;
-    }
-  });
-  // Highlight the line if needed, and make sure genes highlighted too
-  // (this ensures backbone and comparitive genes are highlighted, regardless of which is clicked)
-  props.lines?.forEach((line) => {
-    if (selectedGeneIds.includes(line.backboneGene.gene?.rgdId || -1) ||
-        selectedGeneIds.includes(line.comparativeGene.gene?.rgdId || -1)) 
-    {
-      line.isSelected = true;
-      line.backboneGene.isSelected = true;
-      line.comparativeGene.isSelected = true;
-    } 
-    else 
-    {
-      line.isSelected = false;
     }
   });
 

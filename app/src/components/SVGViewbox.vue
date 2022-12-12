@@ -8,6 +8,11 @@
     <rect class="panel selectable" :class="{'is-loading': arePanelsLoading}" x="0" @mousedown.left="initOverviewSelection" @mousemove="updateOverviewSelection" @mouseup.left="completeOverviewSelection(overviewBackboneSet?.backbone)" :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.viewboxHeight" />
     <rect class="panel selectable" :class="{'is-loading': arePanelsLoading}" @mousedown.left="initZoomSelection" @mousemove="updateZoomSelection" @mouseup.left="completeZoomSelection" :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.viewboxHeight" />
 
+    <!-- Ortholog Lines -->
+    <template v-for="(line, index) in orthologLines" :key="index">
+      <OrthologLineSVG :line="line" />
+    </template>
+    
     <!-- Overview panel SVGs ------------------------------------------->
     <template v-for="(syntenySet, index) in overviewSyntenySets" :key="index">
       <template v-for="(region, index) in syntenySet.regions" :key="index">
@@ -113,6 +118,8 @@ import SyntenyRegionSet from '@/models/SyntenyRegionSet';
 import GeneApi from '@/api/GeneApi';
 import BackboneSet from '@/models/BackboneSet';
 import { LoadedSpeciesGenes } from '@/models/DatatrackSection';
+import OrthologLineSVG from './OrthologLineSVG.vue';
+import OrthologLine from '@/models/OrthologLine';
 
 const store = useStore(key);
 const $log = useLogger();
@@ -128,6 +135,16 @@ let overviewSyntenySets = ref<SyntenyRegionSet[]>([]);
 
 let geneReload: boolean = false; //whether or not load by gene reload has occurred
 
+const orthologLines = computed(() => {
+  let lines: OrthologLine[] = [];
+  detailedSyntenySets.value.forEach(set => {
+    set.regions.forEach(region => {
+      lines = lines.concat(region.orthologLines as OrthologLine[]);
+    });
+  });
+
+  return lines;
+});
 
 async function attachToProgressLoader(storeLoadingActionName: string, func: () => Promise<any>)
 {
