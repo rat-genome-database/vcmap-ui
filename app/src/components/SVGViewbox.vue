@@ -27,12 +27,24 @@
     <!-- Detail panel SVGs ----------------------------------------->
     <template v-if="detailedBackboneSet">
       <BackboneSetSVG show-data-on-hover :backbone-set="detailedBackboneSet" />
+      <template v-if="detailedBackboneSet.datatrackLabels">
+        <template v-for="(label, index) in detailedBackboneSet.datatrackLabels" :key="index">
+          <template v-if="(label.isVisible)">
+            <GeneLabelSVG :label="(label as GeneLabel)" />
+          </template>
+        </template>
+      </template>
     </template>
 
     <template v-if="detailedSyntenySets.length">
       <template v-for="(syntenySet, index) in detailedSyntenySets" :key="index">
         <template v-for="(syntenicRegion, index) in syntenySet.regions" :key="index">
           <SectionSVG show-gene-label show-chromosome :region="syntenicRegion as SyntenyRegion" />
+        </template>
+        <template v-for="(label, index) in syntenySet.datatrackLabels" :key="index">
+          <template v-if="label.isVisible">
+            <GeneLabelSVG :label="(label as GeneLabel)"/>
+          </template>
         </template>
       </template>
     </template>
@@ -102,8 +114,11 @@ import SectionSVG from './SectionSVG.vue';
 import SVGConstants from '@/utils/SVGConstants';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 import VCMapDialog from '@/components/VCMapDialog.vue';
+import GeneLabelSVG from '@/components/GeneLabelSVG.vue';
 import useDialog from '@/composables/useDialog';
 import Gene from '@/models/Gene';
+import OrthologLine from '@/models/OrthologLine';
+import { GeneLabel } from '@/models/Label';
 import SelectedData from '@/models/SelectedData';
 import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
 import { key } from '@/store';
@@ -119,7 +134,7 @@ import GeneApi from '@/api/GeneApi';
 import BackboneSet from '@/models/BackboneSet';
 import { LoadedSpeciesGenes } from '@/models/DatatrackSection';
 import OrthologLineSVG from './OrthologLineSVG.vue';
-import OrthologLine from '@/models/OrthologLine';
+import { mergeGeneLabels } from '@/utils/GeneLabelMerger';
 
 const store = useStore(key);
 const $log = useLogger();
@@ -345,6 +360,13 @@ const updateDetailsPanel = async () => {
       masterGeneMap
     );
 
+
+    // process gene labels
+    for (let setIdx = 0; setIdx < detailedSyntenyData.syntenyRegionSets.length; setIdx++)
+    {
+      const regionSet = detailedSyntenyData.syntenyRegionSets[setIdx];
+      mergeGeneLabels(regionSet.datatrackLabels as GeneLabel[]);
+    }
     detailedSyntenySets.value = detailedSyntenyData.syntenyRegionSets;
 
     timeSyntenyTracks = Date.now() - createSyntenyTracksStart;

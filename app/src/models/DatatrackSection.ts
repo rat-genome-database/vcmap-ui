@@ -1,7 +1,7 @@
 import BackboneSection from "./BackboneSection";
 import Gene from './Gene';
 import { SVGShape, VCMapSVGElement } from "./VCMapSVGElement";
-import Label from './Label';
+import Label, { GeneLabel } from './Label';
 
 export interface LoadedSpeciesGenes
 {
@@ -74,10 +74,12 @@ export default class DatatrackSection implements VCMapSVGElement
 
 export class GeneDatatrack extends DatatrackSection
 {
-  constructor(params: DatatrackSectionParams)
+  constructor(params: DatatrackSectionParams, gene: Gene)
   {
     super(params);
+    this.gene = gene;
   }
 
-
+  declare label: GeneLabel;
+  gene: Gene // gene that this datatrack represents
 }

@@ -1,3 +1,5 @@
+import Gene from './Gene';
+
 interface LabelParams
 {
   posX: number;
@@ -17,5 +19,18 @@ export default class Label
     this.posX = params.posX;
     this.posY = params.posY;
     this.text = params.text;
+  }
+}
+
+export class GeneLabel extends Label
+{
+  gene: Gene;
+  isVisible: boolean = false;
+  combinedLabels: GeneLabel[] = [];
+
+  constructor(params: LabelParams, gene: Gene)
+  {
+    super(params);
+    this.gene = gene;
   }
 }

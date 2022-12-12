@@ -35,6 +35,7 @@ export default class SyntenyRegionSet extends GenomicSet
   renderType: 'overview' | 'detailed' = 'overview';
   speciesSyntenyData: SpeciesSyntenyData; // Raw synteny data for the species represented by this SyntenyRegionSet
   threshold: number; // The synteny threshold that was used to create this SyntenyRegionSet
+  datatrackLabels: Label[] = []; // array of Label objects associated with the datatrackSections in every SyntenyRegion
 
   constructor(speciesName: string, mapName: string, regions: SyntenyRegion[], order: number, renderType: 'overview' | 'detailed', speciesSyntenyData: SpeciesSyntenyData, threshold: number)
   {
@@ -150,6 +151,11 @@ export default class SyntenyRegionSet extends GenomicSet
       }
 
       section.posX2 = section.posX1 + SVGConstants.dataTrackWidth;
+      // set the label x position if there is one
+      if (section.label)
+      {
+        section.label.posX = section.posX2;
+      }
       section.width = Math.abs(section.posX2 - section.posX1);
     });
 
@@ -163,5 +169,10 @@ export default class SyntenyRegionSet extends GenomicSet
         line.posX2 = getDetailedPanelXPositionForDatatracks(this.order);
       }
     });
+  }
+
+  public setGeneLabels<Type extends Label[]>(labels: Type)
+  {
+    this.datatrackLabels = labels;
   }
 }
