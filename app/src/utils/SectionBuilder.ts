@@ -159,7 +159,7 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
       
 
     //Step 3: For each (now processed) block, create syntenic sections for each gene
-    if (blockGenes && blockGenes.length > 0)
+    if (blockGenes && blockGenes.length > 0 && blockSyntenicSection.chainLevel == 1)
     {
       //Step 3.1: Pass block data and gene data to gene processing pipeline
       //NOTE: We might want to instead associate block data with gene data, store data in an array, and pass all gene data at once for processing in order to avoid multiple passes of gene data for initial processing and then finding orthologs
@@ -197,6 +197,7 @@ function syntenicDatatrackBuilder(genomicData: Gene[], syntenyBlock: SyntenySect
       //Get backbone equivalents for gene data
       const backboneEquivalents = convertSyntenicDataToBackboneData(genomicElement, syntenyBlock, blockRatio);
       const currSpecies = genomicElement.speciesName.toLowerCase();
+
 
       //Create gene backbone section
       const geneBackboneSection = new BackboneSection({ start: backboneEquivalents.backboneStart, stop: backboneEquivalents.backboneStop, windowStart: windowStart, windowStop: windowStop, renderType });
