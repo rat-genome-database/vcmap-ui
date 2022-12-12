@@ -29,16 +29,32 @@ defineProps<Props>();
 
 const getLabelText = (label: GeneLabel) => {
   const numCombinedGenes = label.combinedLabels.length;
+  const selectedGeneIds = store.state.selectedGeneIds;
+  const combinedLabelGeneIds = label.combinedLabels.map((label) => label.gene.rgdId);
   let labelText = label.text;
-  if (numCombinedGenes > 0)
+  if (!selectedGeneIds.includes(label.gene.rgdId) && selectedGeneIds.some((id) => combinedLabelGeneIds.includes(id)))
   {
-    const geneSymbolText = numCombinedGenes > 9 ? label.text.substring(0, 4) : label.text.substring(0, 5);
-    labelText = `${geneSymbolText}...(${numCombinedGenes})`;
-  } else
+    const altLabelOptions = label.combinedLabels.filter((label) => selectedGeneIds.includes(label.gene.rgdId));
+    for (let i = 0; i < altLabelOptions.length; i++) {
+      labelText = altLabelOptions[i].text;
+      if (!labelText.startsWith('LOC'))
+      {
+        break;
+      }
+    }
+  }
+  else
   {
-    if (labelText.length > 9)
+    if (numCombinedGenes > 0)
     {
-      labelText = label.text.substring(0, 10) + '...';
+      const geneSymbolText = numCombinedGenes > 9 ? label.text.substring(0, 4) : label.text.substring(0, 5);
+      labelText = `${geneSymbolText}...(${numCombinedGenes})`;
+    } else
+    {
+      if (labelText.length > 9)
+      {
+        labelText = label.text.substring(0, 10) + '...';
+      }
     }
   }
   return labelText;
