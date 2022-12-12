@@ -8,6 +8,7 @@ import SVGConstants from '@/utils/SVGConstants';
 import SelectedData from '@/models/SelectedData';
 import { InjectionKey } from 'vue';
 import { createLogger } from 'vuex';
+import { LoadedSpeciesGenes } from '@/models/DatatrackSection';
 
 export const key: InjectionKey<Store<VCMapState>> = Symbol();
 
@@ -22,7 +23,7 @@ export interface VCMapState
   gene: Gene | null; // backbone gene
 
   comparativeSpecies: Species[];
-  loadedGenes: Map<number, any> | null;
+  loadedGenes: Map<number, LoadedSpeciesGenes> | null;
 
   selectedBackboneRegion: BackboneSelection;
 
@@ -239,11 +240,10 @@ export default createStore({
     }
   },
 
-  getters:
-  {
+  getters: {
     masterGeneMapBySymbol: (state: VCMapState,) => {
       const masterGeneMap = state.loadedGenes;
-      const mapBySymbol = new Map<string, any>();
+      const mapBySymbol = new Map<string, number[]>();
 
       if (masterGeneMap == null)
       {
@@ -255,9 +255,9 @@ export default createStore({
         const rgdId = key;
         const currSpecies = value;
         
-        for (const object in currSpecies)
+        for (const speciesName in currSpecies)
         {
-          const geneEntry = currSpecies[object];
+          const geneEntry = currSpecies[speciesName];
           const geneSymbol = geneEntry.drawn[0].gene.gene?.symbol;
           if (geneSymbol)
           {
