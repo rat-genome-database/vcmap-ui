@@ -1,6 +1,6 @@
 import { backboneDatatrackBuilder, ProcessedGenomicData } from "@/new_utils/BackboneBuilder";
 import SVGConstants from "@/utils/SVGConstants";
-import { mergeGeneLabels } from "@/new_utils/GeneLabelMerger";
+import { mergeGeneLabels } from "@/utils/GeneLabelMerger";
 import BackboneSection from "./BackboneSection";
 import DatatrackSection from "./DatatrackSection";
 import { GenomicSet } from "./GenomicSet";

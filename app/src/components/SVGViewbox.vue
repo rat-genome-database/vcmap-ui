@@ -130,7 +130,7 @@ import SyntenyRegionSet from '@/new_models/SyntenyRegionSet';
 import GeneApi from '@/api/GeneApi';
 import BackboneSet from '@/new_models/BackboneSet';
 import { LoadedSpeciesGenes } from '@/new_models/DatatrackSection';
-import { mergeGeneLabels } from '@/new_utils/GeneLabelMerger';
+import { mergeGeneLabels } from '@/utils/GeneLabelMerger';
 
 const store = useStore(key);
 const $log = useLogger();
