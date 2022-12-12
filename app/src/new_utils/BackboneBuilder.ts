@@ -2,8 +2,9 @@ import BackboneSection, { RenderType } from "@/new_models/BackboneSection";
 import Chromosome from "@/new_models/Chromosome";
 import Species from "@/new_models/Species";
 import Gene from "@/new_models/Gene";
-import DatatrackSection, { LoadedSpeciesGenes } from "@/new_models/DatatrackSection";
+import DatatrackSection, { GeneDatatrack, LoadedSpeciesGenes } from "@/new_models/DatatrackSection";
 import BackboneSet from "@/new_models/BackboneSet";
+import { GeneLabel } from "@/new_models/Label";
 
 export interface ProcessedGenomicData
 {
@@ -41,7 +42,15 @@ export function backboneDatatrackBuilder(genomicData: Gene[], backboneSection: B
   genomicData.forEach((genomicElement: Gene) => {
     const currSpecies = genomicElement.speciesName.toLowerCase();
     const geneBackboneSection = new BackboneSection({ start: genomicElement.start, stop: genomicElement.stop, windowStart: windowStart, windowStop: windowStop, renderType: 'detailed' });
-    const geneDatatrackSection = new DatatrackSection({ start: genomicElement.start, stop: genomicElement.stop, backboneSection: geneBackboneSection, type: 'gene', });
+    const geneDatatrackSection = new GeneDatatrack({ start: genomicElement.start, stop: genomicElement.stop, backboneSection: geneBackboneSection, type: 'gene', }, genomicElement);
+    const geneLabel = new GeneLabel({
+        posX: 0,
+        posY: (geneDatatrackSection.posY1 + geneDatatrackSection.posY2) / 2,
+        text: geneDatatrackSection.gene.symbol,
+      },
+      geneDatatrackSection.gene
+    );
+    geneDatatrackSection.label = geneLabel;
 
     processedGenomicData.datatracks.push(geneDatatrackSection);
     // Map structure is { rgdId: { species: { gene: Gene, drawn: [{ svgY: number, svgX: number }] } } }

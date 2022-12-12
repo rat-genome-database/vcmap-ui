@@ -1,9 +1,10 @@
 import { backboneDatatrackBuilder, ProcessedGenomicData } from "@/new_utils/BackboneBuilder";
 import SVGConstants from "@/utils/SVGConstants";
+import { mergeGeneLabels } from "@/new_utils/GeneLabelMerger";
 import BackboneSection from "./BackboneSection";
 import DatatrackSection from "./DatatrackSection";
 import { GenomicSet } from "./GenomicSet";
-import Label from "./Label";
+import Label, { GeneLabel } from "./Label";
 
 
 const DataTrack_X_OFFSET = 10;
@@ -15,6 +16,7 @@ export default class BackboneSet extends GenomicSet
 {
   backbone: BackboneSection;
   datatracks: DatatrackSection[];
+  datatrackLabels: Label[] = [];
 
   constructor(backboneSection: BackboneSection, processedGenomicData?: ProcessedGenomicData)
   {
@@ -29,6 +31,7 @@ export default class BackboneSet extends GenomicSet
     this.setBackboneXPositions();
     this.createTitleLabels();
     this.setDatatrackXPositions();
+    this.processGeneLabels();
   }
 
   public adjustVisibleSet(backboneStart: number, backboneStop: number)
@@ -49,6 +52,7 @@ export default class BackboneSet extends GenomicSet
       const datatrackInfo = backboneDatatrackBuilder(this.backbone.backboneGenes, this.backbone, backboneStart, backboneStop);
       this.datatracks = datatrackInfo.processedGenomicData.datatracks;
       this.setDatatrackXPositions();
+      this.processGeneLabels();
 
       return datatrackInfo.masterGeneMap;
     }
@@ -94,6 +98,24 @@ export default class BackboneSet extends GenomicSet
       section.posX1 = this.backbone.posX2 + DataTrack_X_OFFSET;
       section.posX2 = section.posX1 + SVGConstants.dataTrackWidth;
       section.width = SVGConstants.dataTrackWidth;
+      if (section.label)
+      {
+        section.label.posX = section.posX2;
+      }
     });
+  }
+
+  private processGeneLabels()
+  {
+    const allLabels: Label[] = [];
+    this.datatracks.forEach((section) => {
+      if (section.label)
+      {
+        allLabels.push(section.label);
+      }
+    });
+    this.datatrackLabels = allLabels;
+
+    mergeGeneLabels(this.datatrackLabels as GeneLabel[]);
   }
 }

@@ -22,6 +22,13 @@
     <!-- Detail panel SVGs ----------------------------------------->
     <template v-if="detailedBackboneSet">
       <BackboneSetSVG show-data-on-hover :backbone-set="detailedBackboneSet" />
+      <template v-if="detailedBackboneSet.datatrackLabels">
+        <template v-for="(label, index) in detailedBackboneSet.datatrackLabels" :key="index">
+          <template v-if="(label.isVisible)">
+            <GeneLabelSVG :label="(label as GeneLabel)" />
+          </template>
+        </template>
+      </template>
     </template>
 
     <template v-if="detailedSyntenySets.length">
