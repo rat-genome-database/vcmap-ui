@@ -47,6 +47,16 @@ const vuexLocal = new VuexPersistence<VCMapState>({
   storage: window.localStorage
 });
 
+const logger = createLogger({
+  /** Filter out some very frequently occurring actions/mutations */
+  filter: (mutation) => {
+    return mutation.type !== 'selectedData';
+  },
+  actionFilter: (action) => {
+    return action.type !== 'setSelectedData';
+  },
+});
+
 export default createStore({
   state: (): VCMapState => ({
     species: null,
@@ -279,6 +289,6 @@ export default createStore({
   },
 
   plugins: process.env.NODE_ENV !== 'production'
-    ? [vuexLocal.plugin, createLogger()] // Only use Vuex logger in development
+    ? [vuexLocal.plugin, logger] // Only use Vuex logger in development
     : [vuexLocal.plugin]
 });
