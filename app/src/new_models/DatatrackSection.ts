@@ -1,7 +1,7 @@
 import BackboneSection from "./BackboneSection";
 import Gene from '../new_models/Gene';
 import { SVGShape, VCMapSVGElement } from "./VCMapSVGElement";
-import Label from './Label';
+import Label, { GeneLabel } from './Label';
 
 export interface LoadedSpeciesGenes
 {
@@ -71,6 +71,7 @@ export class GeneDatatrack extends DatatrackSection
     this.gene = gene;
   }
 
+  declare label: GeneLabel;
   orthologs: Gene[] = [];  // orthologs of this gene
   gene: Gene // gene that this datatrack represents
 }

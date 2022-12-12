@@ -102,6 +102,7 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
   const currMap = speciesSyntenyData.mapName;
   // Only process level 1 and level 2 blocks
   const regionInfo = speciesSyntenyData.regionData.filter(r => r.block.chainLevel === 1 || r.block.chainLevel === 2);
+  const allGeneLabels: GeneLabel[] = [];
   
   //Step 1.1: Create syntenic sections for each block - 1:1 mapping returned from API
   regionInfo.forEach((region) => {
@@ -174,7 +175,7 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
         const geneData = processedGeneInfo.genomicData[i];
         if (geneData.label)
         {
-          currSyntenicRegion.datatrackLabels.push(geneData.label);
+          allGeneLabels.push(geneData.label);
         }
       }
       //Step 3.2: Capture processed gene data and store in block
@@ -185,7 +186,9 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
     processedSyntenicRegions.push(currSyntenicRegion);
   });
 
-  return new SyntenyRegionSet(currSpecies, currMap, processedSyntenicRegions, setOrder, renderType, speciesSyntenyData, threshold);
+  const syntenyRegionSet = new SyntenyRegionSet(currSpecies, currMap, processedSyntenicRegions, setOrder, renderType, speciesSyntenyData, threshold);
+  syntenyRegionSet.setGeneLabels(allGeneLabels);
+  return syntenyRegionSet;
 }
 
 

@@ -29,6 +29,19 @@
         <template v-for="(syntenicRegion, index) in syntenySet.regions" :key="index">
           <SectionSVG show-gene-label show-chromosome :region="syntenicRegion as SyntenyRegion" />
         </template>
+        <template v-for="(label, index) in syntenySet.datatrackLabels" :key="index">
+          <template v-if="label.isVisible">
+            <text
+              class="label small"
+              :x="(label.posX + 5)"
+              :y="(label.posY)"
+              dominant-baseline="middle"
+              text-anchor="start"
+            >
+                {{label.text}}
+            </text>
+          </template>
+        </template>
       </template>
     </template>
 
@@ -101,6 +114,7 @@ import useDialog from '@/composables/useDialog';
 import TrackSet from '@/models/TrackSet';
 import OrthologLine from '@/models/OrthologLine';
 import Gene from '@/new_models/Gene';
+import { GeneLabel } from '@/new_models/Label';
 import { SpeciesSyntenyData } from '@/models/SyntenicRegion';
 import SelectedData from '@/models/SelectedData';
 import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
@@ -395,13 +409,19 @@ const updateDetailsPanel = async () => {
       masterGeneMap
     );
 
+
     // process gene labels
-    detailedSyntenyData.syntenyRegionSets.forEach((regionSet) => {
+    for (let setIdx = 0; setIdx < detailedSyntenyData.syntenyRegionSets.length; setIdx++)
+    {
+      const regionSet = detailedSyntenyData.syntenyRegionSets[setIdx];
       regionSet.regions.forEach((region) => {
-        mergeGeneLabels(region.datatrackLabels);
+        region.datatrackSections.forEach((section) => {
+          mergeGeneLabels(regionSet.datatrackLabels as GeneLabel[]);
+        });
       });
-    })
+    }
     detailedSyntenySets.value = detailedSyntenyData.syntenyRegionSets;
+
     timeSyntenyTracks = Date.now() - createSyntenyTracksStart;
 
     //map backbone species genes to the master map
