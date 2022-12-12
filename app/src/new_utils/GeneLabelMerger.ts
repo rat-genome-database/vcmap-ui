@@ -17,7 +17,7 @@ export function mergeGeneLabels(labels: GeneLabel[])
     }
     // filter for potential overlapping genes
     const overlappedLabels = labels.filter((label) => {
-      return Math.abs(geneLabel.posY - label.posY) < 7;
+      return (Math.abs(geneLabel.posY - label.posY) < 8 && label != geneLabel);
     });
 
     for (let overlapIdx = 0; overlapIdx < overlappedLabels.length; overlapIdx++)
@@ -38,15 +38,6 @@ export function mergeGeneLabels(labels: GeneLabel[])
       {
         geneLabel.combinedLabels ? geneLabel.combinedLabels.push(overlappedLabel) : geneLabel.combinedLabels = [overlappedLabel];
         combinedLabels.push(overlappedLabel);
-        /*
-        if (overlappedLabel.combinedLabels)
-        {
-          console.log(`overlappedLabel.combinedLabels.length: ${overlappedLabel.combinedLabels.length}`);
-          overlappedLabel.combinedLabels.forEach((lab) => {
-            geneLabel.combinedLabels.push(lab);
-          });
-        }
-        */
       }
     }
     geneLabel.isVisible = true;

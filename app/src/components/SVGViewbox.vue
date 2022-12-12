@@ -407,11 +407,7 @@ const updateDetailsPanel = async () => {
     for (let setIdx = 0; setIdx < detailedSyntenyData.syntenyRegionSets.length; setIdx++)
     {
       const regionSet = detailedSyntenyData.syntenyRegionSets[setIdx];
-      regionSet.regions.forEach((region) => {
-        region.datatrackSections.forEach((section) => {
-          mergeGeneLabels(regionSet.datatrackLabels as GeneLabel[]);
-        });
-      });
+      mergeGeneLabels(regionSet.datatrackLabels as GeneLabel[]);
     }
     detailedSyntenySets.value = detailedSyntenyData.syntenyRegionSets;
 

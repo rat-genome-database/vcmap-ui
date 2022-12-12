@@ -20,10 +20,19 @@ interface Props
 defineProps<Props>();
 
 const getLabelText = (label: GeneLabel) => {
-
   const numCombinedGenes = label.combinedLabels.length;
-  const geneSymbolText = numCombinedGenes > 9 ? label.text.substring(0, 4) : label.text.substring(0, 5);
-  const labelText = `${geneSymbolText}...(${numCombinedGenes})`;
+  let labelText = label.text;
+  if (numCombinedGenes > 0)
+  {
+    const geneSymbolText = numCombinedGenes > 9 ? label.text.substring(0, 4) : label.text.substring(0, 5);
+    labelText = `${geneSymbolText}...(${numCombinedGenes})`;
+  } else
+  {
+    if (labelText.length > 9)
+    {
+      labelText = label.text.substring(0, 10) + '...';
+    }
+  }
   return labelText;
 }
 </script>
