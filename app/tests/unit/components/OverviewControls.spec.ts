@@ -13,7 +13,7 @@ describe('OverviewControls', () => {
   let actions: ActionTree<VCMapState, VCMapState>;
   const state: Partial<VCMapState> = {
     species: new Species({ typeKey: 1, name: 'Test Species', defaultMapKey: 1, maps: [new Map({ key: 1, primaryRefAssembly: true, name: 'GRCh38'})]}),
-    chromosome: new Chromosome({ chromosome: '1', mapKey: 38, seqLength: 1000000, gapCount: 5, gapLength: 10000, contigCount: 100, ordinalNumber: 1 }),
+    chromosome: new Chromosome({ chromosome: '1', mapKey: 38, seqLength: 1000000}),
     startPos: 1,
     stopPos: 10000,
     selectedBackboneRegion: new BackboneSelection(new SelectedRegion(50,100,100,10000)),
