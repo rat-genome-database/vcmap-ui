@@ -80,13 +80,13 @@ export default class SyntenySection implements VCMapSVGElement
   {
     this.startLabel = new Label({
       posX: this.posX2,
-      posY: this.posY1,
+      posY: this.isInverted ? this.posY2 : this.posY1,
       text: Formatter.convertBasePairToLabel(this.speciesStart) || '',
       isVisible: false,
     });
     this.stopLabel = new Label({
       posX: this.posX2,
-      posY: this.posY2,
+      posY: this.isInverted ? this.posY1 : this.posY2,
       text: Formatter.convertBasePairToLabel(this.speciesStop) || '',
       isVisible: false,
     });

@@ -20,7 +20,7 @@
         :x="blockSection.startLabel.posX"
         :y="blockSection.startLabel.posY"
       >
-        {{blockSection.startLabel.text}}
+        -  {{blockSection.startLabel.text}}
       </text>
       <text
         class="label small"
@@ -28,7 +28,7 @@
         :x="blockSection.stopLabel.posX"
         :y="blockSection.stopLabel.posY"
       >
-        {{blockSection.stopLabel.text}}
+        -  {{blockSection.stopLabel.text}}
       </text>
     </template>
     <ChromosomeLabelSVG v-if="showChromosome" :synteny-section="blockSection" />
