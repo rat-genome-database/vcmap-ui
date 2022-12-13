@@ -1,9 +1,9 @@
 <template>
   <text
-    class="label small"
     @click="onGeneLabelClick($event, label)"
     @mouseenter="onMouseEnter(label)"
-    @mouseleave="onMouseLeave(label)"
+    @mouseleave="onMouseLeave()"
+    :class="(isLabelSelected(label) ? 'bold-label' : 'label small')"
     :x="(label.posX + 5)"
     :y="(label.posY)"
     dominant-baseline="middle"
@@ -109,4 +109,33 @@ const onMouseLeave = () => {
     store.dispatch('setSelectedData', null);
   }
 };
+
+const isLabelSelected = (label: GeneLabel) => {
+  const selectedGeneIds = store.state.selectedGeneIds;
+  const combinedLabelGeneIds = label.combinedLabels.map((label) => label.gene.rgdId);
+  return (selectedGeneIds.includes(label.gene.rgdId) || selectedGeneIds.some((id) => combinedLabelGeneIds.includes(id)))
+};
 </script>
+
+<style lang="scss" scoped>
+.label.small
+{
+  font: normal 8px sans-serif;
+
+  &:hover
+  {
+    cursor: pointer;
+  }
+}
+
+.bold-label
+{
+  font: 8px sans-serif;
+  font-weight: bold;
+
+  &:hover
+  {
+    cursor: pointer;
+  }
+}
+</style>
