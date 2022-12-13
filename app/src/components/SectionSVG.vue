@@ -13,6 +13,24 @@
       :fill-opacity="1"
     />
 
+    <template v-if="showStartStop && blockSection.startLabel.isVisible">
+      <text
+        class="label small"
+        dominant-baseline="middle"
+        :x="blockSection.startLabel.posX"
+        :y="blockSection.startLabel.posY"
+      >
+        {{blockSection.startLabel.text}}
+      </text>
+      <text
+        class="label small"
+        dominant-baseline="middle"
+        :x="blockSection.stopLabel.posX"
+        :y="blockSection.stopLabel.posY"
+      >
+        {{blockSection.stopLabel.text}}
+      </text>
+    </template>
     <ChromosomeLabelSVG v-if="showChromosome" :synteny-section="blockSection" />
   </template>
 

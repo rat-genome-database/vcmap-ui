@@ -48,6 +48,7 @@ export default class SyntenyRegionSet extends GenomicSet
     this.threshold = threshold;
     this.setRegionXPositionsBasedOnOrder();
     this.createTitleLabels();
+    this.sortBasePairLabels();
     this.processGeneLabels();
   }
 
@@ -139,6 +140,8 @@ export default class SyntenyRegionSet extends GenomicSet
 
       section.posX2 = section.posX1 + trackWidth;
       section.width = Math.abs(section.posX2 - section.posX1);
+      section.startLabel.posX = section.posX2;
+      section.stopLabel.posX = section.posX2;
     });
   }
 
@@ -173,6 +176,39 @@ export default class SyntenyRegionSet extends GenomicSet
         line.posX2 = getDetailedPanelXPositionForDatatracks(this.order);
       }
     });
+  }
+
+  private sortBasePairLabels()
+  {
+    const labelPairs = this.regions.flatMap((region) =>{
+      return region.syntenyBlocks.map((section) => {
+        return {startLabel: section.startLabel, stopLabel: section.stopLabel};
+      });
+    });
+    labelPairs.sort((a, b) => (Math.abs(b.startLabel.posY - b.stopLabel.posY)) - Math.abs((a.startLabel.posY - a.stopLabel.posY)));
+    for (let i = 0; i < labelPairs.length; i++)
+    {
+      const labelPair = labelPairs[i];
+      if (i === 0 && Math.abs(labelPair.stopLabel.posY - labelPair.startLabel.posY) > 5)
+      {
+        labelPair.startLabel.isVisible = true;
+        labelPair.stopLabel.isVisible = true;
+        continue;
+      }
+      const overlappedLabels = labelPairs.filter((overlapPair) => {
+        return Math.abs(overlapPair.startLabel.posY - labelPair.startLabel.posY) < 10
+          || Math.abs(overlapPair.startLabel.posY - labelPair.stopLabel.posY) < 10
+          || Math.abs(overlapPair.stopLabel.posY - labelPair.startLabel.posY) < 10
+          || Math.abs(overlapPair.stopLabel.posY - labelPair.stopLabel.posY) < 10;
+      });
+      if (!overlappedLabels.some((overlapLabel) => overlapLabel.startLabel.isVisible || overlapLabel.stopLabel.isVisible)
+        && Math.abs(labelPair.stopLabel.posY - labelPair.startLabel.posY) > 5)
+      {
+        labelPair.startLabel.isVisible = true;
+        labelPair.startLabel.isVisible = true;
+      }
+
+    }
   }
 
   public processGeneLabels()
