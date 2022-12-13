@@ -2,6 +2,8 @@
   <text
     class="label small"
     @click="onGeneLabelClick($event, label)"
+    @mouseenter="onMouseEnter(label)"
+    @mouseleave="onMouseLeave(label)"
     :x="(label.posX + 5)"
     :y="(label.posY)"
     dominant-baseline="middle"
@@ -88,6 +90,23 @@ const onGeneLabelClick = (event: any, label: GeneLabel) => {
   } else {
     store.dispatch('setSelectedData', newSelectedData);
   }
-
 }
+
+const onMouseEnter = (label: GeneLabel) => {
+  // If there are selected genes, don't update the selected data panel
+  if (store.state.selectedGeneIds.length === 0) {
+    const newSelectedData = label.combinedLabels.map((label) => {
+      return new SelectedData(label.gene, 'Gene');
+    });
+    newSelectedData.unshift(new SelectedData(label.gene, 'Gene'));
+    store.dispatch('setSelectedData', newSelectedData);
+  }
+};
+
+const onMouseLeave = () => {
+  // Only reset data onMouseLeave if there isn't a selected gene
+  if (store.state.selectedGeneIds.length === 0) {
+    store.dispatch('setSelectedData', null);
+  }
+};
 </script>
