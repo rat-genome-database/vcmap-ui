@@ -1,6 +1,8 @@
 import { SVGShape, VCMapSVGElement } from './VCMapSVGElement';
 import BackboneSection from './BackboneSection';
 import Chromosome from './Chromosome';
+import Label from './Label';
+import { Formatter } from '@/utils/Formatter';
 
 type SyntenySectionType = 'block' | 'gap';
 
@@ -33,6 +35,8 @@ export default class SyntenySection implements VCMapSVGElement
 
   speciesStart: number = 0;  // start basepair of the section on its original species
   speciesStop: number = 0;   // stop basepair of the section on its original species
+  startLabel!: Label;         // start basepair label
+  stopLabel!: Label;          // stop basepair label
   length: number = 0;        // length of the section on its original species
   threshold?: number = 0;    // threshold level this object was created at
   orientation: '+' | '-' = '+';   // orientation of the synteny block
@@ -69,5 +73,22 @@ export default class SyntenySection implements VCMapSVGElement
     }
 
     this.elementColor = Chromosome.getColor(this.chromosome.chromosome);
+    this.createSyntenySectionLabels();
+  }
+
+  private createSyntenySectionLabels()
+  {
+    this.startLabel = new Label({
+      posX: this.posX2,
+      posY: this.isInverted ? this.posY2 : this.posY1,
+      text: Formatter.convertBasePairToLabel(this.speciesStart) || '',
+      isVisible: false,
+    });
+    this.stopLabel = new Label({
+      posX: this.posX2,
+      posY: this.isInverted ? this.posY1 : this.posY2,
+      text: Formatter.convertBasePairToLabel(this.speciesStop) || '',
+      isVisible: false,
+    });
   }
 }
