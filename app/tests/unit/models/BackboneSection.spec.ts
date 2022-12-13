@@ -37,7 +37,7 @@ describe('BackboneSection', () => {
 
   describe('Overview Panel', () => {
     it('correctly calculates Y positions when the backbone is the same size as the visible window', () => {
-      let backbone = new BackboneSection(backboneSectionParams);
+      const backbone = new BackboneSection(backboneSectionParams);
 
       const expectedPosY1 = PANEL_SVG_START + SVGConstants.overviewTrackPadding;
       const expectedPosY2 = PANEL_SVG_STOP - SVGConstants.overviewTrackPadding;
@@ -50,7 +50,7 @@ describe('BackboneSection', () => {
 
   describe('Detailed Panel', () => {
     it('correctly calculates Y positions when the backbone is the same size as the visible window', () => {
-      let backbone = new BackboneSection({
+      const backbone = new BackboneSection({
         ...backboneSectionParams,
         renderType: 'detailed',
       });
@@ -65,7 +65,7 @@ describe('BackboneSection', () => {
     it('correctly calculates Y positions when the backbone is larger than the visible window', () => {
       // Simulates being zoomed in on the detailed panel backbone
 
-      let backbone = new BackboneSection({
+      const backbone = new BackboneSection({
         ...backboneSectionParams,
         // Use friendly start/stop numbers for this test
         start: 0,
@@ -82,7 +82,7 @@ describe('BackboneSection', () => {
     it('correctly calculates Y positions when only a portion of the backbone is visible in the window', () => {
       // Simulates being zoomed in on the detailed panel backbone
 
-      let backbone = new BackboneSection({
+      const backbone = new BackboneSection({
         ...backboneSectionParams,
         // Use friendly start/stop numbers for this test
         start: 500,

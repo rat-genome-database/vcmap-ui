@@ -60,7 +60,7 @@ const getLabelText = (label: GeneLabel) => {
     }
   }
   return labelText;
-}
+};
 
 const onGeneLabelClick = (event: any, label: GeneLabel) => {
   if (store.state.selectedGeneIds.includes(label.gene.rgdId))
@@ -90,7 +90,7 @@ const onGeneLabelClick = (event: any, label: GeneLabel) => {
   } else {
     store.dispatch('setSelectedData', newSelectedData);
   }
-}
+};
 
 const onMouseEnter = (label: GeneLabel) => {
   // If there are selected genes, don't update the selected data panel
@@ -113,7 +113,7 @@ const onMouseLeave = () => {
 const isLabelSelected = (label: GeneLabel) => {
   const selectedGeneIds = store.state.selectedGeneIds;
   const combinedLabelGeneIds = label.combinedLabels.map((label) => label.gene.rgdId);
-  return (selectedGeneIds.includes(label.gene.rgdId) || selectedGeneIds.some((id) => combinedLabelGeneIds.includes(id)))
+  return (selectedGeneIds.includes(label.gene.rgdId) || selectedGeneIds.some((id) => combinedLabelGeneIds.includes(id)));
 };
 </script>
 
