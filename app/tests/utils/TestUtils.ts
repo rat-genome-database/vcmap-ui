@@ -24,7 +24,7 @@ export namespace TestUtils
    */
   export function getGlobalMountingOptions(options: TestUtilMountingOptions)
   {
-    let globalOptions: GlobalMountOptions = {};
+    const globalOptions: GlobalMountOptions = {};
 
     if (options.includeExternalComponents || options.includeDirectives)
     {

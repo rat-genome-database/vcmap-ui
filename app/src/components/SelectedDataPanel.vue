@@ -43,10 +43,10 @@
       <template v-for="dataObject in props.selectedData" :key="dataObject">
         <template v-if="dataObject?.type === 'Gene'">
           <GeneInfo
-            :gene="dataObject.genomicSection.gene"
+            :gene="dataObject.genomicSection.gene ? dataObject.genomicSection.gene : dataObject.genomicSection"
             :chromosome="dataObject.genomicSection.chromosome ? dataObject.genomicSection.chromosome : dataObject.genomicSection.gene.chromosome"
-            :start="dataObject.genomicSection.speciesStart"
-            :stop="dataObject.genomicSection.speciesStop"
+            :start="dataObject.genomicSection.speciesStart ? dataObject.genomicSection.speciesStart : dataObject.genomicSection.start"
+            :stop="dataObject.genomicSection.speciesStop ? dataObject.genomicSection.speciesStop : dataObject.genomicSection.stop"
           />
           <Divider />
         </template>
