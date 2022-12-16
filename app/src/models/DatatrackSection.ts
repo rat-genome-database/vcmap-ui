@@ -37,7 +37,7 @@ export default class DatatrackSection implements VCMapSVGElement
   chainLevel: number = 0;                      // level of the chain that this section is on
   
   orthologs: number[] = [];  // orthologs ids of this gene
-  gene: Gene | undefined // gene that this datatrack represents
+  gene: Gene | undefined; // gene that this datatrack represents
 
   posX1: number = 0;
   posX2: number = 0;
@@ -81,5 +81,5 @@ export class GeneDatatrack extends DatatrackSection
   }
 
   declare label: GeneLabel;
-  gene: Gene // gene that this datatrack represents
+  gene: Gene; // gene that this datatrack represents
 }
