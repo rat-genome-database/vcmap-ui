@@ -13,6 +13,7 @@ RUN npm install
 # Install vue cli so it is available
 COPY ./config/vuerc .vuerc
 RUN npm install @vue/cli
+RUN mkdir node_modules/.cache && chmod 777 node_modules/.cache
 
 # Make sure our newly installed npm binaries are on the path
 ENV PATH=/app/node_modules/.bin:$PATH
