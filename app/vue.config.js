@@ -4,7 +4,7 @@ module.exports = {
   //   the dev environment is hosted by the Vue CLI internal web server.
   //publicPath: '/vcmap/',
   devServer: {
-    disableHostCheck: true,
+    allowedHosts: 'all',
     headers: {
       "Access-Control-Allow-Origin" : "*"
     }
