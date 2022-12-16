@@ -1,22 +1,29 @@
-import Map from '@/models/Map';
+import SpeciesMap from './SpeciesMap';
 
-export class SpeciesDTO
+export default class Species
 {
+  activeMap: SpeciesMap;
   typeKey: number = 0;
   name: string = '';
   defaultMapKey: number = 0;
-  maps: Map[] = [];
-}
+  maps: SpeciesMap[] = [];
 
-export default class Species extends SpeciesDTO
-{
-  activeMap: Map;
-
-  constructor(dto: SpeciesDTO)
+  constructor(params: {typeKey: number, name: string, defaultMapKey?: number, maps: SpeciesMap[]})
   {
-    super();
-    Object.assign(this, dto);
-    this.activeMap = this.maps?.filter(m => m.key === this.defaultMapKey)[0];
+    this.typeKey = params.typeKey;
+    this.name = params.name;
+    this.maps = params.maps;
+
+    if (params.defaultMapKey != null)
+    {
+      this.defaultMapKey = params.defaultMapKey;
+      this.activeMap = this.maps?.filter(m => m.key === this.defaultMapKey)[0];
+    }
+    else
+    {
+      this.activeMap = this.maps[0];
+      this.defaultMapKey = this.maps[0].key;
+    }
   }
 
   public copy()

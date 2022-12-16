@@ -1,0 +1,318 @@
+<template>
+  <template v-for="(blockSection, index) in level1Blocks" :key="index">
+    <rect
+      class="block-section"
+      @mouseenter="onMouseEnter(blockSection, 'trackSection')"
+      @mouseleave="onMouseLeave(blockSection, 'trackSection')"
+      @click="onClick($event, blockSection, 'trackSection')"
+      :y="blockSection.posY1"
+      :x="blockSection.posX1"
+      :width="blockSection.width"
+      :height="blockSection.height"
+      :fill="getSectionFill(blockSection)"
+      :fill-opacity="1"
+    />
+
+    <template v-if="showStartStop && blockSection.startLabel.isVisible">
+      <text
+        class="label small"
+        dominant-baseline="middle"
+        :x="blockSection.startLabel.posX"
+        :y="blockSection.startLabel.posY"
+      >
+        -  {{blockSection.startLabel.text}}
+      </text>
+      <text
+        class="label small"
+        dominant-baseline="middle"
+        :x="blockSection.stopLabel.posX"
+        :y="blockSection.stopLabel.posY"
+      >
+        -  {{blockSection.stopLabel.text}}
+      </text>
+    </template>
+    <ChromosomeLabelSVG v-if="showChromosome" :synteny-section="blockSection" />
+  </template>
+
+  <GapSVG v-for="(gapSection,index) in level1Gaps" :key="index" :gap-section="gapSection" />
+
+  <template v-for="(blockSection, index) in level2Blocks" :key="index">
+    <rect
+      class="level-2 block-section"
+      @mouseenter="onMouseEnter(blockSection, 'trackSection')"
+      @mouseleave="onMouseLeave(blockSection, 'trackSection')"
+      @click="onClick($event, blockSection, 'trackSection')"
+      :y="blockSection.posY1"
+      :x="blockSection.posX1"
+      :width="blockSection.width"
+      :height="blockSection.height"
+      :fill="getSectionFill(blockSection)"
+      :fill-opacity="1"
+    />
+
+    <ChromosomeLabelSVG v-if="showChromosome" :synteny-section="blockSection" />
+  </template>
+
+  <GapSVG v-for="(gapSection,index) in level2Gaps" :key="index" :gap-section="gapSection" />
+
+  <template v-if="region && showSyntenyOnHover">
+    <SyntenyLinesSVG v-for="(blockSection, index) in region.syntenyBlocks" :key="index" :synteny-section="blockSection" />
+  </template>
+
+  <!-- Genes -->
+  <template v-for="(datatrack, index) in datatracks" :key="index">
+    <rect
+      class="block-section"
+      @mouseenter="onMouseEnter(datatrack, 'Gene')"
+      @mouseleave="onMouseLeave(datatrack, 'Gene')"
+      @click="onClick($event, datatrack, 'Gene')"
+      :y="datatrack.posY1"
+      :x="datatrack.posX1"
+      :width="datatrack.width"
+      :height="datatrack.height"
+      :fill="getSectionFill(datatrack)"
+      :fill-opacity=".7"
+    />
+  </template>
+  
+</template>
+
+
+<script lang="ts" setup>
+import { watch, onMounted} from 'vue';
+import SelectedData, { SelectedDataType } from '@/models/SelectedData';
+import SyntenyRegion from '@/models/SyntenyRegion';
+import SyntenySection from '@/models/SyntenySection';
+import DatatrackSection from '@/models/DatatrackSection';
+import { computed, toRefs } from '@vue/reactivity';
+import { useStore } from 'vuex';
+import { key } from '@/store';
+import { sortGeneList, getNewSelectedData } from '@/utils/DataPanelHelpers';
+import { VCMapSVGElement } from '@/models/VCMapSVGElement';
+import ChromosomeLabelSVG from './ChromosomeLabelSVG.vue';
+import SyntenyLinesSVG from './SyntenyLinesSVG.vue';
+import GapSVG from './GapSVG.vue';
+
+const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
+const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
+
+const store = useStore(key);
+
+interface Props
+{
+  showSyntenyOnHover?: boolean;
+  showStartStop?: boolean;
+  showChromosome?: boolean;
+  showGeneLabel?: boolean;
+  region: SyntenyRegion;
+}
+const props = defineProps<Props>();
+
+//Converts each property in this object to its own reactive prop
+toRefs(props);
+
+watch(() => store.state.selectedGeneIds, () => {
+  highlightSelections(store.state.selectedGeneIds);
+});
+
+onMounted(() => {
+  highlightSelections(store.state.selectedGeneIds);
+});
+
+const level1Blocks = computed(() => {
+  return props.region.syntenyBlocks.filter(b => b.chainLevel === 1);
+});
+const level2Blocks = computed(() => {
+  return props.region.syntenyBlocks.filter(b => b.chainLevel === 2);
+});
+const level1Gaps = computed(() => {
+  return props.region.syntenyGaps.filter(g => g.chainLevel === 1);
+});
+const level2Gaps = computed(() => {
+  return props.region.syntenyGaps.filter(g => g.chainLevel === 2);
+});
+const datatracks = computed(() => {
+  return props.region.datatrackSections;
+});
+
+const onMouseEnter = (section: SyntenySection | DatatrackSection, type: SelectedDataType) => {
+  section.isHovered = true;
+  
+  // If there are selected genes, don't update the selected data panel
+  if (store.state.selectedGeneIds.length === 0) {
+    const selectedData = new SelectedData(section, type);
+    store.dispatch('setSelectedData', [selectedData]);
+  }
+
+  if (type === 'Gene') 
+  {
+    const geneSection: DatatrackSection = section as DatatrackSection;
+    if (geneSection?.gene)
+    {
+      highlightGeneLines(geneSection?.gene.rgdId, 'enter');
+    }
+  }
+};
+
+const onMouseLeave = (section: VCMapSVGElement, type: SelectedDataType) => {
+  if (section)
+  {
+    section.isHovered = false;
+  }
+  
+  // Only reset data onMouseLeave if there isn't a selected gene
+  if (store.state.selectedGeneIds.length === 0) {
+    store.dispatch('setSelectedData', null);
+  }
+
+  if (type === 'Gene') 
+  {
+    const geneSection: DatatrackSection = section as DatatrackSection;
+    if (geneSection?.gene)
+    {
+      highlightGeneLines(geneSection?.gene.rgdId, 'exit');
+    }
+  }
+};
+
+const getSectionFill = (section: VCMapSVGElement) => {
+  if (section.isSelected) {return SELECTED_HIGHLIGHT_COLOR;}
+  if (section.isHovered) {return HOVER_HIGHLIGHT_COLOR;}
+  return section.elementColor;
+};
+
+const highlightSelections = (selectedGeneIds: number[]) => {
+  // Look through the sections and highlight based on selected genes
+  datatracks.value.forEach((section) => {
+    if (section.gene == null)
+    {
+      return;
+    }
+
+    if (selectedGeneIds.includes(section.gene.rgdId)) 
+    {
+      section.isSelected = true;
+    } 
+    else 
+    {
+      section.isSelected = false;
+    }
+  });
+  // Highlight the line if needed, and make sure genes highlighted too
+  // (this ensures backbone and comparitive genes are highlighted, regardless of which is clicked)
+  props.region.orthologLines.forEach((line) => {
+    if (selectedGeneIds.includes(line.backboneGene.gene?.rgdId || -1) ||
+        selectedGeneIds.includes(line.comparativeGene.gene?.rgdId || -1)) 
+    {
+      line.isSelected = true;
+      line.backboneGene.isSelected = true;
+      line.comparativeGene.isSelected = true;
+    } 
+    else 
+    {
+      line.isSelected = false;
+    }
+  });
+
+  /* // After selecting the sections, check if we should use alt labels
+  props.track.geneLabels.forEach((label) => {
+    // Only consider geneLabels that are already visible anyway
+    if (label.isVisible) {
+      // If the main gene for this section is selected, we'll use the normal label
+      let useAltLabel = false;
+      if (selectedGeneIds.includes(label.section.gene.rgdId)) {
+        useAltLabel = false;
+      } else { // Otherwise if any selected ids exist in the alt labels, we'll use an alt label
+        const altLabelIds = label.section.altLabels.map((label) => label.rgdId);
+        if (selectedGeneIds.some((id) => altLabelIds.includes(id))) {
+          useAltLabel = true;
+        }
+      }
+      label.section.showAltLabel = useAltLabel;
+    }
+  }); */
+};
+
+const onClick = (event: any, section: DatatrackSection, type: string) => {
+  if (!section.gene?.rgdId) {
+    return;
+  }
+  // If clicked section already selected, just reset the selectedGeneId state
+  if (store.state.selectedGeneIds.includes(section.gene?.rgdId || -1)) {
+    store.dispatch('setSelectedGeneIds', []);
+    store.dispatch('setSelectedData', null);
+    return;
+  }
+
+  // If shift key is held, we'll just add to the selections, otherwise, reset first
+  let geneIds: number[] = event.shiftKey ? [...store.state.selectedGeneIds] : [];
+
+  let newSelectedData: SelectedData[] = [];
+  if (section.gene) {
+    const newData = getNewSelectedData(store, section.gene);
+    const geneAndOrthologs = newData.selectedData;
+    const newGeneIds = newData.rgdIds;
+    newSelectedData.push(...geneAndOrthologs);
+    geneIds.push(...newGeneIds);
+  }
+
+  store.dispatch('setSelectedGeneIds', geneIds || []);
+  if (event.shiftKey) {
+    const selectedDataArray = [...(store.state.selectedData || []), ...newSelectedData];
+    store.dispatch('setSelectedData', selectedDataArray);
+  } else {
+    store.dispatch('setSelectedData', newSelectedData);
+  }
+};
+
+const highlightGeneLines = (sectionId: number, type: string) => {
+  const dataPanelSelected = store.state.selectedGeneIds.includes(sectionId);
+  props.region.orthologLines.forEach((line) => {
+    if (line.comparativeGene.gene?.rgdId == sectionId ||
+        line.backboneGene.gene?.rgdId == sectionId)
+    {
+      if (type == 'enter')
+      {
+        line.isSelected = true;
+      }
+      else if (type == 'exit' && !dataPanelSelected)
+      {
+        line.isSelected = false;
+      }
+    } 
+  });
+};
+
+
+</script>
+
+<style lang="scss" scoped>
+.label.small
+{
+  font: normal 8px sans-serif;
+
+  &:hover
+  {
+    cursor: pointer;
+  }
+}
+
+.ortholog-line
+{
+  stroke-width: 1;
+  &:hover
+  {
+    stroke-width: 2.5;
+  }
+}
+
+.level-2
+{
+  filter: brightness(60%);
+}
+
+.block-section:hover
+{
+  cursor: pointer;
+}
+</style>

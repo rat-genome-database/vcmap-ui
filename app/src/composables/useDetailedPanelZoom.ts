@@ -3,8 +3,11 @@ import { getMousePosSVG } from '@/utils/SVGHelpers';
 import { Store } from "vuex";
 import { VCMapState } from "@/store";
 import SVGConstants from "@/utils/SVGConstants";
+import { useLogger } from "vue-logger-plugin";
 
 export default function useDetailedPanelZoom(store: Store<VCMapState>) {
+  const $log = useLogger();
+
   let inSelectMode = false;
   let startingPoint: DOMPoint | { y: number, x: number };
   const startDetailedSelectionY = ref<number>();
@@ -25,7 +28,7 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
     const selectedRegion = store.state.selectedBackboneRegion;
     if (!selectedRegion.innerSelection)
     {
-      console.warn('Cannot zoom on the detailed panel without a selection in the overview');
+      $log.warn('Cannot zoom on the detailed panel without a selection in the overview');
       return;
     }
 

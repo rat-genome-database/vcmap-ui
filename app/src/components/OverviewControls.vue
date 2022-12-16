@@ -62,21 +62,16 @@
 import { Formatter } from '@/utils/Formatter';
 import { computed, ref } from 'vue';
 import { useStore } from 'vuex';
+import { useLogger } from 'vue-logger-plugin';
 import { key } from '@/store';
 import VCMapDialog from './VCMapDialog.vue';
 
 const store = useStore(key);
+const $log = useLogger();
 
 let showEditModal = ref(false);
 let startPosition = ref(store.state.selectedBackboneRegion.baseSelection.basePairStart);
 let stopPosition = ref(store.state.selectedBackboneRegion.baseSelection.basePairStop);
-
-const areSelectionButtonsDisabled = computed(() => {
-  return store.state.selectedBackboneRegion.baseSelection.svgHeight <= 0 
-    || store.state.chromosome == null
-    || store.state.isOverviewPanelUpdating 
-    || store.state.isDetailedPanelUpdating;
-});
 
 const isValidStartStop = computed(() => {
   return startPosition.value !== stopPosition.value;
@@ -113,22 +108,6 @@ const selectionRange = computed(() => {
   return `${Formatter.addCommasToBasePair(selectedRegion.baseSelection.basePairStart)}bp - ${Formatter.addCommasToBasePair(selectedRegion.baseSelection.basePairStop)}bp`;
 });
 
-const clearSelection = () => {
-  store.dispatch('clearBackboneSelection');
-};
-
-const changeSelectionByPercentage = (percent: number) => {
-  if (store.state.chromosome == null)
-  {
-    console.error('Chromosome seq length required when adjusting backbone base selection');
-    return;
-  }
-
-  const selectedBackboneRegion = store.state.selectedBackboneRegion;
-  selectedBackboneRegion.adjustBaseSelectionByPercentage(percent, store.state.chromosome.seqLength, store.state.overviewBasePairToHeightRatio);
-  store.dispatch('setBackboneSelection', selectedBackboneRegion);
-};
-
 const openSelectionEditModal = () => {
   startPosition.value = store.state.selectedBackboneRegion.baseSelection.basePairStart;
   stopPosition.value = store.state.selectedBackboneRegion.baseSelection.basePairStop;
@@ -142,7 +121,7 @@ const closeModal = () => {
 const saveSelectionChange = () => {
   if (store.state.chromosome == null)
   {
-    console.error('Chromosome seq length required when adjusting backbone base selection');
+    $log.error('Chromosome seq length required when adjusting backbone base selection');
     return;
   }
 

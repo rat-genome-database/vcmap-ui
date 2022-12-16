@@ -2,6 +2,7 @@
   <div class="configuration-header">
     <img alt="VCMap Logo" class="logo" src="../assets/images/vcmap_logo_v2.png">
     <h3 class="header">VCMap</h3><span class="version-label">v{{VERSION}}</span>
+    <a  class="logo-link" href="https://rgd.mcw.edu/" target="_blank"><img class="rgd-logo" src="../assets/images/rgd_logo.png" alt="RGD logo"></a>
   </div>
   <div>
     <TabView v-model:activeIndex="activeTab">
@@ -151,7 +152,7 @@
                   :options="backboneAssemblies" 
                   :disabled="!backboneSpecies"
                   @change="setChromosomeOptions($event.value)"
-                  :optionLabel="(assembly: Map) => assembly.primaryRefAssembly ? `${assembly.name} (primary)` : assembly.name" 
+                  :optionLabel="(assembly: SpeciesMap) => assembly.primaryRefAssembly ? `${assembly.name} (primary)` : assembly.name" 
                   placeholder="Backbone Assembly" />
               </div>
             </div>
@@ -258,12 +259,15 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
 import SpeciesApi from '@/api/SpeciesApi';
+import GeneApi from '@/api/GeneApi';
+import ChromosomeApi from '@/api/ChromosomeApi';
 import Species from '@/models/Species';
 import Gene from '@/models/Gene';
-import Map from '@/models/Map';
+import SpeciesMap from '@/models/SpeciesMap';
 import Chromosome from '@/models/Chromosome';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
+import { useLogger } from 'vue-logger-plugin';
 import { VERSION } from '@/version';
 import { Formatter } from '@/utils/Formatter';
 import VCMapDialog from '@/components/VCMapDialog.vue';
@@ -278,6 +282,7 @@ interface ComparativeSpeciesSelection
 
 const router = useRouter();
 const store = useStore(key);
+const $log = useLogger();
 
 const TABS = {
   GENE: 0,
@@ -289,8 +294,8 @@ const activeTab = ref(TABS.GENE);
 const speciesOptions = ref<Species[]>([]);
 const backboneSpecies = ref<Species | null>(null);
 const isLoadingSpecies = ref(false);
-const backboneAssembly = ref<Map | null>(null);
-const backboneAssemblies = ref<Map[]>([]);
+const backboneAssembly = ref<SpeciesMap | null>(null);
+const backboneAssemblies = ref<SpeciesMap[]>([]);
 
 const geneSuggestions = ref<Gene[]>([]);
 const backboneGene = ref<Gene | null>(null);
@@ -353,7 +358,7 @@ async function searchGene(event: {query: string})
   isLoadingGene.value = true;
   try
   {
-    const matches = await SpeciesApi.getGenesBySymbol(backboneSpecies.value.activeMap.key, backboneSpecies.value.name, event.query);
+    const matches = await GeneApi.getGenesBySymbol(backboneSpecies.value.activeMap.key, backboneSpecies.value.name, event.query);
     geneSuggestions.value = matches;
   }
   catch (err: any)
@@ -391,7 +396,7 @@ function setAssemblyOptions(species: Species | null)
   setChromosomeOptions(backboneAssembly.value);
 }
 
-async function setChromosomeOptions(map: Map | null)
+async function setChromosomeOptions(map: SpeciesMap | null)
 {
   // Clear out all fields that rely on chromosome selection
   chromosomeOptions.value = [];
@@ -412,7 +417,7 @@ async function setChromosomeOptions(map: Map | null)
   isLoadingChromosome.value = true;
   try
   {
-    const chromosomes = await SpeciesApi.getChromosomes(map.key);
+    const chromosomes = await ChromosomeApi.getChromosomes(map.key);
     chromosomeOptions.value = chromosomes;
   }
   catch (err: any)
@@ -444,7 +449,7 @@ async function setGeneChromosomeAndDefaultStartAndStopPositions(gene: Gene | nul
   {
     try
     {
-      geneChromosome.value = await SpeciesApi.getChromosomeInfo(gene.chromosome, backboneSpecies.value.activeMap.key);
+      geneChromosome.value = await ChromosomeApi.getChromosomeInfo(gene.chromosome, backboneSpecies.value.activeMap.key);
     }
     catch (err: any)
     {
@@ -507,7 +512,7 @@ async function prepopulateConfigOptions()
   isLoadingChromosome.value = true;
   try
   {
-    chromosomeOptions.value = await SpeciesApi.getChromosomes(backboneAssembly.value.key);
+    chromosomeOptions.value = await ChromosomeApi.getChromosomes(backboneAssembly.value.key);
   }
   catch (err: any)
   {
@@ -557,7 +562,7 @@ async function prepopulateConfigOptions()
     if (!store.state.chromosome && backboneSpecies.value != null)
     {
       // If chromosome not present in the store, set it based on the gene
-      const chromosome = await SpeciesApi.getChromosomeInfo(prevGene.chromosome, backboneAssembly.value.key);
+      const chromosome = await ChromosomeApi.getChromosomeInfo(prevGene.chromosome, backboneAssembly.value.key);
       backboneChromosome.value = chromosome;
     }
     geneChromosome.value = backboneChromosome.value;
@@ -615,7 +620,7 @@ function saveConfigToStoreAndGoToMainScreen()
   }
   else
   {
-    console.warn('Unknown active tab. State may not be set correctly.');
+    $log.warn('Unknown active tab. State may not be set correctly.');
   }
 
   // Make copies of the selected comparative species/assemblies from our available options and push them onto an array before saving them to the store
@@ -680,7 +685,7 @@ function clearPriorBackboneSelectionIfNecessary()
 
 function onApiError(err: any, userMessage: string)
 {
-  console.error(err);
+  $log.error(err);
   errorMessage.value = userMessage;
   showError.value = true;
 }
@@ -717,7 +722,7 @@ function getAssemblyOptionsForSpecies(index: number)
   return [];
 }
 
-function getAssemblyOptionLabel(assembly: Map)
+function getAssemblyOptionLabel(assembly: SpeciesMap)
 {
   return assembly.primaryRefAssembly ? `${assembly.name} (primary)` : assembly.name;
 }
@@ -797,11 +802,18 @@ $warning-color: #a3852b;
 
 .configuration-header
 {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   .header
   {
     margin-left: 2rem;
+  }
+  .rgd-logo {
+    margin-left: auto;
+    width: 80%;
+  }
+  .logo-link {
+    margin-left: auto;
   }
 }
 

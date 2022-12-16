@@ -1,40 +1,35 @@
-
-interface geneParams
+interface GeneParams
 {
   speciesName?: string;
-  geneSymbol: string;
-  geneName: string;
-  geneType: string;
-  key: number;
-  geneRgdId: number;
-  chr: string;
-  startPos: number;
-  stopPos: number;
+  symbol: string;
+  name: string;
+  rgdId: number;
+  chromosome: string;
+  start: number;
+  stop: number;
+  orthologs?: number[];
 }
 
 export default class Gene
 {
-  speciesName?: string;
+  speciesName: string;
   symbol: string = '';
   name: string = '';
-  type: string = '';
-  key: number = 0;
   rgdId: number = 0;
   chromosome: string = '';
   start: number = 0;
   stop: number = 0;
+  orthologs: number[] = []; // RGD IDs -- Note: will only be populated if Gene was received from the Synteny API with the includeOrthologs param
 
-  constructor(params: geneParams)
+  constructor(params: GeneParams)
   {
-    this.speciesName = params.speciesName;
-    this.symbol = params.geneSymbol;
-    this.name = params.geneName;
-    this.type = params.geneType;
-    this.key = params.key;
-    this.rgdId = params.geneRgdId;
-    this.chromosome = params.chr;
-    this.start = params.startPos;
-    this.stop = params.stopPos;
+    params.speciesName ? this.speciesName = params.speciesName : this.speciesName = '';
+    this.symbol = params.symbol;
+    this.name = params.name;
+    this.rgdId = params.rgdId;
+    this.chromosome = params.chromosome;
+    this.start = params.start;
+    this.stop = params.stop;
+    this.orthologs = params.orthologs ?? [];
   }
 }
-

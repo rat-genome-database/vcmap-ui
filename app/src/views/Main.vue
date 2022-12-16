@@ -17,5 +17,7 @@ import SelectedDataPanel from '@/components/SelectedDataPanel.vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 
+
+
 const store = useStore(key);
 </script>

@@ -1,4 +1,4 @@
-export default {
+const constants = {
   overviewPanelWidth: 300,
   detailsPanelWidth: 500,
   overviewTitleXPosition: 10,
@@ -14,4 +14,11 @@ export default {
   trackMapLabelYPosition: 35,
   selectedBackboneXPosition: 320,
   navigationButtonHeight: 15,
+  overviewTrackPadding: 15,
 };
+
+export const PANEL_SVG_START = constants.panelTitleHeight;
+export const PANEL_SVG_STOP = constants.viewboxHeight - constants.navigationButtonHeight;
+export const PANEL_HEIGHT = PANEL_SVG_STOP - PANEL_SVG_START;
+
+export default constants;

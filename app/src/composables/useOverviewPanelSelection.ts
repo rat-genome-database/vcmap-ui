@@ -2,8 +2,8 @@ import { onMounted, ref } from "vue";
 import { getMousePosSVG } from '@/utils/SVGHelpers';
 import { Store } from "vuex";
 import { VCMapState } from "@/store";
-import TrackSet from "@/models/TrackSet";
 import BackboneSelection, { SelectedRegion } from "@/models/BackboneSelection";
+import BackboneSection from "@/models/BackboneSection";
 
 export default function useOverviewPanelSelection(store: Store<VCMapState>) {
   let inSelectMode = false;
@@ -46,40 +46,32 @@ export default function useOverviewPanelSelection(store: Store<VCMapState>) {
     }
   };
 
-  const completeOverviewSelection = (overviewTrackSets: TrackSet[]) => {
-    if (!inSelectMode || overviewTrackSets.length === 0) return;
+  const completeOverviewSelection = (overviewBackbone?: BackboneSection) => {
+    if (!inSelectMode || !overviewBackbone) return;
 
     inSelectMode = false;
 
-    const backboneTracks = overviewTrackSets.filter(set => set.speciesTrack.type === 'backbone');
-    if (backboneTracks.length === 0)
-    {
-      return;
-    }
-
-    // Only 1 backbone track section should exist in the overview track sets
-    const backboneOverviewTrackSection = backboneTracks[0].speciesTrack.sections[0] ?? null;
-    if (startOverviewSelectionY.value != null && stopOverviewSelectionY.value != null && backboneOverviewTrackSection != null)
+    if (startOverviewSelectionY.value != null && stopOverviewSelectionY.value != null)
     {
       // Calculate start/stop base pairs based on bp to height ratio in the overview panel
-      const startingBasePairCountFromStartOfBackbone = Math.floor((startOverviewSelectionY.value - backboneOverviewTrackSection.svgY) * store.state.overviewBasePairToHeightRatio);
-      let basePairStart = startingBasePairCountFromStartOfBackbone + backboneOverviewTrackSection.sectionStart;
+      const startingBasePairCountFromStartOfBackbone = Math.floor((startOverviewSelectionY.value - overviewBackbone.posY1) * store.state.overviewBasePairToHeightRatio);
+      let basePairStart = startingBasePairCountFromStartOfBackbone + overviewBackbone.windowStart;
 
-      const stoppingBasePairCountFromStartOfBackbone = Math.floor((stopOverviewSelectionY.value - backboneOverviewTrackSection.svgY) * store.state.overviewBasePairToHeightRatio);
-      let basePairStop = stoppingBasePairCountFromStartOfBackbone + backboneOverviewTrackSection.sectionStart;
+      const stoppingBasePairCountFromStartOfBackbone = Math.floor((stopOverviewSelectionY.value - overviewBackbone.posY1) * store.state.overviewBasePairToHeightRatio);
+      let basePairStop = stoppingBasePairCountFromStartOfBackbone + overviewBackbone.windowStart;
 
       let startSVGY = startOverviewSelectionY.value;
-      if (basePairStart < backboneOverviewTrackSection.sectionStart)
+      if (basePairStart < overviewBackbone.windowStart)
       {
-        basePairStart = backboneOverviewTrackSection.sectionStart;
-        startSVGY = backboneOverviewTrackSection.svgY;
+        basePairStart = overviewBackbone.windowStart;
+        startSVGY = overviewBackbone.posY1;
       }
 
       let stopSVGY = stopOverviewSelectionY.value;
-      if (basePairStop > backboneOverviewTrackSection.sectionStop)
+      if (basePairStop > overviewBackbone.windowStop)
       {
-        basePairStop = backboneOverviewTrackSection.sectionStop;
-        stopSVGY = backboneOverviewTrackSection.svgY2;
+        basePairStop = overviewBackbone.windowStop;
+        stopSVGY = overviewBackbone.posY2;
       }
 
       const selectedBackboneRegion = new BackboneSelection(new SelectedRegion(startSVGY, stopSVGY - startSVGY, basePairStart, basePairStop), store.state.chromosome ?? undefined);

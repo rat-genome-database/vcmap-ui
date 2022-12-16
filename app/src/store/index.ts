@@ -2,12 +2,13 @@ import { ActionContext, createStore, Store } from 'vuex';
 import VuexPersistence from 'vuex-persist';
 import Species from '@/models/Species';
 import Chromosome from '@/models/Chromosome';
-import TrackSection from '@/models/TrackSection';
 import Gene from '@/models/Gene';
 import BackboneSelection, { BasePairRange, SelectedRegion } from '@/models/BackboneSelection';
 import SVGConstants from '@/utils/SVGConstants';
 import SelectedData from '@/models/SelectedData';
 import { InjectionKey } from 'vue';
+import { createLogger } from 'vuex';
+import { LoadedSpeciesGenes } from '@/models/DatatrackSection';
 
 export const key: InjectionKey<Store<VCMapState>> = Symbol();
 
@@ -22,8 +23,7 @@ export interface VCMapState
   gene: Gene | null; // backbone gene
 
   comparativeSpecies: Species[];
-  loadedGenes: Map<string, any> | Gene[];
-  loadedGeneSections: TrackSection[];
+  loadedGenes: Map<number, LoadedSpeciesGenes> | null;
 
   selectedBackboneRegion: BackboneSelection;
 
@@ -47,6 +47,16 @@ const vuexLocal = new VuexPersistence<VCMapState>({
   storage: window.localStorage
 });
 
+const logger = createLogger({
+  /** Filter out some very frequently occurring actions/mutations */
+  filter: (mutation) => {
+    return mutation.type !== 'selectedData';
+  },
+  actionFilter: (action) => {
+    return action.type !== 'setSelectedData';
+  },
+});
+
 export default createStore({
   state: (): VCMapState => ({
     species: null,
@@ -58,8 +68,7 @@ export default createStore({
     gene: null,
 
     comparativeSpecies: [],
-    loadedGenes: [],
-    loadedGeneSections: [],
+    loadedGenes: null,
 
     selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
 
@@ -104,11 +113,8 @@ export default createStore({
     comparativeSpecies (state: VCMapState, speciesArray: Species[]) {
       state.comparativeSpecies = speciesArray;
     },
-    loadedGenes (state: VCMapState, loadedGenesArray: Gene[]) {
-      state.loadedGenes = loadedGenesArray;
-    },
-    loadedGeneSections (state: VCMapState, loadedGeneSections: TrackSection[]) {
-      state.loadedGeneSections = loadedGeneSections;
+    loadedGenes (state: VCMapState, loadedGenesMap: Map<number, any>) {
+      state.loadedGenes = loadedGenesMap;
     },
     selectedBackboneRegion ( state: VCMapState, selection: BackboneSelection) {
       state.selectedBackboneRegion = selection;
@@ -117,19 +123,15 @@ export default createStore({
       state.detailedBasePairRange = range;
     },
     overviewBasePairToHeightRatio(state: VCMapState, ratio: number) {
-      console.debug(`Setting overview panel bp resolution to ${ratio} bp/unit`);
       state.overviewBasePairToHeightRatio = ratio;
     },
     overviewSyntenyThreshold(state: VCMapState, threshold: number) {
-      console.debug(`Setting overview panel synteny threshold to ${threshold}bp`);
       state.overviewSyntenyThreshold = threshold;
     },
     detailedBasePairToHeightRatio(state: VCMapState, ratio: number) {
-      console.debug(`Setting details panel bp resolution to ${ratio} bp/unit`);
       state.detailedBasePairToHeightRatio = ratio;
     },
     detailsSyntenyThreshold(state: VCMapState, threshold: number) {
-      console.debug(`Setting details panel synteny threshold to ${threshold}bp`);
       state.detailsSyntenyThreshold = threshold;
     },
     configTab(state: VCMapState, tab: number) {
@@ -203,9 +205,6 @@ export default createStore({
     setLoadedGenes(context: ActionContext<VCMapState, VCMapState>, loadedGenes: Gene[]) {
       context.commit('loadedGenes', loadedGenes);
     },
-    setLoadedGeneSections(context: ActionContext<VCMapState, VCMapState>, loadedGeneSections: TrackSection[]) {
-      context.commit('loadedGeneSections', loadedGeneSections);
-    },
     setIsDetailedPanelUpdating(context: ActionContext<VCMapState, VCMapState>, isUpdating: boolean) {
       context.commit('isDetailedPanelUpdating', isUpdating);
     },
@@ -251,7 +250,45 @@ export default createStore({
     }
   },
 
-  plugins: [
-    vuexLocal.plugin
-  ]
+  getters: {
+    masterGeneMapBySymbol: (state: VCMapState,) => {
+      const masterGeneMap = state.loadedGenes;
+      const mapBySymbol = new Map<string, number[]>();
+
+      if (masterGeneMap == null)
+      {
+        return mapBySymbol;
+      }
+
+     for (const [key, value] of masterGeneMap.entries())
+     {
+        const rgdId = key;
+        const currSpecies = value;
+        
+        for (const speciesName in currSpecies)
+        {
+          const geneEntry = currSpecies[speciesName];
+          const geneSymbol = geneEntry.drawn[0].gene.gene?.symbol;
+          if (geneSymbol)
+          {
+            const currId = mapBySymbol.get(geneSymbol);
+            if (currId != null)
+            {
+              mapBySymbol.set(geneSymbol, currId.concat(rgdId));
+            }
+            else
+            {
+              mapBySymbol.set(geneSymbol, [rgdId]);
+            }
+          }
+        }
+      }
+
+      return mapBySymbol;
+    }
+  },
+
+  plugins: process.env.NODE_ENV !== 'production'
+    ? [vuexLocal.plugin, logger] // Only use Vuex logger in development
+    : [vuexLocal.plugin]
 });
