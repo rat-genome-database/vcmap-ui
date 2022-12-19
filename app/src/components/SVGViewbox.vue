@@ -134,7 +134,6 @@ import GeneApi from '@/api/GeneApi';
 import BackboneSet from '@/models/BackboneSet';
 import { LoadedSpeciesGenes } from '@/models/DatatrackSection';
 import OrthologLineSVG from './OrthologLineSVG.vue';
-import { mergeGeneLabels } from '@/utils/GeneLabelMerger';
 
 const store = useStore(key);
 const $log = useLogger();
