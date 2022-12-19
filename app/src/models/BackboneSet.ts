@@ -31,7 +31,6 @@ export default class BackboneSet extends GenomicSet
     this.setBackboneXPositions();
     this.createTitleLabels();
     this.setDatatrackXPositions();
-    this.processGeneLabels();
   }
 
   public adjustVisibleSet(backboneStart: number, backboneStop: number)

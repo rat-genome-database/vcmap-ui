@@ -49,7 +49,6 @@ export default class SyntenyRegionSet extends GenomicSet
     this.setRegionXPositionsBasedOnOrder();
     this.createTitleLabels();
     this.sortBasePairLabels();
-    this.processGeneLabels();
   }
 
   public adjustVisibleSet(backboneStart: number, backboneStop: number, masterGeneMap: Map<number, LoadedSpeciesGenes>)
@@ -65,7 +64,6 @@ export default class SyntenyRegionSet extends GenomicSet
     );
 
     this.regions = syntenyRegionData.regions;
-    // TODO: adjusting gene labels seesm to slow things down a lot here, so should address this at some point
     this.processGeneLabels();
   }
 
