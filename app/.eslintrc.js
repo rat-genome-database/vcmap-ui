@@ -32,6 +32,7 @@ module.exports = {
       "vue/no-v-for-template-key": "off",
       "vue/script-setup-uses-vars": "error",
       "no-inner-declarations": "off",
-      "no-unused-vars": "warn"
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": "warn" // ignores args in abstract functions
     }
 };
