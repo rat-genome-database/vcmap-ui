@@ -45,7 +45,6 @@ export default class BackboneSet extends GenomicSet
     this.backbone.changeWindowStartAndStop(backboneStart, backboneStop);
 
     // Use stored genomic data to rebuild datatrack sections for visible region
-    // TODO: Return new master gene map?
     if (this.backbone.backboneGenes)
     {
       const datatrackInfo = backboneDatatrackBuilder(this.backbone.backboneGenes, this.backbone, backboneStart, backboneStop);

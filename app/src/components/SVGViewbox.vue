@@ -200,6 +200,8 @@ const arePanelsLoading = computed(() => {
 });
 
 const updateOverviewPanel = async () => {
+  $log.debug('Updating Overview Panel');
+
   const overviewUpdateStart = Date.now();
 
   const backboneSpecies = store.state.species;
@@ -299,6 +301,8 @@ const updateOverviewPanel = async () => {
 };
 
 const updateDetailsPanel = async () => {
+  $log.debug(`Updating Detailed Panel`);
+
   const detailedUpdateStart = Date.now();
   store.dispatch('setIsDetailedPanelUpdating', true);
 
@@ -355,6 +359,15 @@ const updateDetailsPanel = async () => {
       return;
     }
 
+    $log.debug(`Creating synteny region sets for detailed panel`, {
+      backboneChr: backboneChromosome.chromosome,
+      backboneStart: originalSelectedBackboneRegion.baseSelection.basePairStart,
+      backboneStop: originalSelectedBackboneRegion.baseSelection.basePairStop,
+      visibleStart: originalSelectedBackboneRegion.innerSelection?.basePairStart,
+      visibleStop: originalSelectedBackboneRegion.innerSelection?.basePairStop,
+      threshold: store.state.detailsSyntenyThreshold,
+    });
+
     const createSyntenyTracksStart = Date.now();
     const detailedSyntenyData = await createSyntenicRegionsAndDatatracks(
       store.state.comparativeSpecies,
@@ -367,6 +380,8 @@ const updateDetailsPanel = async () => {
       true,
       masterGeneMap
     );
+
+    $log.debug(`Synteny region sets built`, detailedSyntenyData.syntenyRegionSets);
 
     detailedSyntenySets.value = detailedSyntenyData.syntenyRegionSets;
 
@@ -420,10 +435,10 @@ const adjustDetailedVisibleSetsBasedOnZoom = (zoomedSelection: SelectedRegion) =
     const updatedMasterGeneMap = detailedBackboneSet.value.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop);
     if (updatedMasterGeneMap)
     {
+      store.dispatch('setLoadedGenes', updatedMasterGeneMap);
       detailedSyntenySets.value.forEach(set => {
         set.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop, updatedMasterGeneMap);
       });
-      store.dispatch('setLoadedGenes', updatedMasterGeneMap);
     }
   }
 };

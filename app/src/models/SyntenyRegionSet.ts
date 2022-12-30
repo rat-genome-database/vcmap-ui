@@ -1,5 +1,4 @@
 import { SpeciesSyntenyData } from "@/api/SyntenyApi";
-import { syntenicSectionBuilder } from "@/utils/SectionBuilder";
 import SVGConstants from "@/utils/SVGConstants";
 import DatatrackSection, { LoadedSpeciesGenes } from "./DatatrackSection";
 import { GenomicSet } from "./GenomicSet";
@@ -38,7 +37,7 @@ export default class SyntenyRegionSet extends GenomicSet
   threshold: number; // The synteny threshold that was used to create this SyntenyRegionSet
   datatrackLabels: Label[] = []; // array of Label objects associated with the datatrackSections in every SyntenyRegion
 
-  constructor(speciesName: string, mapName: string, regions: SyntenyRegion[], order: number, renderType: 'overview' | 'detailed', speciesSyntenyData: SpeciesSyntenyData, threshold: number)
+  constructor(speciesName: string, mapName: string, regions: SyntenyRegion[], order: number, renderType: 'overview' | 'detailed', speciesSyntenyData: SpeciesSyntenyData, threshold: number, geneLabels?: Label[])
   {
     super(speciesName, mapName);
     this.regions = regions;
@@ -46,6 +45,8 @@ export default class SyntenyRegionSet extends GenomicSet
     this.renderType = renderType;
     this.speciesSyntenyData = speciesSyntenyData;
     this.threshold = threshold;
+    this.datatrackLabels = geneLabels ?? [];
+
     this.setRegionXPositionsBasedOnOrder();
     this.createTitleLabels();
     this.sortBasePairLabels();
@@ -53,17 +54,23 @@ export default class SyntenyRegionSet extends GenomicSet
 
   public adjustVisibleSet(backboneStart: number, backboneStop: number, masterGeneMap: Map<number, LoadedSpeciesGenes>)
   {
-    const syntenyRegionData = syntenicSectionBuilder(
-      this.speciesSyntenyData,
-      backboneStart,
-      backboneStop,
-      this.threshold,
-      this.renderType,
-      this.order,
-      masterGeneMap,
-    );
+    // const syntenyRegionData = syntenicSectionBuilder(
+    //   this.speciesSyntenyData,
+    //   backboneStart,
+    //   backboneStop,
+    //   this.threshold,
+    //   this.renderType,
+    //   this.order,
+    //   masterGeneMap,
+    // );
 
-    this.regions = syntenyRegionData.regions;
+    // this.regions = syntenyRegionData.regions;
+    // this.processGeneLabels();
+
+    // New implementation:
+    this.regions.forEach(region => {
+      region.adjustSectionYPositionsBasedOnVisibleStartAndStop(backboneStart, backboneStop);
+    });
     this.processGeneLabels();
   }
 
