@@ -443,10 +443,12 @@ const adjustDetailedVisibleSetsBasedOnZoom = (zoomedSelection: SelectedRegion) =
   // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
   if (detailedBackboneSet.value)
   {
+    const startTime = Date.now();
     detailedBackboneSet.value.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop);
     detailedSyntenySets.value.forEach(set => {
       set.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop);
     });
+    $log.debug(`Navigation Time: ${Date.now() - startTime} ms`);
   }
 };
 
