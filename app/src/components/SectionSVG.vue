@@ -4,7 +4,6 @@
       class="block-section"
       @mouseenter="onMouseEnter(blockSection, 'trackSection')"
       @mouseleave="onMouseLeave(blockSection, 'trackSection')"
-      @click="onClick($event, blockSection, 'trackSection')"
       :y="blockSection.posY1"
       :x="blockSection.posX1"
       :width="blockSection.width"
@@ -41,7 +40,6 @@
       class="level-2 block-section"
       @mouseenter="onMouseEnter(blockSection, 'trackSection')"
       @mouseleave="onMouseLeave(blockSection, 'trackSection')"
-      @click="onClick($event, blockSection, 'trackSection')"
       :y="blockSection.posY1"
       :x="blockSection.posX1"
       :width="blockSection.width"
@@ -65,7 +63,7 @@
       class="block-section"
       @mouseenter="onMouseEnter(datatrack, 'Gene')"
       @mouseleave="onMouseLeave(datatrack, 'Gene')"
-      @click="onClick($event, datatrack, 'Gene')"
+      @click="onClick($event, datatrack)"
       :y="datatrack.posY1"
       :x="datatrack.posX1"
       :width="datatrack.width"
@@ -83,7 +81,7 @@ import { watch, onMounted} from 'vue';
 import SelectedData, { SelectedDataType } from '@/models/SelectedData';
 import SyntenyRegion from '@/models/SyntenyRegion';
 import SyntenySection from '@/models/SyntenySection';
-import DatatrackSection from '@/models/DatatrackSection';
+import DatatrackSection, { GeneDatatrack } from '@/models/DatatrackSection';
 import { computed, toRefs } from '@vue/reactivity';
 import { useStore } from 'vuex';
 import { key } from '@/store';
@@ -132,10 +130,10 @@ const level2Gaps = computed(() => {
   return props.region.syntenyGaps.filter(g => g.chainLevel === 2);
 });
 const datatracks = computed(() => {
-  return props.region.datatrackSections;
+  return (props.region.datatrackSections as GeneDatatrack[]);
 });
 
-const onMouseEnter = (section: SyntenySection | DatatrackSection, type: SelectedDataType) => {
+const onMouseEnter = (section: SyntenySection | GeneDatatrack, type: SelectedDataType) => {
   section.isHovered = true;
   
   // If there are selected genes, don't update the selected data panel
@@ -146,7 +144,7 @@ const onMouseEnter = (section: SyntenySection | DatatrackSection, type: Selected
 
   if (type === 'Gene') 
   {
-    const geneSection: DatatrackSection = section as DatatrackSection;
+    const geneSection = section as GeneDatatrack;
     if (geneSection?.gene)
     {
       highlightGeneLines(geneSection?.gene.rgdId, 'enter');
@@ -167,10 +165,10 @@ const onMouseLeave = (section: VCMapSVGElement, type: SelectedDataType) => {
 
   if (type === 'Gene') 
   {
-    const geneSection: DatatrackSection = section as DatatrackSection;
+    const geneSection = section as GeneDatatrack;
     if (geneSection?.gene)
     {
-      highlightGeneLines(geneSection?.gene.rgdId, 'exit');
+      highlightGeneLines(geneSection.gene.rgdId, 'exit');
     }
   }
 };
@@ -233,7 +231,7 @@ const highlightSelections = (selectedGeneIds: number[]) => {
   }); */
 };
 
-const onClick = (event: any, section: DatatrackSection, type: string) => {
+const onClick = (event: any, section: GeneDatatrack) => {
   if (!section.gene?.rgdId) {
     return;
   }
