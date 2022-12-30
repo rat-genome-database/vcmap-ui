@@ -1,16 +1,16 @@
-import Datatracksection from './DatatrackSection';
+import Datatracksection, { GeneDatatrack } from './DatatrackSection';
 import { SVGShape, VCMapSVGElement } from "./VCMapSVGElement";
 
 interface OrthologLineParams
 {
-  backboneGene: Datatracksection;
-  comparativeGene: Datatracksection;
+  backboneGene: GeneDatatrack;
+  comparativeGene: GeneDatatrack;
 }
 
 export default class OrthologLine implements VCMapSVGElement
 {
-  backboneGene: Datatracksection;
-  comparativeGene: Datatracksection;
+  backboneGene: GeneDatatrack;
+  comparativeGene: GeneDatatrack;
 
   posX1: number = 0;
   posX2: number = 0;

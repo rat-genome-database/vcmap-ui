@@ -1,4 +1,3 @@
-import { LoadedSpeciesGenes } from "./DatatrackSection";
 import Label from "./Label";
 
 /**
@@ -16,6 +15,6 @@ export abstract class GenomicSet
     this.mapName = mapName ?? '';
   }
 
-  protected abstract adjustVisibleSet(backboneStart: number, backboneStop: number, masterGeneMap?: Map<number, LoadedSpeciesGenes>): void | Map<number, LoadedSpeciesGenes>;
+  protected abstract adjustVisibleSet(visibleBackboneStart: number, visibleBackboneStop: number): void;
   protected abstract createTitleLabels(): void;
 }

@@ -432,14 +432,10 @@ const adjustDetailedVisibleSetsBasedOnZoom = (zoomedSelection: SelectedRegion) =
   // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
   if (detailedBackboneSet.value)
   {
-    const updatedMasterGeneMap = detailedBackboneSet.value.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop);
-    if (updatedMasterGeneMap)
-    {
-      store.dispatch('setLoadedGenes', updatedMasterGeneMap);
-      detailedSyntenySets.value.forEach(set => {
-        set.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop, updatedMasterGeneMap);
-      });
-    }
+    detailedBackboneSet.value.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop);
+    detailedSyntenySets.value.forEach(set => {
+      set.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop);
+    });
   }
 };
 

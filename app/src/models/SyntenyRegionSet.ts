@@ -1,6 +1,6 @@
 import { SpeciesSyntenyData } from "@/api/SyntenyApi";
 import SVGConstants from "@/utils/SVGConstants";
-import DatatrackSection, { LoadedSpeciesGenes } from "./DatatrackSection";
+import DatatrackSection from "./DatatrackSection";
 import { GenomicSet } from "./GenomicSet";
 import Label, { GeneLabel } from "./Label";
 import OrthologLine from "./OrthologLine";
@@ -52,7 +52,7 @@ export default class SyntenyRegionSet extends GenomicSet
     this.sortBasePairLabels();
   }
 
-  public adjustVisibleSet(backboneStart: number, backboneStop: number, masterGeneMap: Map<number, LoadedSpeciesGenes>)
+  public adjustVisibleSet(visibleBackboneStart: number, visibleBackboneStop: number)
   {
     // const syntenyRegionData = syntenicSectionBuilder(
     //   this.speciesSyntenyData,
@@ -69,7 +69,7 @@ export default class SyntenyRegionSet extends GenomicSet
 
     // New implementation:
     this.regions.forEach(region => {
-      region.adjustSectionYPositionsBasedOnVisibleStartAndStop(backboneStart, backboneStop);
+      region.adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
     });
     this.processGeneLabels();
   }

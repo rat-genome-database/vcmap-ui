@@ -8,7 +8,7 @@ import SyntenyApi, { SpeciesSyntenyData, SyntenyRequestParams, SyntenyComponent 
 import Gene from '@/models/Gene';
 import SyntenyRegionSet from '@/models/SyntenyRegionSet';
 import OrthologLine from '@/models/OrthologLine';
-import Label, { GeneLabel } from '@/models/Label';
+import Label from '@/models/Label';
 
 const GAPS_THRESHOLD_MULTIPLIER = 10;
 
@@ -302,7 +302,7 @@ function convertSyntenicDataToBackboneData(genomicObject: SyntenyComponent | Gen
 }
 
 
-function orthologLineBuilder(orthologs: number[], masterProcessedGenes: Map<number, LoadedSpeciesGenes>, processedSpecies: string, currGene: DatatrackSection)
+function orthologLineBuilder(orthologs: number[], masterProcessedGenes: Map<number, LoadedSpeciesGenes>, processedSpecies: string, currGene: GeneDatatrack)
 {
   const orthologLines: OrthologLine[] = [];
   orthologs.forEach((rgdId: number) => {
