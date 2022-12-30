@@ -315,6 +315,9 @@ const updateDetailsPanel = async () => {
   // debug timers
   let timeSyntenyTracks = 0;
   let timeCreateBackboneTrack = 0;
+  let timeQueryBackboneGenes = 0;
+  let timeCreateBackboneDatatracks = 0;
+  let timeCreateBackboneSet = 0;
   let timeAdjustVisibleRegion = 0;
 
   if (detailedBasePairRange.stop - detailedBasePairRange.start <= 0)
@@ -342,14 +345,21 @@ const updateDetailsPanel = async () => {
   const createBackboneTrackStart = Date.now();
   // Create the backbone track for the entire base selection at the updated Detailed panel resolution
   const detailedBackbone = createBackboneSection(backboneSpecies, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, 'detailed');
+  timeCreateBackboneTrack = Date.now() - createBackboneTrackStart;
+
+  const timeQueryBackboneGenesStart = Date.now();
   // Create the backbone data tracks for the entire selection at the updated Detailed panel resolution
   const tempBackboneGenes: Gene[] = await GeneApi.getGenesByRegion(backboneChromosome.chromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, backboneSpecies.activeMap.key, backboneSpecies.name);
+  timeQueryBackboneGenes = Date.now() - timeQueryBackboneGenesStart;
 
+  const timeCreateBackboneDatatracksStart = Date.now();
   const backboneDatatrackInfo = backboneDatatrackBuilder(tempBackboneGenes, detailedBackbone, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, );
+  timeCreateBackboneDatatracks = Date.now() - timeCreateBackboneDatatracksStart;
+  
+  const timeCreateBackboneSetStart = Date.now();
   detailedBackboneSet.value = createBackboneSet(detailedBackbone, backboneDatatrackInfo.processedGenomicData);
   const masterGeneMap = backboneDatatrackInfo.masterGeneMap;
-
-  timeCreateBackboneTrack = Date.now() - createBackboneTrackStart;
+  timeCreateBackboneSet = Date.now() - timeCreateBackboneSetStart;
 
   if (detailedBackbone != null && detailedBackboneSet.value.datatracks.length > 0)
   {
@@ -380,8 +390,6 @@ const updateDetailsPanel = async () => {
       true,
       masterGeneMap
     );
-
-    $log.debug(`Synteny region sets built`, detailedSyntenyData.syntenyRegionSets);
 
     detailedSyntenySets.value = detailedSyntenyData.syntenyRegionSets;
 
@@ -422,6 +430,9 @@ const updateDetailsPanel = async () => {
 
   logPerformanceReport('Update Detailed Time', timeDetailedUpdate, {
     'Create Backbone Track': timeCreateBackboneTrack,
+    'Query Backbone Genes': timeQueryBackboneGenes,
+    'Create Backbone Datatracks': timeCreateBackboneDatatracks,
+    'Create Backbone Set': timeCreateBackboneSet,
     'Create Synteny Tracks': timeSyntenyTracks,
     'Adjust Visible Region': timeAdjustVisibleRegion,
     'Misc': timeDetailedUpdateOther,
