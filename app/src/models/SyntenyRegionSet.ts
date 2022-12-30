@@ -54,20 +54,6 @@ export default class SyntenyRegionSet extends GenomicSet
 
   public adjustVisibleSet(visibleBackboneStart: number, visibleBackboneStop: number)
   {
-    // const syntenyRegionData = syntenicSectionBuilder(
-    //   this.speciesSyntenyData,
-    //   backboneStart,
-    //   backboneStop,
-    //   this.threshold,
-    //   this.renderType,
-    //   this.order,
-    //   masterGeneMap,
-    // );
-
-    // this.regions = syntenyRegionData.regions;
-    // this.processGeneLabels();
-
-    // New implementation:
     this.regions.forEach(region => {
       region.adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
     });

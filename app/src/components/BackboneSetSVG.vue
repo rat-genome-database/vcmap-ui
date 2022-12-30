@@ -5,7 +5,6 @@
     class="section"
     @mouseenter="onMouseEnter(backbone, 'backbone')"
     @mouseleave="onMouseLeave(backbone)"
-    @click="onClick($event, backbone, 'trackSection')"
     :fill="backbone.isHovered && showDataOnHover ? HOVER_HIGHLIGHT_COLOR : backbone.elementColor"
     :x="backbone.posX1" :y="backbone.posY1"
     :width="backbone.width"
@@ -38,7 +37,7 @@
       class="section clickable"
       @mouseenter="onMouseEnter(datatrack, 'Gene')"
       @mouseleave="onMouseLeave(datatrack)"
-      @click="onClick($event, datatrack, 'Gene')"
+      @click="onClick($event, datatrack)"
 
       :y="datatrack.posY1"
       :x="datatrack.posX1"
@@ -104,7 +103,7 @@
 <script lang="ts" setup>
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 import SelectedData, { SelectedDataType } from '@/models/SelectedData';
-import { sortGeneList, getNewSelectedData } from '@/utils/DataPanelHelpers';
+import { getNewSelectedData } from '@/utils/DataPanelHelpers';
 import { computed, toRefs } from '@vue/reactivity';
 import { ref, watch, onMounted } from 'vue';
 import { useStore } from 'vuex';
@@ -113,7 +112,7 @@ import { key } from '@/store';
 import { Formatter } from '@/utils/Formatter';
 import BackboneSection from '@/models/BackboneSection';
 import BackboneSet from '@/models/BackboneSet';
-import DatatrackSection from '@/models/DatatrackSection';
+import DatatrackSection, { GeneDatatrack } from '@/models/DatatrackSection';
 import { VCMapSVGElement } from '@/models/VCMapSVGElement';
 
 const INNER_SELECTION_EXTRA_WIDTH = 4;
@@ -135,7 +134,7 @@ const backbone = computed(() => {
 });
 
 const datatracks = computed(() => {
-  return props.backboneSet.datatracks;
+  return (props.backboneSet.datatracks as GeneDatatrack[]);
 });
 
 const isDetailed = computed(() => {
@@ -199,7 +198,7 @@ const getSectionFill = (section: VCMapSVGElement) => {
   return section.elementColor;
 };
 
-const onClick = (event: any, section: DatatrackSection | BackboneSection, type: string) => {
+const onClick = (event: any, section: GeneDatatrack) => {
   if (!section.gene?.rgdId) {
     return;
   }

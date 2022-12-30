@@ -3,7 +3,7 @@ import Chromosome from '@/models/Chromosome';
 import BackboneSection, { RenderType } from '@/models/BackboneSection';
 import SyntenySection from '@/models/SyntenySection';
 import SyntenyRegion from '@/models/SyntenyRegion';
-import DatatrackSection, { GeneDatatrack, LoadedSpeciesGenes } from '@/models/DatatrackSection';
+import { GeneDatatrack, LoadedSpeciesGenes } from '@/models/DatatrackSection';
 import SyntenyApi, { SpeciesSyntenyData, SyntenyRequestParams, SyntenyComponent } from '@/api/SyntenyApi';
 import Gene from '@/models/Gene';
 import SyntenyRegionSet from '@/models/SyntenyRegionSet';
