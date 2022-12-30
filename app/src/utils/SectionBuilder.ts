@@ -26,7 +26,7 @@ const GAPS_THRESHOLD_MULTIPLIER = 10;
  * @param isComparative         whether or not to draw comparative data NOTE: worth separating into two functions for overview and detailed panel (or datatracks and no datatracks)
  * @returns                     processed syntenic regions for each species
  */
-export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Species[], backboneChr: Chromosome, backboneStart: number, backboneStop: number, windowStart: number, windowStop: number, syntenyThreshold: number, isComparative: boolean, masterGeneMap: Map<number, LoadedSpeciesGenes>)
+export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Species[], backboneChr: Chromosome, backboneStart: number, backboneStop: number, windowStart: number, windowStop: number, syntenyThreshold: number, isComparative: boolean, masterGeneMap?: Map<number, LoadedSpeciesGenes>)
 {
   //Step 1: Get syntenic data for each species
   const syntenyApiParams: SyntenyRequestParams = {
@@ -92,7 +92,7 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
  * @param renderType               overview or detailed
  * @returns                        processed syntenic regions for each species
  */
-export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, windowStart: number,  windowStop: number, threshold: number, renderType: 'overview' | 'detailed', setOrder: number, masterGeneMap: Map<number, LoadedSpeciesGenes>)
+export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, windowStart: number,  windowStop: number, threshold: number, renderType: 'overview' | 'detailed', setOrder: number, masterGeneMap?: Map<number, LoadedSpeciesGenes>)
 {
   //Step 1: For each species synteny data, create syntenic sections for each block
   const processedSyntenicRegions: SyntenyRegion[] = [];
@@ -161,7 +161,7 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
       
 
     //Step 3: For each (now processed) block, create syntenic sections for each gene
-    if (blockGenes && blockGenes.length > 0 && blockSyntenicSection.chainLevel == 1)
+    if (blockGenes && blockGenes.length > 0 && blockSyntenicSection.chainLevel == 1 && masterGeneMap != null)
     {
       //Step 3.1: Pass block data and gene data to gene processing pipeline
       //NOTE: We might want to instead associate block data with gene data, store data in an array, and pass all gene data at once for processing in order to avoid multiple passes of gene data for initial processing and then finding orthologs
