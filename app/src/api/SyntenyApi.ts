@@ -130,6 +130,7 @@ export default class SyntenyApi
 {
   static async getSyntenicRegions(params: SyntenyRequestParams)
   {
+    const start = Date.now();
     try
     {
       const syntenyApiCalls: Promise<AxiosResponse<SyntenyResponseDTO[], any>>[] = [];
@@ -190,6 +191,7 @@ export default class SyntenyApi
           console.error(result.status, result.reason);
         }
       });
+      console.debug(`[DEBUG] Synteny API: ${Date.now() - start} ms`, params);
 
       return speciesSyntenyData;
     }

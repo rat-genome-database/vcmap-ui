@@ -200,6 +200,8 @@ const arePanelsLoading = computed(() => {
 });
 
 const updateOverviewPanel = async () => {
+  $log.debug('Updating Overview Panel');
+
   const overviewUpdateStart = Date.now();
 
   const backboneSpecies = store.state.species;
@@ -299,6 +301,8 @@ const updateOverviewPanel = async () => {
 };
 
 const updateDetailsPanel = async () => {
+  $log.debug(`Updating Detailed Panel`);
+
   const detailedUpdateStart = Date.now();
   store.dispatch('setIsDetailedPanelUpdating', true);
 
@@ -311,6 +315,9 @@ const updateDetailsPanel = async () => {
   // debug timers
   let timeSyntenyTracks = 0;
   let timeCreateBackboneTrack = 0;
+  let timeQueryBackboneGenes = 0;
+  let timeCreateBackboneDatatracks = 0;
+  let timeCreateBackboneSet = 0;
   let timeAdjustVisibleRegion = 0;
 
   if (detailedBasePairRange.stop - detailedBasePairRange.start <= 0)
@@ -338,14 +345,21 @@ const updateDetailsPanel = async () => {
   const createBackboneTrackStart = Date.now();
   // Create the backbone track for the entire base selection at the updated Detailed panel resolution
   const detailedBackbone = createBackboneSection(backboneSpecies, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, 'detailed');
+  timeCreateBackboneTrack = Date.now() - createBackboneTrackStart;
+
+  const timeQueryBackboneGenesStart = Date.now();
   // Create the backbone data tracks for the entire selection at the updated Detailed panel resolution
   const tempBackboneGenes: Gene[] = await GeneApi.getGenesByRegion(backboneChromosome.chromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, backboneSpecies.activeMap.key, backboneSpecies.name);
+  timeQueryBackboneGenes = Date.now() - timeQueryBackboneGenesStart;
 
+  const timeCreateBackboneDatatracksStart = Date.now();
   const backboneDatatrackInfo = backboneDatatrackBuilder(tempBackboneGenes, detailedBackbone, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, );
+  timeCreateBackboneDatatracks = Date.now() - timeCreateBackboneDatatracksStart;
+  
+  const timeCreateBackboneSetStart = Date.now();
   detailedBackboneSet.value = createBackboneSet(detailedBackbone, backboneDatatrackInfo.processedGenomicData);
   const masterGeneMap = backboneDatatrackInfo.masterGeneMap;
-
-  timeCreateBackboneTrack = Date.now() - createBackboneTrackStart;
+  timeCreateBackboneSet = Date.now() - timeCreateBackboneSetStart;
 
   if (detailedBackbone != null && detailedBackboneSet.value.datatracks.length > 0)
   {
@@ -354,6 +368,15 @@ const updateDetailsPanel = async () => {
       onError(missingComparativeSpeciesError, missingComparativeSpeciesError.message);
       return;
     }
+
+    $log.debug(`Creating synteny region sets for detailed panel`, {
+      backboneChr: backboneChromosome.chromosome,
+      backboneStart: originalSelectedBackboneRegion.baseSelection.basePairStart,
+      backboneStop: originalSelectedBackboneRegion.baseSelection.basePairStop,
+      visibleStart: originalSelectedBackboneRegion.innerSelection?.basePairStart,
+      visibleStop: originalSelectedBackboneRegion.innerSelection?.basePairStop,
+      threshold: store.state.detailsSyntenyThreshold,
+    });
 
     const createSyntenyTracksStart = Date.now();
     const detailedSyntenyData = await createSyntenicRegionsAndDatatracks(
@@ -407,6 +430,9 @@ const updateDetailsPanel = async () => {
 
   logPerformanceReport('Update Detailed Time', timeDetailedUpdate, {
     'Create Backbone Track': timeCreateBackboneTrack,
+    'Query Backbone Genes': timeQueryBackboneGenes,
+    'Create Backbone Datatracks': timeCreateBackboneDatatracks,
+    'Create Backbone Set': timeCreateBackboneSet,
     'Create Synteny Tracks': timeSyntenyTracks,
     'Adjust Visible Region': timeAdjustVisibleRegion,
     'Misc': timeDetailedUpdateOther,
@@ -417,14 +443,12 @@ const adjustDetailedVisibleSetsBasedOnZoom = (zoomedSelection: SelectedRegion) =
   // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
   if (detailedBackboneSet.value)
   {
-    const updatedMasterGeneMap = detailedBackboneSet.value.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop);
-    if (updatedMasterGeneMap)
-    {
-      detailedSyntenySets.value.forEach(set => {
-        set.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop, updatedMasterGeneMap);
-      });
-      store.dispatch('setLoadedGenes', updatedMasterGeneMap);
-    }
+    const startTime = Date.now();
+    detailedBackboneSet.value.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop);
+    detailedSyntenySets.value.forEach(set => {
+      set.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop);
+    });
+    $log.debug(`Navigation Time: ${Date.now() - startTime} ms`);
   }
 };
 

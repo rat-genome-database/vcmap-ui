@@ -42,10 +42,11 @@ const goToConfigurationScreen = () => {
 </script>
 
 <style lang="scss" scoped>
-.vcmap-panel::v-deep .p-panel-icons {
+.vcmap-panel:deep() .p-panel-icons {
    display: flex;
    align-items: center;
 }
+
 .vcmap-header
 {
   display: flex;
@@ -56,6 +57,7 @@ const goToConfigurationScreen = () => {
   }
   
 }
+
 .p-button.p-component.header-btn
 {
   margin-right: 1rem;
