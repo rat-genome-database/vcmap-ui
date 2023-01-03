@@ -2,6 +2,7 @@ import { backboneDatatrackBuilder, ProcessedGenomicData } from "@/utils/Backbone
 import SVGConstants from "@/utils/SVGConstants";
 import { mergeGeneLabels } from "@/utils/GeneLabelMerger";
 import BackboneSection from "./BackboneSection";
+import Gene from "./Gene";
 import DatatrackSection from "./DatatrackSection";
 import { GenomicSet } from "./GenomicSet";
 import Label, { GeneLabel } from "./Label";
@@ -37,8 +38,9 @@ export default class BackboneSet extends GenomicSet
   {
     if (backboneStart < this.backbone.start || backboneStop > this.backbone.stop)
     {
-      // Can't generate visible set from outside the boundaries of this BackboneSet
-      throw new Error('Cannot create visible backbone set outside boundaries of loaded backbone set');
+      //expand base start/stop of backbone to include new range accomodating for the new window
+      console.log('base expand')
+      this.backbone.expandBaseStartAndStop(backboneStart, backboneStop);
     }
 
     // Change visible backbone section
@@ -55,6 +57,11 @@ export default class BackboneSet extends GenomicSet
 
       return datatrackInfo.masterGeneMap;
     }
+  }
+
+  public updateBackboneGenes(genes: Gene[])
+  {
+    this.backbone.addBackboneGenes(genes);
   }
 
   protected createTitleLabels()
@@ -116,5 +123,11 @@ export default class BackboneSet extends GenomicSet
     this.datatrackLabels = allLabels;
 
     mergeGeneLabels(this.datatrackLabels as GeneLabel[]);
+  }
+
+  public addDatatrackSections(datatrackSections: DatatrackSection[])
+  {
+    this.datatracks.length > 0 ? this.datatracks.concat(datatrackSections) : this.datatracks = datatrackSections;
+    this.setDatatrackXPositions();
   }
 }
