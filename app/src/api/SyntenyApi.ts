@@ -134,8 +134,10 @@ export default class SyntenyApi
     {
       const syntenyApiCalls: Promise<AxiosResponse<SyntenyResponseDTO[], any>>[] = [];
       const comparativeSpeciesMaps = params.comparativeSpecies.map(s => s.activeMap);
+      const roundedStart = Math.round(params.start);
+      const roundedStop = Math.round(params.stop);
       comparativeSpeciesMaps.forEach(map => {
-        let apiRoute = `/vcmap/synteny/${params.backboneChromosome?.mapKey}/${params.backboneChromosome?.chromosome}/${params.start}/${params.stop}/${map.key}`;
+        let apiRoute = `/vcmap/synteny/${params.backboneChromosome?.mapKey}/${params.backboneChromosome?.chromosome}/${roundedStart}/${roundedStop}/${map.key}`;
 
         // Append query params
         let optionCount = 0;
