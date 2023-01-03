@@ -74,9 +74,13 @@ export default function useOverviewPanelSelection(store: Store<VCMapState>) {
         stopSVGY = overviewBackbone.posY2;
       }
 
-      const selectedBackboneRegion = new BackboneSelection(new SelectedRegion(startSVGY, stopSVGY - startSVGY, basePairStart, basePairStop), store.state.chromosome ?? undefined);
-      selectedBackboneRegion.generateInnerSelection(basePairStart, basePairStop, store.state.overviewBasePairToHeightRatio);
-      store.dispatch('setBackboneSelection', selectedBackboneRegion);
+      const backboneChromosome = store.state.chromosome;
+      if (backboneChromosome)
+      {
+        const selectedBackboneRegion = new BackboneSelection(new SelectedRegion(startSVGY, stopSVGY - startSVGY, basePairStart, basePairStop), backboneChromosome);
+        selectedBackboneRegion.generateInnerSelection(basePairStart, basePairStop, store.state.overviewBasePairToHeightRatio);
+        store.dispatch('setBackboneSelection', selectedBackboneRegion);
+      }
     }
 
     // Clear selection box
