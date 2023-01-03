@@ -3,7 +3,7 @@ import Chromosome from '@/models/Chromosome';
 import BackboneSection, { RenderType } from '@/models/BackboneSection';
 import SyntenySection from '@/models/SyntenySection';
 import SyntenyRegion from '@/models/SyntenyRegion';
-import { GeneDatatrack, LoadedSpeciesGenes } from '@/models/DatatrackSection';
+import { LoadedGene, GeneDatatrack } from '@/models/DatatrackSection';
 import SyntenyApi, { SpeciesSyntenyData, SyntenyRequestParams, SyntenyComponent } from '@/api/SyntenyApi';
 import Gene from '@/models/Gene';
 import SyntenyRegionSet from '@/models/SyntenyRegionSet';
@@ -26,7 +26,7 @@ const GAPS_THRESHOLD_MULTIPLIER = 10;
  * @param isComparative         whether or not to draw comparative data NOTE: worth separating into two functions for overview and detailed panel (or datatracks and no datatracks)
  * @returns                     processed syntenic regions for each species
  */
-export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Species[], backboneChr: Chromosome, backboneStart: number, backboneStop: number, windowStart: number, windowStop: number, syntenyThreshold: number, isComparative: boolean, masterGeneMap?: Map<number, LoadedSpeciesGenes>)
+export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Species[], backboneChr: Chromosome, backboneStart: number, backboneStop: number, windowStart: number, windowStop: number, syntenyThreshold: number, isComparative: boolean, masterGeneMap?: Map<number, LoadedGene>)
 {
   //Step 1: Get syntenic data for each species
   const syntenyApiParams: SyntenyRequestParams = {
@@ -76,7 +76,7 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
     console.log("No syntenic data returned for species");
     return {
       syntenyRegionSets: ([] as SyntenyRegionSet[]),
-      masterGeneMap: new Map<number, LoadedSpeciesGenes>()
+      masterGeneMap: new Map<number, LoadedGene>()
     };
   }
 }
@@ -92,7 +92,7 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
  * @param renderType               overview or detailed
  * @returns                        processed syntenic regions for each species
  */
-export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, windowStart: number,  windowStop: number, threshold: number, renderType: 'overview' | 'detailed', setOrder: number, masterGeneMap?: Map<number, LoadedSpeciesGenes>)
+export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, windowStart: number,  windowStop: number, threshold: number, renderType: 'overview' | 'detailed', setOrder: number, masterGeneMap?: Map<number, LoadedGene>)
 {
   //Step 1: For each species synteny data, create syntenic sections for each block
   const processedSyntenicRegions: SyntenyRegion[] = [];
@@ -208,7 +208,7 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
  * @param genomicData             genomic data for current block
  * @param blockInfo               info about block (start, stop, etc)
  */
-function syntenicDatatrackBuilder(genomicData: Gene[], syntenyBlock: SyntenySection, blockRatio: number, windowStart: number, windowStop: number, isGene: boolean, renderType: RenderType, masterGeneMap: Map<number, LoadedSpeciesGenes>)
+function syntenicDatatrackBuilder(genomicData: Gene[], syntenyBlock: SyntenySection, blockRatio: number, windowStart: number, windowStop: number, isGene: boolean, renderType: RenderType, masterGeneMap: Map<number, LoadedGene>)
 {
   //Step 1: For each gene, convert to backbone equivalents using blockInfo and blockRatio
   const processedGenomicData: GeneDatatrack[] = [];
@@ -227,27 +227,31 @@ function syntenicDatatrackBuilder(genomicData: Gene[], syntenyBlock: SyntenySect
       //Create DatatrackSection for each gene
       const geneDatatrackSection = new GeneDatatrack({ start: genomicElement.start, stop: genomicElement.stop, backboneSection: geneBackboneSection }, genomicElement);
 
-      const existingId = masterGeneMap.get(genomicElement.rgdId);
-      if (existingId)
+      const loadedGene = masterGeneMap.get(genomicElement.rgdId);
+      if (loadedGene)
       {
-        if (existingId[currSpecies])
+        if (loadedGene.genes[currSpecies])
         {
-          existingId[currSpecies]['drawn'].push({ gene: geneDatatrackSection, svgY: geneBackboneSection.posY1, svgX: geneBackboneSection.posX1 });
+          loadedGene.genes[currSpecies].push(geneDatatrackSection);
         }
         else
         {
-          existingId[currSpecies] = { drawn: [{gene: geneDatatrackSection, svgY: geneBackboneSection.posY1, svgX: geneBackboneSection.posX1 }]};
+          loadedGene.genes[currSpecies] = [geneDatatrackSection];
         }
       }
       else
       {
-        masterGeneMap.set(genomicElement.rgdId, { [currSpecies]:  { drawn: [{gene: geneDatatrackSection, svgY: geneBackboneSection.posY1, svgX: geneBackboneSection.posX1 }]} });
+        masterGeneMap.set(genomicElement.rgdId, {
+          genes: {
+            [currSpecies]: [geneDatatrackSection]
+          }
+        });
       }
 
       const geneOrthologs = genomicElement.orthologs;
       if (geneOrthologs && geneOrthologs.length > 0)
       {
-        const orthologLines: OrthologLine[] = orthologLineBuilder(geneOrthologs, masterGeneMap, currSpecies, geneDatatrackSection);
+        const orthologLines: OrthologLine[] = orthologLineBuilder(masterGeneMap, currSpecies, geneDatatrackSection);
         
         if (orthologLines)
         {
@@ -302,25 +306,18 @@ function convertSyntenicDataToBackboneData(genomicObject: SyntenyComponent | Gen
 }
 
 
-function orthologLineBuilder(orthologs: number[], masterProcessedGenes: Map<number, LoadedSpeciesGenes>, processedSpecies: string, currGene: GeneDatatrack)
+function orthologLineBuilder(masterProcessedGenes: Map<number, LoadedGene>, processedSpecies: string, currGene: GeneDatatrack)
 {
   const orthologLines: OrthologLine[] = [];
-  orthologs.forEach((rgdId: number) => {
-    const masterGene = masterProcessedGenes.get(rgdId);
-    if (masterGene)
+  currGene.gene.orthologs.forEach((rgdId: number) => {
+    const loadedGene = masterProcessedGenes.get(rgdId);
+    if (loadedGene && loadedGene.backboneOrtholog != null)
     {
-      for (const species in masterGene)
-      {
-        if (species !== processedSpecies)
-        {
-          const backboneGene = masterGene[species].drawn[0].gene;
-          const orthologLine = new OrthologLine({
-            backboneGene: backboneGene, 
-            comparativeGene: currGene,
-          });
-          orthologLines.push(orthologLine);
-        }
-      }
+      const orthologLine = new OrthologLine({
+        backboneGene: loadedGene.backboneOrtholog, 
+        comparativeGene: currGene,
+      });
+      orthologLines.push(orthologLine);
     }
   });
 

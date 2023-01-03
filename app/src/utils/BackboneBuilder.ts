@@ -2,7 +2,7 @@ import BackboneSection, { RenderType } from "@/models/BackboneSection";
 import Chromosome from "@/models/Chromosome";
 import Species from "@/models/Species";
 import Gene from "@/models/Gene";
-import DatatrackSection, { GeneDatatrack, LoadedSpeciesGenes } from "@/models/DatatrackSection";
+import DatatrackSection, { LoadedGene, GeneDatatrack } from "@/models/DatatrackSection";
 import BackboneSet from "@/models/BackboneSet";
 import { GeneLabel } from "@/models/Label";
 
@@ -33,14 +33,13 @@ export function createBackboneSection(species: Species, chromosome: Chromosome, 
 
 export function backboneDatatrackBuilder(genomicData: Gene[], backboneSection: BackboneSection, windowStart: number, windowStop: number,)
 {
-  const masterGeneMap = new Map<number, LoadedSpeciesGenes>();
+  const masterGeneMap = new Map<number, LoadedGene>();
 
   const processedGenomicData: ProcessedGenomicData = {
     datatracks: [],
     genes: genomicData,
   };
   genomicData.forEach((genomicElement: Gene) => {
-    const currSpecies = genomicElement.speciesName.toLowerCase();
     const geneBackboneSection = new BackboneSection({ start: genomicElement.start, stop: genomicElement.stop, windowStart: windowStart, windowStop: windowStop, renderType: 'detailed' });
     const geneDatatrackSection = new GeneDatatrack({ start: genomicElement.start, stop: genomicElement.stop, backboneSection: geneBackboneSection }, genomicElement);
     const geneLabel = new GeneLabel({
@@ -54,7 +53,10 @@ export function backboneDatatrackBuilder(genomicData: Gene[], backboneSection: B
 
     processedGenomicData.datatracks.push(geneDatatrackSection);
     // Map structure is { rgdId: { species: { gene: Gene, drawn: [{ svgY: number, svgX: number }] } } }
-    masterGeneMap.set(genomicElement.rgdId, { [currSpecies]: { drawn: [{gene: geneDatatrackSection, svgY: geneBackboneSection.posY1, svgX: geneBackboneSection.posX1 ?? 370 }]} });
+    masterGeneMap.set(genomicElement.rgdId, {
+      backboneOrtholog: geneDatatrackSection,
+      genes: {},
+    });
   });
 
   return { backboneSection, masterGeneMap, processedGenomicData };

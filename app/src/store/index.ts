@@ -8,9 +8,14 @@ import SVGConstants from '@/utils/SVGConstants';
 import SelectedData from '@/models/SelectedData';
 import { InjectionKey } from 'vue';
 import { createLogger } from 'vuex';
-import { LoadedSpeciesGenes } from '@/models/DatatrackSection';
+import { GeneDatatrack, LoadedGene } from '@/models/DatatrackSection';
 
 export const key: InjectionKey<Store<VCMapState>> = Symbol();
+
+type VCMapGetters = {
+  masterGeneMapByRGDId: Map<number, GeneDatatrack[]>,
+  masterGeneMapBySymbol: Map<string, number[]>,
+}
 
 export interface VCMapState
 {
@@ -23,7 +28,7 @@ export interface VCMapState
   gene: Gene | null; // backbone gene
 
   comparativeSpecies: Species[];
-  loadedGenes: Map<number, LoadedSpeciesGenes> | null;
+  loadedGenes: Map<number, LoadedGene> | null;
 
   selectedBackboneRegion: BackboneSelection;
 
@@ -251,41 +256,80 @@ export default createStore({
   },
 
   getters: {
-    masterGeneMapBySymbol: (state: VCMapState,) => {
-      const masterGeneMap = state.loadedGenes;
+    masterGeneMapByRGDId: (state: VCMapState, getters: VCMapGetters) => {
+      const loadedGenes = state.loadedGenes;
+
+      const mapByRGDId = new Map<number, GeneDatatrack[]>();
+
+      if (loadedGenes == null)
+      {
+        return mapByRGDId;
+      }
+
+      for (const [rgdId, loadedGene] of loadedGenes.entries())
+      {
+        const allGenes: GeneDatatrack[] = [];
+        if (loadedGene.backboneOrtholog != null)
+        {
+          allGenes.push(loadedGene.backboneOrtholog);
+        }
+
+        for (const speciesName in loadedGene.genes)
+        {
+          const speciesGenes = loadedGene.genes[speciesName];
+          speciesGenes.forEach(gene => allGenes.push(gene));
+        }
+
+        mapByRGDId.set(rgdId, allGenes);
+      }
+
+      return mapByRGDId;
+    },
+
+    masterGeneMapBySymbol: (state: VCMapState, getters: VCMapGetters) => {
+      const loadedGenes = state.loadedGenes;
+      // Map of RGD Ids keyed by gene symbol
       const mapBySymbol = new Map<string, number[]>();
 
-      if (masterGeneMap == null)
+      if (loadedGenes == null)
       {
         return mapBySymbol;
       }
 
-     for (const [key, value] of masterGeneMap.entries())
+     for (const [rgdId, loadedGene] of loadedGenes.entries())
      {
-        const rgdId = key;
-        const currSpecies = value;
-        
-        for (const speciesName in currSpecies)
+        // Collect the backbone ortholog and all comparative species genes with this RGD ID
+        const allGenes: GeneDatatrack[]  = [];
+        for (const speciesName in loadedGene.genes)
         {
-          const geneEntry = currSpecies[speciesName];
-          const geneSymbol = geneEntry.drawn[0].gene.gene?.symbol;
+          const speciesGenes = loadedGene.genes[speciesName];
+          speciesGenes.forEach(gene => allGenes.push(gene));
+        }
+
+        if (loadedGene.backboneOrtholog != null)
+        {
+          allGenes.push(loadedGene.backboneOrtholog);
+        }
+
+        allGenes.forEach(geneDatatrack => {
+          const geneSymbol = geneDatatrack.gene.symbol;
           if (geneSymbol)
           {
-            const currId = mapBySymbol.get(geneSymbol);
-            if (currId != null)
+            const rgdIds = mapBySymbol.get(geneSymbol);
+            if (rgdIds != null)
             {
-              mapBySymbol.set(geneSymbol, currId.concat(rgdId));
+              mapBySymbol.set(geneSymbol, rgdIds.concat(rgdId));
             }
             else
             {
               mapBySymbol.set(geneSymbol, [rgdId]);
             }
           }
-        }
+        });
       }
 
       return mapBySymbol;
-    }
+    },
   },
 
   plugins: process.env.NODE_ENV !== 'production'

@@ -2,7 +2,8 @@ import Gene from '@/models/Gene';
 import SelectedData from '@/models/SelectedData';
 import { Store } from "vuex";
 import { VCMapState } from "@/store";
-import DatatrackSection from '@/models/DatatrackSection';
+import { GeneDatatrack, LoadedGene } from '@/models/DatatrackSection';
+
 // Util methods to help process and update selection info
 export function getGeneOrthologIds(store: Store<VCMapState>, gene: Gene) {
   const geneOrthologs = store.state.selectedBackboneRegion.orthologData.get(gene.symbol);
@@ -78,37 +79,37 @@ function getOrthologsFromComparativeSpecies(store: Store<VCMapState>, gene: Gene
 
 function getGeneOrthologData(store: Store<VCMapState>, gene: Gene) 
 {
-  const drawnGeneData = store.state.loadedGenes;
-  const currGeneInfo = drawnGeneData?.get(gene.rgdId);
-  const geneSpecies = gene.speciesName.toLowerCase();
+  const masterGeneMapByRGDId = store.getters.masterGeneMapByRGDId as Map<number, GeneDatatrack[]>;
+  const geneDatatracks = masterGeneMapByRGDId?.get(gene.rgdId);
 
-  const selectedData: SelectedData[] = [];
+  const selectedDataList: SelectedData[] = [];
   const rgdIds: number[] = [];
 
-  if (!currGeneInfo) return {rgdIds: rgdIds, selectedData: selectedData };
+  if (!geneDatatracks)
+  {
+    return {
+      rgdIds: rgdIds, 
+      selectedData: selectedDataList 
+    };
+  }
 
-  selectedData.push(new SelectedData(currGeneInfo[geneSpecies].drawn[0].gene, 'Gene'));
+  selectedDataList.push(new SelectedData(gene, 'Gene'));
+
   rgdIds.push(gene.rgdId);
   // If the gene has orthologs, add them to the selected data
   if (gene.orthologs.length > 0)
   {
-    gene.orthologs.forEach((ortholog: number) => {
-      const currOrthologInfo = drawnGeneData?.get(ortholog);
-      if (currOrthologInfo)
-      {
-        for (const species in currOrthologInfo)
-        {
-          if (species !== geneSpecies)
-          {
-            currOrthologInfo[species].drawn.forEach((orthologGene: any) => {
-              selectedData.push(new SelectedData(orthologGene.gene, 'Gene'));
-              rgdIds.push(orthologGene.gene.gene.rgdId);
-            });
-          }
-        }
-      }
+    gene.orthologs.forEach((rgdId: number) => {
+      const orthologGenes = masterGeneMapByRGDId?.get(rgdId);
+      orthologGenes?.forEach(geneDatatrack => {
+        selectedDataList.push(new SelectedData(geneDatatrack.gene, 'Gene'));
+      });
+      rgdIds.push(rgdId);
     });
   }
-  
-  return {rgdIds: rgdIds, selectedData: selectedData};
+
+  return {
+    rgdIds: rgdIds, 
+    selectedData: selectedDataList
+  };
 }
