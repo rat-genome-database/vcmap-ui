@@ -77,6 +77,11 @@ export default class BackboneSection implements VCMapSVGElement
     this.backboneGenes = backboneGenes;
   }
 
+  public addBackboneGenes(backboneGenes: Gene[])
+  {
+    this.backboneGenes = this.backboneGenes?.concat(backboneGenes) ?? backboneGenes;
+  }
+
   /**
    * Change the windowStart, windowStop of the backbone and regenerate SVG Y positions.
    * windowStart and windowStop are analagous to the inner selection start/stop.
@@ -93,6 +98,12 @@ export default class BackboneSection implements VCMapSVGElement
     {
       this.createLabels();
     }
+  }
+
+  public expandBaseStartAndStop(start: number, stop: number)
+  {
+    start < this.start ? this.start = start : null;
+    stop > this.stop ? this.stop = stop : null;
   }
 
   /**
