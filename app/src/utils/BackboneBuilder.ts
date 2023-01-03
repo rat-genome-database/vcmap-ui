@@ -42,7 +42,7 @@ export function backboneDatatrackBuilder(genomicData: Gene[], backboneSection: B
   genomicData.forEach((genomicElement: Gene) => {
     const currSpecies = genomicElement.speciesName.toLowerCase();
     const geneBackboneSection = new BackboneSection({ start: genomicElement.start, stop: genomicElement.stop, windowStart: windowStart, windowStop: windowStop, renderType: 'detailed' });
-    const geneDatatrackSection = new GeneDatatrack({ start: genomicElement.start, stop: genomicElement.stop, backboneSection: geneBackboneSection, orthologs: genomicElement.orthologs, type: 'gene', }, genomicElement);
+    const geneDatatrackSection = new GeneDatatrack({ start: genomicElement.start, stop: genomicElement.stop, backboneSection: geneBackboneSection }, genomicElement);
     const geneLabel = new GeneLabel({
         posX: 0,
         posY: (geneDatatrackSection.posY1 + geneDatatrackSection.posY2) / 2,

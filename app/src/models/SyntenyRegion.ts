@@ -1,8 +1,9 @@
 import BackboneSection from './BackboneSection';
 import SyntenySection from './SyntenySection';
 import DatatrackSection from './DatatrackSection';
-import Label, { GeneLabel } from './Label';
+import Label from './Label';
 import OrthologLine from './OrthologLine';
+import GenomicSection from './GenomicSection';
 
 interface SyntenyRegionParams
 {
@@ -11,7 +12,7 @@ interface SyntenyRegionParams
   gaplessBlock: SyntenySection;
 }
 
-//This model is used to store data for a syntenic region offbackbone
+//This model is used to store data for a syntenic region off-backbone
 export default class SyntenyRegion
 {
   gaplessBlock: SyntenySection;
@@ -22,7 +23,6 @@ export default class SyntenyRegion
   backboneSection: BackboneSection | undefined;               // backbone section that this synteny region is aligned to
   species: string = '';                                       // species that this region is from
   mapName: string = '';
-  //chromosome: Chromosome = new Chromosome();                // chromosome that this region is from
   // NOTE: We should evaluate if we want this, if its just a copy of the references to the labels in SyntenyRegion.datatrackSections
   datatrackLabels: Label[] = [];                               // array of Label objects associated with the datatrackSections
 
@@ -31,6 +31,17 @@ export default class SyntenyRegion
     this.species = params.species;
     this.mapName = params.mapName;
     this.gaplessBlock = params.gaplessBlock;
+  }
+
+  public adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart: number, visibleBackboneStop: number)
+  {
+    this.genomicSections.forEach(section => {
+      section.adjustYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
+      section.recalculateLabelYPositions();
+    });
+    this.orthologLines.forEach(line => {
+      line.setSVGPositions();
+    });
   }
 
   public addSyntenyGaps(syntenyGap: SyntenySection[])
@@ -53,5 +64,12 @@ export default class SyntenyRegion
   public addOrthologLines(orthologLine: OrthologLine[])
   {
     this.orthologLines.length > 0 ? this.orthologLines = this.orthologLines.concat(orthologLine) : this.orthologLines = orthologLine;
+  }
+
+  private get genomicSections()
+  {
+    let genomicSections: GenomicSection[] = [this.gaplessBlock];
+    genomicSections = genomicSections.concat(this.syntenyBlocks).concat(this.syntenyGaps).concat(this.datatrackSections);
+    return genomicSections; 
   }
 }

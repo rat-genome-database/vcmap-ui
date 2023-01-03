@@ -83,8 +83,16 @@ export default class GeneApi
   {
     const roundedStart = Math.round(start);
     const roundedStop = Math.round(stop);
+    const startTime = Date.now();
     const res = await httpInstance.get<GeneDTO[]>(`/vcmap/genes/${mapKey}/${chromosome}/${roundedStart}/${roundedStop}`);
     const geneList: Gene[] = res.data.map(dto => getGeneFromGeneDTO(dto, speciesName));
+    console.debug(`[DEBUG] Genes By Region API: ${Date.now() - startTime} ms`, {
+      chromosome,
+      start,
+      stop,
+      mapKey,
+      speciesName,
+    });
     return geneList;
   }
 

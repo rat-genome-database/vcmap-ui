@@ -1,4 +1,4 @@
-import { backboneDatatrackBuilder, ProcessedGenomicData } from "@/utils/BackboneBuilder";
+import { ProcessedGenomicData } from "@/utils/BackboneBuilder";
 import SVGConstants from "@/utils/SVGConstants";
 import { mergeGeneLabels } from "@/utils/GeneLabelMerger";
 import BackboneSection from "./BackboneSection";
@@ -34,9 +34,9 @@ export default class BackboneSet extends GenomicSet
     this.setDatatrackXPositions();
   }
 
-  public adjustVisibleSet(backboneStart: number, backboneStop: number)
+  public adjustVisibleSet(visibleBackboneStart: number, visibleBackboneStop: number)
   {
-    if (backboneStart < this.backbone.start || backboneStop > this.backbone.stop)
+    if (visibleBackboneStart < this.backbone.start || visibleBackboneStop > this.backbone.stop)
     {
       //expand base start/stop of backbone to include new range accomodating for the new window
       console.log('base expand')
@@ -44,19 +44,13 @@ export default class BackboneSet extends GenomicSet
     }
 
     // Change visible backbone section
-    this.backbone.changeWindowStartAndStop(backboneStart, backboneStop);
+    this.backbone.changeWindowStartAndStop(visibleBackboneStart, visibleBackboneStop);
 
-    // Use stored genomic data to rebuild datatrack sections for visible region
-    // TODO: Return new master gene map?
-    if (this.backbone.backboneGenes)
-    {
-      const datatrackInfo = backboneDatatrackBuilder(this.backbone.backboneGenes, this.backbone, backboneStart, backboneStop);
-      this.datatracks = datatrackInfo.processedGenomicData.datatracks;
-      this.setDatatrackXPositions();
-      this.processGeneLabels();
-
-      return datatrackInfo.masterGeneMap;
-    }
+    this.datatracks.forEach(datatrack => {
+      datatrack.adjustYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
+      datatrack.recalculateLabelYPositions();
+    });
+    this.processGeneLabels();
   }
 
   public updateBackboneGenes(genes: Gene[])
