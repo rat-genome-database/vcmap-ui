@@ -74,7 +74,7 @@
     <template v-if="detailedSyntenySets.length">
       <template v-for="(syntenySet, index) in detailedSyntenySets" :key="index">
         <template v-for="(label, index) in syntenySet.titleLabels" :key="index">
-          <text class="label small" :x="label.posX" :y="label.posY">{{label.text}} (test)</text>
+          <text class="label small" :x="label.posX" :y="label.posY">{{label.text}}</text>
         </template>
       </template>
     </template>
