@@ -74,7 +74,7 @@
     <template v-if="detailedSyntenySets.length">
       <template v-for="(syntenySet, index) in detailedSyntenySets" :key="index">
         <template v-for="(label, index) in syntenySet.titleLabels" :key="index">
-          <text class="label small" :x="label.posX" :y="label.posY">{{label.text}} (test)</text>
+          <text class="label small" :x="label.posX" :y="label.posY">{{label.text}}</text>
         </template>
       </template>
     </template>
@@ -132,7 +132,6 @@ import BackboneSetSVG from './BackboneSetSVG.vue';
 import SyntenyRegionSet from '@/models/SyntenyRegionSet';
 import GeneApi from '@/api/GeneApi';
 import BackboneSet from '@/models/BackboneSet';
-import { LoadedSpeciesGenes } from '@/models/DatatrackSection';
 import OrthologLineSVG from './OrthologLineSVG.vue';
 
 const store = useStore(key);
@@ -238,8 +237,6 @@ const updateOverviewPanel = async () => {
     return;
   }
 
-  // TODO: Do we need masterGeneMap for the overview?
-  const emptyMap = new Map<number, LoadedSpeciesGenes>();
   const overviewSyntenyData = await createSyntenicRegionsAndDatatracks(
     store.state.comparativeSpecies,
     backboneChromosome,
@@ -249,7 +246,6 @@ const updateOverviewPanel = async () => {
     backboneChromosome.seqLength,
     store.state.overviewSyntenyThreshold,
     false,
-    emptyMap,
   );
 
   overviewSyntenySets.value = overviewSyntenyData.syntenyRegionSets;
