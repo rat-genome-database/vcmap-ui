@@ -141,6 +141,7 @@ import { ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import { getNewSelectedData, sortGeneList } from '@/utils/DataPanelHelpers';
+import { GeneDatatrack } from '@/models/DatatrackSection';
 
 const store = useStore(key);
 
@@ -198,27 +199,30 @@ const clearSelectedGenes = () => {
 };
 
 const searchGene = (event: {query: string}) => {
-  const loadedGenes = store.state.loadedGenes;
-  const loadedGeneSymbols = store.getters.masterGeneMapBySymbol;
-  
+  // Need to figure out how to more efficiently type vuex getters
+  const loadedGenesByRGDId = store.getters.masterGeneMapByRGDId as Map<number, GeneDatatrack[]>;
+  const loadedGeneSymbols = store.getters.masterGeneMapBySymbol as Map<string, number[]>;
+
   let matches: Gene[] = [];
-  for (let k of loadedGeneSymbols.keys()) 
+  for (const symbol of loadedGeneSymbols.keys()) 
   {
-    if (k.toLowerCase().includes(event.query.toLowerCase()))
+    if (symbol.toLowerCase().includes(event.query.toLowerCase()))
     {
-      const rgdIds = loadedGeneSymbols.get(k);
+      const rgdIds = loadedGeneSymbols.get(symbol);
+      if (rgdIds == null)
+      {
+        continue;
+      }
+
       for (let rgdId of rgdIds) 
       {
-        const currSpecies = loadedGenes.get(rgdId);
-
-        for (const object in currSpecies) 
+        const genes = loadedGenesByRGDId.get(rgdId);
+        if (genes == null)
         {
-          const geneEntry = currSpecies[object];
-          geneEntry.drawn.forEach(element => {
-            matches.push(element.gene.gene);
-          });
+          continue;
         }
 
+        genes.forEach(geneDatatrack => matches.push(geneDatatrack.gene));
       }
     }
   }

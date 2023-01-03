@@ -5,17 +5,12 @@ import GenomicSection from "./GenomicSection";
 
 type DatatrackSectionType = 'gene';
 
-// TODO: See if this can be simplified to just [speciesName: string]: GeneDataTrack[]
-export interface LoadedSpeciesGenes
+export interface LoadedGene
 {
-  [speciesName:string]: {
-    drawn: {
-      gene: GeneDatatrack,
-      // Are these necessary anymore? Orthologs are drawn using gene datatrack section positions...
-      svgY: number;
-      svgX: number;
-    }[];
-  };
+  backboneOrtholog?: GeneDatatrack,
+  genes: {
+    [speciesName:string]: GeneDatatrack[]
+  }
 }
 
 interface DatatrackSectionParams

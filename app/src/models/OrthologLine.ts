@@ -1,4 +1,4 @@
-import Datatracksection, { GeneDatatrack } from './DatatrackSection';
+import { GeneDatatrack } from './DatatrackSection';
 import { SVGShape, VCMapSVGElement } from "./VCMapSVGElement";
 
 interface OrthologLineParams
