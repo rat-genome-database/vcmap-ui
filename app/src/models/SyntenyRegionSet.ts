@@ -22,7 +22,7 @@ function getDetailedPanelXPositionForSynteny(order: number)
 
 function getDetailedPanelXPositionForDatatracks(order: number)
 {
-  return getDetailedPanelXPositionForSynteny(order) + (order * 30);
+  return getDetailedPanelXPositionForSynteny(order) + 30;
 }
 
 /**
