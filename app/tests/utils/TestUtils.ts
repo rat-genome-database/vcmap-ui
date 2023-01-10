@@ -81,6 +81,7 @@ export namespace TestUtils
 
         selectedData: null,
         loadedGenes: null,
+        loadedBlocks: null,
         selectedGeneIds: [],
 
         isDetailedPanelUpdating: false,
