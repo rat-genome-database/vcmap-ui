@@ -10,6 +10,11 @@ import SyntenyRegionSet from '@/models/SyntenyRegionSet';
 import OrthologLine from '@/models/OrthologLine';
 import Label from '@/models/Label';
 
+export interface LoadedBlock
+{
+  [speciesName:string]: { [chromosome: string]: [SyntenySection] }
+}
+
 const GAPS_THRESHOLD_MULTIPLIER = 10;
 
 /**
@@ -26,7 +31,7 @@ const GAPS_THRESHOLD_MULTIPLIER = 10;
  * @param isComparative         whether or not to draw comparative data NOTE: worth separating into two functions for overview and detailed panel (or datatracks and no datatracks)
  * @returns                     processed syntenic regions for each species
  */
-export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Species[], backboneChr: Chromosome, backboneStart: number, backboneStop: number, windowStart: number, windowStop: number, syntenyThreshold: number, isComparative: boolean, masterGeneMap?: Map<number, LoadedGene>)
+export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Species[], backboneChr: Chromosome, backboneStart: number, backboneStop: number, windowStart: number, windowStop: number, syntenyThreshold: number, isComparative: boolean, masterBlockMap: Map<number, LoadedBlock>, masterGeneMap?: Map<number, LoadedGene>)
 {
   //Step 1: Get syntenic data for each species
   const syntenyApiParams: SyntenyRequestParams = {
@@ -60,6 +65,7 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
         syntenyThreshold, 
         (isComparative) ? 'detailed' : 'overview',
         index + 1,
+        masterBlockMap,
         masterGeneMap,
       );
       syntenyRegionSets.push(syntenyRegionSet);
@@ -68,7 +74,8 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
     //Step 3: Capture processed data and return to caller for drawing
     return {
       syntenyRegionSets: syntenyRegionSets, 
-      masterGeneMap: masterGeneMap
+      masterGeneMap: masterGeneMap,
+      masterBlockMap: masterBlockMap,
     };
   }
   else
@@ -76,7 +83,8 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
     console.log("No syntenic data returned for species");
     return {
       syntenyRegionSets: ([] as SyntenyRegionSet[]),
-      masterGeneMap: new Map<number, LoadedGene>()
+      masterGeneMap: new Map<number, LoadedGene>(),
+      masterBlockMap: new Map<number, LoadedBlock>(),
     };
   }
 }
@@ -92,7 +100,7 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
  * @param renderType               overview or detailed
  * @returns                        processed syntenic regions for each species
  */
-export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, windowStart: number,  windowStop: number, threshold: number, renderType: 'overview' | 'detailed', setOrder: number, masterGeneMap?: Map<number, LoadedGene>)
+export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, windowStart: number,  windowStop: number, threshold: number, renderType: 'overview' | 'detailed', setOrder: number, masterBlockMap: Map<number, LoadedBlock>, masterGeneMap?: Map<number, LoadedGene>, )
 {
   //Step 1: For each species synteny data, create syntenic sections for each block
   const processedSyntenicRegions: SyntenyRegion[] = [];
@@ -110,6 +118,7 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
     const blockRatio = (Math.abs(blockInfo.backboneStop - blockInfo.backboneStart)) / blockLength;
     const blockGaps = region.gaps;
     const blockGenes = region.genes;
+    const blockChromosome = blockInfo.chromosome;
     
 
     //Step 1.2: Record backbone mapping for each block as BackboneSection and store in each section 
@@ -119,6 +128,7 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
       stop: blockInfo.backboneStop, 
       windowStart: windowStart, 
       windowStop: windowStop,
+      speciesName: currSpecies,
       renderType: renderType,
     });
     const blockSyntenicSection = new SyntenySection({
@@ -130,6 +140,40 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
       chromosome: new Chromosome({chromosome: blockInfo.chromosome, mapKey: blockInfo.mapKey}), 
       chainLevel: blockInfo.chainLevel,
     });
+
+    const gaplessBlockObject: LoadedBlock = { [currSpecies]: { [blockChromosome]: [blockSyntenicSection] } };
+
+    //already have blocks for this bp position, check further to see if its a new block or a duplicate
+    if (masterBlockMap && masterBlockMap.has(blockSyntenicSection.speciesStart))
+    {
+      const oldBlock = masterBlockMap.get(blockSyntenicSection.speciesStart);
+
+      //if the block is already in the map, check to see if its a duplicate
+      if (oldBlock && oldBlock[currSpecies] && oldBlock[currSpecies][blockChromosome])
+      {
+        const isNewBlock = checkIfNewBlock(blockSyntenicSection, oldBlock[currSpecies][blockChromosome]);
+        if (isNewBlock)
+        {
+          //add the new block to the map
+          oldBlock[currSpecies][blockChromosome].push(blockSyntenicSection);
+        }
+        else
+        {
+          //block already processed/loaded, skip this loop of processing
+          return;
+        }
+      }
+    }
+    //no blocks for this bp position, add it
+    else if (masterBlockMap)
+    {
+      masterBlockMap.set(blockSyntenicSection.speciesStart, gaplessBlockObject);
+    }
+
+
+
+
+
 
     const currSyntenicRegion = new SyntenyRegion({ species: currSpecies, mapName: currMap, gaplessBlock: blockSyntenicSection });
     //Step 1.3: Convert SyntenicSection data to SVG values
@@ -182,6 +226,7 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
     }
 
     currSyntenicRegion.gaplessBlock = blockSyntenicSection;
+    
     processedSyntenicRegions.push(currSyntenicRegion);
   });
 
@@ -278,7 +323,7 @@ function convertSyntenicDataToBackboneData(genomicObject: SyntenyComponent | Gen
     const geneStopDiff = blockInfo.speciesStop - genomicObject.stop;
 
     //Convert the difference to backbone equivalents
-    const geneStartBackboneDiff = geneStopDiff * blockRatio;
+    const geneStartBackboneDiff = Math.max(geneStopDiff, 0) * blockRatio;
     const geneBackboneStart = blockInfo.backboneSection.start + geneStartBackboneDiff;
 
     //Calculate height and stop of gene in backbone equivalents
@@ -293,7 +338,7 @@ function convertSyntenicDataToBackboneData(genomicObject: SyntenyComponent | Gen
     const geneStartDiff = genomicObject.start - blockInfo.speciesStart;
 
     //Convert the difference to backbone equivalents
-    const geneStartBackboneDiff = geneStartDiff * blockRatio;
+    const geneStartBackboneDiff = Math.max(geneStartDiff, 0) * blockRatio;
     const geneBackboneStart = blockInfo.backboneSection.start + geneStartBackboneDiff;
 
     //Calculate height and stop of gene in backbone equivalents
@@ -415,4 +460,19 @@ function splitBlockWithGaps(block: SyntenySection, gaps: SyntenyComponent[], thr
   }
   
   return { processedGaps: processedGaps, processedBlocks: processedBlocks };
+}
+
+
+function checkIfNewBlock(block: SyntenySection, blocks: SyntenySection[])
+{
+  let isNewBlock = true;
+  blocks.forEach((loadedBlock: SyntenySection) => {
+    if (loadedBlock.backboneSection.start == block.backboneSection.start && loadedBlock.backboneSection.stop == block.backboneSection.stop)
+    {
+      isNewBlock = false;
+      return;
+    }
+  });
+
+  return isNewBlock;
 }

@@ -11,6 +11,7 @@ export function mergeGeneLabels(labels: GeneLabel[])
   for (let geneLabelIdx = 0; geneLabelIdx < labels.length; geneLabelIdx++)
   {
     const geneLabel = labels[geneLabelIdx];
+    geneLabel.combinedLabels = [];
     // Check if this label has been combined or not
     if (combinedLabels.has(geneLabel))
     {
@@ -25,6 +26,8 @@ export function mergeGeneLabels(labels: GeneLabel[])
     for (let overlapIdx = 0; overlapIdx < overlappedLabels.length; overlapIdx++)
     {
       const overlappedLabel = overlappedLabels[overlapIdx];
+      overlappedLabel.combinedLabels = [];
+
       if (combinedLabels.has(overlappedLabel))
       {
         overlappedLabel.isVisible = false;

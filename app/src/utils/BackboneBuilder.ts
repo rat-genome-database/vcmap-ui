@@ -20,6 +20,7 @@ export function createBackboneSection(species: Species, chromosome: Chromosome, 
   const backbone = new BackboneSection({
     chromosome: chromosome.chromosome,
     species: species,
+    speciesName: species.name,
     start: startPos,
     stop: stopPos,
     windowStart: startPos,
@@ -34,11 +35,13 @@ export function createBackboneSection(species: Species, chromosome: Chromosome, 
 export function backboneDatatrackBuilder(genomicData: Gene[], backboneSection: BackboneSection, windowStart: number, windowStop: number,)
 {
   const masterGeneMap = new Map<number, LoadedGene>();
+  const species = backboneSection.speciesName;
 
   const processedGenomicData: ProcessedGenomicData = {
     datatracks: [],
     genes: genomicData,
   };
+
   genomicData.forEach((genomicElement: Gene) => {
     const geneBackboneSection = new BackboneSection({ start: genomicElement.start, stop: genomicElement.stop, windowStart: windowStart, windowStop: windowStop, renderType: 'detailed' });
     const geneDatatrackSection = new GeneDatatrack({ start: genomicElement.start, stop: genomicElement.stop, backboneSection: geneBackboneSection }, genomicElement);
@@ -55,7 +58,9 @@ export function backboneDatatrackBuilder(genomicData: Gene[], backboneSection: B
     // Map structure is { rgdId: { species: { gene: Gene, drawn: [{ svgY: number, svgX: number }] } } }
     masterGeneMap.set(genomicElement.rgdId, {
       backboneOrtholog: geneDatatrackSection,
-      genes: {},
+      genes: {
+        [species.toLowerCase()]: [geneDatatrackSection],
+      }
     });
   });
 
