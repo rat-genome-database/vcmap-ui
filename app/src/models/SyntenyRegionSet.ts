@@ -229,7 +229,8 @@ export default class SyntenyRegionSet extends GenomicSet
   public processGeneLabels()
   {
     const allLabels: any[] = [];
-    this.regions.forEach((region: SyntenyRegion) => {
+    this.datatrackLabels = [];
+    this.regions.forEach((region: SyntenyRegion) => {      
       region.datatrackSections.forEach((section) => {
         if (section.label)
         {

@@ -134,7 +134,8 @@ import SyntenyRegionSet from '@/models/SyntenyRegionSet';
 import GeneApi from '@/api/GeneApi';
 import BackboneSet from '@/models/BackboneSet';
 import DatatrackSection from '@/models/DatatrackSection';
-import LoadedSpeciesGenes from '@/models/DatatrackSection';
+import LoadedGene from '@/models/DatatrackSection';
+import { LoadedBlock } from '@/utils/SectionBuilder';
 import OrthologLineSVG from './OrthologLineSVG.vue';
 
 const store = useStore(key);
@@ -248,13 +249,11 @@ const updateOverviewPanel = async () => {
     return;
   }
 
-<<<<<<< HEAD
   // TODO: Do we need masterGeneMap for the overview?
-  const emptyMap = new Map<number, LoadedSpeciesGenes>();
+  const emptyMap = new Map<number, LoadedGene>();
+  const emptyBlockMap = new Map<number, LoadedBlock>();
 
   //build overview synteny sets
-=======
->>>>>>> devel
   const overviewSyntenyData = await createSyntenicRegionsAndDatatracks(
     store.state.comparativeSpecies,
     backboneChromosome,
@@ -264,6 +263,7 @@ const updateOverviewPanel = async () => {
     backboneChromosome.seqLength,
     store.state.overviewSyntenyThreshold,
     false,
+    emptyBlockMap
   );
 
   overviewSyntenySets.value = overviewSyntenyData.syntenyRegionSets;
@@ -326,6 +326,8 @@ const updateDetailsPanel = async () => {
   const originalSelectedBackboneRegion: BackboneSelection = store.state.selectedBackboneRegion;
   const detailedBasePairRange = store.state.detailedBasePairRange;
 
+  const masterBlockMap: Map<number, LoadedBlock> = store.state.LoadedBlocks ?? new Map<number, LoadedBlock>();
+
   // debug timers
   let timeSyntenyTracks = 0;
   let timeCreateBackboneTrack = 0;
@@ -334,6 +336,7 @@ const updateDetailsPanel = async () => {
   let timeCreateBackboneSet = 0;
   let timeAdjustVisibleRegion = 0;
 
+  //error if invalid base pair range
   if (detailedBasePairRange.stop - detailedBasePairRange.start <= 0)
   {
     // Clear out our detailed synteny sets
@@ -341,6 +344,7 @@ const updateDetailsPanel = async () => {
     return;
   }
 
+  //error if no backbone species or chromosome
   if (backboneSpecies == null || backboneChromosome == null)
   {
     onError(backboneDetailedError, backboneDetailedError.message);
@@ -348,6 +352,7 @@ const updateDetailsPanel = async () => {
     return;
   }
 
+  //error if no comparative species
   if (store.state.comparativeSpecies.length === 0)
   {
     onError(missingComparativeSpeciesError, missingComparativeSpeciesError.message);
@@ -355,26 +360,22 @@ const updateDetailsPanel = async () => {
   }
 
 
-
-
-
-
-
-
   // Get the range of the inner section that will be shown in the Detailed panel
   const zoomedSelection = originalSelectedBackboneRegion.generateInnerSelection(detailedBasePairRange.start, detailedBasePairRange.stop, store.state.overviewBasePairToHeightRatio);
 
-  checkAndUpdateForBufferzone(zoomedSelection.basePairStart, zoomedSelection.basePairStop);
 
   // Update the Detailed panel rez to match that region length
   store.dispatch('setDetailsResolution', zoomedSelection.basePairStop - zoomedSelection.basePairStart);
 
-  //detailedSyntenySets.value = [];
+  //check if our zoomed selection is positioned such that we need to adjust our buffer zone
+  checkAndUpdateForBufferzone(zoomedSelection.basePairStart, zoomedSelection.basePairStop);
+
 
   //Check if we have loaded synteny sets, if not, load them (initial)
-  let masterGeneMap = new Map<number, LoadedSpeciesGenes>();
-  if (detailedBackboneSet.value == null)
+  let masterGeneMap: Map<number, LoadedGene> = store.state.loadedGenes;
+ /*  if (detailedBackboneSet.value == null)
   {
+ */
     // Create the backbone track for the entire base selection at the updated Detailed panel resolution
     const detailedBackbone = createBackboneSection(backboneSpecies, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, 'detailed');
     // Create the backbone data tracks for the entire selection at the updated Detailed panel resolution
@@ -383,18 +384,19 @@ const updateDetailsPanel = async () => {
     const backboneDatatrackInfo = backboneDatatrackBuilder(tempBackboneGenes, detailedBackbone, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, );
     detailedBackboneSet.value = createBackboneSet(detailedBackbone, backboneDatatrackInfo.processedGenomicData);
     masterGeneMap = backboneDatatrackInfo.masterGeneMap;
-  }
-  else
+
+  //}
+  /* else
   {
     //otherwise, we have previously processed information and need to update it
     console.log('POPULATED BBone');
-  }
+  } */
 
 
 
   //no previously processed data, so we need to create the synteny tracks/inital load
-  if (detailedSyntenySets.value.length == 0)
-  {
+  /* if (detailedSyntenySets.value.length == 0)
+  { */
     const detailedSyntenyData = await createSyntenicRegionsAndDatatracks(
       store.state.comparativeSpecies,
       backboneChromosome,
@@ -404,17 +406,21 @@ const updateDetailsPanel = async () => {
       originalSelectedBackboneRegion.innerSelection?.basePairStop ?? originalSelectedBackboneRegion.baseSelection.basePairStop,
       store.state.detailsSyntenyThreshold,
       true,
-      masterGeneMap
+      masterBlockMap,
+      masterGeneMap,
     );
 
+    
     detailedSyntenySets.value = detailedSyntenyData.syntenyRegionSets;
     adjustDetailedVisibleSetsBasedOnZoom(zoomedSelection);
-  }
-  else
+  //}
+  /* else
   {
+    //detailedSyntenySets.value = [];
     console.log('POPULATED Synteny');
-  }
+  } */
 
+  store.dispatch('setLoadedBlocks', masterBlockMap);
   store.dispatch('setLoadedGenes', masterGeneMap);
 
   const loadSelectedGene = store.state.gene;
@@ -435,108 +441,6 @@ const updateDetailsPanel = async () => {
 
   store.dispatch('setIsDetailedPanelUpdating', false);
 
-  
-
-
-
-
-
-
-
-
-/* 
-  // Reset our detailed synteny sets before generating new ones
-  detailedSyntenySets.value = [];
-
-  // Get the range of the inner section that will be shown in the Detailed panel
-  const zoomedSelection = originalSelectedBackboneRegion.generateInnerSelection(detailedBasePairRange.start, detailedBasePairRange.stop, store.state.overviewBasePairToHeightRatio);
-  // Update the Detailed panel rez to match that region length
-  store.dispatch('setDetailsResolution', zoomedSelection.basePairStop - zoomedSelection.basePairStart);
-
-  const createBackboneTrackStart = Date.now();
-  // Create the backbone track for the entire base selection at the updated Detailed panel resolution
-  const detailedBackbone = createBackboneSection(backboneSpecies, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, 'detailed');
-  timeCreateBackboneTrack = Date.now() - createBackboneTrackStart;
-
-  const timeQueryBackboneGenesStart = Date.now();
-  // Create the backbone data tracks for the entire selection at the updated Detailed panel resolution
-  const tempBackboneGenes: Gene[] = await GeneApi.getGenesByRegion(backboneChromosome.chromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, backboneSpecies.activeMap.key, backboneSpecies.name);
-  timeQueryBackboneGenes = Date.now() - timeQueryBackboneGenesStart;
-
-  const timeCreateBackboneDatatracksStart = Date.now();
-  const backboneDatatrackInfo = backboneDatatrackBuilder(tempBackboneGenes, detailedBackbone, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, );
-  timeCreateBackboneDatatracks = Date.now() - timeCreateBackboneDatatracksStart;
-  
-  const timeCreateBackboneSetStart = Date.now();
-  detailedBackboneSet.value = createBackboneSet(detailedBackbone, backboneDatatrackInfo.processedGenomicData);
-  const masterGeneMap = backboneDatatrackInfo.masterGeneMap;
-  timeCreateBackboneSet = Date.now() - timeCreateBackboneSetStart;
-
-  if (detailedBackbone != null && detailedBackboneSet.value.datatracks.length > 0)
-  {
-    if (store.state.comparativeSpecies.length === 0)
-    {
-      onError(missingComparativeSpeciesError, missingComparativeSpeciesError.message);
-      return;
-    }
-
-    $log.debug(`Creating synteny region sets for detailed panel`, {
-      backboneChr: backboneChromosome.chromosome,
-      backboneStart: originalSelectedBackboneRegion.baseSelection.basePairStart,
-      backboneStop: originalSelectedBackboneRegion.baseSelection.basePairStop,
-      visibleStart: originalSelectedBackboneRegion.innerSelection?.basePairStart,
-      visibleStop: originalSelectedBackboneRegion.innerSelection?.basePairStop,
-      threshold: store.state.detailsSyntenyThreshold,
-    });
-
-    const createSyntenyTracksStart = Date.now();
-    const detailedSyntenyData = await createSyntenicRegionsAndDatatracks(
-      store.state.comparativeSpecies,
-      backboneChromosome,
-      originalSelectedBackboneRegion.baseSelection.basePairStart,
-      originalSelectedBackboneRegion.baseSelection.basePairStop,
-      originalSelectedBackboneRegion.innerSelection?.basePairStart ?? originalSelectedBackboneRegion.baseSelection.basePairStart,
-      originalSelectedBackboneRegion.innerSelection?.basePairStop ?? originalSelectedBackboneRegion.baseSelection.basePairStop,
-      store.state.detailsSyntenyThreshold,
-      true,
-      masterGeneMap
-    );
-
-    detailedSyntenySets.value = detailedSyntenyData.syntenyRegionSets;
-
-    timeSyntenyTracks = Date.now() - createSyntenyTracksStart;
-
-    // Throw our master gene map on the store
-    store.dispatch('setLoadedGenes', masterGeneMap);
-
-    //if loading by gene initially, we need to find the backbone start of the "highest" positioned ortholog, and the backbone stop of the "lowest" positioned ortholog, then setting the backbone selection to those coords
-    const loadSelectedGene = store.state.gene;
-    if ((loadType == 0) && (store.state.selectedGeneIds.length > 0) && (!geneReload) && loadSelectedGene != null)
-    {
-      const geneBasePairLength = loadSelectedGene.stop - loadSelectedGene.start;
-      const newInnerStart = Math.max(Math.floor(loadSelectedGene.start - 3 * geneBasePairLength), originalSelectedBackboneRegion.baseSelection.basePairStart);
-      const newInnerStop = Math.min(Math.floor(loadSelectedGene.stop + 3 * geneBasePairLength), originalSelectedBackboneRegion.baseSelection.basePairStop);
-
-      const selection = detailedBackboneSet.value.backbone.generateBackboneSelection(newInnerStart, newInnerStop, store.state.detailedBasePairToHeightRatio, backboneChromosome);
-      store.dispatch('clearBackboneSelection');
-      store.dispatch('setBackboneSelection', selection);
-
-      geneReload = true;
-      return;
-    }
-
-    const adjustVisibleRegionStart = Date.now();
-    adjustDetailedVisibleSetsBasedOnZoom(zoomedSelection);
-    timeAdjustVisibleRegion = Date.now() - adjustVisibleRegionStart;
-  }
-  else
-  {
-    // Could not create synteny sets for the backbone or its data tracks -> clear out all detailed panel synteny sets
-    detailedSyntenySets.value = [];
-  }
-   */
-
-  //store.dispatch('setIsDetailedPanelUpdating', false);
   const timeDetailedUpdate= Date.now() - detailedUpdateStart;
   const timeDetailedUpdateOther = timeDetailedUpdate - (timeSyntenyTracks + timeCreateBackboneTrack + timeAdjustVisibleRegion);
 
@@ -568,12 +472,18 @@ const navigateUp = () => {
   if (isNavigationUpDisabled.value) return;
 
   const selectedRegion = store.state.selectedBackboneRegion;
-  // Adjust the inner selection on the selected region
-  selectedRegion.moveInnerSelectionUp(store.state.overviewBasePairToHeightRatio);
-  checkAndUpdateForBufferzone(selectedRegion.innerSelection.basePairStart, selectedRegion.innerSelection.basePairStop);
 
-  if (selectedRegion.innerSelection)
+  if (selectedRegion.innerSelection.length != selectedRegion.baseSelection.length)
   {
+    // Adjust the inner selection on the selected region
+    selectedRegion.moveInnerSelectionUp(store.state.overviewBasePairToHeightRatio);
+    checkAndUpdateForBufferzone(selectedRegion.innerSelection.basePairStart, selectedRegion.innerSelection.basePairStop);
+    adjustDetailedVisibleSetsBasedOnZoom(selectedRegion.innerSelection);
+  }
+  else
+  {
+    //query for data above current base selection and append it to current data
+    expandBaseSelection('up');
     adjustDetailedVisibleSetsBasedOnZoom(selectedRegion.innerSelection);
   }
 };
@@ -582,15 +492,56 @@ const navigateDown = () => {
   if (isNavigationDownDisabled.value) return;
 
   const selectedRegion = store.state.selectedBackboneRegion;
-  // Adjust the inner selection on the selected region
-  selectedRegion.moveInnerSelectionDown(store.state.overviewBasePairToHeightRatio);
-  checkAndUpdateForBufferzone(selectedRegion.innerSelection.basePairStart, selectedRegion.innerSelection.basePairStop);
 
-  if (selectedRegion.innerSelection)
+  if (selectedRegion.innerSelection.length != selectedRegion.baseSelection.length)
   {
+    // Adjust the inner selection on the selected region
+    selectedRegion.moveInnerSelectionDown(store.state.overviewBasePairToHeightRatio);
+    checkAndUpdateForBufferzone(selectedRegion.innerSelection.basePairStart, selectedRegion.innerSelection.basePairStop);
+    adjustDetailedVisibleSetsBasedOnZoom(selectedRegion.innerSelection);
+  }
+  else
+  {
+    //query for data below current base selection and append it to current data
+    expandBaseSelection('down');
     adjustDetailedVisibleSetsBasedOnZoom(selectedRegion.innerSelection);
   }
 };
+
+const expandBaseSelection = (direction: string) => 
+{
+  const originalSelectedBackboneRegion: BackboneSelection = store.state.selectedBackboneRegion;
+  const selectionLength = originalSelectedBackboneRegion.baseSelection.length * .2;
+
+  const chromosome = originalSelectedBackboneRegion.chromosome;
+  if (!chromosome)
+  {
+    console.error('No chromosome found for selected backbone region');
+    return;
+  }
+
+  if (direction == 'up')
+  {
+    const newStart = Math.max(originalSelectedBackboneRegion.baseSelection.basePairStart - selectionLength, 0);
+
+    //query for data above the buffer zone
+    expandDetailedBackboneData(newStart, originalSelectedBackboneRegion.baseSelection.basePairStart);
+    expandDetailedSyntenyData(newStart, originalSelectedBackboneRegion.baseSelection.basePairStart);
+
+    originalSelectedBackboneRegion.adjustBaseSelectionByPosition(newStart, originalSelectedBackboneRegion.baseSelection.basePairStop, chromosome.seqLength, store.state.overviewBasePairToHeightRatio);
+
+  }
+  else if (direction == 'down')
+  {
+    const newStop = Math.min(originalSelectedBackboneRegion.baseSelection.basePairStop + selectionLength, chromosome.seqLength);
+
+    //query for data below the buffer zone
+    expandDetailedBackboneData(originalSelectedBackboneRegion.baseSelection.basePairStop, newStop);
+    expandDetailedSyntenyData(originalSelectedBackboneRegion.baseSelection.basePairStop, newStop);
+
+    originalSelectedBackboneRegion.adjustBaseSelectionByPosition(originalSelectedBackboneRegion.baseSelection.basePairStart, newStop, chromosome.seqLength, store.state.overviewBasePairToHeightRatio);
+  }
+}
 
 const checkAndUpdateForBufferzone = (detailedStart: number, detailedStop: number) =>
 {
@@ -613,8 +564,6 @@ const checkAndUpdateForBufferzone = (detailedStart: number, detailedStop: number
   else if (detailedStart <= bufferStart)
   {
     //If the detailed panel selection is above the buffer zone, we need to query for data above the buffer zone and adjust the buffer zone
-    console.log('ABOVE');
-
     //Determine the basepair start of our query, if we have an innerselection query for the same bp range
     if (originalSelectedBackboneRegion.innerSelection)
     {
@@ -622,8 +571,8 @@ const checkAndUpdateForBufferzone = (detailedStart: number, detailedStop: number
       const newStart = Math.max(originalSelectedBackboneRegion.baseSelection.basePairStart - selectionLength, 0);
 
       //query for data above the buffer zone
-      expandDetailedBackboneData(newStart, originalSelectedBackboneRegion.baseSelection.basePairStart, 'start');
-      expandDetailedSyntenyData(newStart, originalSelectedBackboneRegion.baseSelection.basePairStart, 'start');
+      expandDetailedBackboneData(newStart, originalSelectedBackboneRegion.baseSelection.basePairStart);
+      expandDetailedSyntenyData(newStart, originalSelectedBackboneRegion.baseSelection.basePairStart);
 
       //set new buffer zone values based on new data dimensions and adjust base selection values of 
       originalSelectedBackboneRegion.adjustBaseSelectionByPosition(newStart, originalSelectedBackboneRegion.baseSelection.basePairStop, chromosome.seqLength, store.state.overviewBasePairToHeightRatio);
@@ -632,8 +581,6 @@ const checkAndUpdateForBufferzone = (detailedStart: number, detailedStop: number
   else if (detailedStop >= bufferStop)
   {
     //If the detailed panel selection is below the buffer zone, we need to query for data below the buffer zone and adjust the buffer zone
-    console.log('BELOW')
-
     
     //Determine the basepair start of our query, if we have an innerselection query for the same bp range
     if (originalSelectedBackboneRegion.innerSelection)
@@ -642,8 +589,8 @@ const checkAndUpdateForBufferzone = (detailedStart: number, detailedStop: number
       const newStop = Math.min(originalSelectedBackboneRegion.baseSelection.basePairStop + selectionLength, chromosome.seqLength);
 
       //query for data below the buffer zone
-      expandDetailedBackboneData(originalSelectedBackboneRegion.baseSelection.basePairStop, newStop, 'stop');
-      expandDetailedSyntenyData(originalSelectedBackboneRegion.baseSelection.basePairStop, newStop, 'stop');
+      expandDetailedBackboneData(originalSelectedBackboneRegion.baseSelection.basePairStop, newStop);
+      expandDetailedSyntenyData(originalSelectedBackboneRegion.baseSelection.basePairStop, newStop);
 
       //set new buffer zone values based on new data dimensions and adjust base selection values of 
       originalSelectedBackboneRegion.adjustBaseSelectionByPosition(originalSelectedBackboneRegion.baseSelection.basePairStart, newStop, chromosome.seqLength, store.state.overviewBasePairToHeightRatio);
@@ -651,15 +598,14 @@ const checkAndUpdateForBufferzone = (detailedStart: number, detailedStop: number
   }
 };
 
-const expandDetailedBackboneData = async (start: number, stop: number, direction: string) =>
+const expandDetailedBackboneData = async (start: number, stop: number) =>
 {
-  let masterGeneMap: Map<number, LoadedSpeciesGenes> = store.state.loadedGenes;
+  let masterGeneMap: Map<number, LoadedGene> = store.state.loadedGenes;
   const selectedRegion = store.state.selectedBackboneRegion;
   const chromosome = selectedRegion.chromosome;
   const backboneSpecies = store.state.species;
   const originalSelectedBackboneRegion: BackboneSelection = store.state.selectedBackboneRegion;
 
-  console.log('QUERY', start, stop);
   if (!chromosome)
   {
     console.error('No chromosome found for selected backbone region');
@@ -672,12 +618,12 @@ const expandDetailedBackboneData = async (start: number, stop: number, direction
   const tempBackboneGenes: Gene[] = await GeneApi.getGenesByRegion(chromosome.chromosome, start, stop, backboneSpecies.activeMap.key, backboneSpecies.name);
   
   const backboneDatatrackInfo = backboneDatatrackBuilder(tempBackboneGenes, detailedBackbone, originalSelectedBackboneRegion.innerSelection ? originalSelectedBackboneRegion.innerSelection.basePairStart : originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.innerSelection ? originalSelectedBackboneRegion.innerSelection.basePairStop : originalSelectedBackboneRegion.baseSelection.basePairStop );
-  //detailedBackboneSet.value = createBackboneSet(detailedBackbone, backboneDatatrackInfo.processedGenomicData);
-  masterGeneMap = backboneDatatrackInfo.masterGeneMap;
-  console.log('BACKBONE DATATRACKS', backboneDatatrackInfo.processedGenomicData.datatracks.length);
-  if (backboneDatatrackInfo.processedGenomicData.datatracks.length > 0)
+
+
+  if (backboneDatatrackInfo.processedGenomicData)
   {
-    updateBackboneData(backboneDatatrackInfo.processedGenomicData.datatracks, backboneDatatrackInfo.processedGenomicData.genes);
+    updateBackboneData(backboneDatatrackInfo.processedGenomicData.datatracks);
+    updateMasterGeneMap(backboneDatatrackInfo.masterGeneMap);
   }
   else
   {
@@ -686,10 +632,11 @@ const expandDetailedBackboneData = async (start: number, stop: number, direction
 };
 
 
-
-const expandDetailedSyntenyData = async (start: number, stop: number, direction: string) =>
+const expandDetailedSyntenyData = async (start: number, stop: number,) =>
 {
-  let masterGeneMap: Map<number, LoadedSpeciesGenes> = store.state.loadedGenes;
+  let masterGeneMap: Map<number, LoadedGene > = store.state.loadedGenes;
+  let masterBlockMap: Map<number, LoadedBlock> = store.state.loadedBlocks;
+
   const selectedRegion = store.state.selectedBackboneRegion;
   const backboneChromosome = selectedRegion.chromosome;
   const backboneSpecies = store.state.species;
@@ -704,18 +651,20 @@ const expandDetailedSyntenyData = async (start: number, stop: number, direction:
   const detailedSyntenyData = await createSyntenicRegionsAndDatatracks(
     store.state.comparativeSpecies,
     backboneChromosome,
-    start,
-    stop,
     originalSelectedBackboneRegion.baseSelection.basePairStart,
     originalSelectedBackboneRegion.baseSelection.basePairStop,
+    start,
+    stop,
     store.state.detailsSyntenyThreshold,
     true,
+    masterBlockMap,
     masterGeneMap
   );
 
   if (detailedSyntenyData)
   {
     updateSyntenyData(detailedSyntenyData.syntenyRegionSets);
+    updateMasterGeneMap(detailedSyntenyData.masterGeneMap);
   }
   else
   {
@@ -723,15 +672,11 @@ const expandDetailedSyntenyData = async (start: number, stop: number, direction:
   }
 };
 
-const updateBackboneData = (backboneDatatracks: DatatrackSection[], backboneGenes: Gene[]) =>
+const updateBackboneData = (backboneDatatracks: DatatrackSection[]) =>
 {
-  console.log('UPDATING BACKBONE DATA');
   const originalSelectedBackboneRegion: BackboneSelection = store.state.selectedBackboneRegion;
-  const windowStart = originalSelectedBackboneRegion.innerSelection ? originalSelectedBackboneRegion.innerSelection.basePairStart : originalSelectedBackboneRegion.baseSelection.basePairStart;
-  const windowStop = originalSelectedBackboneRegion.innerSelection ? originalSelectedBackboneRegion.innerSelection.basePairStop : originalSelectedBackboneRegion.baseSelection.basePairStop;
   if (detailedBackboneSet.value as BackboneSet)
   {
-    detailedBackboneSet.value.updateBackboneGenes(backboneGenes);
     detailedBackboneSet.value.addDatatrackSections(backboneDatatracks);
   }
   else
@@ -745,19 +690,12 @@ const updateSyntenyData = (syntenyRegionSets: SyntenyRegionSet[]) =>
 {
   if (detailedSyntenySets.value)
   {
-    console.log('LOADED', detailedSyntenySets.value);
-    console.log('NEW', syntenyRegionSets);
-
     detailedSyntenySets.value.forEach((syntenySet: SyntenyRegionSet) => {
-      console.log(syntenySet.speciesName);
       const newSyntenySet = syntenyRegionSets.find((newSet: SyntenyRegionSet) => newSet.speciesName === syntenySet.speciesName);
       if (newSyntenySet)
       {
-        /* syntenySet.addRegions(newSyntenySet.regions);
-        syntenySet.addDatatrackLabels(newSyntenySet.datatrackLabels); */
-        syntenySet.updateRawData(newSyntenySet.speciesSyntenyData);
-        console.log('NEW', newSyntenySet)
-        console.log('UPDATED', syntenySet)
+        syntenySet.addRegions(newSyntenySet.regions);
+        syntenySet.addDatatrackLabels(newSyntenySet.datatrackLabels);
       }
     });
   }
@@ -775,14 +713,10 @@ const isNavigationUpDisabled = computed(() => {
   }
 
   const selectedRegion = store.state.selectedBackboneRegion;
-  if (selectedRegion.zoomLevel <= 1)
-  {
-    return true;
-  }
 
   if (selectedRegion.innerSelection)
   {
-    return selectedRegion.baseSelection.basePairStart >= selectedRegion.innerSelection.basePairStart;
+    return selectedRegion.baseSelection.basePairStart > selectedRegion.innerSelection.basePairStart;
   }
 
   return false;
@@ -795,18 +729,45 @@ const isNavigationDownDisabled = computed(() => {
   }
   
   const selectedRegion = store.state.selectedBackboneRegion;
-  if (selectedRegion.zoomLevel <= 1)
-  {
-    return true;
-  }
-
+  
   if (selectedRegion.innerSelection)
   {
-    return selectedRegion.baseSelection.basePairStop <= selectedRegion.innerSelection.basePairStop;
+    return selectedRegion.baseSelection.basePairStop < selectedRegion.innerSelection.basePairStop;
   }
 
   return false;
 });
+
+const updateMasterGeneMap = (newMappedGenes: Map<number, LoadedGene>) =>
+{
+  const masterGeneMap: Map<number, LoadedGene> = store.state.loadedGenes;
+
+  if (!newMappedGenes)
+  {
+    return;
+  }
+  
+  for (const [key, value] of newMappedGenes.entries())
+  {
+    const geneRgdId: number = key;
+    const loadedGene: LoadedGene = masterGeneMap.get(geneRgdId);
+    if (loadedGene)
+    {
+      //backbone genes will not have multiple fragments and thus not need to update the master gene map
+      //only backbone genes should have the backboneOrtholog property populated
+      if (loadedGene.backboneOrtholog)
+      {
+        continue;
+      }
+      //TODO: Verify comparative gene map additions are valid and not duplicates 
+    }
+    else
+    {
+      masterGeneMap.set(geneRgdId, value);
+    }
+  }
+  store.dispatch('setLoadedGenes', masterGeneMap);
+};
 
 function logPerformanceReport(title: string, totalTimeMillis: number, detailedTimeReportObject: { [key:string]: number} )
 {
