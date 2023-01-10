@@ -60,6 +60,30 @@ export default class SyntenyRegionSet extends GenomicSet
     this.processGeneLabels();
   }
 
+  public updateRawData(speciesSyntenyData: SpeciesSyntenyData)
+  {
+    if (this.speciesSyntenyData.allGenes && speciesSyntenyData.allGenes)
+    {
+      this.speciesSyntenyData.allGenes = this.speciesSyntenyData.allGenes.concat(speciesSyntenyData.allGenes);
+    }
+
+    if (this.speciesSyntenyData.regionData && speciesSyntenyData.regionData)
+    {
+      this.speciesSyntenyData.regionData = this.speciesSyntenyData.regionData.concat(speciesSyntenyData.regionData);
+    }
+  }
+
+  public addRegions(regions: SyntenyRegion[])
+  {
+    this.regions.length > 0 ? this.regions = this.regions.concat(regions) : this.regions = regions;
+    this.setRegionXPositionsBasedOnOrder();
+  }
+
+  public addDatatrackLabels(labels: Label[])
+  {
+    this.datatrackLabels.length > 0 ? this.datatrackLabels = this.datatrackLabels.concat(labels) : this.datatrackLabels = labels;
+  }
+
   protected createTitleLabels()
   {
     const speciesLabel = new Label({
@@ -205,7 +229,8 @@ export default class SyntenyRegionSet extends GenomicSet
   public processGeneLabels()
   {
     const allLabels: any[] = [];
-    this.regions.forEach((region: SyntenyRegion) => {
+    this.datatrackLabels = [];
+    this.regions.forEach((region: SyntenyRegion) => {      
       region.datatrackSections.forEach((section) => {
         if (section.label)
         {

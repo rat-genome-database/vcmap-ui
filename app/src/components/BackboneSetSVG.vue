@@ -48,40 +48,14 @@
     />
   </template>
 
-  <!-- Selected Region on Track -->
-  <rect v-if="!isDetailed && selectedRegion.baseSelection.svgHeight > 0"
-    data-test="selected-region"
-    class="selected-region"
-    fill="#000"
-    fill-opacity="0.3"
-    stroke="#333"
-    stroke-width="1"
-    :x="backbone.posX1" :y="selectedRegion.baseSelection.svgYPoint"
-    :width="SVGConstants.trackWidth"
-    :height="selectedRegion.baseSelection.svgHeight" />
-
   <!-- Inner selection that changes depending on Detailed panel zoom -->
-  <rect v-if="!isDetailed && selectedRegion.innerSelection && selectedRegion.innerSelection.svgHeight > 0"
+  <rect v-if="!isDetailed && selectedRegion.innerSelection"
     stroke="green"
     fill="green"
     fill-opacity="0.5"
     :x="backbone.posX1 - 2" :y="selectedRegion.innerSelection.svgYPoint"
     :width="SVGConstants.trackWidth + INNER_SELECTION_EXTRA_WIDTH"
     :height="selectedRegion.innerSelection.svgHeight" />
-    
-  <text v-if="!isDetailed && selectedRegion.baseSelection.svgYPoint > 75"
-    class="label small"
-    :x="backbone.posX1 - 3"
-    :y="selectedRegion.baseSelection.svgYPoint - 1">
-      {{ Formatter.convertBasePairToLabel(selectedRegion.baseSelection.basePairStart) }}
-  </text>
-
-  <text v-if="!isDetailed && (selectedRegion.baseSelection.svgYPoint + selectedRegion.baseSelection.svgHeight) < 405"
-    class="label small"
-    :x="backbone.posX1 - 3"
-    :y="selectedRegion.baseSelection.svgYPoint + selectedRegion.baseSelection.svgHeight + 6">
-      {{ Formatter.convertBasePairToLabel(selectedRegion.baseSelection.basePairStop) }}
-  </text>
 
   <template v-if="(!isDetailed && selectedRegion.innerSelection)">
     <text v-if="!isDetailed && selectedRegion.innerSelection?.svgHeight > 0 && selectedRegion.innerSelection?.svgYPoint - selectedRegion.baseSelection.svgYPoint > 6"
@@ -91,7 +65,7 @@
         {{ Formatter.convertBasePairToLabel(selectedRegion.innerSelection.basePairStart) }}
     </text>
     
-    <text v-if="!isDetailed && selectedRegion.innerSelection?.svgHeight >= 6 && ((selectedRegion.baseSelection.svgYPoint + selectedRegion.baseSelection.svgHeight + 6) - (selectedRegion.innerSelection.svgYPoint + selectedRegion.innerSelection.svgHeight + 6) > 6)"
+    <text v-if="!isDetailed && selectedRegion.innerSelection"
       class="label small"
       :x="backbone.posX1 - 3"
       :y="selectedRegion.innerSelection?.svgYPoint + selectedRegion.innerSelection.svgHeight + 6">

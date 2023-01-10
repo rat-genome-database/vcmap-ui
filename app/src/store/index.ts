@@ -9,6 +9,7 @@ import SelectedData from '@/models/SelectedData';
 import { InjectionKey } from 'vue';
 import { createLogger } from 'vuex';
 import { GeneDatatrack, LoadedGene } from '@/models/DatatrackSection';
+import { LoadedBlock } from '@/utils/SectionBuilder';
 
 export const key: InjectionKey<Store<VCMapState>> = Symbol();
 
@@ -29,6 +30,7 @@ export interface VCMapState
 
   comparativeSpecies: Species[];
   loadedGenes: Map<number, LoadedGene> | null;
+  loadedBlocks: Map<number, LoadedBlock> | null;
 
   selectedBackboneRegion: BackboneSelection;
 
@@ -74,6 +76,7 @@ export default createStore({
 
     comparativeSpecies: [],
     loadedGenes: null,
+    loadedBlocks: null,
 
     selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
 
@@ -120,6 +123,9 @@ export default createStore({
     },
     loadedGenes (state: VCMapState, loadedGenesMap: Map<number, any>) {
       state.loadedGenes = loadedGenesMap;
+    },
+    loadedBlocks (state: VCMapState, loadedBlocksMap: Map<number, any>) {
+      state.loadedBlocks = loadedBlocksMap;
     },
     selectedBackboneRegion ( state: VCMapState, selection: BackboneSelection) {
       state.selectedBackboneRegion = selection;
@@ -210,6 +216,9 @@ export default createStore({
     setLoadedGenes(context: ActionContext<VCMapState, VCMapState>, loadedGenes: Gene[]) {
       context.commit('loadedGenes', loadedGenes);
     },
+    setLoadedBlocks(context: ActionContext<VCMapState, VCMapState>, loadedBlocks: Map<number, any>) {  
+      context.commit('loadedBlocks', loadedBlocks);
+    },
     setIsDetailedPanelUpdating(context: ActionContext<VCMapState, VCMapState>, isUpdating: boolean) {
       context.commit('isDetailedPanelUpdating', isUpdating);
     },
@@ -226,8 +235,8 @@ export default createStore({
       context.commit('loadStop', null);
       context.commit('comparativeSpecies', []);
       context.commit('selectedGeneIds', []);
-      context.commit('loadedGenes', []);
-      context.commit('loadedGeneSections', []);
+      context.commit('loadedGenes', null);
+      context.commit('loadedBlocks', null);
       context.commit('selectedBackboneRegion', new BackboneSelection(new SelectedRegion(0,0,0,0)));
       context.commit('detailedBasePairRange', { start: 0, stop: 0 });
     },

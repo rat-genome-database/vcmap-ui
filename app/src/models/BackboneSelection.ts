@@ -28,21 +28,45 @@ export class SelectedRegion
   }
 }
 
+
+export class BufferZone
+{
+  topBackboneBuffer: number;          //Backbone basepair cutoff for the current top of the backbone in the detailed panel
+  bottomBackboneBuffer: number;       //Backbone basepair cutoff for the current bottom of the backbone in the detailed panel
+
+
+  constructor(start: number, stop: number)
+  {
+    this.topBackboneBuffer = start;
+    this.bottomBackboneBuffer = stop;
+  }
+}
+
 export default class BackboneSelection
 {
   chromosome?: Chromosome;
   baseSelection: SelectedRegion;
   innerSelection?: SelectedRegion;
+  bufferZone: BufferZone;
   zoomLevel: number = 1;
   orthologData?: any;
 
 
   private shiftPercent: number = 0.2; // TODO: configurable?
+  private bufferZonePercent: number = 0.15; // TODO: configurable?
 
   constructor(baseSelection: SelectedRegion, chromosome?: Chromosome)
   {
     this.baseSelection = baseSelection;
     this.chromosome = chromosome;
+
+    const basePairStart = this.baseSelection.basePairStart;
+    const basePairStop = this.baseSelection.basePairStop;
+    const length = basePairStop - basePairStart;
+
+    //Generate the buffer zone for the inner selection, which is the top and 15% mark for top and 85% mark for bottom
+    const bufferZoneValues = this.adjustBufferZone(basePairStart, basePairStop, length);
+    this.bufferZone = new BufferZone(bufferZoneValues.start, bufferZoneValues.stop);
   }
 
   /**
@@ -94,6 +118,10 @@ export default class BackboneSelection
     const svgHeightOfNewBaseSelection = (newStopBasePair - newStartBasePair) / overviewBasePairToHeightRatio;
 
     this.baseSelection = new SelectedRegion(svgY, svgHeightOfNewBaseSelection, newStartBasePair, newStopBasePair);
+
+    const bufferZoneValues = this.adjustBufferZone(newStartBasePair, newStopBasePair, newStopBasePair - newStartBasePair);
+    this.bufferZone = new BufferZone(bufferZoneValues.start, bufferZoneValues.stop);
+
     // Adjust inner selection if it is outside the bounds of the base selection
     if (this.innerSelection)
     {
@@ -117,6 +145,15 @@ export default class BackboneSelection
         this.generateInnerSelection(innerStart, innerStop, overviewBasePairToHeightRatio);
       }
     }
+  }
+
+  private adjustBufferZone(newStart: number, newStop: number, length: number)
+  {
+      //Generate the buffer zone for the inner selection, which is the top and 15% mark for top and 85% mark for bottom
+      const bufferZoneTop = newStart + (length * this.bufferZonePercent) > 0 ? newStart + (length * this.bufferZonePercent) : 0;
+      const bufferZoneBottom = newStop - (length * this.bufferZonePercent) < this.baseSelection.basePairStop ? newStop - (length * this.bufferZonePercent) : this.baseSelection.basePairStop;
+  
+      return { start: bufferZoneTop, stop: bufferZoneBottom };
   }
 
   /**
@@ -144,6 +181,7 @@ export default class BackboneSelection
     {
       innerSVGYPoint = this.baseSelection.svgYPoint - ((this.baseSelection.basePairStart - detailedStart) / overviewBasePairToHeightRatio);
     }
+
     this.innerSelection = new SelectedRegion(innerSVGYPoint, innerSVGHeight, detailedStart, detailedStop);
     return this.innerSelection;
   }

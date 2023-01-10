@@ -79,10 +79,12 @@ export default class GeneApi
     return geneList;
   }
 
-  static async getGenesByRegion(chromosome: String, start: Number, stop: Number, mapKey: Number, speciesName: string)
+  static async getGenesByRegion(chromosome: String, start: number, stop: number, mapKey: number, speciesName: string)
   {
+    const roundedStart = Math.round(start);
+    const roundedStop = Math.round(stop);
     const startTime = Date.now();
-    const res = await httpInstance.get<GeneDTO[]>(`/vcmap/genes/${mapKey}/${chromosome}/${start}/${stop}`);
+    const res = await httpInstance.get<GeneDTO[]>(`/vcmap/genes/${mapKey}/${chromosome}/${roundedStart}/${roundedStop}`);
     const geneList: Gene[] = res.data.map(dto => getGeneFromGeneDTO(dto, speciesName));
     console.debug(`[DEBUG] Genes By Region API: ${Date.now() - startTime} ms`, {
       chromosome,

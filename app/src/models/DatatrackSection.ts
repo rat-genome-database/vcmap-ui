@@ -7,10 +7,10 @@ type DatatrackSectionType = 'gene';
 
 export interface LoadedGene
 {
-  backboneOrtholog?: GeneDatatrack,
   genes: {
     [speciesName:string]: GeneDatatrack[]
   }
+  backboneOrtholog?: GeneDatatrack,
 }
 
 interface DatatrackSectionParams
