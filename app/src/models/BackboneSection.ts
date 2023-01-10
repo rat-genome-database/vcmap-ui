@@ -19,6 +19,7 @@ export interface BackboneSectionParams
   windowStop: number;
   chromosome?: string;
   species?: Species;
+  speciesName?: string;
   renderType: RenderType;
   createLabels?: boolean;
 }
@@ -45,6 +46,7 @@ export default class BackboneSection implements VCMapSVGElement
   windowRatio: number = 0;  // ratio of the window bp to svg unit height
   length: number = 0;  // length of the section for the backbone
   species?: Species;  // species that this section is from
+  speciesName: string = ''; // species name
   chromosome: string = '';  // chromosome that this section is from
   syntenyRegions: SyntenyRegion[] = [];
   labels: Label[] = []; // BP labels for the backbone section
@@ -61,6 +63,7 @@ export default class BackboneSection implements VCMapSVGElement
     this.windowStop = params.windowStop;
     this.chromosome = params.chromosome ?? '';
     this.species = params.species;
+    this.speciesName = params.speciesName ?? '';
     this.elementColor = Chromosome.getColor(this.chromosome);
     this.renderType = params.renderType;
     this.hasLabels = params.createLabels ?? false;

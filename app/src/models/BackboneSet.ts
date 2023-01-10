@@ -39,8 +39,7 @@ export default class BackboneSet extends GenomicSet
     if (visibleBackboneStart < this.backbone.start || visibleBackboneStop > this.backbone.stop)
     {
       //expand base start/stop of backbone to include new range accomodating for the new window
-      console.log('base expand')
-      this.backbone.expandBaseStartAndStop(backboneStart, backboneStop);
+      this.backbone.expandBaseStartAndStop(visibleBackboneStart, visibleBackboneStart);
     }
 
     // Change visible backbone section
@@ -121,7 +120,8 @@ export default class BackboneSet extends GenomicSet
 
   public addDatatrackSections(datatrackSections: DatatrackSection[])
   {
-    this.datatracks.length > 0 ? this.datatracks.concat(datatrackSections) : this.datatracks = datatrackSections;
+    this.datatracks = this.datatracks.concat(datatrackSections);
+    this.processGeneLabels();
     this.setDatatrackXPositions();
   }
 }
