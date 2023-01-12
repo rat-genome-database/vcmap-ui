@@ -4,6 +4,7 @@
       class="block-section"
       @mouseenter="onMouseEnter(blockSection, 'trackSection')"
       @mouseleave="onMouseLeave(blockSection, 'trackSection')"
+      @click="selectOnClick ? onSectionClick(blockSection, 'trackSection') : () => {}"
       :y="blockSection.posY1"
       :x="blockSection.posX1"
       :width="blockSection.width"
@@ -90,6 +91,7 @@ import { VCMapSVGElement } from '@/models/VCMapSVGElement';
 import ChromosomeLabelSVG from './ChromosomeLabelSVG.vue';
 import SyntenyLinesSVG from './SyntenyLinesSVG.vue';
 import GapSVG from './GapSVG.vue';
+import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
 const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
@@ -102,6 +104,7 @@ interface Props
   showStartStop?: boolean;
   showChromosome?: boolean;
   showGeneLabel?: boolean;
+  selectOnClick?: boolean;
   region: SyntenyRegion;
 }
 const props = defineProps<Props>();
@@ -170,6 +173,21 @@ const onMouseLeave = (section: VCMapSVGElement, type: SelectedDataType) => {
     {
       highlightGeneLines(geneSection.gene.rgdId, 'exit');
     }
+  }
+};
+
+const onSectionClick = (section: VCMapSVGElement, type: SelectedDataType) => {
+  console.log(section);
+  const startSVGY = section.posY1;
+  const stopSVGY = section.posY2;
+  const basePairStart = section.backboneSection.start;
+  const basePairStop = section.backboneSection.stop;
+  const backboneChromose = store.state.chromosome;
+  if (backboneChromose)
+  {
+    const selectedBackboneRegion = new BackboneSelection(new SelectedRegion(startSVGY, stopSVGY - startSVGY, basePairStart, basePairStop), store.state.chromosome);
+    selectedBackboneRegion.generateInnerSelection(basePairStart, basePairStop, store.state.overviewBasePairToHeightRatio);
+    store.dispatch('setBackboneSelection', selectedBackboneRegion);
   }
 };
 
