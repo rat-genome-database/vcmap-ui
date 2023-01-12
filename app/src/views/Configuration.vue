@@ -5,7 +5,7 @@
     <a  class="logo-link" href="https://rgd.mcw.edu/" target="_blank"><img class="rgd-logo" src="../assets/images/rgd_logo.png" alt="RGD logo"></a>
   </div>
   <div>
-    <TabView v-model:activeIndex="activeTab">
+    <TabView v-model:activeIndex="activeTab" :lazy="true">
       <TabPanel header="Load by Gene">
         <div class="grid">
           <div class="col-12 text-center">
@@ -143,7 +143,6 @@
                   placeholder="Backbone Species" />
               </div>
             </div>
-
             <div class="grid">
               <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
                 <h4>Assembly</h4>
@@ -156,7 +155,6 @@
                   placeholder="Backbone Assembly" />
               </div>
             </div>
-            
             <div class="grid">
               <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
                 <h4>Chromosome</h4>
@@ -257,7 +255,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, computed, watch, nextTick } from 'vue';
 import SpeciesApi from '@/api/SpeciesApi';
 import GeneApi from '@/api/GeneApi';
 import ChromosomeApi from '@/api/ChromosomeApi';
@@ -323,6 +321,11 @@ watch(backboneAssembly, () => {
   comparativeSpeciesSelections.value.forEach(selection => {
     checkAgainstBackboneSpeciesAndAssembly(selection);
   }); 
+});
+
+watch(activeTab, async () => {
+  console.log('tab switched');
+  await nextTick();
 });
 
 const isValidConfig = computed(() => {
@@ -438,8 +441,11 @@ async function setChromosomeOptions(map: SpeciesMap | null)
 
 function setDefaultStartAndStopPositions(chromosome: Chromosome | null)
 {
+  console.log('setting default positions');
   startPosition.value = 0;
+  console.log('after start');
   stopPosition.value = chromosome?.seqLength ?? 0;
+  console.log('after stop', startPosition.value, stopPosition.value);
   maxPosition.value = backboneChromosome.value?.seqLength ?? null;
 }
 
