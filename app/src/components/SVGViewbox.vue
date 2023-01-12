@@ -134,7 +134,7 @@ import SyntenyRegionSet from '@/models/SyntenyRegionSet';
 import GeneApi from '@/api/GeneApi';
 import BackboneSet from '@/models/BackboneSet';
 import DatatrackSection from '@/models/DatatrackSection';
-import LoadedGene from '@/models/DatatrackSection';
+import { LoadedGene } from '@/models/DatatrackSection';
 import { LoadedBlock } from '@/utils/SectionBuilder';
 import OrthologLineSVG from './OrthologLineSVG.vue';
 
@@ -372,18 +372,28 @@ const updateDetailsPanel = async () => {
 
 
   //Check if we have loaded synteny sets, if not, load them (initial)
-  let masterGeneMap: Map<number, LoadedGene> = store.state.loadedGenes;
+  let masterGeneMap: Map<number, LoadedGene> | null = store.state.loadedGenes;
  /*  if (detailedBackboneSet.value == null)
   {
  */
     // Create the backbone track for the entire base selection at the updated Detailed panel resolution
+    const backboneTrackStart = Date.now();
     const detailedBackbone = createBackboneSection(backboneSpecies, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, 'detailed');
-    // Create the backbone data tracks for the entire selection at the updated Detailed panel resolution
-    const tempBackboneGenes: Gene[] = await GeneApi.getGenesByRegion(backboneChromosome.chromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, backboneSpecies.activeMap.key, backboneSpecies.name);
+    timeCreateBackboneTrack = Date.now() - backboneTrackStart;
 
-    const backboneDatatrackInfo = backboneDatatrackBuilder(tempBackboneGenes, detailedBackbone, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, );
-    detailedBackboneSet.value = createBackboneSet(detailedBackbone, backboneDatatrackInfo.processedGenomicData);
+    // Create the backbone data tracks for the entire selection at the updated Detailed panel resolution
+    const queryBackboneboneGenesStart = Date.now();
+    const tempBackboneGenes: Gene[] = await GeneApi.getGenesByRegion(backboneChromosome.chromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, backboneSpecies.activeMap.key, backboneSpecies.name);
+    timeQueryBackboneGenes = Date.now() - queryBackboneboneGenesStart;
+
+    const backboneDatatracksStart = Date.now();
+    const backboneDatatrackInfo = backboneDatatrackBuilder(tempBackboneGenes, detailedBackbone, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop);
     masterGeneMap = backboneDatatrackInfo.masterGeneMap;
+    timeCreateBackboneDatatracks = Date.now() - backboneDatatracksStart;
+
+    const backboneSetStart = Date.now();
+    detailedBackboneSet.value = createBackboneSet(detailedBackbone, backboneDatatrackInfo.processedGenomicData);
+    timeCreateBackboneSet = Date.now() - backboneSetStart;
 
   //}
   /* else
@@ -397,6 +407,7 @@ const updateDetailsPanel = async () => {
   //no previously processed data, so we need to create the synteny tracks/inital load
   /* if (detailedSyntenySets.value.length == 0)
   { */
+    const syntenyTracksStart = Date.now();
     const detailedSyntenyData = await createSyntenicRegionsAndDatatracks(
       store.state.comparativeSpecies,
       backboneChromosome,
@@ -409,10 +420,14 @@ const updateDetailsPanel = async () => {
       masterBlockMap,
       masterGeneMap,
     );
-
     
     detailedSyntenySets.value = detailedSyntenyData.syntenyRegionSets;
+    timeSyntenyTracks = Date.now() - syntenyTracksStart;
+
+    const adjustVisibleRegionStart = Date.now();
     adjustDetailedVisibleSetsBasedOnZoom(zoomedSelection);
+    timeAdjustVisibleRegion = Date.now() - adjustVisibleRegionStart;
+
   //}
   /* else
   {
@@ -442,7 +457,13 @@ const updateDetailsPanel = async () => {
   store.dispatch('setIsDetailedPanelUpdating', false);
 
   const timeDetailedUpdate= Date.now() - detailedUpdateStart;
-  const timeDetailedUpdateOther = timeDetailedUpdate - (timeSyntenyTracks + timeCreateBackboneTrack + timeAdjustVisibleRegion);
+  const timeDetailedUpdateOther = timeDetailedUpdate - (
+    timeCreateBackboneTrack 
+    + timeQueryBackboneGenes 
+    + timeCreateBackboneDatatracks 
+    + timeCreateBackboneSet 
+    + timeSyntenyTracks 
+    + timeAdjustVisibleRegion);
 
   logPerformanceReport('Update Detailed Time', timeDetailedUpdate, {
     'Create Backbone Track': timeCreateBackboneTrack,
@@ -634,8 +655,8 @@ const expandDetailedBackboneData = async (start: number, stop: number) =>
 
 const expandDetailedSyntenyData = async (start: number, stop: number,) =>
 {
-  let masterGeneMap: Map<number, LoadedGene > = store.state.loadedGenes;
-  let masterBlockMap: Map<number, LoadedBlock> = store.state.loadedBlocks;
+  let masterGeneMap: Map<number, LoadedGene> | null = store.state.loadedGenes;
+  let masterBlockMap: Map<number, LoadedBlock> | null = store.state.loadedBlocks;
 
   const selectedRegion = store.state.selectedBackboneRegion;
   const backboneChromosome = selectedRegion.chromosome;
