@@ -16,7 +16,7 @@
     <!-- Overview panel SVGs ------------------------------------------->
     <template v-for="(syntenySet, index) in overviewSyntenySets" :key="index">
       <template v-for="(region, index) in syntenySet.regions" :key="index">
-        <SectionSVG show-chromosome show-synteny-on-hover show-start-stop :region="(region as SyntenyRegion)" />
+        <SectionSVG show-chromosome show-synteny-on-hover show-start-stop select-on-click :region="(region as SyntenyRegion)" />
       </template>
     </template>
 
@@ -541,7 +541,7 @@ const expandBaseSelection = (direction: string) =>
 
     originalSelectedBackboneRegion.adjustBaseSelectionByPosition(originalSelectedBackboneRegion.baseSelection.basePairStart, newStop, chromosome.seqLength, store.state.overviewBasePairToHeightRatio);
   }
-}
+};
 
 const checkAndUpdateForBufferzone = (detailedStart: number, detailedStop: number) =>
 {
