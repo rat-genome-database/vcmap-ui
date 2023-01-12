@@ -121,10 +121,10 @@ export default createStore({
     comparativeSpecies (state: VCMapState, speciesArray: Species[]) {
       state.comparativeSpecies = speciesArray;
     },
-    loadedGenes (state: VCMapState, loadedGenesMap: Map<number, any>) {
+    loadedGenes (state: VCMapState, loadedGenesMap: Map<number, LoadedGene>) {
       state.loadedGenes = loadedGenesMap;
     },
-    loadedBlocks (state: VCMapState, loadedBlocksMap: Map<number, any>) {
+    loadedBlocks (state: VCMapState, loadedBlocksMap: Map<number, LoadedBlock>) {
       state.loadedBlocks = loadedBlocksMap;
     },
     selectedBackboneRegion ( state: VCMapState, selection: BackboneSelection) {
@@ -216,7 +216,7 @@ export default createStore({
     setLoadedGenes(context: ActionContext<VCMapState, VCMapState>, loadedGenes: Gene[]) {
       context.commit('loadedGenes', loadedGenes);
     },
-    setLoadedBlocks(context: ActionContext<VCMapState, VCMapState>, loadedBlocks: Map<number, any>) {  
+    setLoadedBlocks(context: ActionContext<VCMapState, VCMapState>, loadedBlocks: Map<number, LoadedBlock>) {  
       context.commit('loadedBlocks', loadedBlocks);
     },
     setIsDetailedPanelUpdating(context: ActionContext<VCMapState, VCMapState>, isUpdating: boolean) {
