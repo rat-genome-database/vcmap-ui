@@ -177,15 +177,14 @@ const onMouseLeave = (section: VCMapSVGElement, type: SelectedDataType) => {
 };
 
 const onSectionClick = (section: VCMapSVGElement, type: SelectedDataType) => {
-  console.log(section);
-  const startSVGY = section.posY1;
-  const stopSVGY = section.posY2;
-  const basePairStart = section.backboneSection.start;
-  const basePairStop = section.backboneSection.stop;
   const backboneChromose = store.state.chromosome;
-  if (backboneChromose)
+  if (backboneChromose && section.backboneSection)
   {
-    const selectedBackboneRegion = new BackboneSelection(new SelectedRegion(startSVGY, stopSVGY - startSVGY, basePairStart, basePairStop), store.state.chromosome);
+    const startSVGY = section.posY1;
+    const stopSVGY = section.posY2;
+    const basePairStart = section.backboneSection.start;
+    const basePairStop = section.backboneSection.stop;
+    const selectedBackboneRegion = new BackboneSelection(new SelectedRegion(startSVGY, stopSVGY - startSVGY, basePairStart, basePairStop), backboneChromose);
     selectedBackboneRegion.generateInnerSelection(basePairStart, basePairStop, store.state.overviewBasePairToHeightRatio);
     store.dispatch('setBackboneSelection', selectedBackboneRegion);
   }

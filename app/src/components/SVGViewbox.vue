@@ -541,7 +541,7 @@ const expandBaseSelection = (direction: string) =>
 
     originalSelectedBackboneRegion.adjustBaseSelectionByPosition(originalSelectedBackboneRegion.baseSelection.basePairStart, newStop, chromosome.seqLength, store.state.overviewBasePairToHeightRatio);
   }
-}
+};
 
 const checkAndUpdateForBufferzone = (detailedStart: number, detailedStop: number) =>
 {
