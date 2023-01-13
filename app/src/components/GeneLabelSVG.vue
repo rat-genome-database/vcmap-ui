@@ -2,7 +2,7 @@
   <text
     @click="onGeneLabelClick($event, label)"
     @mouseenter="onMouseEnter(label)"
-    @mouseleave="onMouseLeave()"
+    @mouseleave="onMouseLeave(label)"
     :class="(isLabelSelected(label) ? 'bold-label' : 'label small')"
     :x="(label.posX + 5)"
     :y="(label.posY)"
@@ -20,6 +20,7 @@ import { GeneLabel } from '@/models/Label';
 import Gene from '@/models/Gene';
 import SelectedData from '@/models/SelectedData';
 import { getNewSelectedData, sortGeneList } from '@/utils/DataPanelHelpers';
+import { labeledStatement } from '@babel/types';
 
 const store = useStore(key);
 
@@ -93,6 +94,8 @@ const onGeneLabelClick = (event: any, label: GeneLabel) => {
 };
 
 const onMouseEnter = (label: GeneLabel) => {
+  label.isHovered = true;
+
   // If there are selected genes, don't update the selected data panel
   if (store.state.selectedGeneIds.length === 0) {
     const newSelectedData = label.combinedLabels.map((label) => {
@@ -101,9 +104,13 @@ const onMouseEnter = (label: GeneLabel) => {
     newSelectedData.unshift(new SelectedData(label.gene, 'Gene'));
     store.dispatch('setSelectedData', newSelectedData);
   }
+
+  console.log('label----', label);
 };
 
-const onMouseLeave = () => {
+const onMouseLeave = (label: GeneLabel) => {
+  label.isHovered = false;
+  
   // Only reset data onMouseLeave if there isn't a selected gene
   if (store.state.selectedGeneIds.length === 0) {
     store.dispatch('setSelectedData', null);
@@ -113,7 +120,7 @@ const onMouseLeave = () => {
 const isLabelSelected = (label: GeneLabel) => {
   const selectedGeneIds = store.state.selectedGeneIds;
   const combinedLabelGeneIds = label.combinedLabels.map((label) => label.gene.rgdId);
-  return (selectedGeneIds.includes(label.gene.rgdId) || selectedGeneIds.some((id) => combinedLabelGeneIds.includes(id)));
+  return (selectedGeneIds.includes(label.gene.rgdId) || selectedGeneIds.some((id) => combinedLabelGeneIds.includes(id)) || label.isHovered);
 };
 </script>
 
