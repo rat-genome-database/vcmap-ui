@@ -14,6 +14,7 @@ export default class Label
   posY: number = 0;
   text: string = '';
   isVisible: boolean;
+  isHovered: boolean = false;
 
   constructor(params: LabelParams)
   {
