@@ -265,19 +265,32 @@ function syntenicDatatrackBuilder(genomicData: Gene[], syntenyBlock: SyntenySect
       const backboneEquivalents = convertSyntenicDataToBackboneData(genomicElement, syntenyBlock, blockRatio);
       const currSpecies = genomicElement.speciesName.toLowerCase();
 
-
       //Create gene backbone section
-      const geneBackboneSection = new BackboneSection({ start: backboneEquivalents.backboneStart, stop: backboneEquivalents.backboneStop, windowStart: windowStart, windowStop: windowStop, renderType });
+      const geneBackboneSection = new BackboneSection({ start: backboneEquivalents.backboneStart, stop: backboneEquivalents.backboneStop, windowStart: windowStart, windowStop: windowStop, renderType, speciesName: currSpecies });
 
       //Create DatatrackSection for each gene
       const geneDatatrackSection = new GeneDatatrack({ start: genomicElement.start, stop: genomicElement.stop, backboneSection: geneBackboneSection }, genomicElement);
 
+      const geneSymbol = geneDatatrackSection.gene.symbol.toLowerCase();
       const loadedGene = masterGeneMap.get(genomicElement.rgdId);
       if (loadedGene)
       {
         if (loadedGene.genes[currSpecies])
         {
-          loadedGene.genes[currSpecies].push(geneDatatrackSection);
+          /* let newGeneFlag = true;
+          loadedGene.genes[currSpecies].forEach((gene: GeneDatatrack) => 
+          {
+            if (gene.backboneSection.start == geneDatatrackSection.backboneSection.start)
+            {
+              newGeneFlag = false;
+            }
+          });
+
+          if (newGeneFlag)
+          {
+            loadedGene.genes[currSpecies].push(geneDatatrackSection);
+          } */
+          return;
         }
         else
         {

@@ -59,7 +59,7 @@ export function backboneDatatrackBuilder(genomicData: Gene[], backboneSection: B
     masterGeneMap.set(genomicElement.rgdId, {
       backboneOrtholog: geneDatatrackSection,
       genes: {
-        [species.toLowerCase()]: [geneDatatrackSection],
+        [species.toLowerCase()]: [],
       }
     });
   });
