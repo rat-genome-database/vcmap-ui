@@ -328,6 +328,10 @@ const updateDetailsPanel = async () => {
 
   const masterBlockMap: Map<number, LoadedBlock> = store.state.LoadedBlocks ?? new Map<number, LoadedBlock>();
 
+  // Get comparison species Ids for ortholog API call parameter
+  const comparativeSpeciesIds: number[] = [];
+  store.state.comparativeSpecies.map((gene: { defaultMapKey: number; }) => comparativeSpeciesIds.push(gene.defaultMapKey));
+
   // debug timers
   let timeSyntenyTracks = 0;
   let timeCreateBackboneTrack = 0;
@@ -378,12 +382,14 @@ const updateDetailsPanel = async () => {
  */
     // Create the backbone track for the entire base selection at the updated Detailed panel resolution
     const backboneTrackStart = Date.now();
+
     const detailedBackbone = createBackboneSection(backboneSpecies, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, 'detailed');
     timeCreateBackboneTrack = Date.now() - backboneTrackStart;
 
     // Create the backbone data tracks for the entire selection at the updated Detailed panel resolution
     const queryBackboneboneGenesStart = Date.now();
-    const tempBackboneGenes: Gene[] = await GeneApi.getGenesByRegion(backboneChromosome.chromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, backboneSpecies.activeMap.key, backboneSpecies.name);
+    const tempBackboneGenes: Gene[] = await GeneApi.getGenesByRegion(backboneChromosome.chromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, backboneSpecies.activeMap.key, backboneSpecies.name, comparativeSpeciesIds);
+
     timeQueryBackboneGenes = Date.now() - queryBackboneboneGenesStart;
 
     const backboneDatatracksStart = Date.now();
@@ -627,6 +633,12 @@ const expandDetailedBackboneData = async (start: number, stop: number) =>
   const backboneSpecies = store.state.species;
   const originalSelectedBackboneRegion: BackboneSelection = store.state.selectedBackboneRegion;
 
+  // Get comparison species Ids for ortholog API call parameter
+  const comparativeSpeciesIds: number[] = [];
+  store.state.comparativeSpecies.map((gene: { defaultMapKey: number; }) => comparativeSpeciesIds.push(gene.defaultMapKey));
+
+
+  
   if (!chromosome)
   {
     console.error('No chromosome found for selected backbone region');
@@ -636,9 +648,9 @@ const expandDetailedBackboneData = async (start: number, stop: number) =>
   //Create backbone section for new expanded base region
   const detailedBackbone = createBackboneSection(backboneSpecies, chromosome, start, stop, 'detailed');
   // Create the backbone data tracks for the entire selection at the updated Detailed panel resolution
-  const tempBackboneGenes: Gene[] = await GeneApi.getGenesByRegion(chromosome.chromosome, start, stop, backboneSpecies.activeMap.key, backboneSpecies.name);
+  const tempBackboneGenes: Gene[] = await GeneApi.getGenesByRegion(chromosome.chromosome, start, stop, backboneSpecies.activeMap.key, backboneSpecies.name, comparativeSpeciesIds);
   
-  const backboneDatatrackInfo = backboneDatatrackBuilder(tempBackboneGenes, detailedBackbone, originalSelectedBackboneRegion.innerSelection ? originalSelectedBackboneRegion.innerSelection.basePairStart : originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.innerSelection ? originalSelectedBackboneRegion.innerSelection.basePairStop : originalSelectedBackboneRegion.baseSelection.basePairStop );
+  const backboneDatatrackInfo = backboneDatatrackBuilder(tempBackboneGenes, detailedBackbone, originalSelectedBackboneRegion.innerSelection ? originalSelectedBackboneRegion.innerSelection.basePairStart : originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.innerSelection ? originalSelectedBackboneRegion.innerSelection.basePairStop : originalSelectedBackboneRegion.baseSelection.basePairStop);
 
 
   if (backboneDatatrackInfo.processedGenomicData)

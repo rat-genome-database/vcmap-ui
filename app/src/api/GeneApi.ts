@@ -15,6 +15,7 @@ interface GeneDTO
   startPos: number;
   stopPos: number;
   strand: '+' | '-';
+  orthologs: number[];
 }
 
 /**
@@ -30,6 +31,7 @@ function getGeneFromGeneDTO(dto: GeneDTO, speciesName?: string)
     chromosome: dto.chr,
     start: dto.startPos,
     stop: dto.stopPos,
+    orthologs: dto.orthologs,
   });
 }
 
@@ -79,12 +81,16 @@ export default class GeneApi
     return geneList;
   }
 
-  static async getGenesByRegion(chromosome: String, start: number, stop: number, mapKey: number, speciesName: string)
+  static async getGenesByRegion(chromosome: String, start: number, stop: number, mapKey: number, speciesName: string, comparativeSpeciesIds: number[])
   {
     const roundedStart = Math.round(start);
     const roundedStop = Math.round(stop);
     const startTime = Date.now();
-    const res = await httpInstance.get<GeneDTO[]>(`/vcmap/genes/${mapKey}/${chromosome}/${roundedStart}/${roundedStop}`);
+
+    
+
+    // const res = await httpInstance.get<GeneDTO[]>(`/vcmap/genes/${mapKey}/${chromosome}/${roundedStart}/${roundedStop}`);
+    const res = await httpInstance.get<GeneDTO[]>(`/vcmap/genes/${mapKey}/${chromosome}/${roundedStart}/${roundedStop}?orthologMapKeys=${comparativeSpeciesIds.toString()}`);
     const geneList: Gene[] = res.data.map(dto => getGeneFromGeneDTO(dto, speciesName));
     console.debug(`[DEBUG] Genes By Region API: ${Date.now() - startTime} ms`, {
       chromosome,
@@ -92,7 +98,11 @@ export default class GeneApi
       stop,
       mapKey,
       speciesName,
+      comparativeSpeciesIds,
     });
+
+    console.log(`/vcmap/genes/${mapKey}/${chromosome}/${roundedStart}/${roundedStop}?orthologMapKeys=${comparativeSpeciesIds.toString()}`);
+
     return geneList;
   }
 
