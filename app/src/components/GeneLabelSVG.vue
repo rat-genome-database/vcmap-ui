@@ -104,8 +104,6 @@ const onMouseEnter = (label: GeneLabel) => {
     newSelectedData.unshift(new SelectedData(label.gene, 'Gene'));
     store.dispatch('setSelectedData', newSelectedData);
   }
-
-  console.log('label----', label);
 };
 
 const onMouseLeave = (label: GeneLabel) => {
