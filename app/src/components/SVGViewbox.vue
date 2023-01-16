@@ -1,12 +1,11 @@
 <template>
-  <ProgressBar class="vcmap-loader" :mode="arePanelsLoading ? 'indeterminate' : 'determinate'" :value="0" :showValue="false"/>
   <svg :viewBox="'0 0 800 ' + SVGConstants.viewboxHeight" xmlns="http://www.w3.org/2000/svg" id="svg-wrapper" width="100%">
 
     <!-- Outside panel -->
     <rect class="panel" x="0" width="800" :height="SVGConstants.viewboxHeight" />
     <!-- Inner panels -->
     <rect class="panel selectable" :class="{'is-loading': arePanelsLoading}" x="0" @mousedown.left="initOverviewSelection" @mousemove="updateOverviewSelection" @mouseup.left="completeOverviewSelection(overviewBackboneSet?.backbone)" :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.viewboxHeight" />
-    <rect class="panel selectable" :class="{'is-loading': arePanelsLoading}" @mousedown.left="initZoomSelection" @mousemove="updateZoomSelection" @mouseup.left="completeZoomSelection" :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.viewboxHeight" />
+    <rect id="detailed" class="panel selectable" :class="{'is-loading': arePanelsLoading}" @mousedown.left="initZoomSelection" @mousemove="updateZoomSelection" @mouseup.left="completeZoomSelection" :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.viewboxHeight" />
 
     <!-- Ortholog Lines -->
     <template v-for="(line, index) in orthologLines" :key="index">
@@ -105,6 +104,7 @@
   </svg>
 
   <VCMapDialog v-model:show="showDialog" :header="dialogHeader" :message="dialogMessage" />
+  <LoadingSpinnerMask v-if="enableProcessingLoadMask" :style="getDetailedPosition()"></LoadingSpinnerMask>
 </template>
 
 <script setup lang="ts">
@@ -137,6 +137,7 @@ import DatatrackSection from '@/models/DatatrackSection';
 import { LoadedGene } from '@/models/DatatrackSection';
 import { LoadedBlock } from '@/utils/SectionBuilder';
 import OrthologLineSVG from './OrthologLineSVG.vue';
+import LoadingSpinnerMask from './LoadingSpinnerMask.vue';
 
 const store = useStore(key);
 const $log = useLogger();
@@ -149,6 +150,7 @@ let detailedSyntenySets = ref<SyntenyRegionSet[]>([]); // The currently displaye
 let overviewBackboneSet = ref<BackboneSet>();
 let detailedBackboneSet = ref<BackboneSet>();
 let overviewSyntenySets = ref<SyntenyRegionSet[]>([]);
+let enableProcessingLoadMask = ref<boolean>(false); // Whether or not to show the processing load mask
 
 let geneReload: boolean = false; //whether or not load by gene reload has occurred
 
@@ -208,6 +210,7 @@ const arePanelsLoading = computed(() => {
 const updateOverviewPanel = async () => {
   $log.debug('Updating Overview Panel');
 
+  enableProcessingLoadMask.value = true;
   const overviewUpdateStart = Date.now();
 
   const backboneSpecies = store.state.species;
@@ -221,6 +224,7 @@ const updateOverviewPanel = async () => {
   {
     onError(backboneOverviewError, backboneOverviewError.message);
     overviewSyntenySets.value = [];
+    enableProcessingLoadMask.value = false;
     return;
   }
 
@@ -229,6 +233,7 @@ const updateOverviewPanel = async () => {
   {
     onError(noRegionLengthError, noRegionLengthError.message);
     overviewSyntenySets.value = [];
+    enableProcessingLoadMask.value = false;
     return;
   }
 
@@ -246,6 +251,7 @@ const updateOverviewPanel = async () => {
   if (store.state.comparativeSpecies.length === 0)
   {
     onError(missingComparativeSpeciesError, missingComparativeSpeciesError.message);
+    enableProcessingLoadMask.value = false;
     return;
   }
 
@@ -306,6 +312,7 @@ const updateOverviewPanel = async () => {
     store.dispatch('setBackboneSelection', recreatedSelection);
   }
 
+  enableProcessingLoadMask.value = false;
   const overviewCreateBackboneSelectionTime = Date.now();
   logPerformanceReport('Update Overview Time', (overviewCreateBackboneSelectionTime - overviewUpdateStart), {
     'Create Backbone Track': (overviewBackboneCreationTime - overviewUpdateStart),
@@ -318,6 +325,7 @@ const updateDetailsPanel = async () => {
   $log.debug(`Updating Detailed Panel`);
 
   const detailedUpdateStart = Date.now();
+  enableProcessingLoadMask.value = true;
   store.dispatch('setIsDetailedPanelUpdating', true);
 
   const backboneSpecies = store.state.species;
@@ -345,6 +353,7 @@ const updateDetailsPanel = async () => {
   {
     // Clear out our detailed synteny sets
     detailedSyntenySets.value = [];
+    enableProcessingLoadMask.value = false;
     return;
   }
 
@@ -353,6 +362,7 @@ const updateDetailsPanel = async () => {
   {
     onError(backboneDetailedError, backboneDetailedError.message);
     detailedSyntenySets.value = [];
+    enableProcessingLoadMask.value = false;
     return;
   }
 
@@ -360,6 +370,7 @@ const updateDetailsPanel = async () => {
   if (store.state.comparativeSpecies.length === 0)
   {
     onError(missingComparativeSpeciesError, missingComparativeSpeciesError.message);
+    detailedSyntenySets.value = [];
     return;
   }
 
@@ -460,6 +471,7 @@ const updateDetailsPanel = async () => {
   }
 
 
+  enableProcessingLoadMask.value = false;
   store.dispatch('setIsDetailedPanelUpdating', false);
 
   const timeDetailedUpdate= Date.now() - detailedUpdateStart;
@@ -802,6 +814,31 @@ const updateMasterGeneMap = (newMappedGenes: Map<number, LoadedGene>) =>
   store.dispatch('setLoadedGenes', masterGeneMap);
 };
 
+const getDetailedPosition = () =>
+{
+  const detailedPanel = document.getElementById('detailed');
+  const scrollY = window.scrollY;
+  const scrollX = window.scrollX;
+  if (detailedPanel)
+  {
+    const detailedPanelRec = detailedPanel.getBoundingClientRect();
+    const detailedPanelDomPositions = detailedPanelRec;
+    const styleElement = {
+      position: 'absolute',
+      top: String(detailedPanelDomPositions.top + scrollY)+ 'px',
+      bottom: String(detailedPanelDomPositions.bottom ) + 'px',
+      right: String(detailedPanelDomPositions.right) + 'px',
+      left: String(detailedPanelDomPositions.left + scrollX) + 'px',
+      width: String(detailedPanelDomPositions.width) + 'px',
+      height: String(detailedPanelDomPositions.height ) + 'px',
+    };
+
+    return styleElement;
+  }
+}
+
+document.addEventListener('scroll' , getDetailedPosition);
+
 function logPerformanceReport(title: string, totalTimeMillis: number, detailedTimeReportObject: { [key:string]: number} )
 {
   const performanceReport: any = {
@@ -823,6 +860,7 @@ function logPerformanceReport(title: string, totalTimeMillis: number, detailedTi
 #svg-wrapper
 {
   user-select: none ;
+  z-index: -1;
 }
 
 rect.panel
