@@ -272,13 +272,10 @@ const adjustSelectionWindow = () => {
   // Take min of new stop and selected regions original stop
   const newInnerStop = Math.min(Math.floor(searchedGene.value.stop
     + SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), selectedRegion.baseSelection.basePairStop);
-
-  console.log(searchedGene.value);
     
   //get orthologs for backbone gene, and determine the relative highest and lowest positioned genes to reset the window
   // const orthologs = loadedGenes.get(searchedGene.value.symbol.toLowerCase());
   const orthologs = searchedGene.value.orthologs;
-  console.log(orthologs);
   let drawnOrthologs = [];
   for (let [key, value] of Object.entries(orthologs)) 
   {
