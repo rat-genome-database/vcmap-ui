@@ -103,7 +103,6 @@ interface Props
   showSyntenyOnHover?: boolean;
   showStartStop?: boolean;
   showChromosome?: boolean;
-  showGeneLabel?: boolean;
   selectOnClick?: boolean;
   region: SyntenyRegion;
 }
