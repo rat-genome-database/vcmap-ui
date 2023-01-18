@@ -19,6 +19,8 @@
         dominant-baseline="middle"
         :x="blockSection.startLabel.posX"
         :y="blockSection.startLabel.posY"
+        @mouseenter="onMouseEnter(blockSection, 'trackSection')"
+        @mouseleave="onMouseLeave(blockSection, 'trackSection')"
       >
         -  {{blockSection.startLabel.text}}
       </text>
@@ -27,6 +29,8 @@
         dominant-baseline="middle"
         :x="blockSection.stopLabel.posX"
         :y="blockSection.stopLabel.posY"
+        @mouseenter="onMouseEnter(blockSection, 'trackSection')"
+        @mouseleave="onMouseLeave(blockSection, 'trackSection')"
       >
         -  {{blockSection.stopLabel.text}}
       </text>
