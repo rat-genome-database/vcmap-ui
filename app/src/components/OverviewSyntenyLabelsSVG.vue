@@ -21,8 +21,8 @@
     :x="props.gaplessBlock.startLabel.posX + 2"
     :y="(props.gaplessBlock.isInverted ? props.gaplessBlock.startLabel.posY - 1 : props.gaplessBlock.startLabel.posY + 1)"
     :fill="(props.gaplessBlock.elementColor)"
-    stroke="#555555"
-    stroke-width="0.25px"
+    :stroke="STROKE_COLOR"
+    :stroke-width="STROKE_WIDTH"
     stroke-linejoin="round"
     paint-order="stroke"
   >
@@ -34,8 +34,8 @@
     :x="props.gaplessBlock.stopLabel.posX + 2"
     :y="(props.gaplessBlock.isInverted ? props.gaplessBlock.stopLabel.posY + 1 : props.gaplessBlock.stopLabel.posY - 1)"
     :fill="(props.gaplessBlock.elementColor)"
-    stroke="#555555"
-    stroke-width="0.25px"
+    :stroke="STROKE_COLOR"
+    :stroke-width="STROKE_WIDTH"
     stroke-linejoin="round"
     paint-order="stroke"
   >
@@ -45,7 +45,9 @@
 
 <script lang="ts" setup>
 import SyntenySection from "@/models/SyntenySection";
-import { toRefs } from "@vue/reactivity";
+
+const STROKE_COLOR = "#555555";
+const STROKE_WIDTH = "0.25px"
 
 interface Props
 {
