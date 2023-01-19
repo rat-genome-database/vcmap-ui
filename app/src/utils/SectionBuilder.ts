@@ -467,7 +467,7 @@ function splitBlockWithGaps(block: SyntenySection, gaps: SyntenyComponent[], thr
   if (finalGap.backboneStop < block.backboneSection.stop)
   {
     const blockBackboneSection = new BackboneSection({ start: finalGap.backboneStop, stop: block.backboneSection.stop, windowStart: block.backboneSection.windowStart, windowStop: block.backboneSection.windowStop, renderType: renderType });
-    const blockSyntenicSection = new SyntenySection({ start: finalGap.stop, stop: block.backboneSection.stop, backboneSection: blockBackboneSection, type: 'block', orientation: block.orientation, chromosome: new Chromosome({chromosome: finalGap.chromosome, mapKey: finalGap.mapKey}), chainLevel: block.chainLevel, });
+    const blockSyntenicSection = new SyntenySection({ start: finalGap.stop, stop: block.speciesStop, backboneSection: blockBackboneSection, type: 'block', orientation: block.orientation, chromosome: new Chromosome({chromosome: finalGap.chromosome, mapKey: finalGap.mapKey}), chainLevel: block.chainLevel, });
 
     processedBlocks.push(blockSyntenicSection);
   }
