@@ -1,4 +1,48 @@
 <template>
+  <template v-if="showStartStop && region.gaplessBlock.startLabel.isVisible">
+    <text
+      class="label small"
+      dominant-baseline="middle"
+      :x="region.gaplessBlock.startLabel.posX"
+      :y="region.gaplessBlock.startLabel.posY"
+    >
+      {{"-"}}
+    </text>
+    <text
+      class="label small"
+      dominant-baseline="middle"
+      :x="region.gaplessBlock.stopLabel.posX"
+      :y="region.gaplessBlock.stopLabel.posY"
+    >
+      {{"-"}}
+    </text>
+    <text
+      class="label small"
+      :dominant-baseline="(region.gaplessBlock.isInverted ? 'auto' : 'hanging')"
+      :x="region.gaplessBlock.startLabel.posX + 2"
+      :y="(region.gaplessBlock.isInverted ? region.gaplessBlock.startLabel.posY - 1 : region.gaplessBlock.startLabel.posY + 1)"
+      :fill="(region.gaplessBlock.elementColor)"
+      stroke="#555555"
+      stroke-width="0.25px"
+      stroke-linejoin="round"
+      paint-order="stroke"
+    >
+      {{region.gaplessBlock.startLabel.text}}
+    </text>
+    <text
+      class="label small"
+      :dominant-baseline="(region.gaplessBlock.isInverted ? 'hanging' : 'auto')"
+      :x="region.gaplessBlock.stopLabel.posX + 2"
+      :y="(region.gaplessBlock.isInverted ? region.gaplessBlock.stopLabel.posY + 1 : region.gaplessBlock.stopLabel.posY - 1)"
+      :fill="(region.gaplessBlock.elementColor)"
+      stroke="#555555"
+      stroke-width="0.25px"
+      stroke-linejoin="round"
+      paint-order="stroke"
+    >
+      {{region.gaplessBlock.stopLabel.text}}
+    </text>
+  </template>
   <template v-for="(blockSection, index) in level1Blocks" :key="index">
     <rect
       class="block-section"
@@ -13,28 +57,6 @@
       :fill-opacity="1"
     />
 
-    <template v-if="showStartStop && blockSection.startLabel.isVisible">
-      <text
-        class="label small"
-        dominant-baseline="middle"
-        :x="blockSection.startLabel.posX"
-        :y="blockSection.startLabel.posY"
-        @mouseenter="onMouseEnter(blockSection, 'trackSection')"
-        @mouseleave="onMouseLeave(blockSection, 'trackSection')"
-      >
-        -  {{blockSection.startLabel.text}}
-      </text>
-      <text
-        class="label small"
-        dominant-baseline="middle"
-        :x="blockSection.stopLabel.posX"
-        :y="blockSection.stopLabel.posY"
-        @mouseenter="onMouseEnter(blockSection, 'trackSection')"
-        @mouseleave="onMouseLeave(blockSection, 'trackSection')"
-      >
-        -  {{blockSection.stopLabel.text}}
-      </text>
-    </template>
     <template v-if="blockSection.posY1 < 55 && blockSection.posY2 > 55">
       <text
         class="label small"
@@ -156,10 +178,6 @@ const level2Gaps = computed(() => {
 });
 const datatracks = computed(() => {
   return (props.region.datatrackSections as GeneDatatrack[]);
-});
-const gaplessBlock = computed(() => {
-  console.log(gaplessBlock);
-  return props.region.gaplessBlock;
 });
 
 const onMouseEnter = (section: SyntenySection | GeneDatatrack, type: SelectedDataType) => {

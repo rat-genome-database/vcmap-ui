@@ -195,21 +195,23 @@ export default class SyntenyRegionSet extends GenomicSet
 
   private sortBasePairLabels()
   {
-    const labelPairs = this.regions.flatMap((region) =>{
-      return region.syntenyBlocks.map((section) => {
-        return {startLabel: section.startLabel, stopLabel: section.stopLabel};
-      });
+    const labelPosX = getOverviewPanelXPosition(this.order) + SVGConstants.trackWidth;
+    const labelPairs = this.regions.map((region) =>{
+      return {startLabel: region.gaplessBlock.startLabel, stopLabel: region.gaplessBlock.stopLabel};
     });
     labelPairs.sort((a, b) => (Math.abs(b.startLabel.posY - b.stopLabel.posY)) - Math.abs((a.startLabel.posY - a.stopLabel.posY)));
     for (let i = 0; i < labelPairs.length; i++)
     {
       const labelPair = labelPairs[i];
-      if (i === 0 && Math.abs(labelPair.stopLabel.posY - labelPair.startLabel.posY) > 5)
+      labelPair.startLabel.posX = labelPosX;
+      labelPair.stopLabel.posX = labelPosX;
+      if (Math.abs(labelPair.stopLabel.posY - labelPair.startLabel.posY) > 14)
       {
         labelPair.startLabel.isVisible = true;
         labelPair.stopLabel.isVisible = true;
         continue;
       }
+      /*
       const overlappedLabels = labelPairs.filter((overlapPair) => {
         return Math.abs(overlapPair.startLabel.posY - labelPair.startLabel.posY) < 10
           || Math.abs(overlapPair.startLabel.posY - labelPair.stopLabel.posY) < 10
@@ -222,6 +224,7 @@ export default class SyntenyRegionSet extends GenomicSet
         labelPair.startLabel.isVisible = true;
         labelPair.startLabel.isVisible = true;
       }
+      */
 
     }
   }
