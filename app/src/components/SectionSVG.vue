@@ -57,25 +57,25 @@
       :fill-opacity="1"
     />
 
-    <template v-if="blockSection.posY1 < 55 && blockSection.posY2 > 55">
-      <text
-        class="label small"
-        :x="blockSection.posX1 - 5"
-        :y="62"
-      >
-       {{ calculateSectionStartPositionLabel(blockSection) }}
-      </text>
-    </template>
-    <template v-if="blockSection.posY2 > 424 && blockSection.posY1 < 424">
-      <text
-        class="label small"
-        :x="blockSection.posX1 - 5"
-        :y="420"
-      >
-       {{ calculateSectionStopPositionLabel(blockSection) }}
-      </text>
-    </template>
     <ChromosomeLabelSVG v-if="showChromosome" :synteny-section="blockSection" />
+  </template>
+  <template v-if="region.gaplessBlock.posY1 < 55 && region.gaplessBlock.posY2 > 55">
+    <text
+      class="label small"
+      :x="region.gaplessBlock.posX1 - 5"
+      :y="62"
+    >
+      {{ calculateSectionStartPositionLabel(region.gaplessBlock) }}
+    </text>
+  </template>
+  <template v-if="region.gaplessBlock.posY2 > 424 && region.gaplessBlock.posY1 < 424">
+    <text
+      class="label small"
+      :x="region.gaplessBlock.posX1 - 5"
+      :y="420"
+    >
+      {{ calculateSectionStopPositionLabel(region.gaplessBlock) }}
+    </text>
   </template>
 
   <GapSVG v-for="(gapSection,index) in level1Gaps" :key="index" :gap-section="gapSection" />

@@ -106,6 +106,7 @@ export default class SyntenyRegionSet extends GenomicSet
     if (this.regions.length > 0)
     {
       this.regions.forEach(region => {
+        this.setSyntenyBlockXPositions([region.gaplessBlock]);
         this.setSyntenyBlockXPositions(region.syntenyBlocks);
         this.setSyntenyGapXPositions(region.syntenyGaps);
         this.setDatatrackSectionXPositions(region.datatrackSections, region.orthologLines);
