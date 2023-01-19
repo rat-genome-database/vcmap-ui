@@ -35,6 +35,24 @@
         -  {{blockSection.stopLabel.text}}
       </text>
     </template>
+    <template v-if="blockSection.posY1 < 55 && blockSection.posY2 > 55">
+      <text
+        class="label small"
+        :x="blockSection.posX1 - 5"
+        :y="62"
+      >
+       {{ calculateSectionStartPositionLabel(blockSection) }}
+      </text>
+    </template>
+    <template v-if="blockSection.posY2 > 424 && blockSection.posY1 < 424">
+      <text
+        class="label small"
+        :x="blockSection.posX1 - 5"
+        :y="420"
+      >
+       {{ calculateSectionStopPositionLabel(blockSection) }}
+      </text>
+    </template>
     <ChromosomeLabelSVG v-if="showChromosome" :synteny-section="blockSection" />
   </template>
 
@@ -90,6 +108,7 @@ import { GeneDatatrack } from '@/models/DatatrackSection';
 import { computed, toRefs } from '@vue/reactivity';
 import { useStore } from 'vuex';
 import { key } from '@/store';
+import { Formatter } from '@/utils/Formatter';
 import { getNewSelectedData } from '@/utils/DataPanelHelpers';
 import { VCMapSVGElement } from '@/models/VCMapSVGElement';
 import ChromosomeLabelSVG from './ChromosomeLabelSVG.vue';
@@ -137,6 +156,10 @@ const level2Gaps = computed(() => {
 });
 const datatracks = computed(() => {
   return (props.region.datatrackSections as GeneDatatrack[]);
+});
+const gaplessBlock = computed(() => {
+  console.log(gaplessBlock);
+  return props.region.gaplessBlock;
 });
 
 const onMouseEnter = (section: SyntenySection | GeneDatatrack, type: SelectedDataType) => {
@@ -301,6 +324,19 @@ const highlightGeneLines = (sectionId: number, type: string) => {
   });
 };
 
+const calculateSectionStartPositionLabel = (section: SyntenySection) => {
+  const displayedHeight = section.posY2 - 55;
+  const basePairPerSVG = Math.abs(section.speciesStop - section.speciesStart) / section.height;
+  const labelBasePair = section.isInverted ? section.speciesStart + (displayedHeight * basePairPerSVG) : section.speciesStop - (displayedHeight * basePairPerSVG);
+  return Formatter.convertBasePairToLabel(Math.round(labelBasePair));
+};
+
+const calculateSectionStopPositionLabel = (section: SyntenySection) => {
+  const displayedHeight = 424 - section.posY1;
+  const basePairPerSVG = Math.abs(section.speciesStop - section.speciesStart) / section.height;
+  const labelBasePair = !section.isInverted ? section.speciesStart + (displayedHeight * basePairPerSVG) : section.speciesStop - (displayedHeight * basePairPerSVG);
+  return Formatter.convertBasePairToLabel(Math.round(labelBasePair));
+};
 
 </script>
 
