@@ -1,47 +1,6 @@
 <template>
   <template v-if="showStartStop && region.gaplessBlock.startLabel.isVisible">
-    <text
-      class="label small"
-      dominant-baseline="middle"
-      :x="region.gaplessBlock.startLabel.posX"
-      :y="region.gaplessBlock.startLabel.posY"
-    >
-      {{"-"}}
-    </text>
-    <text
-      class="label small"
-      dominant-baseline="middle"
-      :x="region.gaplessBlock.stopLabel.posX"
-      :y="region.gaplessBlock.stopLabel.posY"
-    >
-      {{"-"}}
-    </text>
-    <text
-      class="label small"
-      :dominant-baseline="(region.gaplessBlock.isInverted ? 'auto' : 'hanging')"
-      :x="region.gaplessBlock.startLabel.posX + 2"
-      :y="(region.gaplessBlock.isInverted ? region.gaplessBlock.startLabel.posY - 1 : region.gaplessBlock.startLabel.posY + 1)"
-      :fill="(region.gaplessBlock.elementColor)"
-      stroke="#555555"
-      stroke-width="0.25px"
-      stroke-linejoin="round"
-      paint-order="stroke"
-    >
-      {{region.gaplessBlock.startLabel.text}}
-    </text>
-    <text
-      class="label small"
-      :dominant-baseline="(region.gaplessBlock.isInverted ? 'hanging' : 'auto')"
-      :x="region.gaplessBlock.stopLabel.posX + 2"
-      :y="(region.gaplessBlock.isInverted ? region.gaplessBlock.stopLabel.posY + 1 : region.gaplessBlock.stopLabel.posY - 1)"
-      :fill="(region.gaplessBlock.elementColor)"
-      stroke="#555555"
-      stroke-width="0.25px"
-      stroke-linejoin="round"
-      paint-order="stroke"
-    >
-      {{region.gaplessBlock.stopLabel.text}}
-    </text>
+    <OverviewSyntenyLabelsSVG :gapless-block="region.gaplessBlock"/>
   </template>
   <template v-for="(blockSection, index) in level1Blocks" :key="index">
     <rect
@@ -137,6 +96,7 @@ import ChromosomeLabelSVG from './ChromosomeLabelSVG.vue';
 import SyntenyLinesSVG from './SyntenyLinesSVG.vue';
 import GapSVG from './GapSVG.vue';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
+import OverviewSyntenyLabelsSVG from './OverviewSyntenyLabelsSVG.vue';
 
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
 const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
