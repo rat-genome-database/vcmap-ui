@@ -235,9 +235,9 @@ const searchSVG = (event: any) => {
   store.dispatch('setSelectedData', newData.selectedData);
   // Only adjust window of the searched gene is on backbone
 
-  // if (event.value && event.value.speciesName === store.state.species?.name) {
-  //   adjustSelectionWindow();
-  // }
+  if (event.value && event.value.speciesName === store.state.species?.name) {
+    adjustSelectionWindow();
+  }
 };
 
 const selectAndSearchSVG = (event: any) => {
@@ -248,9 +248,9 @@ const selectAndSearchSVG = (event: any) => {
     store.dispatch('setGene', searchedGene.value);
     store.dispatch('setSelectedGeneIds', newData.rgdIds || []);
     store.dispatch('setSelectedData', newData.selectedData);
-    /* if (searchedGene.value && searchedGene.value.speciesName === store.state.species?.name) {
+    if (searchedGene.value && searchedGene.value.speciesName === store.state.species?.name) {
       adjustSelectionWindow();
-    } */
+    }
   }
 };
 
@@ -273,44 +273,35 @@ const adjustSelectionWindow = () => {
   const newInnerStop = Math.min(Math.floor(searchedGene.value.stop
     + SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), selectedRegion.baseSelection.basePairStop);
 
-  console.log(searchedGene.value);
-    
   //get orthologs for backbone gene, and determine the relative highest and lowest positioned genes to reset the window
-  // const orthologs = loadedGenes.get(searchedGene.value.symbol.toLowerCase());
   const orthologs = searchedGene.value.orthologs;
-  console.log(orthologs);
-  let drawnOrthologs = [];
-  for (let [key, value] of Object.entries(orthologs)) 
+
+  const orthologInfo: any[] = [];
+  Object.entries(orthologs).forEach((ortholog) => {
+    const currentOrtholog = loadedGenes.get(ortholog[1][0]);
+    orthologInfo.push(currentOrtholog['genes'][Object.keys(currentOrtholog['genes'])][0]);
+  });
+  
+  // if (orthologs.length > 0)
+  if (Object.entries(orthologs).length > 0)
   {
-    if (value.gene.speciesName.toLowerCase() !== searchedGene.value.speciesName.toLowerCase()) 
-    {
-      if (value.visible.length > 0)
-      {
-        drawnOrthologs = drawnOrthologs.concat(value.visible);
-      }
-      else if (value.drawn.length > 0)
-      {
-        drawnOrthologs = drawnOrthologs.concat(value.drawn);
-      }
-    }
-  }
 
-  if (drawnOrthologs.length > 0)
-  {
-    drawnOrthologs.sort((a, b) => a.svgY - b.svgY);
-    const highestOrtholog = drawnOrthologs[0];
-    const lowestOrtholog = drawnOrthologs[drawnOrthologs.length - 1];
+    orthologInfo.sort((a, b) => a.posY1 - b.posY1);
 
-    const topOrthologLength = highestOrtholog.sectionStop - highestOrtholog.sectionStart;
-    const bottomOrthologLength = lowestOrtholog.sectionStop - lowestOrtholog.sectionStart;
+    const highestOrtholog = orthologInfo[0];
+    const lowestOrtholog = orthologInfo[orthologInfo.length - 1];
 
-    const basePairsFromInnerSelection1 = Math.floor((highestOrtholog.svgY - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
+    const topOrthologLength = highestOrtholog.gene.stop - highestOrtholog.gene.start;
+    const bottomOrthologLength = lowestOrtholog.gene.stop - lowestOrtholog.gene.start;
+
+    const basePairsFromInnerSelection1 = Math.floor((highestOrtholog.posY1- SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
     const basePairStart = Math.max(basePairsFromInnerSelection1 + selectionStart - (topOrthologLength * 5), selectedRegion.baseSelection.basePairStart);
 
-    const basePairsFromInnerSelection2 = Math.floor((lowestOrtholog.svgY - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
+    const basePairsFromInnerSelection2 = Math.floor((lowestOrtholog.posY1 - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
     const basePairStop = Math.min(basePairsFromInnerSelection2 + selectionStart + (bottomOrthologLength * 5), selectedRegion.baseSelection.basePairStop);
 
-    //confirm the searched gene is visible in the result and adjust if not
+
+    // confirm the searched gene is visible in the result and adjust if not
     if (newInnerStart > basePairStart && newInnerStop < basePairStop)
     {
       store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: basePairStop});
@@ -321,8 +312,10 @@ const adjustSelectionWindow = () => {
     }
     else if (newInnerStop > basePairStop)
     {
-      newInnerStart < basePairStart ? store.dispatch('setDetailedBasePairRange', { start: newInnerStart, stop: newInnerStop}) : store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: newInnerStop}); 
+      newInnerStart < basePairStart ? store.dispatch('setDetailedBasePairRange', { start: newInnerStart, stop: newInnerStop}) : store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: newInnerStop});
     }
+
+    
     
   }
   else

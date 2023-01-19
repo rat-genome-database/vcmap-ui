@@ -101,7 +101,6 @@ export default class GeneApi
       comparativeSpeciesIds,
     });
 
-    console.log(`/vcmap/genes/${mapKey}/${chromosome}/${roundedStart}/${roundedStop}?orthologMapKeys=${comparativeSpeciesIds.toString()}`);
 
     return geneList;
   }
