@@ -411,7 +411,7 @@ function splitBlockWithGaps(block: SyntenySection, gaps: SyntenyComponent[], thr
       processedGaps.push(gapSyntenicSection);
 
       const blockBackboneSection = new BackboneSection({ start: gap.backboneStop, stop: block.backboneSection.stop, windowStart: block.backboneSection.windowStart, windowStop: block.backboneSection.windowStop, renderType: renderType });
-      const blockSyntenicSection = new SyntenySection({ start: gap.stop, stop: block.speciesStart, backboneSection: blockBackboneSection, threshold: threshold, type: 'block', chromosome: new Chromosome({chromosome: block.chromosome.chromosome, mapKey: block.chromosome.mapKey}), chainLevel: gap.chainLevel, orientation: gap.orientation });
+      const blockSyntenicSection = new SyntenySection({ start: gap.stop, stop: block.isInverted ? block.speciesStop : block.speciesStart, backboneSection: blockBackboneSection, threshold: threshold, type: 'block', chromosome: new Chromosome({chromosome: block.chromosome.chromosome, mapKey: block.chromosome.mapKey}), chainLevel: gap.chainLevel, orientation: gap.orientation });
       processedBlocks.push(blockSyntenicSection);
       lastProcessedSection = blockSyntenicSection;
     }
@@ -419,7 +419,7 @@ function splitBlockWithGaps(block: SyntenySection, gaps: SyntenyComponent[], thr
     {
       //First gap start not before block start, so create block section and then gap section
       const blockBackboneSection = new BackboneSection({ start: block.backboneSection.start, stop: gap.backboneStart, windowStart: block.backboneSection.windowStart, windowStop: block.backboneSection.windowStop, renderType: renderType });
-      const blockSyntenicSection = new SyntenySection({ start: block.speciesStart, stop: gap.start, backboneSection: blockBackboneSection, type: 'block', orientation: block.orientation, chromosome: new Chromosome({chromosome: gap.chromosome, mapKey: gap.mapKey}), chainLevel: block.chainLevel, });
+      const blockSyntenicSection = new SyntenySection({ start: block.isInverted ? block.speciesStop : block.speciesStart, stop: gap.start, backboneSection: blockBackboneSection, type: 'block', orientation: block.orientation, chromosome: new Chromosome({chromosome: gap.chromosome, mapKey: gap.mapKey}), chainLevel: block.chainLevel, });
 
       const gapBackboneSection = new BackboneSection({ start: gap.backboneStart, stop: gap.backboneStop, windowStart: block.backboneSection.windowStart, windowStop: block.backboneSection.windowStop, renderType: renderType });
       const gapSyntenicSection = new SyntenySection({ start: gap.start, stop: gap.stop, backboneSection: gapBackboneSection, threshold: threshold, type: 'gap', chromosome: new Chromosome({chromosome: gap.chromosome, mapKey: gap.mapKey}), chainLevel: gap.chainLevel, orientation: gap.orientation });
@@ -467,7 +467,7 @@ function splitBlockWithGaps(block: SyntenySection, gaps: SyntenyComponent[], thr
   if (finalGap.backboneStop < block.backboneSection.stop)
   {
     const blockBackboneSection = new BackboneSection({ start: finalGap.backboneStop, stop: block.backboneSection.stop, windowStart: block.backboneSection.windowStart, windowStop: block.backboneSection.windowStop, renderType: renderType });
-    const blockSyntenicSection = new SyntenySection({ start: finalGap.stop, stop: block.speciesStop, backboneSection: blockBackboneSection, type: 'block', orientation: block.orientation, chromosome: new Chromosome({chromosome: finalGap.chromosome, mapKey: finalGap.mapKey}), chainLevel: block.chainLevel, });
+    const blockSyntenicSection = new SyntenySection({ start: finalGap.stop, stop: block.isInverted ? block.speciesStart : block.speciesStop, backboneSection: blockBackboneSection, type: 'block', orientation: block.orientation, chromosome: new Chromosome({chromosome: finalGap.chromosome, mapKey: finalGap.mapKey}), chainLevel: block.chainLevel, });
 
     processedBlocks.push(blockSyntenicSection);
   }
