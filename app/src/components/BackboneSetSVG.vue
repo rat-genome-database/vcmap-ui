@@ -3,6 +3,7 @@
   <rect v-if="backbone"
     data-test="track-section-svg"
     class="section"
+    :class="{selecting: isSelecting}"
     @mouseenter="onMouseEnter(backbone, 'backbone')"
     @mouseleave="onMouseLeave(backbone)"
     :fill="backbone.isHovered && showDataOnHover ? HOVER_HIGHLIGHT_COLOR : backbone.elementColor"
@@ -25,6 +26,7 @@
     <text v-if="label.isVisible"
       data-test="bp-label"
       class="label small"
+      :class="{selecting: isSelecting}"
       :x="label.posX"
       :y="label.posY">
       {{label.text}}
@@ -50,6 +52,7 @@
 
   <!-- Inner selection that changes depending on Detailed panel zoom -->
   <rect v-if="!isDetailed && selectedRegion.innerSelection"
+    :class="{selecting: isSelecting}"
     stroke="green"
     fill="green"
     fill-opacity="0.5"
@@ -99,6 +102,7 @@ interface Props
 {
   showDataOnHover?: boolean;
   backboneSet: BackboneSet;
+  isSelecting?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -246,12 +250,14 @@ const highlightSelections = (selectedGeneIds: number[]) => {
 .label.small
 {
   font: normal 8px sans-serif;
+  pointer-events: none;
 }
 
 .chromosome-label
 {
   font: normal 12px sans-serif;
   fill: #4c4b4b;
+  pointer-events: none;
 }
 
 .section
@@ -271,5 +277,10 @@ const highlightSelections = (selectedGeneIds: number[]) => {
 .selected-region
 {
   stroke-width: 1;
+}
+
+.selecting
+{
+  pointer-events: none;
 }
 </style>

@@ -16,6 +16,27 @@ export default function useOverviewPanelSelection(store: Store<VCMapState>) {
     svg = document.querySelector('svg');
   });
 
+  const getOverviewSelectionStatus = () => {
+    return inSelectMode;
+  }
+
+  const overviewSelectionHandler = (event: any, overviewBackbone?: BackboneSection) => {
+    if (store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating)
+    {
+      // Don't allow a selection until both panels are done updating
+      return;
+    }
+
+    if (!inSelectMode) {
+      inSelectMode = true;
+      startingPoint = getMousePosSVG(svg, event);
+      startOverviewSelectionY.value = startingPoint.y;
+      return;
+    }
+
+    completeOverviewSelection(overviewBackbone);
+  }
+
   const initOverviewSelection = (event: any) => {
     if (store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating)
     {
@@ -45,6 +66,16 @@ export default function useOverviewPanelSelection(store: Store<VCMapState>) {
       stopOverviewSelectionY.value = currentSVGPoint.y;
     }
   };
+
+  const cancelOverviewSelection = () => {
+    if (inSelectMode) {
+      inSelectMode = false;
+      // Clear selection box
+      startOverviewSelectionY.value = undefined;
+      stopOverviewSelectionY.value = undefined;
+    }
+
+  }
 
   const completeOverviewSelection = (overviewBackbone?: BackboneSection) => {
     if (!inSelectMode || !overviewBackbone) return;
@@ -89,10 +120,13 @@ export default function useOverviewPanelSelection(store: Store<VCMapState>) {
   };
 
   return {
+    overviewSelectionHandler,
     startOverviewSelectionY,
     stopOverviewSelectionY,
     initOverviewSelection,
     updateOverviewSelection,
-    completeOverviewSelection
+    cancelOverviewSelection,
+    completeOverviewSelection,
+    getOverviewSelectionStatus
   };
 }

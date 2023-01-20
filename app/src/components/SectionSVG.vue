@@ -2,6 +2,7 @@
   <template v-for="(blockSection, index) in level1Blocks" :key="index">
     <rect
       class="block-section"
+      :class="{selecting: isSelecting}"
       @mouseenter="onMouseEnter(blockSection, 'trackSection')"
       @mouseleave="onMouseLeave(blockSection, 'trackSection')"
       @click="selectOnClick ? onSectionClick(blockSection, 'trackSection') : () => {}"
@@ -39,6 +40,7 @@
   <template v-for="(blockSection, index) in level2Blocks" :key="index">
     <rect
       class="level-2 block-section"
+      :class="{selecting: isSelecting}"
       @mouseenter="onMouseEnter(blockSection, 'trackSection')"
       @mouseleave="onMouseLeave(blockSection, 'trackSection')"
       :y="blockSection.posY1"
@@ -106,6 +108,7 @@ interface Props
   showGeneLabel?: boolean;
   selectOnClick?: boolean;
   region: SyntenyRegion;
+  isSelecting?: boolean;
 }
 const props = defineProps<Props>();
 
@@ -137,22 +140,24 @@ const datatracks = computed(() => {
 });
 
 const onMouseEnter = (section: SyntenySection | GeneDatatrack, type: SelectedDataType) => {
-  section.isHovered = true;
-  
-  // If there are selected genes, don't update the selected data panel
-  if (store.state.selectedGeneIds.length === 0) {
-    const selectedData = new SelectedData(section, type);
-    store.dispatch('setSelectedData', [selectedData]);
-  }
-
-  if (type === 'Gene') 
-  {
-    const geneSection = section as GeneDatatrack;
-    if (geneSection?.gene)
-    {
-      highlightGeneLines(geneSection?.gene.rgdId, 'enter');
+  // if ()
+    section.isHovered = true;
+    
+    // If there are selected genes, don't update the selected data panel
+    if (store.state.selectedGeneIds.length === 0) {
+      const selectedData = new SelectedData(section, type);
+      store.dispatch('setSelectedData', [selectedData]);
     }
-  }
+
+    if (type === 'Gene') 
+    {
+      const geneSection = section as GeneDatatrack;
+      if (geneSection?.gene)
+      {
+        highlightGeneLines(geneSection?.gene.rgdId, 'enter');
+      }
+    }
+
 };
 
 const onMouseLeave = (section: VCMapSVGElement, type: SelectedDataType) => {
@@ -310,6 +315,7 @@ const highlightGeneLines = (sectionId: number, type: string) => {
   {
     cursor: pointer;
   }
+  pointer-events: none;
 }
 
 .ortholog-line
@@ -329,5 +335,10 @@ const highlightGeneLines = (sectionId: number, type: string) => {
 .block-section:hover
 {
   cursor: pointer;
+}
+
+.selecting
+{
+  pointer-events: none;
 }
 </style>
