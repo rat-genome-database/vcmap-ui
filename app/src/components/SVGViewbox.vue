@@ -38,7 +38,7 @@
     <template v-if="detailedSyntenySets.length">
       <template v-for="(syntenySet, index) in detailedSyntenySets" :key="index">
         <template v-for="(syntenicRegion, index) in syntenySet.regions" :key="index">
-          <SectionSVG show-gene-label show-chromosome :region="syntenicRegion as SyntenyRegion" />
+          <SectionSVG show-chromosome :region="syntenicRegion as SyntenyRegion" />
         </template>
         <template v-for="(label, index) in syntenySet.datatrackLabels" :key="index">
           <template v-if="label.isVisible">
@@ -835,7 +835,7 @@ const getDetailedPosition = () =>
 
     return styleElement;
   }
-}
+};
 
 document.addEventListener('scroll' , getDetailedPosition);
 

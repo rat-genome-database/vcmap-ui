@@ -101,7 +101,6 @@ export default class GeneApi
       comparativeSpeciesIds,
     });
 
-
     return geneList;
   }
 

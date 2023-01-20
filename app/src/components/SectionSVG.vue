@@ -1,4 +1,7 @@
 <template>
+  <template v-if="showStartStop && region.gaplessBlock.startLabel.isVisible">
+    <OverviewSyntenyLabelsSVG :gapless-block="region.gaplessBlock"/>
+  </template>
   <template v-for="(blockSection, index) in level1Blocks" :key="index">
     <rect
       class="block-section"
@@ -13,25 +16,27 @@
       :fill-opacity="1"
     />
 
-    <template v-if="showStartStop && blockSection.startLabel.isVisible">
-      <text
-        class="label small"
-        dominant-baseline="middle"
-        :x="blockSection.startLabel.posX"
-        :y="blockSection.startLabel.posY"
-      >
-        -  {{blockSection.startLabel.text}}
-      </text>
-      <text
-        class="label small"
-        dominant-baseline="middle"
-        :x="blockSection.stopLabel.posX"
-        :y="blockSection.stopLabel.posY"
-      >
-        -  {{blockSection.stopLabel.text}}
-      </text>
-    </template>
     <ChromosomeLabelSVG v-if="showChromosome" :synteny-section="blockSection" />
+  </template>
+
+  <!-- Detailed Panel Synteny Postion Labels -->
+  <template v-if="region.gaplessBlock.posY1 < PANEL_SVG_START && region.gaplessBlock.posY2 > PANEL_SVG_START">
+    <text
+      class="label small"
+      :x="region.gaplessBlock.posX1 - 5"
+      :y="PANEL_SVG_START + 10"
+    >
+      {{ calculateSectionStartPositionLabel(region.gaplessBlock) }}
+    </text>
+  </template>
+  <template v-if="region.gaplessBlock.posY2 > PANEL_SVG_STOP && region.gaplessBlock.posY1 < PANEL_SVG_STOP">
+    <text
+      class="label small"
+      :x="region.gaplessBlock.posX1 - 5"
+      :y="PANEL_SVG_STOP - 10"
+    >
+      {{ calculateSectionStopPositionLabel(region.gaplessBlock) }}
+    </text>
   </template>
 
   <GapSVG v-for="(gapSection,index) in level1Gaps" :key="index" :gap-section="gapSection" />
@@ -86,12 +91,15 @@ import { GeneDatatrack } from '@/models/DatatrackSection';
 import { computed, toRefs } from '@vue/reactivity';
 import { useStore } from 'vuex';
 import { key } from '@/store';
+import { Formatter } from '@/utils/Formatter';
 import { getNewSelectedData } from '@/utils/DataPanelHelpers';
 import { VCMapSVGElement } from '@/models/VCMapSVGElement';
 import ChromosomeLabelSVG from './ChromosomeLabelSVG.vue';
 import SyntenyLinesSVG from './SyntenyLinesSVG.vue';
 import GapSVG from './GapSVG.vue';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
+import OverviewSyntenyLabelsSVG from './OverviewSyntenyLabelsSVG.vue';
+import { PANEL_SVG_START, PANEL_SVG_STOP } from '@/utils/SVGConstants';
 
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
 const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
@@ -103,7 +111,6 @@ interface Props
   showSyntenyOnHover?: boolean;
   showStartStop?: boolean;
   showChromosome?: boolean;
-  showGeneLabel?: boolean;
   selectOnClick?: boolean;
   region: SyntenyRegion;
 }
@@ -298,6 +305,19 @@ const highlightGeneLines = (sectionId: number, type: string) => {
   });
 };
 
+const calculateSectionStartPositionLabel = (section: SyntenySection) => {
+  const displayedHeight = section.posY2 - PANEL_SVG_START;
+  const basePairPerSVG = Math.abs(section.speciesStop - section.speciesStart) / section.height;
+  const labelBasePair = section.isInverted ? section.speciesStart + (displayedHeight * basePairPerSVG) : section.speciesStop - (displayedHeight * basePairPerSVG);
+  return Formatter.convertBasePairToLabel(Math.round(labelBasePair));
+};
+
+const calculateSectionStopPositionLabel = (section: SyntenySection) => {
+  const displayedHeight = PANEL_SVG_STOP - section.posY1;
+  const basePairPerSVG = Math.abs(section.speciesStop - section.speciesStart) / section.height;
+  const labelBasePair = !section.isInverted ? section.speciesStart + (displayedHeight * basePairPerSVG) : section.speciesStop - (displayedHeight * basePairPerSVG);
+  return Formatter.convertBasePairToLabel(Math.round(labelBasePair));
+};
 
 </script>
 
