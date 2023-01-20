@@ -139,6 +139,7 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
       orientation: blockInfo.orientation, 
       chromosome: new Chromosome({chromosome: blockInfo.chromosome, mapKey: blockInfo.mapKey}), 
       chainLevel: blockInfo.chainLevel,
+      isGapless: true,
     });
 
     const gaplessBlockObject: LoadedBlock = { [currSpecies]: { [blockChromosome]: [blockSyntenicSection] } };

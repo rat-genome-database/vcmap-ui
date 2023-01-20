@@ -16,6 +16,7 @@ interface SyntenySectionParams
   orientation: '+' | '-';
   chromosome: Chromosome;
   chainLevel: number;
+  isGapless?: boolean
 }
 
 export default class SyntenySection extends GenomicSection
@@ -40,13 +41,20 @@ export default class SyntenySection extends GenomicSection
     this.chromosome = params.chromosome;
     this.chainLevel = params.chainLevel;
 
-    this.createSyntenySectionLabels();
+    // Only build these section labels for gapless blocks to display in overview panel
+    if (params.isGapless)
+    {
+      this.createSyntenySectionLabels();
+    }
   }
 
   public recalculateLabelYPositions()
   {
-    this.startLabel.posY = this.startLabelYPosition;
-    this.stopLabel.posY = this.stopLabelYPosition;
+    if (this.startLabel && this.stopLabel)
+    {
+      this.startLabel.posY = this.startLabelYPosition;
+      this.stopLabel.posY = this.stopLabelYPosition;
+    }
   }
 
   private createSyntenySectionLabels()

@@ -106,7 +106,7 @@ export default class SyntenyRegionSet extends GenomicSet
     if (this.regions.length > 0)
     {
       this.regions.forEach(region => {
-        this.setSyntenyBlockXPositions([region.gaplessBlock]);
+        this.setGaplessSyntenyBlockXPositions(region.gaplessBlock);
         this.setSyntenyBlockXPositions(region.syntenyBlocks);
         this.setSyntenyGapXPositions(region.syntenyGaps);
         this.setDatatrackSectionXPositions(region.datatrackSections, region.orthologLines);
@@ -156,9 +156,14 @@ export default class SyntenyRegionSet extends GenomicSet
 
       section.posX2 = section.posX1 + trackWidth;
       section.width = Math.abs(section.posX2 - section.posX1);
-      section.startLabel.posX = section.posX2;
-      section.stopLabel.posX = section.posX2;
     });
+  }
+
+  private setGaplessSyntenyBlockXPositions(section: SyntenySection)
+  {
+    this.setSyntenyBlockXPositions([section]);
+    section.startLabel.posX = section.posX2;
+    section.stopLabel.posX = section.posX2;
   }
 
   private setDatatrackSectionXPositions(sections: DatatrackSection[], lines: OrthologLine[])
@@ -212,21 +217,6 @@ export default class SyntenyRegionSet extends GenomicSet
         labelPair.stopLabel.isVisible = true;
         continue;
       }
-      /*
-      const overlappedLabels = labelPairs.filter((overlapPair) => {
-        return Math.abs(overlapPair.startLabel.posY - labelPair.startLabel.posY) < 10
-          || Math.abs(overlapPair.startLabel.posY - labelPair.stopLabel.posY) < 10
-          || Math.abs(overlapPair.stopLabel.posY - labelPair.startLabel.posY) < 10
-          || Math.abs(overlapPair.stopLabel.posY - labelPair.stopLabel.posY) < 10;
-      });
-      if (!overlappedLabels.some((overlapLabel) => overlapLabel.startLabel.isVisible || overlapLabel.stopLabel.isVisible)
-        && Math.abs(labelPair.stopLabel.posY - labelPair.startLabel.posY) > 5)
-      {
-        labelPair.startLabel.isVisible = true;
-        labelPair.startLabel.isVisible = true;
-      }
-      */
-
     }
   }
 

@@ -835,7 +835,7 @@ const getDetailedPosition = () =>
 
     return styleElement;
   }
-}
+};
 
 document.addEventListener('scroll' , getDetailedPosition);
 
