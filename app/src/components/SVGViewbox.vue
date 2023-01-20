@@ -4,8 +4,13 @@
     <!-- Outside panel -->
     <rect class="panel" x="0" width="800" :height="SVGConstants.viewboxHeight" />
     <!-- Inner panels -->
-    <rect class="panel selectable" :class="{'is-loading': arePanelsLoading}" x="0" @mousedown.left="initOverviewSelection" @mousemove="updateOverviewSelection" @mouseup.left="completeOverviewSelection(overviewBackboneSet?.backbone)" :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.viewboxHeight" />
-    <rect id="detailed" class="panel selectable" :class="{'is-loading': arePanelsLoading}" @mousedown.left="initZoomSelection" @mousemove="updateZoomSelection" @mouseup.left="completeZoomSelection" :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.viewboxHeight" />
+    <rect class="panel selectable" :class="{'is-loading': arePanelsLoading}" x="0" @click.left="(event) => overviewSelectionHandler(event, overviewBackboneSet?.backbone)" 
+    @mousemove="updateOverviewSelection" @contextmenu.prevent @click.right="cancelOverviewSelection"
+    :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.viewboxHeight" />
+
+    <rect id="detailed" class="panel selectable" :class="{'is-loading': arePanelsLoading}" @click.left="(event) => detailedSelectionHandler(event)"
+     @mousemove="updateZoomSelection" @contextmenu.prevent @click.right="cancelDetailedSelection" 
+     :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.viewboxHeight" />
 
     <!-- Ortholog Lines -->
     <template v-for="(line, index) in orthologLines" :key="index">
@@ -15,17 +20,17 @@
     <!-- Overview panel SVGs ------------------------------------------->
     <template v-for="(syntenySet, index) in overviewSyntenySets" :key="index">
       <template v-for="(region, index) in syntenySet.regions" :key="index">
-        <SectionSVG show-chromosome show-synteny-on-hover show-start-stop select-on-click :region="(region as SyntenyRegion)" />
+        <SectionSVG show-chromosome show-synteny-on-hover show-start-stop select-on-click :isSelecting="currentlySelectingRegion()" :region="(region as SyntenyRegion)" />
       </template>
     </template>
 
     <template v-if="overviewBackboneSet">
-      <BackboneSetSVG show-data-on-hover :backbone-set="overviewBackboneSet" />
+      <BackboneSetSVG show-data-on-hover :backbone-set="overviewBackboneSet" :isSelecting="currentlySelectingRegion()"/>
     </template>
 
     <!-- Detail panel SVGs ----------------------------------------->
     <template v-if="detailedBackboneSet">
-      <BackboneSetSVG show-data-on-hover :backbone-set="detailedBackboneSet" />
+      <BackboneSetSVG show-data-on-hover :backbone-set="detailedBackboneSet" :isSelecting="currentlySelectingRegion()" />
       <template v-if="detailedBackboneSet.datatrackLabels">
         <template v-for="(label, index) in detailedBackboneSet.datatrackLabels" :key="index">
           <template v-if="(label.isVisible)">
@@ -86,17 +91,21 @@
 
     <!-- Detailed panel selection svg for zoom -->
     <rect v-if="startDetailedSelectionY && stopDetailedSelectionY" 
-      @mouseup.left="completeZoomSelection"
+      @mousedown.left="(event) => detailedSelectionHandler(event)"
+      @click.right="cancelDetailedSelection"
       @mousemove="updateZoomSelection"
+      @contextmenu.prevent
       fill="lightgray"
       fill-opacity="0.4"
       :x="SVGConstants.overviewPanelWidth" :y="startDetailedSelectionY"
       :width="SVGConstants.detailsPanelWidth" :height="stopDetailedSelectionY - startDetailedSelectionY" />
 
     <!-- Overview panel selection svg for backbone -->
-    <rect v-if="startOverviewSelectionY && stopOverviewSelectionY" 
-      @mouseup.left="completeOverviewSelection(overviewBackboneSet?.backbone)"
+    <rect v-if="startOverviewSelectionY && stopOverviewSelectionY"
       @mousemove="updateOverviewSelection"
+      @contextmenu.prevent
+      @mousedown.left="(event) => overviewSelectionHandler(event, overviewBackboneSet?.backbone)" 
+      @click.right="cancelOverviewSelection"
       fill="lightgray"
       fill-opacity="0.4"
       :x="0" :y="startOverviewSelectionY"
@@ -143,8 +152,8 @@ const store = useStore(key);
 const $log = useLogger();
 
 const { showDialog, dialogHeader, dialogMessage, onError, checkSyntenyResultsOnComparativeSpecies } = useDialog();
-const { startDetailedSelectionY, stopDetailedSelectionY, initZoomSelection, updateZoomSelection, completeZoomSelection } = useDetailedPanelZoom(store);
-const { startOverviewSelectionY, stopOverviewSelectionY, initOverviewSelection, updateOverviewSelection, completeOverviewSelection } = useOverviewPanelSelection(store);
+const { startDetailedSelectionY, stopDetailedSelectionY, updateZoomSelection, detailedSelectionHandler, cancelDetailedSelection, getDetailedSelectionStatus} = useDetailedPanelZoom(store);
+const { startOverviewSelectionY, stopOverviewSelectionY, updateOverviewSelection, overviewSelectionHandler, cancelOverviewSelection, getOverviewSelectionStatus } = useOverviewPanelSelection(store);
 
 let detailedSyntenySets = ref<SyntenyRegionSet[]>([]); // The currently displayed SyntenicRegions in the detailed panel
 let overviewBackboneSet = ref<BackboneSet>();
@@ -206,6 +215,10 @@ watch(() => store.state.detailedBasePairRange, () => {
 const arePanelsLoading = computed(() => {
   return store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating;
 });
+
+const currentlySelectingRegion = () => {
+  return (getOverviewSelectionStatus() || getDetailedSelectionStatus());
+}
 
 const updateOverviewPanel = async () => {
   $log.debug('Updating Overview Panel');
@@ -838,6 +851,15 @@ const getDetailedPosition = () =>
 };
 
 document.addEventListener('scroll' , getDetailedPosition);
+
+// listen for escape press, cancel overview/detailed panel selection if active.
+window.addEventListener('keyup', function(event) {
+    // If  ESC key was pressed...
+    if (event.keyCode === 27) {
+      cancelOverviewSelection();
+      cancelDetailedSelection();
+    }
+});
 
 function logPerformanceReport(title: string, totalTimeMillis: number, detailedTimeReportObject: { [key:string]: number} )
 {

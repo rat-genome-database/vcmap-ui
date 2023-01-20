@@ -18,6 +18,34 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
     svg = document.querySelector('svg');
   });
 
+  const getDetailedSelectionStatus = () => {
+    return inSelectMode;
+  }
+
+  const detailedSelectionHandler = (event: any) => {
+    if (store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating)
+    {
+      // Don't allow zoom until both panels are done updating
+      return;
+    }
+
+    const selectedRegion = store.state.selectedBackboneRegion;
+    if (!selectedRegion.innerSelection)
+    {
+      $log.warn('Cannot zoom on the detailed panel without a selection in the overview');
+      return;
+    }
+
+    if (!inSelectMode) {
+      inSelectMode = true;
+      startingPoint = getMousePosSVG(svg, event);
+      startDetailedSelectionY.value = startingPoint.y;
+      return;
+    }
+
+    completeZoomSelection();
+  }
+
   const initZoomSelection = (event: any) => {
     if (store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating)
     {
@@ -55,6 +83,15 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
     }
   };
 
+  const cancelDetailedSelection = () => {
+    if (inSelectMode) {
+      inSelectMode = false;
+      // Clear selection box
+      startDetailedSelectionY.value = undefined;
+      stopDetailedSelectionY.value = undefined;
+    }
+  }
+
   const completeZoomSelection = () => {
     if (!inSelectMode) return;
 
@@ -79,10 +116,13 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
   };
 
   return {
+    detailedSelectionHandler,
     startDetailedSelectionY,
     stopDetailedSelectionY,
     initZoomSelection,
     updateZoomSelection,
-    completeZoomSelection
+    cancelDetailedSelection,
+    completeZoomSelection,
+    getDetailedSelectionStatus
   };
 }
