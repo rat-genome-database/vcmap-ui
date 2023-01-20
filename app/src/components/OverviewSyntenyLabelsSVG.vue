@@ -2,7 +2,7 @@
   <line
     :x1="props.gaplessBlock.startLabel.posX"
     :y1="(props.gaplessBlock.isInverted ? props.gaplessBlock.startLabel.posY - 1 : props.gaplessBlock.startLabel.posY + 1)"
-    :x2="props.gaplessBlock.startLabel.posX + 45"
+    :x2="props.gaplessBlock.startLabel.posX + LABEL_LINE_LENGTH"
     :y2="(props.gaplessBlock.isInverted ? props.gaplessBlock.startLabel.posY - 1 : props.gaplessBlock.startLabel.posY + 1)"
     :stroke="props.gaplessBlock.elementColor"
   >
@@ -10,7 +10,7 @@
   <line
     :x1="props.gaplessBlock.stopLabel.posX"
     :y1="(props.gaplessBlock.isInverted ? props.gaplessBlock.stopLabel.posY + 1 : props.gaplessBlock.stopLabel.posY - 1)"
-    :x2="props.gaplessBlock.stopLabel.posX + 45"
+    :x2="props.gaplessBlock.stopLabel.posX + LABEL_LINE_LENGTH"
     :y2="(props.gaplessBlock.isInverted ? props.gaplessBlock.stopLabel.posY + 1 : props.gaplessBlock.stopLabel.posY - 1)"
     :stroke="props.gaplessBlock.elementColor"
   >
@@ -36,8 +36,7 @@
 <script lang="ts" setup>
 import SyntenySection from "@/models/SyntenySection";
 
-const STROKE_COLOR = "#555555";
-const STROKE_WIDTH = "0.25px";
+const LABEL_LINE_LENGTH = 45;
 
 interface Props
 {
