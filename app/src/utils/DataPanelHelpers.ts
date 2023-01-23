@@ -116,6 +116,21 @@ function getGeneOrthologData(store: Store<VCMapState>, gene: Gene)
     gene.orthologs.forEach((rgdId: number) => {
       const orthologGenes = masterGeneMapByRGDId?.get(rgdId);
       orthologGenes?.forEach(geneDatatrack => {
+        const orthos = geneDatatrack.gene.orthologs;
+
+        // Backbone gene might have multiple orthos to check
+        if (orthos) {
+          for (const [key, value] of Object.entries(orthos)) {
+            if (Number(`${value}`) !== gene.rgdId) {
+              const newOrthoData = masterGeneMapByRGDId?.get(Number(`${value}`));
+              newOrthoData?.forEach(geneDatatrack => {
+                selectedDataList.push(new SelectedData(geneDatatrack.gene, 'Gene'));
+              });
+              rgdIds.push(Number(`${value}`));
+            }
+          }
+        }
+
         selectedDataList.push(new SelectedData(geneDatatrack.gene, 'Gene'));
       });
       rgdIds.push(rgdId);
