@@ -311,16 +311,18 @@ const highlightGeneLines = (sectionId: number, type: string) => {
 };
 
 const calculateSectionStartPositionLabel = (section: SyntenySection) => {
-  const displayedHeight = section.posY2 - PANEL_SVG_START;
-  const basePairPerSVG = Math.abs(section.speciesStop - section.speciesStart) / section.height;
-  const labelBasePair = section.isInverted ? section.speciesStart + (displayedHeight * basePairPerSVG) : section.speciesStop - (displayedHeight * basePairPerSVG);
+  const hiddenHeight = PANEL_SVG_START - section.posY1;
+  const basePairPerSVG = section.length / section.height;
+  // Subtract or multiple the number of hidden basepairs above the visible window based on inversion
+  const labelBasePair = section.isInverted ? section.speciesStart - (hiddenHeight * basePairPerSVG) : section.speciesStart + (hiddenHeight * basePairPerSVG);
   return Formatter.convertBasePairToLabel(Math.round(labelBasePair));
 };
 
 const calculateSectionStopPositionLabel = (section: SyntenySection) => {
-  const displayedHeight = PANEL_SVG_STOP - section.posY1;
-  const basePairPerSVG = Math.abs(section.speciesStop - section.speciesStart) / section.height;
-  const labelBasePair = !section.isInverted ? section.speciesStart + (displayedHeight * basePairPerSVG) : section.speciesStop - (displayedHeight * basePairPerSVG);
+  const hiddenHeight = section.posY2 - PANEL_SVG_STOP;
+  const basePairPerSVG = section.length / section.height;
+  // Subtract or multiple the number of hidden basepairs below the visible window based on inversion
+  const labelBasePair = !section.isInverted ? section.speciesStop - (hiddenHeight * basePairPerSVG) : section.speciesStop + (hiddenHeight * basePairPerSVG);
   return Formatter.convertBasePairToLabel(Math.round(labelBasePair));
 };
 
