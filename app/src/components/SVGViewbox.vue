@@ -5,12 +5,14 @@
     <rect class="panel" x="0" width="800" :height="SVGConstants.viewboxHeight" />
     <!-- Inner panels -->
     <rect class="panel selectable" :class="{'is-loading': arePanelsLoading}" x="0" @click.left="(event) => overviewSelectionHandler(event, overviewBackboneSet?.backbone)" 
-    @mousemove="updateOverviewSelection" @contextmenu.prevent @click.right="cancelOverviewSelection"
-    :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.viewboxHeight" />
+      @mousemove.stop="(event) => updateOverviewSelection(event)" @contextmenu.prevent @click.right="cancelOverviewSelection"
+      :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.viewboxHeight" />
 
     <rect id="detailed" class="panel selectable" :class="{'is-loading': arePanelsLoading}" @click.left="(event) => detailedSelectionHandler(event)"
-     @mousemove="updateZoomSelection" @contextmenu.prevent @click.right="cancelDetailedSelection" 
-     :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.viewboxHeight" />
+      @mousemove="updateZoomSelection" @contextmenu.prevent @click.right="cancelDetailedSelection" 
+      :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.viewboxHeight" />
+
+    
 
     <!-- Ortholog Lines -->
     <template v-for="(line, index) in orthologLines" :key="index">
@@ -20,17 +22,17 @@
     <!-- Overview panel SVGs ------------------------------------------->
     <template v-for="(syntenySet, index) in overviewSyntenySets" :key="index">
       <template v-for="(region, index) in syntenySet.regions" :key="index">
-        <SectionSVG show-chromosome show-synteny-on-hover show-start-stop select-on-click :isSelecting="currentlySelectingRegion()" :region="(region as SyntenyRegion)" />
+        <SectionSVG show-chromosome show-synteny-on-hover show-start-stop select-on-click :region="(region as SyntenyRegion)" />
       </template>
     </template>
 
     <template v-if="overviewBackboneSet">
-      <BackboneSetSVG show-data-on-hover :backbone-set="overviewBackboneSet" :isSelecting="currentlySelectingRegion()"/>
+      <BackboneSetSVG show-data-on-hover :backbone-set="overviewBackboneSet"/>
     </template>
 
     <!-- Detail panel SVGs ----------------------------------------->
     <template v-if="detailedBackboneSet">
-      <BackboneSetSVG show-data-on-hover :backbone-set="detailedBackboneSet" :isSelecting="currentlySelectingRegion()" />
+      <BackboneSetSVG show-data-on-hover :backbone-set="detailedBackboneSet" />
       <template v-if="detailedBackboneSet.datatrackLabels">
         <template v-for="(label, index) in detailedBackboneSet.datatrackLabels" :key="index">
           <template v-if="(label.isVisible)">
@@ -89,6 +91,14 @@
     <image class="nav-btn-img" href="../../node_modules/primeicons/raw-svg/chevron-up.svg" @click="navigateUp" :x="SVGConstants.overviewPanelWidth + (SVGConstants.detailsPanelWidth / 2)" :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
     <image class="nav-btn-img" href="../../node_modules/primeicons/raw-svg/chevron-down.svg" @click="navigateDown" :x="SVGConstants.overviewPanelWidth + (SVGConstants.detailsPanelWidth / 2)" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
 
+    <rect v-if="currentlySelectingRegion()" id="selecting-overview" class="selecting-panel" :class="{'is-loading': arePanelsLoading}" x="0" 
+      @mousemove="updateOverviewSelection" @contextmenu.prevent @click.right="cancelOverviewSelection"
+      :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.viewboxHeight" />
+
+    <rect v-if="currentlySelectingRegion()" id="selecting-detailed" class="selecting-panel" :class="{'is-loading': arePanelsLoading}"
+      @mousemove="updateZoomSelection" @contextmenu.prevent @click.right="cancelDetailedSelection" 
+      :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.viewboxHeight" />
+
     <!-- Detailed panel selection svg for zoom -->
     <rect v-if="startDetailedSelectionY && stopDetailedSelectionY" 
       @mousedown.left="(event) => detailedSelectionHandler(event)"
@@ -102,7 +112,7 @@
 
     <!-- Overview panel selection svg for backbone -->
     <rect v-if="startOverviewSelectionY && stopOverviewSelectionY"
-      @mousemove="updateOverviewSelection"
+      @mousemove="(event) => updateOverviewSelection(event)"
       @contextmenu.prevent
       @mousedown.left="(event) => overviewSelectionHandler(event, overviewBackboneSet?.backbone)" 
       @click.right="cancelOverviewSelection"
@@ -890,6 +900,25 @@ rect.panel
   fill: white;
   stroke-width: 2;
   stroke: lightgray;
+  z-index: 0;
+
+  &.selectable:not(.is-loading)
+  {
+    cursor: crosshair;
+  }
+
+  &.is-loading
+  {
+    cursor: wait;
+  }
+}
+
+rect.selecting-panel
+{
+  fill: white;
+  opacity: 0;
+  position: absolute;
+  z-index: 1;
 
   &.selectable:not(.is-loading)
   {

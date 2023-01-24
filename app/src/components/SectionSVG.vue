@@ -5,7 +5,6 @@
   <template v-for="(blockSection, index) in level1Blocks" :key="index">
     <rect
       class="block-section"
-      :class="{selecting: isSelecting}"
       @mouseenter="onMouseEnter(blockSection, 'trackSection')"
       @mouseleave="onMouseLeave(blockSection, 'trackSection')"
       @click="selectOnClick ? onSectionClick(blockSection, 'trackSection') : () => {}"
@@ -45,7 +44,6 @@
   <template v-for="(blockSection, index) in level2Blocks" :key="index">
     <rect
       class="level-2 block-section"
-      :class="{selecting: isSelecting}"
       @mouseenter="onMouseEnter(blockSection, 'trackSection')"
       @mouseleave="onMouseLeave(blockSection, 'trackSection')"
       :y="blockSection.posY1"
@@ -115,7 +113,6 @@ interface Props
   showChromosome?: boolean;
   selectOnClick?: boolean;
   region: SyntenyRegion;
-  isSelecting?: boolean;
 }
 const props = defineProps<Props>();
 
@@ -357,8 +354,4 @@ const calculateSectionStopPositionLabel = (section: SyntenySection) => {
   cursor: pointer;
 }
 
-.selecting
-{
-  pointer-events: none;
-}
 </style>
