@@ -20,7 +20,7 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
 
   const getDetailedSelectionStatus = () => {
     return inSelectMode;
-  }
+  };
 
   const detailedSelectionHandler = (event: any) => {
     if (store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating)
@@ -44,7 +44,7 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
     }
 
     completeZoomSelection();
-  }
+  };
 
   const initZoomSelection = (event: any) => {
     if (store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating)
@@ -90,7 +90,7 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
       startDetailedSelectionY.value = undefined;
       stopDetailedSelectionY.value = undefined;
     }
-  }
+  };
 
   const completeZoomSelection = () => {
     if (!inSelectMode) return;

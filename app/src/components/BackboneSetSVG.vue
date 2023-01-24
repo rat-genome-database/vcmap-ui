@@ -3,9 +3,8 @@
   <rect v-if="backbone"
     data-test="track-section-svg"
     class="section"
-    :class="{selecting: isSelecting}"
-    @mouseenter="onMouseEnter(backbone, 'backbone')"
-    @mouseleave="onMouseLeave(backbone)"
+    @mouseenter="() => onMouseEnter(backbone, 'backbone')"
+    @mouseleave="() => onMouseLeave(backbone)"
     :fill="backbone.isHovered && showDataOnHover ? HOVER_HIGHLIGHT_COLOR : backbone.elementColor"
     :x="backbone.posX1" :y="backbone.posY1"
     :width="backbone.width"
@@ -26,7 +25,6 @@
     <text v-if="label.isVisible"
       data-test="bp-label"
       class="label small"
-      :class="{selecting: isSelecting}"
       :x="label.posX"
       :y="label.posY">
       {{label.text}}
@@ -37,8 +35,8 @@
   <template v-for="(datatrack, index) in datatracks" :key="index">
     <rect
       class="section clickable"
-      @mouseenter="onMouseEnter(datatrack, 'Gene')"
-      @mouseleave="onMouseLeave(datatrack)"
+      @mouseenter="() => onMouseEnter(datatrack, 'Gene')"
+      @mouseleave="() => onMouseLeave(datatrack)"
       @click="onClick($event, datatrack)"
 
       :y="datatrack.posY1"
@@ -52,7 +50,6 @@
 
   <!-- Inner selection that changes depending on Detailed panel zoom -->
   <rect v-if="!isDetailed && selectedRegion.innerSelection"
-    :class="{selecting: isSelecting}"
     stroke="green"
     fill="green"
     fill-opacity="0.5"
@@ -102,7 +99,6 @@ interface Props
 {
   showDataOnHover?: boolean;
   backboneSet: BackboneSet;
-  isSelecting?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -277,10 +273,5 @@ const highlightSelections = (selectedGeneIds: number[]) => {
 .selected-region
 {
   stroke-width: 1;
-}
-
-.selecting
-{
-  pointer-events: none;
 }
 </style>
