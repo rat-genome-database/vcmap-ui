@@ -228,7 +228,7 @@ const arePanelsLoading = computed(() => {
 
 const currentlySelectingRegion = () => {
   return (getOverviewSelectionStatus() || getDetailedSelectionStatus());
-}
+};
 
 const updateOverviewPanel = async () => {
   $log.debug('Updating Overview Panel');

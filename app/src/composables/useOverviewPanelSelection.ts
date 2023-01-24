@@ -18,7 +18,7 @@ export default function useOverviewPanelSelection(store: Store<VCMapState>) {
 
   const getOverviewSelectionStatus = () => {
     return inSelectMode;
-  }
+  };
 
   const overviewSelectionHandler = (event: any, overviewBackbone?: BackboneSection) => {
     if (store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating)
@@ -35,7 +35,7 @@ export default function useOverviewPanelSelection(store: Store<VCMapState>) {
     }
 
     completeOverviewSelection(overviewBackbone);
-  }
+  };
 
   const initOverviewSelection = (event: any) => {
     if (store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating)
@@ -75,7 +75,7 @@ export default function useOverviewPanelSelection(store: Store<VCMapState>) {
       stopOverviewSelectionY.value = undefined;
     }
 
-  }
+  };
 
   const completeOverviewSelection = (overviewBackbone?: BackboneSection) => {
     if (!inSelectMode || !overviewBackbone) return;
