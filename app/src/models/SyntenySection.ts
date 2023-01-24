@@ -52,8 +52,8 @@ export default class SyntenySection extends GenomicSection
   {
     if (this.startLabel && this.stopLabel)
     {
-      this.startLabel.posY = this.startLabelYPosition;
-      this.stopLabel.posY = this.stopLabelYPosition;
+      this.startLabel.posY = this.posY1;
+      this.stopLabel.posY = this.posY2;
     }
   }
 
@@ -61,25 +61,15 @@ export default class SyntenySection extends GenomicSection
   {
     this.startLabel = new Label({
       posX: this.posX2,
-      posY: this.startLabelYPosition,
+      posY: this.posY1,
       text: Formatter.convertBasePairToLabel(this.speciesStart) || '',
       isVisible: false,
     });
     this.stopLabel = new Label({
       posX: this.posX2,
-      posY: this.stopLabelYPosition,
+      posY: this.posY2,
       text: Formatter.convertBasePairToLabel(this.speciesStop) || '',
       isVisible: false,
     });
-  }
-
-  private get startLabelYPosition()
-  {
-    return this.isInverted ? this.posY2 : this.posY1;
-  }
-
-  private get stopLabelYPosition()
-  {
-    return this.isInverted ? this.posY1 : this.posY2;
   }
 }

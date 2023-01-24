@@ -57,10 +57,10 @@ const vuexLocal = new VuexPersistence<VCMapState>({
 const logger = createLogger({
   // Filter out frequently occurring actions/mutations (makes the console really noisy for not much benefit)
   filter: (mutation) => {
-    return mutation.type !== 'selectedData';
+    return !['selectedData', 'loadedGenes', 'loadedBlocks'].includes(mutation.type);
   },
   actionFilter: (action) => {
-    return action.type !== 'setSelectedData';
+    return !['setSelectedData', 'setLoadedGenes', 'setLoadedBlocks'].includes(action.type);
   },
 });
 
