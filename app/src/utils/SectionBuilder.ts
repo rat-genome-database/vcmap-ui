@@ -569,18 +569,18 @@ function splitBlockWithGaps(block: SyntenySection, gaps: SyntenyComponent[], thr
   });
 
   // Check to see if the gapless block ends with a gap. If not, then create and process the last synteny block
-  const finalGap = gaps[gaps.length - 1];
-  if (finalGap.backboneStop < block.backboneSection.stop)
+  const finalGap = processedGaps[processedGaps.length - 1];
+  if (finalGap.backboneSection.stop < block.backboneSection.stop)
   {
     const blockBackboneSection = new BackboneSection({
-      start: finalGap.backboneStop,
+      start: finalGap.backboneSection.stop,
       stop: block.backboneSection.stop,
       windowStart: windowStart,
       windowStop: windowStop,
       renderType: renderType,
     });
     const blockSyntenicSection = new SyntenySection({
-      start: finalGap.stop, // Should be oriented correctly regardless of inversion, since previous processed section would take it into account
+      start: finalGap.speciesStop, // Should be oriented correctly regardless of inversion, since previous processed section would take it into account
       stop: block.speciesStop, // Should be oriented correctly regardless of inversion since it was taken into account during gapless block creation
       backboneSection: blockBackboneSection,
       type: 'block',
