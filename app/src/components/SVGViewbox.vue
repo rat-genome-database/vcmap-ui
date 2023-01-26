@@ -516,12 +516,17 @@ const adjustDetailedVisibleSetsBasedOnZoom = async (zoomedSelection: SelectedReg
   if (detailedBackboneSet.value)
   {
     const startTime = Date.now();
-    detailedBackboneSet.value.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop);
+    const backboneTiming = detailedBackboneSet.value.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop);
+    const backboneEndTime = Date.now();
     detailedSyntenySets.value.forEach(set => {
       set.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop, updateCache, masterGeneMap);
     });
+    const endTime = Date.now();
 
-    $log.debug(`Navigation Time: ${Date.now() - startTime} ms`);
+    logPerformanceReport('Visible Set Adjustment Time', endTime - startTime, {
+      ...backboneTiming,
+      'synteny sets adjustment': endTime -backboneEndTime,
+    });
   }
 
   if (updateCache)
