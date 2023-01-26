@@ -43,8 +43,6 @@ export default class BackboneSection implements VCMapSVGElement
   stop: number = 0;    // stop basepair of the section for the backbone
   windowStart: number = 0;  // start basepair of the section for the backbone in the detailed view
   windowStop: number = 0;   // stop basepair of the section for the backbone in the detailed view
-  windowRatio: number = 0;  // ratio of the window bp to svg unit height
-  length: number = 0;  // length of the section for the backbone
   species?: Species;  // species that this section is from
   speciesName: string = ''; // species name
   chromosome: string = '';  // chromosome that this section is from
@@ -58,7 +56,6 @@ export default class BackboneSection implements VCMapSVGElement
   {
     this.start = params.start;
     this.stop = params.stop;
-    this.length = Math.abs(this.stop - this.start);
     this.windowStart = params.windowStart;
     this.windowStop = params.windowStop;
     this.chromosome = params.chromosome ?? '';
@@ -86,6 +83,38 @@ export default class BackboneSection implements VCMapSVGElement
   }
 
   /**
+   * Length of backbone is basepairs
+   */
+  public get length()
+  {
+    return Math.abs(this.stop - this.start);
+  }
+
+  /**
+   * SVG start position of the visible part of the backbone
+   */
+  public get windowSVGStart()
+  {
+    return (this.renderType === 'overview') ? PANEL_SVG_START + SVGConstants.overviewTrackPadding : PANEL_SVG_START;
+  }
+
+  /**
+   * SVG stop position of the visible part of the backbone
+   */
+  public get windowSVGStop()
+  {
+    return (this.renderType === 'overview') ? PANEL_SVG_STOP - SVGConstants.overviewTrackPadding : PANEL_SVG_STOP;
+  }
+
+  /**
+   * SVG middle position of the visible part of the backbone
+   */
+  public get windowSVGMiddle()
+  {
+    return this.windowSVGStart + ((this.windowSVGStop - this.windowSVGStart) / 2);
+  }
+
+  /**
    * Change the windowStart, windowStop of the backbone and regenerate SVG Y positions.
    * windowStart and windowStop are analagous to the inner selection start/stop.
    * 
@@ -101,12 +130,6 @@ export default class BackboneSection implements VCMapSVGElement
     {
       this.createLabels();
     }
-  }
-
-  public expandBaseStartAndStop(start: number, stop: number)
-  {
-    start < this.start ? this.start = start : null;
-    stop > this.stop ? this.stop = stop : null;
   }
 
   /**
@@ -128,38 +151,32 @@ export default class BackboneSection implements VCMapSVGElement
   }
 
   /**
-   * Function determines the start and stop SVG positions of this backbone section using the ratio of known windowStart and svgStart (55)
-   * 
-   * @param windowStart 
-   * @param windowStop 
+   * Function determines the start and stop SVG positions of this backbone section using the ratio of known windowStart and svgStart
    */
   private calculateYPositions()
   {
-    const svgStart = this.getWindowSVGStart();
-    const svgStop = this.getWindowSVGStop();
-    const svgLength = svgStop - svgStart;
-    const windowLength = Math.abs(this.windowStop - this.windowStart);
-    const ratio = windowLength / svgLength;
+    const svgLength = this.windowSVGStop - this.windowSVGStart;
+    const bpVisibleWindowLength = Math.abs(this.windowStop - this.windowStart);
+    const bpToSVGRatio = bpVisibleWindowLength / svgLength;
 
     // Calculate the start and stop SVG positions of this backbone section
-    this.windowRatio = ratio;
     const basepairDiff =  this.start < this.windowStart ? this.windowStart - this.start : this.start - this.windowStart;
-    const svgDiff = basepairDiff / ratio;
+    const svgDiff = basepairDiff / bpToSVGRatio;
 
     if (this.start < this.windowStart)
     {
-      this.posY1 = svgStart - svgDiff;
+      this.posY1 = this.windowSVGStart - svgDiff;
     }
     else if (this.start > this.windowStart)
     {
-      this.posY1 = svgStart + svgDiff;
+      this.posY1 = this.windowSVGStart + svgDiff;
     }
     else if (this.start === this.windowStart)
     {
-      this.posY1 = svgStart;
+      this.posY1 = this.windowSVGStart;
     }
 
-    this.posY2 = this.posY1 + ( this.length / ratio );
+    this.posY2 = this.posY1 + (this.length / bpToSVGRatio);
 
     this.height = Math.abs(this.posY2 - this.posY1);
   }
@@ -173,13 +190,13 @@ export default class BackboneSection implements VCMapSVGElement
     {
       startBPLabel = new Label({
         posX: SVGConstants.backboneXPosition - (SVGConstants.trackWidth / 2 ),
-        posY: this.getWindowSVGStart() - 3,
+        posY: this.windowSVGStart - 3,
         text: Formatter.convertBasePairToLabel(this.windowStart) ?? ''
       });
 
       stopBPLabel = new Label({
         posX: SVGConstants.backboneXPosition - (SVGConstants.trackWidth / 2 ),
-        posY: this.getWindowSVGStop() + 7,
+        posY: this.windowSVGStop + 7,
         text: Formatter.convertBasePairToLabel(this.windowStop) ?? ''
       });
     }
@@ -187,27 +204,17 @@ export default class BackboneSection implements VCMapSVGElement
     {
       startBPLabel = new Label({
         posX: SVGConstants.selectedBackboneXPosition - (SVGConstants.trackWidth / 2 ),
-        posY: this.getWindowSVGStart() + 10,
+        posY: this.windowSVGStart + 10,
         text: Formatter.convertBasePairToLabel(this.windowStart) ?? ''
       });
 
       stopBPLabel = new Label({
         posX: SVGConstants.selectedBackboneXPosition - (SVGConstants.trackWidth / 2 ),
-        posY: this.getWindowSVGStop() - 10,
+        posY: this.windowSVGStop - 10,
         text: Formatter.convertBasePairToLabel(this.windowStop) ?? ''
       });
     }
     
     this.labels = [startBPLabel, stopBPLabel];
-  }
-
-  private getWindowSVGStart()
-  {
-    return (this.renderType === 'overview') ? PANEL_SVG_START + SVGConstants.overviewTrackPadding : PANEL_SVG_START;
-  }
-
-  private getWindowSVGStop()
-  {
-    return (this.renderType === 'overview') ? PANEL_SVG_STOP - SVGConstants.overviewTrackPadding : PANEL_SVG_STOP;
   }
 }
