@@ -36,12 +36,6 @@ export default class BackboneSet extends GenomicSet
 
   public adjustVisibleSet(visibleBackboneStart: number, visibleBackboneStop: number)
   {
-    if (visibleBackboneStart < this.backbone.start || visibleBackboneStop > this.backbone.stop)
-    {
-      //expand base start/stop of backbone to include new range accomodating for the new window
-      this.backbone.expandBaseStartAndStop(visibleBackboneStart, visibleBackboneStart);
-    }
-
     // Change visible backbone section
     this.backbone.changeWindowStartAndStop(visibleBackboneStart, visibleBackboneStop);
 

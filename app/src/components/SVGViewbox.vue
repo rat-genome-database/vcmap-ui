@@ -409,7 +409,7 @@ const updateDetailsPanel = async () => {
     // Create the backbone track for the entire base selection at the updated Detailed panel resolution
     const backboneTrackStart = Date.now();
 
-    const detailedBackbone = createBackboneSection(backboneSpecies, backboneChromosome, originalSelectedBackboneRegion.baseSelection.basePairStart, originalSelectedBackboneRegion.baseSelection.basePairStop, 'detailed');
+    const detailedBackbone = createBackboneSection(backboneSpecies, backboneChromosome, 0, backboneChromosome.seqLength, 'detailed');
     timeCreateBackboneTrack = Date.now() - backboneTrackStart;
 
     // Create the backbone data tracks for the entire selection at the updated Detailed panel resolution
