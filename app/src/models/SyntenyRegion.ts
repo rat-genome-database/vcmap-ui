@@ -19,6 +19,7 @@ export default class SyntenyRegion
   syntenyGaps: SyntenySection[] = [];                         // synteny gaps occupying this region
   syntenyBlocks: SyntenySection[] = [];                       // synteny blocks occupying this region
   datatrackSections: DatatrackSection[] = [];                 // DatatrackSections belonging to this SyntenyRegion
+  geneIds: number[] = [];                                     // Gene IDs belonging to genes in this SyntenyRegion
   orthologLines: OrthologLine[] = [];                         // OrthologLines belonging to this SyntenyRegion
   backboneSection: BackboneSection | undefined;               // backbone section that this synteny region is aligned to
   species: string = '';                                       // species that this region is from

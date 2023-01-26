@@ -122,7 +122,10 @@ export default class BackboneSection implements VCMapSVGElement
     const startingSVGY = this.posY1 + (start - this.start) / basePairToHeightRatio;
     const svgHeight = (stop - start) / basePairToHeightRatio;
 
-    const selection = new BackboneSelection(new SelectedRegion(startingSVGY, svgHeight, start, stop), chromosome);
+    //calculate full chromosome selection
+    const fullBackboneChr = new SelectedRegion(PANEL_SVG_START, ( chromosome.seqLength / basePairToHeightRatio ), 0, chromosome.seqLength);
+
+    const selection = new BackboneSelection(new SelectedRegion(startingSVGY, svgHeight, start, stop), chromosome, fullBackboneChr);
     selection.generateInnerSelection(start, stop, basePairToHeightRatio);
     return selection;
   }

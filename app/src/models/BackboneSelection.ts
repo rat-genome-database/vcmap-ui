@@ -45,8 +45,18 @@ export class BufferZone
 export default class BackboneSelection
 {
   chromosome?: Chromosome;
-  baseSelection: SelectedRegion;
-  innerSelection?: SelectedRegion;
+  //full backbone selection is the entire backbone chromosome selection range
+  fullBackboneSelection?: SelectedRegion;
+  //bufferzone is range above and below the viewport that is used to determine when to load more data
+  bufferZoneSelection?: SelectedRegion;
+  //viewport selection is the current viewport selection range
+  viewPortSelection?: SelectedRegion;
+
+
+  innerSelection?: SelectedRegion;   //TODO: remove
+  baseSelection: SelectedRegion;     //TODO: remove
+  
+
   bufferZone: BufferZone;
   zoomLevel: number = 1;
   orthologData?: any;
@@ -55,8 +65,12 @@ export default class BackboneSelection
   private shiftPercent: number = 0.2; // TODO: configurable?
   private bufferZonePercent: number = 0.15; // TODO: configurable?
 
-  constructor(baseSelection: SelectedRegion, chromosome?: Chromosome)
+  constructor(baseSelection: SelectedRegion, chromosome?: Chromosome, fullBackboneSelection?: SelectedRegion, viewPortSelection?: SelectedRegion)
   {
+    this.baseSelection = baseSelection;
+    this.chromosome = chromosome;
+    this.fullBackboneSelection = fullBackboneSelection;
+    this.viewPortSelection = viewPortSelection;
     this.baseSelection = baseSelection;
     this.chromosome = chromosome;
 

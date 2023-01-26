@@ -45,6 +45,7 @@ export interface VCMapState
   selectedGeneIds: number[];
 
   detailedBasePairRange: BasePairRange;
+  zoomLevel: number;
 
   isDetailedPanelUpdating: boolean;
   isOverviewPanelUpdating: boolean;
@@ -91,6 +92,7 @@ export default createStore({
     selectedGeneIds: [],
 
     detailedBasePairRange: { start: 0, stop: 0 },
+    zoomLevel: 1,
 
     isDetailedPanelUpdating: false,
     isOverviewPanelUpdating: false,
@@ -163,6 +165,9 @@ export default createStore({
     backboneOrthologs(state: VCMapState, orthologs: any) {
       state.selectedBackboneRegion.orthologData = orthologs;
     },
+    zoomLevel(state: VCMapState, zoomLevel: number) {
+      state.zoomLevel = zoomLevel;
+    }
   },
 
   actions: {
@@ -261,6 +266,9 @@ export default createStore({
     },
     setBackboneOrthologData(context: ActionContext<VCMapState, VCMapState>, orthologs: any) {
       context.commit('backboneOrthologs', orthologs);
+    },
+    setZoomLevel(context: ActionContext<VCMapState, VCMapState>, zoomLevel: number) {
+      context.commit('zoomLevel', zoomLevel);
     }
   },
 

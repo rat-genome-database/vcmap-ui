@@ -1,6 +1,7 @@
 import { SpeciesSyntenyData } from "@/api/SyntenyApi";
 import SVGConstants from "@/utils/SVGConstants";
 import DatatrackSection from "./DatatrackSection";
+import { LoadedGene } from "./DatatrackSection";
 import { GenomicSet } from "./GenomicSet";
 import Label, { GeneLabel } from "./Label";
 import OrthologLine from "./OrthologLine";
@@ -52,11 +53,30 @@ export default class SyntenyRegionSet extends GenomicSet
     this.sortBasePairLabels();
   }
 
-  public adjustVisibleSet(visibleBackboneStart: number, visibleBackboneStop: number)
+  public adjustVisibleSet(visibleBackboneStart: number, visibleBackboneStop: number,  updateCache: boolean, masterGeneMap?: Map<number, LoadedGene>)
   {
-    this.regions.forEach(region => {
-      region.adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
-    });
+    let removedIds: number[] = [];
+    for (let index = 0; index < this.regions.length; index++)
+    {
+      const currRegion = this.regions[index];
+      if (updateCache && this.regionIsVisible(currRegion, visibleBackboneStart, visibleBackboneStop))
+      {
+        removedIds = removedIds.concat(currRegion.geneIds);
+        this.regions.splice(index, 1);
+        index--;
+      }
+      else
+      {
+        currRegion.adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
+      }
+    }
+
+    if (updateCache && masterGeneMap && removedIds.length > 0)
+    {
+      removedIds.forEach((id) => masterGeneMap.delete(id));
+    }
+    
+    
     this.processGeneLabels();
   }
 
@@ -234,5 +254,10 @@ export default class SyntenyRegionSet extends GenomicSet
     });
     this.datatrackLabels = allLabels;
     mergeGeneLabels(this.datatrackLabels as GeneLabel[]);
+  }
+
+  private regionIsVisible(region: SyntenyRegion, start: number, stop: number): boolean
+  {
+    return ( region.gaplessBlock.backboneSection.start >= start && region.gaplessBlock.backboneSection.start < stop ) || (region.gaplessBlock.backboneSection.stop <= stop && region.gaplessBlock.backboneSection.stop > start);
   }
 }

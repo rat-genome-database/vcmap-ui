@@ -211,6 +211,8 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
       const processedGeneInfo = syntenicDatatrackBuilder(blockGenes, currSyntenicRegion, windowStart, windowStop, true, renderType, masterGeneMap);
       currSyntenicRegion.addDatatrackSections(processedGeneInfo.genomicData);
       currSyntenicRegion.addOrthologLines(processedGeneInfo.orthologLines);
+      currSyntenicRegion.geneIds = processedGeneInfo.geneIds;
+
       currSyntenicRegion.datatrackLabels = [];
       for (let i = 0; i < processedGeneInfo.genomicData.length; i++)
       {
@@ -220,6 +222,12 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
           allGeneLabels.push(geneData.label);
         }
       }
+
+      /* if(region.block.backboneStart == 68121445)
+      {
+        console.log('GENES', processedGeneInfo);
+      } */
+      
       //Step 3.2: Capture processed gene data and store in block
       //Step 3.3: Capture returned map of processed genes and add to master map of processed genes
     }
@@ -256,6 +264,7 @@ function syntenicDatatrackBuilder(genomicData: Gene[], syntenyRegion: SyntenyReg
 {
   //Step 1: For each gene, convert to backbone equivalents using blockInfo and blockRatio
   const processedGenomicData: GeneDatatrack[] = [];
+  const processedGeneIds: number[] = [];
   const processedOrthologs: OrthologLine[] = [];
   if (isGene)
   {
@@ -285,6 +294,10 @@ function syntenicDatatrackBuilder(genomicData: Gene[], syntenyRegion: SyntenyReg
       );
 
       const geneSymbol = geneDatatrackSection.gene.symbol.toLowerCase();
+      if (!processedGeneIds.includes(genomicElement.rgdId))
+      {
+        processedGeneIds.push(genomicElement.rgdId);
+      }
       const loadedGene = masterGeneMap.get(genomicElement.rgdId);
       if (loadedGene)
       {
@@ -336,7 +349,7 @@ function syntenicDatatrackBuilder(genomicData: Gene[], syntenyRegion: SyntenyReg
   }
 
   processedGenomicData.sort((a, b) => a.speciesStart - b.speciesStart);
-  return { genomicData: processedGenomicData, masterGeneMap: masterGeneMap, orthologLines: processedOrthologs };
+  return { genomicData: processedGenomicData, masterGeneMap: masterGeneMap, orthologLines: processedOrthologs, geneIds: processedGeneIds };
 
   //Step 4: Capture gene as processed in a map to return for finding ortholog
 }
