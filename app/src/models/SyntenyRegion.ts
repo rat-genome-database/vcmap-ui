@@ -66,6 +66,18 @@ export default class SyntenyRegion
     this.orthologLines.length > 0 ? this.orthologLines = this.orthologLines.concat(orthologLine) : this.orthologLines = orthologLine;
   }
 
+  public get sortedSyntenicBlocksAndGaps()
+  {
+    let blocksAndGaps: SyntenySection[] = this.syntenyBlocks;
+    blocksAndGaps = blocksAndGaps.concat(this.syntenyGaps);
+    blocksAndGaps.sort((a, b) => {
+      // If inverted, sections with largest speciesStart should be at the front of the array
+      return (this.gaplessBlock.isInverted) ? (a.speciesStart - b.speciesStart) * -1 : (a.speciesStart - b.speciesStart);
+    });
+
+    return blocksAndGaps;
+  }
+
   private get genomicSections()
   {
     let genomicSections: GenomicSection[] = [this.gaplessBlock];
