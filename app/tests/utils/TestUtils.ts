@@ -71,6 +71,7 @@ export namespace TestUtils
 
         selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
         detailedBasePairRange: { start: 0, stop: 0 },
+        zoomLevel: 1,
 
         overviewBasePairToHeightRatio: 1000,
         overviewSyntenyThreshold: 0,
