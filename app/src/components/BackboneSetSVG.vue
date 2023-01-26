@@ -14,7 +14,7 @@
   <text v-if="backbone"
     class="chromosome-label"
     :x="backbone.posX1 + (SVGConstants.trackWidth / 2)"
-    :y="backbone.posY1 + (backbone.height / 2)"
+    :y="backbone.windowSVGMiddle"
     dominant-baseline="middle"
     text-anchor="middle">
     {{backbone.chromosome}}
