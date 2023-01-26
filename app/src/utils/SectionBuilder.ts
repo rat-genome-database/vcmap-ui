@@ -208,7 +208,7 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
     {
       //Step 3.1: Pass block data and gene data to gene processing pipeline
       //NOTE: We might want to instead associate block data with gene data, store data in an array, and pass all gene data at once for processing in order to avoid multiple passes of gene data for initial processing and then finding orthologs
-      const processedGeneInfo = syntenicDatatrackBuilder(blockGenes, gaplessSyntenyBlock, blockRatio, windowStart, windowStop, true, renderType, masterGeneMap);
+      const processedGeneInfo = syntenicDatatrackBuilder(blockGenes, currSyntenicRegion, windowStart, windowStop, true, renderType, masterGeneMap);
       currSyntenicRegion.addDatatrackSections(processedGeneInfo.genomicData);
       currSyntenicRegion.addOrthologLines(processedGeneInfo.orthologLines);
       currSyntenicRegion.datatrackLabels = [];
@@ -252,7 +252,7 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
  * @param genomicData             genomic data for current block
  * @param blockInfo               info about block (start, stop, etc)
  */
-function syntenicDatatrackBuilder(genomicData: Gene[], syntenyBlock: SyntenySection, blockRatio: number, windowStart: number, windowStop: number, isGene: boolean, renderType: RenderType, masterGeneMap: Map<number, LoadedGene>)
+function syntenicDatatrackBuilder(genomicData: Gene[], syntenyRegion: SyntenyRegion, windowStart: number, windowStop: number, isGene: boolean, renderType: RenderType, masterGeneMap: Map<number, LoadedGene>)
 {
   //Step 1: For each gene, convert to backbone equivalents using blockInfo and blockRatio
   const processedGenomicData: GeneDatatrack[] = [];
@@ -261,14 +261,28 @@ function syntenicDatatrackBuilder(genomicData: Gene[], syntenyBlock: SyntenySect
   {
     genomicData.forEach((genomicElement: Gene) => {
       //Get backbone equivalents for gene data
-      const backboneEquivalents = convertSyntenicDataToBackboneData(genomicElement, syntenyBlock, blockRatio);
+      const backboneEquivalents = convertSyntenicDataToBackboneData(genomicElement, syntenyRegion);
       const currSpecies = genomicElement.speciesName.toLowerCase();
 
       //Create gene backbone section
-      const geneBackboneSection = new BackboneSection({ start: backboneEquivalents.backboneStart, stop: backboneEquivalents.backboneStop, windowStart: windowStart, windowStop: windowStop, renderType, speciesName: currSpecies });
-
-      //Create DatatrackSection for each gene
-      const geneDatatrackSection = new GeneDatatrack({ start: genomicElement.start, stop: genomicElement.stop, backboneSection: geneBackboneSection }, genomicElement);
+      const geneBackboneSection = new BackboneSection({
+        start: backboneEquivalents.backboneStart, 
+        stop: backboneEquivalents.backboneStop, 
+        windowStart: windowStart, 
+        windowStop: windowStop, 
+        renderType, 
+        speciesName: currSpecies,
+      });
+      
+      //Create DatatrackSection for each gene (account for inversion in start/stops)
+      const geneDatatrackSection = new GeneDatatrack(
+        {
+          start: syntenyRegion.gaplessBlock.isInverted ? genomicElement.stop : genomicElement.start,
+          stop: syntenyRegion.gaplessBlock.isInverted ? genomicElement.start : genomicElement.stop,
+          backboneSection: geneBackboneSection,
+        }, 
+        genomicElement
+      );
 
       const geneSymbol = geneDatatrackSection.gene.symbol.toLowerCase();
       const loadedGene = masterGeneMap.get(genomicElement.rgdId);
@@ -327,39 +341,83 @@ function syntenicDatatrackBuilder(genomicData: Gene[], syntenyBlock: SyntenySect
   //Step 4: Capture gene as processed in a map to return for finding ortholog
 }
 
-function convertSyntenicDataToBackboneData(genomicObject: SyntenyComponent | Gene, blockInfo: SyntenySection, blockRatio: number)
+function convertSyntenicDataToBackboneData(genomicObject: SyntenyComponent | Gene, syntenyRegion: SyntenyRegion)
 {
-  //First calculate the difference between the start of the block and the start of the gene
-  if (blockInfo.orientation == '-')
+  const syntenySections = syntenyRegion.sortedSyntenicBlocksAndGaps;
+  const isInverted = syntenyRegion.gaplessBlock.isInverted;
+
+  // Orient gene start/stop based on synteny block orientation
+  const geneStart = syntenyRegion.gaplessBlock.isInverted ? genomicObject.stop : genomicObject.start;
+  const geneStop = syntenyRegion.gaplessBlock.isInverted ? genomicObject.start : genomicObject.stop;
+
+  // Find which block this gene starts in and determine a starting backbone position based on that block's "backbone bp/block bp" ratio
+  let startingSection: SyntenySection | null = null;
+  let endingSection: SyntenySection | null = null;
+  for (let i = 0; i < syntenySections.length; i++)
   {
-    const geneStopDiff = blockInfo.speciesStop - genomicObject.stop;
+    if (startingSection && endingSection)
+    {
+      break;
+    }
 
-    //Convert the difference to backbone equivalents
-    const geneStartBackboneDiff = Math.max(geneStopDiff, 0) * blockRatio;
-    const geneBackboneStart = blockInfo.backboneSection.start + geneStartBackboneDiff;
+    if (isInverted)
+    {
+      if (geneStart <= syntenySections[i].speciesStart && geneStart >= syntenySections[i].speciesStop)
+      {
+        startingSection = syntenySections[i];
+      }
 
-    //Calculate height and stop of gene in backbone equivalents
-    const geneLength = genomicObject.stop - genomicObject.start;
-    const geneBackboneLength = geneLength * blockRatio;
-    const geneBackboneStop = geneBackboneStart - geneBackboneLength;
+      // The ending section is when the gene stop
+      if (geneStop <= syntenySections[i].speciesStart && geneStop >= syntenySections[i].speciesStop)
+      {
+        endingSection = syntenySections[i];
+      }
+    }
+    else
+    {
+      if (geneStart >= syntenySections[i].speciesStart && geneStart <= syntenySections[i].speciesStop)
+      {
+        startingSection = syntenySections[i];
+      }
 
-    return { backboneStart: Math.ceil(geneBackboneStart), backboneStop: Math.ceil(geneBackboneStop), };
+      if (geneStop >= syntenySections[i].speciesStart && geneStop <= syntenySections[i].speciesStop)
+      {
+        endingSection = syntenySections[i];
+      }
+    }
+  }
+
+  let backboneStart;
+  let backboneStop;
+
+  if (startingSection)
+  {
+    const geneStartDiff = isInverted ? startingSection.speciesStart - geneStart : geneStart - startingSection.speciesStart;
+    const startBackboneDiff = Math.max(geneStartDiff, 0) * startingSection.blockRatio;
+    backboneStart = startingSection.backboneSection.start + startBackboneDiff;
   }
   else
   {
-    const geneStartDiff = genomicObject.start - blockInfo.speciesStart;
-
-    //Convert the difference to backbone equivalents
-    const geneStartBackboneDiff = Math.max(geneStartDiff, 0) * blockRatio;
-    const geneBackboneStart = blockInfo.backboneSection.start + geneStartBackboneDiff;
-
-    //Calculate height and stop of gene in backbone equivalents
-    const geneLength = genomicObject.stop - genomicObject.start;
-    const geneBackboneLength = geneLength * blockRatio;
-    const geneBackboneStop = geneBackboneStart + geneBackboneLength;
-
-    return { backboneStart: Math.ceil(geneBackboneStart), backboneStop: Math.ceil(geneBackboneStop), };
+    // Default to top of first section
+    backboneStart = syntenySections[0].backboneSection.start;
   }
+
+  if (endingSection)
+  {
+    const geneStopDiff = isInverted ? geneStop - endingSection.speciesStop : endingSection.speciesStop - geneStop;
+    const stopBackboneDiff = Math.max(geneStopDiff, 0) * endingSection.blockRatio;
+    backboneStop = endingSection.backboneSection.stop - stopBackboneDiff;
+  }
+  else
+  {
+    // Default to end of last section
+    backboneStop = syntenySections[syntenySections.length - 1].backboneSection.stop;
+  }
+
+  return {
+    backboneStart,
+    backboneStop,
+  };
 }
 
 
