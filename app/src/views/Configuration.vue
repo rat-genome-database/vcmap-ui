@@ -192,7 +192,7 @@
                     :disabled="!backboneChromosome"
                     suffix="bp"
                     :step="1000"
-                    :max="maxPosition"
+                    :max="maxPosition ?? undefined"
                     :min="1"
                   />
                 </div>
