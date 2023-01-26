@@ -34,16 +34,35 @@ export default class BackboneSet extends GenomicSet
     this.setDatatrackXPositions();
   }
 
+  /**
+   * Adjusts the Y positions of all of the data associated with this BackboneSet
+   * 
+   * @param visibleBackboneStart backbone start bp in visible selection
+   * @param visibleBackboneStop backbone stop bp in visible selection
+   * @returns an object containing timing info so we can log it if we choose
+   */
   public adjustVisibleSet(visibleBackboneStart: number, visibleBackboneStop: number)
   {
+    const startTime = Date.now();
+
     // Change visible backbone section
     this.backbone.changeWindowStartAndStop(visibleBackboneStart, visibleBackboneStop);
+    const backboneEndTime = Date.now();
 
     this.datatracks.forEach(datatrack => {
       datatrack.adjustYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
       datatrack.recalculateLabelYPositions();
     });
+    const datatracksEndTime = Date.now();
+
     this.processGeneLabels();
+    const geneLabelsEndTime = Date.now();
+
+    return {
+      'Backbone adjustment time': backboneEndTime - startTime,
+      'Backbone datatracks adjustment time': datatracksEndTime - backboneEndTime,
+      'Backbone gene labels processing time': geneLabelsEndTime - datatracksEndTime,
+    };
   }
 
   public updateBackboneGenes(genes: Gene[])
