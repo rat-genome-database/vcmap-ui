@@ -18,6 +18,14 @@ watch(() => store.state.isDetailedPanelUpdating, (isUpdating) => {
   if (!isUpdating)
   {
     zoomLevel.value = store.state.selectedBackboneRegion.zoomLevel;
+    store.dispatch('setZoomLevel', zoomLevel.value);
+  }
+});
+
+watch(() => store.state.zoomLevel, () => {
+  if (zoomLevel.value != store.state.zoomLevel)
+  {
+    zoomLevel.value = store.state.zoomLevel;
   }
 });
 
