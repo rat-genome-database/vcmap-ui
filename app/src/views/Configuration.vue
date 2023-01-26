@@ -324,7 +324,6 @@ watch(backboneAssembly, () => {
 });
 
 watch(activeTab, async () => {
-  console.log('tab switched');
   await nextTick();
 });
 
@@ -441,11 +440,8 @@ async function setChromosomeOptions(map: SpeciesMap | null)
 
 function setDefaultStartAndStopPositions(chromosome: Chromosome | null)
 {
-  console.log('setting default positions');
   startPosition.value = 0;
-  console.log('after start');
   stopPosition.value = chromosome?.seqLength ?? 0;
-  console.log('after stop', startPosition.value, stopPosition.value);
   maxPosition.value = backboneChromosome.value?.seqLength ?? null;
 }
 
