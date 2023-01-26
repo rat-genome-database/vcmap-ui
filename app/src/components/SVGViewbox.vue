@@ -324,21 +324,10 @@ const updateOverviewPanel = async () => {
   }
   else
   {
-    // Recreate the BackboneSelection model b/c the model loses its functions after page refresh (vuex-persist plugin does not preserve functions on objects)
-    const recreatedSelection = new BackboneSelection(
-      new SelectedRegion(prevBackboneSelection.baseSelection.svgYPoint, prevBackboneSelection.baseSelection.svgHeight, prevBackboneSelection.baseSelection.basePairStart, prevBackboneSelection.baseSelection.basePairStop), 
-      prevBackboneSelection.chromosome
-    );
-    if (prevBackboneSelection.innerSelection)
-    {
-      recreatedSelection.generateInnerSelection(prevBackboneSelection.innerSelection.basePairStart, prevBackboneSelection.innerSelection.basePairStop, store.state.overviewBasePairToHeightRatio);
-    }
-    else
-    {
-      recreatedSelection.generateInnerSelection(prevBackboneSelection.baseSelection.basePairStart, prevBackboneSelection.baseSelection.basePairStop, store.state.overviewBasePairToHeightRatio);
-    }
-    
-    store.dispatch('setBackboneSelection', recreatedSelection);
+    console.log('RECREATING SELECTION');
+    const selection = overviewBackbone.generateBackboneSelection(0, backboneChromosome.seqLength, store.state.overviewBasePairToHeightRatio, backboneChromosome);
+    selection.generateInnerSelection(prevBackboneSelection.innerSelection.basePairStart ?? 0, prevBackboneSelection.innerSelection.basePairStop ?? backboneChromosome.seqLength, store.state.overviewBasePairToHeightRatio);
+    store.dispatch('setBackboneSelection', selection);
   }
 
   enableProcessingLoadMask.value = false;
@@ -355,7 +344,6 @@ const updateDetailsPanel = async () => {
 
   const detailedUpdateStart = Date.now();
   enableProcessingLoadMask.value = true;
-  store.dispatch('setIsDetailedPanelUpdating', true);
 
   const backboneSpecies = store.state.species;
   const backboneChromosome = store.state.chromosome;
@@ -440,19 +428,12 @@ const updateDetailsPanel = async () => {
     timeCreateBackboneSet = Date.now() - backboneSetStart;
 
   }
-  else
-  {
-    //otherwise, we have previously processed information and need to update it
-
-    console.log('POPULATED BBone');
-  }
 
 
 
   //no previously processed data, so we need to create the synteny tracks/inital load
   if (detailedSyntenySets.value.length == 0)
   {
-    console.log('REBUILDING');
     const syntenyTracksStart = Date.now();
     const detailedSyntenyData = await createSyntenicRegionsAndDatatracks(
       store.state.comparativeSpecies,
@@ -473,12 +454,11 @@ const updateDetailsPanel = async () => {
     const adjustVisibleRegionStart = Date.now();
     adjustDetailedVisibleSetsBasedOnZoom(zoomedSelection, false);
     timeAdjustVisibleRegion = Date.now() - adjustVisibleRegionStart;
-
+    enableProcessingLoadMask.value = false;
   }
   else
   {
     //detailedSyntenySets.value = [];
-    console.log('ADJUSTING Synteny');
     adjustDetailedVisibleSetsBasedOnZoom(zoomedSelection, true);
   }
 
@@ -499,10 +479,6 @@ const updateDetailsPanel = async () => {
     geneReload = true;
     return;
   }
-
-
-  enableProcessingLoadMask.value = false;
-  store.dispatch('setIsDetailedPanelUpdating', false);
 
   const timeDetailedUpdate= Date.now() - detailedUpdateStart;
   const timeDetailedUpdateOther = timeDetailedUpdate - (
@@ -525,6 +501,7 @@ const updateDetailsPanel = async () => {
 };
 
 const adjustDetailedVisibleSetsBasedOnZoom = async (zoomedSelection: SelectedRegion, updateCache: boolean) => {
+  enableProcessingLoadMask.value = true;
   let masterGeneMap: Map<number, LoadedGene> | null = store.state.loadedGenes;
   let masterBlockMap: Map<number, LoadedBlock> | null = new Map<number, LoadedBlock>();
   const originalSelectedBackboneRegion = store.state.selectedBackboneRegion;
@@ -568,6 +545,14 @@ const adjustDetailedVisibleSetsBasedOnZoom = async (zoomedSelection: SelectedReg
     updateSyntenyData(detailedSyntenyData.syntenyRegionSets);
     updateMasterGeneMap(detailedSyntenyData.masterGeneMap);
   }
+
+
+  const originalRegionLength = (originalSelectedBackboneRegion.baseSelection.basePairStop - originalSelectedBackboneRegion.baseSelection.basePairStart);
+  const detailedRegionLength = (zoomedSelection.basePairStop - zoomedSelection.basePairStart);
+  const tempZoomLevel = parseFloat((1 / (detailedRegionLength / originalRegionLength)).toFixed(2));
+
+  store.dispatch('setZoomLevel', tempZoomLevel);
+  enableProcessingLoadMask.value = false;
 };
 
 const navigateUp = () => {
@@ -600,13 +585,13 @@ const navigateDown = () => {
     // Adjust the inner selection on the selected region
     selectedRegion.moveInnerSelectionDown(store.state.overviewBasePairToHeightRatio);
     checkAndUpdateForBufferzone(selectedRegion.innerSelection.basePairStart, selectedRegion.innerSelection.basePairStop);
-    adjustDetailedVisibleSetsBasedOnZoom(selectedRegion.innerSelection);
+    adjustDetailedVisibleSetsBasedOnZoom(selectedRegion.innerSelection, false);
   }
   else
   {
     //query for data below current base selection and append it to current data
     expandBaseSelection('down');
-    adjustDetailedVisibleSetsBasedOnZoom(selectedRegion.innerSelection);
+    adjustDetailedVisibleSetsBasedOnZoom(selectedRegion.innerSelection, false);
   }
 };
 
@@ -804,6 +789,7 @@ const updateSyntenyData = (syntenyRegionSets: SyntenyRegionSet[]) =>
         syntenySet.addRegions(newSyntenySet.regions);
         syntenySet.addDatatrackLabels(newSyntenySet.datatrackLabels);
       }
+      syntenySet.processGeneLabels();
     });
   }
   else
