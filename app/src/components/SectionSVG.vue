@@ -20,23 +20,43 @@
   </template>
 
   <!-- Detailed Panel Synteny Postion Labels -->
-  <template v-if="region.gaplessBlock.posY1 < PANEL_SVG_START && region.gaplessBlock.posY2 > PANEL_SVG_START">
-    <text
-      class="label small"
-      :x="region.gaplessBlock.posX1 - 5"
-      :y="PANEL_SVG_START + 10"
-    >
-      {{ calculateSectionStartPositionLabel(region.gaplessBlock) }}
-    </text>
-  </template>
-  <template v-if="region.gaplessBlock.posY2 > PANEL_SVG_STOP && region.gaplessBlock.posY1 < PANEL_SVG_STOP">
-    <text
-      class="label small"
-      :x="region.gaplessBlock.posX1 - 5"
-      :y="PANEL_SVG_STOP - 10"
-    >
-      {{ calculateSectionStopPositionLabel(region.gaplessBlock) }}
-    </text>
+  <template v-if="!showStartStop">
+    <template v-if="region.gaplessBlock.posY1 < PANEL_SVG_START && region.gaplessBlock.posY2 > PANEL_SVG_START">
+      <text
+        class="label small"
+        :x="region.gaplessBlock.posX1 - 5"
+        :y="PANEL_SVG_START + 10"
+      >
+        {{ calculateSectionStartPositionLabel(region.gaplessBlock) }}
+      </text>
+    </template>
+    <template v-else>
+      <text
+        class="label small"
+        :x="region.gaplessBlock.posX1 - 5"
+        :y="region.gaplessBlock.posY1"
+      >
+        {{region.gaplessBlock.startLabel.text}}
+      </text>
+    </template>
+    <template v-if="region.gaplessBlock.posY2 > PANEL_SVG_STOP && region.gaplessBlock.posY1 < PANEL_SVG_STOP">
+      <text
+        class="label small"
+        :x="region.gaplessBlock.posX1 - 5"
+        :y="PANEL_SVG_STOP - 10"
+      >
+        {{ calculateSectionStopPositionLabel(region.gaplessBlock) }}
+      </text>
+    </template>
+    <template v-else>
+      <text
+        class="label small"
+        :x="region.gaplessBlock.posX1 - 5"
+        :y="region.gaplessBlock.posY1"
+      >
+        {{region.gaplessBlock.stopLabel.text}}
+      </text>
+    </template>
   </template>
 
   <GapSVG v-for="(gapSection,index) in level1Gaps" :key="index" :gap-section="gapSection" />
