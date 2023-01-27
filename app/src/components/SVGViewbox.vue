@@ -581,9 +581,9 @@ const adjustDetailedVisibleSetsBasedOnZoom = async (zoomedSelection: SelectedReg
 };
 
 const navigateUp = () => {
-  if (isNavigationUpDisabled.value) return;
-
   const selectedRegion = store.state.selectedBackboneRegion;
+
+  if (isNavigationUpDisabled.value || selectedRegion.innerSelection == null) return;
 
   if (selectedRegion.innerSelection.length != selectedRegion.baseSelection.length)
   {
@@ -601,9 +601,9 @@ const navigateUp = () => {
 };
 
 const navigateDown = () => {
-  if (isNavigationDownDisabled.value) return;
-
   const selectedRegion = store.state.selectedBackboneRegion;
+
+  if (isNavigationDownDisabled.value || selectedRegion.innerSelection == null) return;
 
   if (selectedRegion.innerSelection.length != selectedRegion.baseSelection.length)
   {

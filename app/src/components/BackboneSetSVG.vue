@@ -49,7 +49,7 @@
   </template>
 
   <!-- Inner selection that changes depending on Detailed panel zoom -->
-  <rect v-if="!isDetailed && selectedRegion.innerSelection"
+  <rect v-if="!isDetailed && selectedRegion.innerSelection != null && selectedRegion.innerSelection.svgHeight > 0"
     stroke="green"
     fill="green"
     fill-opacity="0.5"
@@ -57,18 +57,18 @@
     :width="SVGConstants.trackWidth + INNER_SELECTION_EXTRA_WIDTH"
     :height="selectedRegion.innerSelection.svgHeight" />
 
-  <template v-if="(!isDetailed && selectedRegion.innerSelection)">
-    <text v-if="!isDetailed && selectedRegion.innerSelection?.svgHeight > 0 && selectedRegion.innerSelection?.svgYPoint - selectedRegion.baseSelection.svgYPoint > 6"
+  <template v-if="!isDetailed && selectedRegion.innerSelection != null && selectedRegion.innerSelection.svgHeight > 0">
+    <text v-if="selectedRegion.innerSelection.svgYPoint > backbone.posY1 + 10"
       class="label small"
-      :x="backbone.posX1 - 3"
-      :y="selectedRegion.innerSelection?.svgYPoint - 1">
+      :x="backbone.posX1 - 5"
+      :y="selectedRegion.innerSelection.svgYPoint - 2">
         {{ Formatter.convertBasePairToLabel(selectedRegion.innerSelection.basePairStart) }}
     </text>
     
-    <text v-if="!isDetailed && selectedRegion.innerSelection"
+    <text v-if="selectedRegion.innerSelection.svgYPoint + selectedRegion.innerSelection.svgHeight < backbone.posY2 - 10"
       class="label small"
-      :x="backbone.posX1 - 3"
-      :y="selectedRegion.innerSelection?.svgYPoint + selectedRegion.innerSelection.svgHeight + 6">
+      :x="backbone.posX1 - 5"
+      :y="selectedRegion.innerSelection.svgYPoint + selectedRegion.innerSelection.svgHeight + 7">
         {{ Formatter.convertBasePairToLabel(selectedRegion.innerSelection.basePairStop) }}
     </text>
   </template>
