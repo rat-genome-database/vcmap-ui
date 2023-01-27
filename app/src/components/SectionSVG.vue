@@ -20,7 +20,7 @@
   </template>
 
   <!-- Detailed Panel Synteny Postion Labels -->
-  <template v-if="!showStartStop">
+  <template v-if="!showStartStop && region.gaplessBlock.startLabel.isVisible">
     <template v-if="region.gaplessBlock.posY1 < PANEL_SVG_START && region.gaplessBlock.posY2 > PANEL_SVG_START">
       <text
         class="label small"
@@ -33,6 +33,7 @@
     <template v-else>
       <text
         class="label small"
+        dominant-baseline="hanging"
         :x="region.gaplessBlock.posX1 - 5"
         :y="region.gaplessBlock.posY1"
       >
@@ -51,8 +52,9 @@
     <template v-else>
       <text
         class="label small"
+        dominant-baseline="auto"
         :x="region.gaplessBlock.posX1 - 5"
-        :y="region.gaplessBlock.posY1"
+        :y="region.gaplessBlock.posY2"
       >
         {{region.gaplessBlock.stopLabel.text}}
       </text>
