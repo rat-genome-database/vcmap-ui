@@ -122,7 +122,13 @@
       :width="SVGConstants.overviewPanelWidth" :height="stopOverviewSelectionY - startOverviewSelectionY" />
   </svg>
 
-  <VCMapDialog v-model:show="showDialog" :header="dialogHeader" :message="dialogMessage" />
+  <VCMapDialog 
+    v-model:show="showDialog" 
+    :header="dialogHeader" 
+    :message="dialogMessage" 
+    :show-back-button="showDialogBackButton" 
+    :on-confirm-callback="(isMissingSynteny) ? () => {allowDetailedPanelProcessing = true} : undefined"
+  />
   <LoadingSpinnerMask v-if="enableProcessingLoadMask" :style="getDetailedPosition()"></LoadingSpinnerMask>
 </template>
 
@@ -142,7 +148,6 @@ import SelectedData from '@/models/SelectedData';
 import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
 import { key } from '@/store';
 import { backboneDetailedError, backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError } from '@/utils/VCMapErrors';
-import SyntenyApi, { SpeciesSyntenyData, SyntenyRequestParams, SyntenyComponent } from '@/api/SyntenyApi';
 import { createSyntenicRegionsAndDatatracks,  } from '@/utils/SectionBuilder';
 import useOverviewPanelSelection from '@/composables/useOverviewPanelSelection';
 import { useLogger } from 'vue-logger-plugin';
@@ -161,10 +166,12 @@ import LoadingSpinnerMask from './LoadingSpinnerMask.vue';
 const store = useStore(key);
 const $log = useLogger();
 
-const { showDialog, dialogHeader, dialogMessage, onError, checkSyntenyResultsOnComparativeSpecies } = useDialog();
+const { showDialog, dialogHeader, dialogMessage, showDialogBackButton, onError, checkSyntenyResultsOnComparativeSpecies } = useDialog();
 const { startDetailedSelectionY, stopDetailedSelectionY, updateZoomSelection, detailedSelectionHandler, cancelDetailedSelection, getDetailedSelectionStatus} = useDetailedPanelZoom(store);
 const { startOverviewSelectionY, stopOverviewSelectionY, updateOverviewSelection, overviewSelectionHandler, cancelOverviewSelection, getOverviewSelectionStatus } = useOverviewPanelSelection(store);
 
+let isMissingSynteny = ref<boolean>(false);
+let allowDetailedPanelProcessing = ref<boolean>(false);
 let detailedSyntenySets = ref<SyntenyRegionSet[]>([]); // The currently displayed SyntenicRegions in the detailed panel
 let overviewBackboneSet = ref<BackboneSet>();
 let detailedBackboneSet = ref<BackboneSet>();
@@ -215,11 +222,24 @@ onMounted(async () => {
   }
 
   await attachToProgressLoader('setIsOverviewPanelUpdating', updateOverviewPanel);
-  checkSyntenyResultsOnComparativeSpecies(overviewSyntenySets.value as SyntenyRegionSet[]);
+
+  // Note: We need to type cast here b/c SyntenyRegionSet contains private fields and type-checking fails
+  // See: https://github.com/vuejs/core/issues/2981
+  isMissingSynteny.value = !(checkSyntenyResultsOnComparativeSpecies(overviewSyntenySets.value as SyntenyRegionSet[]));
+
+  // Prevent detailed panel processing from happening if there is an issue with off-backbone synteny
+  // A dialog will appear to let the user confirm before proceeding...
+  if (!isMissingSynteny.value)
+  {
+    allowDetailedPanelProcessing.value = true;
+  }
 });
 
-watch(() => store.state.detailedBasePairRange, () => {
-  attachToProgressLoader('setIsDetailedPanelUpdating', updateDetailsPanel);
+watch([() => store.state.detailedBasePairRange, allowDetailedPanelProcessing], () => {
+  if (allowDetailedPanelProcessing.value)
+  {
+    attachToProgressLoader('setIsDetailedPanelUpdating', updateDetailsPanel);
+  }
 });
 
 const arePanelsLoading = computed(() => {
@@ -788,6 +808,7 @@ const updateSyntenyData = (syntenyRegionSets: SyntenyRegionSet[]) =>
   if (detailedSyntenySets.value)
   {
     detailedSyntenySets.value.forEach((syntenySet: SyntenyRegionSet) => {
+      // TODO: What if there are two of the same species off-backbone? I don't think speciesName will be reliable enough
       const newSyntenySet = syntenyRegionSets.find((newSet: SyntenyRegionSet) => newSet.speciesName === syntenySet.speciesName);
       if (newSyntenySet)
       {
