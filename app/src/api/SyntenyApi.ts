@@ -117,12 +117,14 @@ function getSpeciesSyntenyDataFromDTO(dtoArray: SyntenyResponseDTO[], comparativ
     });
   });
 
+  const genesPerRegion = regions.length > 0 ? regions.map(r => r.genes) : [];
+
   return {
     speciesName: comparativeSpecies.name,
     mapName: comparativeSpecies.activeMap.name,
     mapKey: comparativeSpecies.activeMap.key,
     regionData: regions,
-    allGenes: regions.map(r => r.genes).reduce((prevGenes, currentGenes) => prevGenes.concat(currentGenes)),
+    allGenes: genesPerRegion.length > 0 ? genesPerRegion.reduce((prevGenes, currentGenes) => prevGenes.concat(currentGenes)) : [],
   };
 }
 

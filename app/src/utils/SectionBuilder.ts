@@ -115,7 +115,6 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
   regionInfo.forEach((region) => {
     const blockInfo = region.block;
     const blockLength = Math.abs(blockInfo.stop - blockInfo.start);
-    const blockRatio = (Math.abs(blockInfo.backboneStop - blockInfo.backboneStart)) / blockLength;
     const blockGaps = region.gaps;
     const blockGenes = region.genes;
     const blockChromosome = blockInfo.chromosome;
