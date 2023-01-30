@@ -92,11 +92,11 @@
     <image class="nav-btn-img" href="../../node_modules/primeicons/raw-svg/chevron-down.svg" @click="navigateDown" :x="SVGConstants.overviewPanelWidth + (SVGConstants.detailsPanelWidth / 2)" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
 
     <rect v-if="currentlySelectingRegion()" id="selecting-overview" class="selecting-panel" :class="{'is-loading': arePanelsLoading}" x="0" 
-      @mousemove="updateOverviewSelection" @contextmenu.prevent @click.right="cancelOverviewSelection"
+      @mousemove="updateOverviewSelection" @contextmenu.prevent @click.right="cancelOverviewSelection" @click.left="(event) => overviewSelectionHandler(event, overviewBackboneSet?.backbone)"
       :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.viewboxHeight" />
 
     <rect v-if="currentlySelectingRegion()" id="selecting-detailed" class="selecting-panel" :class="{'is-loading': arePanelsLoading}"
-      @mousemove="updateZoomSelection" @contextmenu.prevent @click.right="cancelDetailedSelection" 
+      @mousemove="updateZoomSelection" @contextmenu.prevent @click.right="cancelDetailedSelection" @click.left="(event) => detailedSelectionHandler(event)"
       :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.viewboxHeight" />
 
     <!-- Detailed panel selection svg for zoom -->
@@ -1007,5 +1007,6 @@ rect.navigation-btn
 .nav-btn-img
 {
   cursor: pointer;
+  pointer-events: none;
 }
 </style>
