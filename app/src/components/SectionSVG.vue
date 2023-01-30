@@ -47,7 +47,7 @@
     <OverviewSyntenyLabelsSVG :gapless-block="region.gaplessBlock" />
   </template>
   <!-- Detailed Panel Synteny Postion Labels -->
-  <template v-if="!showStartStop && region.gaplessBlock.startLabel.isVisible && region.gaplessBlock.height > 10">
+  <template v-if="!showStartStop && region.gaplessBlock.startLabel.isVisible && region.gaplessBlock.height > 10 && region.syntenyBlocks.some((section) => section.isHovered)">
     <template v-if="region.gaplessBlock.posY1 < PANEL_SVG_START && region.gaplessBlock.posY2 > PANEL_SVG_START">
       <text
         class="label small"
