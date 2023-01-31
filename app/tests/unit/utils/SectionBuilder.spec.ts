@@ -1,7 +1,7 @@
 import { SpeciesSyntenyData } from "@/api/SyntenyApi";
 import { LoadedBlock, syntenicSectionBuilder } from "@/utils/SectionBuilder";
 
-let speciesSyntenyData: SpeciesSyntenyData = {
+const speciesSyntenyData: SpeciesSyntenyData = {
   speciesName: 'Bonobo',
   mapName: 'Mhudiblu_PPA_v0',
   mapKey: 513,

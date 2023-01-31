@@ -142,13 +142,13 @@ export default class BackboneSelection
       let innerStart = this.innerSelection.basePairStart;
       let innerStop = this.innerSelection.basePairStop;
       let innerSelectionChanged = false;
-      if (this.innerSelection.basePairStart < this.baseSelection.basePairStart)
+      if (this.innerSelection.basePairStart < this.baseSelection.basePairStart || this.innerSelection.basePairStart > this.baseSelection.basePairStop)
       {
         innerStart = this.baseSelection.basePairStart;
         innerSelectionChanged = true;
       }
 
-      if (this.innerSelection.basePairStop > this.baseSelection.basePairStop)
+      if (this.innerSelection.basePairStop > this.baseSelection.basePairStop || this.innerSelection.basePairStop < innerStart)
       {
         innerStop = this.baseSelection.basePairStop;
         innerSelectionChanged = true;

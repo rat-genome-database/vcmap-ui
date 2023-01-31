@@ -268,7 +268,7 @@ const highlightSelections = (selectedGeneIds: number[]) => {
 const updatePositionLabel = (event: any) => {
   const basePairPos = getBasePairPositionFromSVG(event, backbone.value.windowSVGStart, backbone.value.windowSVGStop, backbone.value.windowStart, backbone.value.windowStop);
   basePairPositionLabel.value = Formatter.convertBasePairToLabel(basePairPos) || '';
-}
+};
 </script>
 
 <style lang="scss" scoped>
