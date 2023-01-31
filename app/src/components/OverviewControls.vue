@@ -74,7 +74,9 @@ let startPosition = ref(store.state.selectedBackboneRegion.baseSelection.basePai
 let stopPosition = ref(store.state.selectedBackboneRegion.baseSelection.basePairStop);
 
 const isValidStartStop = computed(() => {
-  return startPosition.value !== stopPosition.value;
+  // Do we account for stop positions below start?
+  // originally: return startPosition.value !== stopPosition.value;
+  return startPosition.value < stopPosition.value;
 });
 
 const maxPosition = computed(() => {
