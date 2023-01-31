@@ -19,26 +19,6 @@
     <ChromosomeLabelSVG v-if="showChromosome" :synteny-section="blockSection" />
   </template>
 
-  <!-- Detailed Panel Synteny Postion Labels -->
-  <template v-if="region.gaplessBlock.posY1 < PANEL_SVG_START && region.gaplessBlock.posY2 > PANEL_SVG_START">
-    <text
-      class="label small"
-      :x="region.gaplessBlock.posX1 - 5"
-      :y="PANEL_SVG_START + 10"
-    >
-      {{ calculateSectionStartPositionLabel(region.gaplessBlock) }}
-    </text>
-  </template>
-  <template v-if="region.gaplessBlock.posY2 > PANEL_SVG_STOP && region.gaplessBlock.posY1 < PANEL_SVG_STOP">
-    <text
-      class="label small"
-      :x="region.gaplessBlock.posX1 - 5"
-      :y="PANEL_SVG_STOP - 10"
-    >
-      {{ calculateSectionStopPositionLabel(region.gaplessBlock) }}
-    </text>
-  </template>
-
   <GapSVG v-for="(gapSection,index) in level1Gaps" :key="index" :gap-section="gapSection" />
 
   <template v-for="(blockSection, index) in level2Blocks" :key="index">
@@ -62,6 +42,52 @@
   <template v-if="region && showSyntenyOnHover">
     <SyntenyLinesSVG v-for="(blockSection, index) in region.syntenyBlocks" :key="index" :synteny-section="blockSection" />
   </template>
+
+  <template>
+    <OverviewSyntenyLabelsSVG :gapless-block="region.gaplessBlock" />
+  </template>
+  <!-- Detailed Panel Synteny Postion Labels -->
+  <template v-if="!showStartStop && region.gaplessBlock.startLabel.isVisible && region.gaplessBlock.height > 10 && region.syntenyBlocks.some((section) => section.isHovered)">
+    <template v-if="region.gaplessBlock.posY1 < PANEL_SVG_START && region.gaplessBlock.posY2 > PANEL_SVG_START">
+      <text
+        class="label small"
+        :x="region.gaplessBlock.posX1 - SYNTENY_LABEL_SHIFT"
+        :y="PANEL_SVG_START + 10"
+      >
+        {{ calculateSectionStartPositionLabel(region.gaplessBlock) }}
+      </text>
+    </template>
+    <template v-else>
+      <text
+        class="label small"
+        dominant-baseline="hanging"
+        :x="region.gaplessBlock.posX1 - SYNTENY_LABEL_SHIFT"
+        :y="region.gaplessBlock.posY1"
+      >
+        {{region.gaplessBlock.startLabel.text}}
+      </text>
+    </template>
+    <template v-if="region.gaplessBlock.posY2 > PANEL_SVG_STOP && region.gaplessBlock.posY1 < PANEL_SVG_STOP">
+      <text
+        class="label small"
+        :x="region.gaplessBlock.posX1 - SYNTENY_LABEL_SHIFT"
+        :y="PANEL_SVG_STOP - 10"
+      >
+        {{ calculateSectionStopPositionLabel(region.gaplessBlock) }}
+      </text>
+    </template>
+    <template v-else>
+      <text
+        class="label small"
+        dominant-baseline="auto"
+        :x="region.gaplessBlock.posX1 - SYNTENY_LABEL_SHIFT"
+        :y="region.gaplessBlock.posY2"
+      >
+        {{region.gaplessBlock.stopLabel.text}}
+      </text>
+    </template>
+  </template>
+
 
   <!-- Genes -->
   <template v-for="(datatrack, index) in datatracks" :key="index">
@@ -103,6 +129,7 @@ import { PANEL_SVG_START, PANEL_SVG_STOP } from '@/utils/SVGConstants';
 
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
 const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
+const SYNTENY_LABEL_SHIFT = 10;
 
 const store = useStore(key);
 

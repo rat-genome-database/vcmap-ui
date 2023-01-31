@@ -5,6 +5,7 @@
     class="section"
     @mouseenter="() => onMouseEnter(backbone, 'backbone')"
     @mouseleave="() => onMouseLeave(backbone)"
+    @mousemove="updatePositionLabel($event)"
     :fill="backbone.isHovered && showDataOnHover ? HOVER_HIGHLIGHT_COLOR : backbone.elementColor"
     :x="backbone.posX1" :y="backbone.posY1"
     :width="backbone.width"
@@ -72,6 +73,25 @@
         {{ Formatter.convertBasePairToLabel(selectedRegion.innerSelection.basePairStop) }}
     </text>
   </template>
+
+  <template v-if="mouseYPos && backbone.isHovered && isDetailed">
+    <text
+      class="label small"
+      text-anchor="end"
+      dominant-baseline="middle"
+      :x="backbone.posX1 - 1"
+      :y="mouseYPos"
+    >
+      {{ basePairPositionLabel }}
+    </text>
+    <line
+      class="position-label"
+      :x1="backbone.posX1"
+      :x2="backbone.posX1 + backbone.width"
+      :y1="mouseYPos"
+      :y2="mouseYPos"
+    />
+  </template>
 </template>
 
 <script lang="ts" setup>
@@ -88,12 +108,15 @@ import BackboneSection from '@/models/BackboneSection';
 import BackboneSet from '@/models/BackboneSet';
 import DatatrackSection, { GeneDatatrack } from '@/models/DatatrackSection';
 import { VCMapSVGElement } from '@/models/VCMapSVGElement';
+import useMouseBasePairPos from '@/composables/useMouseBasePairPos';
 
 const INNER_SELECTION_EXTRA_WIDTH = 4;
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
 const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
 
 const store = useStore(key);
+
+const { getBasePairPositionFromSVG, mouseYPos, } = useMouseBasePairPos();
 
 interface Props
 {
@@ -118,6 +141,7 @@ const isDetailed = computed(() => {
 //Converts each property in this object to its own reactive prop
 toRefs(props);
 const selectedRegion = ref(new BackboneSelection(new SelectedRegion(0,0,0,0), store.state.chromosome ?? undefined));
+const basePairPositionLabel = ref<string>('');
 
 watch(() => store.state.selectedBackboneRegion, (newVal: BackboneSelection, oldVal: BackboneSelection) => {
   // Watch for possible clear out of the selected backbone region
@@ -240,6 +264,11 @@ const highlightSelections = (selectedGeneIds: number[]) => {
     }
   }); */
 };
+
+const updatePositionLabel = (event: any) => {
+  const basePairPos = getBasePairPositionFromSVG(event, backbone.value.windowSVGStart, backbone.value.windowSVGStop, backbone.value.windowStart, backbone.value.windowStop);
+  basePairPositionLabel.value = Formatter.convertBasePairToLabel(basePairPos) || '';
+}
 </script>
 
 <style lang="scss" scoped>
@@ -273,5 +302,11 @@ const highlightSelections = (selectedGeneIds: number[]) => {
 .selected-region
 {
   stroke-width: 1;
+}
+
+.position-label
+{
+  stroke: black;
+  pointer-events: none;
 }
 </style>
