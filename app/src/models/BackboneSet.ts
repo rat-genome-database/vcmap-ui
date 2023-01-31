@@ -134,7 +134,6 @@ export default class BackboneSet extends GenomicSet
   public addDatatrackSections(datatrackSections: DatatrackSection[])
   {
     this.datatracks = this.datatracks.concat(datatrackSections);
-    this.processGeneLabels();
     this.setDatatrackXPositions();
   }
 }

@@ -76,7 +76,6 @@ export default class SyntenyRegionSet extends GenomicSet
       removedIds.forEach((id) => masterGeneMap.delete(id));
     }
     
-    
     this.processGeneLabels();
   }
 
@@ -244,7 +243,7 @@ export default class SyntenyRegionSet extends GenomicSet
   {
     const allLabels: any[] = [];
     this.datatrackLabels = [];
-    this.regions.forEach((region: SyntenyRegion) => {      
+    this.regions.forEach((region: SyntenyRegion) => {
       region.datatrackSections.forEach((section) => {
         if (section.label)
         {

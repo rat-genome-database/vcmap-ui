@@ -1,4 +1,5 @@
 import { GeneLabel } from '../models/Label';
+import { PANEL_SVG_START, PANEL_SVG_STOP } from './SVGConstants';
 
 const OVERLAP_SIZE = 8;
 
@@ -13,7 +14,7 @@ export function mergeGeneLabels(labels: GeneLabel[])
     const geneLabel = labels[geneLabelIdx];
     geneLabel.combinedLabels = [];
     // Check if this label has been combined or not
-    if (combinedLabels.has(geneLabel))
+    if (combinedLabels.has(geneLabel) || geneLabel.posY > PANEL_SVG_STOP || geneLabel.posY < PANEL_SVG_START)
     {
       geneLabel.isVisible = false;
       continue;
