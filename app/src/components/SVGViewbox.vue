@@ -329,7 +329,7 @@ const updateOverviewPanel = async () => {
   
   if (overviewBackbone != null && prevBackboneSelection.baseSelection.svgHeight === 0)
   {
-    const selection = new BackboneSelection(overviewBackbone)
+    const selection = new BackboneSelection(overviewBackbone);
     //if initially loading by gene, we need to set and process the full backbone range and syntenic blocks to find ortholog positions to later adjust so all are visible in the detail panel
     if (loadType === 0)
     {
