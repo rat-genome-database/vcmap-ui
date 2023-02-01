@@ -7,6 +7,7 @@
       class="block-section"
       @mouseenter="onMouseEnter(blockSection, 'trackSection')"
       @mouseleave="onMouseLeave(blockSection, 'trackSection')"
+      @mousemove="updatePositionLabel($event, blockSection)"
       @click="selectOnClick ? onSectionClick(blockSection, 'trackSection') : () => {}"
       :y="blockSection.posY1"
       :x="blockSection.posX1"
@@ -43,9 +44,6 @@
     <SyntenyLinesSVG v-for="(blockSection, index) in region.syntenyBlocks" :key="index" :synteny-section="blockSection" />
   </template>
 
-  <template>
-    <OverviewSyntenyLabelsSVG :gapless-block="region.gaplessBlock" />
-  </template>
   <!-- Detailed Panel Synteny Postion Labels -->
   <template v-if="!showStartStop && region.gaplessBlock.startLabel.isVisible && region.gaplessBlock.height > 10 && region.syntenyBlocks.some((section) => section.isHovered)">
     <template v-if="region.gaplessBlock.posY1 < PANEL_SVG_START && region.gaplessBlock.posY2 > PANEL_SVG_START">
@@ -86,6 +84,24 @@
         {{region.gaplessBlock.stopLabel.text}}
       </text>
     </template>
+    <template v-if="mouseYPos">
+    <text
+      class="label small"
+      text-anchor="end"
+      dominant-baseline="middle"
+      :x="region.gaplessBlock.posX1 - 1"
+      :y="mouseYPos"
+    >
+      {{ basePairPositionLabel }}
+    </text>
+    <line
+      class="position-label"
+      :x1="region.gaplessBlock.posX1"
+      :x2="region.gaplessBlock.posX1 + region.gaplessBlock.width"
+      :y1="mouseYPos"
+      :y2="mouseYPos"
+    />
+  </template>
   </template>
 
 
@@ -109,7 +125,7 @@
 
 
 <script lang="ts" setup>
-import { watch, onMounted} from 'vue';
+import { watch, onMounted, ref } from 'vue';
 import SelectedData, { SelectedDataType } from '@/models/SelectedData';
 import SyntenyRegion from '@/models/SyntenyRegion';
 import SyntenySection from '@/models/SyntenySection';
@@ -126,12 +142,15 @@ import GapSVG from './GapSVG.vue';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 import OverviewSyntenyLabelsSVG from './OverviewSyntenyLabelsSVG.vue';
 import { PANEL_SVG_START, PANEL_SVG_STOP } from '@/utils/SVGConstants';
+import useMouseBasePairPos from '@/composables/useMouseBasePairPos';
 
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
 const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
 const SYNTENY_LABEL_SHIFT = 10;
 
 const store = useStore(key);
+
+const { getBasePairPositionFromSVG, mouseYPos } = useMouseBasePairPos();
 
 interface Props
 {
@@ -145,6 +164,7 @@ const props = defineProps<Props>();
 
 //Converts each property in this object to its own reactive prop
 toRefs(props);
+const basePairPositionLabel = ref<string>('');
 
 watch(() => store.state.selectedGeneIds, () => {
   highlightSelections(store.state.selectedGeneIds);
@@ -350,6 +370,10 @@ const calculateSectionStopPositionLabel = (section: SyntenySection) => {
   return Formatter.convertBasePairToLabel(Math.round(labelBasePair));
 };
 
+const updatePositionLabel = (event: any, blockSection: SyntenySection) => {
+  const basePairPos = getBasePairPositionFromSVG(event, blockSection.posY1, blockSection.posY2, blockSection.speciesStart, blockSection.speciesStop);
+  basePairPositionLabel.value = Formatter.convertBasePairToLabel(basePairPos) || '';
+};
 </script>
 
 <style lang="scss" scoped>
@@ -383,4 +407,9 @@ const calculateSectionStopPositionLabel = (section: SyntenySection) => {
   cursor: pointer;
 }
 
+.position-label
+{
+  stroke: black;
+  pointer-events: none;
+}
 </style>
