@@ -84,7 +84,8 @@
         {{region.gaplessBlock.stopLabel.text}}
       </text>
     </template>
-    <template v-if="mouseYPos">
+  </template>
+  <template v-if="mouseYPos && !showStartStop && region.syntenyBlocks.some((section) => section.isHovered)">
     <text
       class="label small"
       text-anchor="end"
@@ -101,7 +102,6 @@
       :y1="mouseYPos"
       :y2="mouseYPos"
     />
-  </template>
   </template>
 
 
@@ -284,24 +284,6 @@ const highlightSelections = (selectedGeneIds: number[]) => {
       line.isSelected = false;
     }
   });
-
-  /* // After selecting the sections, check if we should use alt labels
-  props.track.geneLabels.forEach((label) => {
-    // Only consider geneLabels that are already visible anyway
-    if (label.isVisible) {
-      // If the main gene for this section is selected, we'll use the normal label
-      let useAltLabel = false;
-      if (selectedGeneIds.includes(label.section.gene.rgdId)) {
-        useAltLabel = false;
-      } else { // Otherwise if any selected ids exist in the alt labels, we'll use an alt label
-        const altLabelIds = label.section.altLabels.map((label) => label.rgdId);
-        if (selectedGeneIds.some((id) => altLabelIds.includes(id))) {
-          useAltLabel = true;
-        }
-      }
-      label.section.showAltLabel = useAltLabel;
-    }
-  }); */
 };
 
 const onClick = (event: any, section: GeneDatatrack) => {

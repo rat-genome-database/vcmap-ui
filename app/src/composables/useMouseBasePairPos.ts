@@ -18,10 +18,6 @@ export default function useMouseBasePairPos() {
     return basePairStart + (mousePos.y - svgStart) * ((basePairStop - basePairStart) / (svgStop - svgStart));
   };
 
-  const resetMousePos = () => {
-    mouseYPos.value = undefined;
-  };
-
   return {
     getBasePairPositionFromSVG,
     mouseYPos,
