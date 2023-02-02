@@ -106,7 +106,7 @@ const selectionRange = computed(() => {
 
   if (selectedRegion)
   {
-    return `${Formatter.addCommasToBasePair(selectedRegion.viewportSelection.basePairStart ?? 0)}bp - ${Formatter.addCommasToBasePair(selectedRegion.viewportSelection.basePairStop ?? chromosome.seqLength)}bp`;
+    return `${Formatter.addCommasToBasePair(selectedRegion.viewportSelection?.basePairStart ?? 0)}bp - ${Formatter.addCommasToBasePair(selectedRegion.viewportSelection?.basePairStop ?? chromosome.seqLength)}bp`;
   }
   else
   {
@@ -116,7 +116,7 @@ const selectionRange = computed(() => {
 
 const openSelectionEditModal = () => {
   startPosition.value = store.state.selectedBackboneRegion.viewportSelection.basePairStart;
-  stopPosition.value = store.state.selectedBackboneRegion.baseSelection.basePairStop;
+  stopPosition.value = store.state.selectedBackboneRegion.viewportSelection.basePairStop;
   showEditModal.value = true;
 };
 
