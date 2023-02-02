@@ -3,7 +3,7 @@ import VuexPersistence from 'vuex-persist';
 import Species from '@/models/Species';
 import Chromosome from '@/models/Chromosome';
 import Gene from '@/models/Gene';
-import BackboneSelection, { BasePairRange, SelectedRegion } from '@/models/BackboneSelection';
+import BackboneSelection, { BasePairRange } from '@/models/BackboneSelection';
 import SVGConstants from '@/utils/SVGConstants';
 import SelectedData from '@/models/SelectedData';
 import { InjectionKey } from 'vue';
@@ -32,7 +32,7 @@ export interface VCMapState
   loadedGenes: Map<number, LoadedGene> | null;
   loadedBlocks: Map<number, LoadedBlock> | null;
 
-  selectedBackboneRegion: BackboneSelection;
+  selectedBackboneRegion: BackboneSelection | null;
 
   overviewBasePairToHeightRatio: number;
   overviewSyntenyThreshold: number;
@@ -79,7 +79,7 @@ export default createStore({
     loadedGenes: null,
     loadedBlocks: null,
 
-    selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
+    selectedBackboneRegion: null,
 
     overviewBasePairToHeightRatio: 1000,
     overviewSyntenyThreshold: 0,
@@ -162,9 +162,6 @@ export default createStore({
     isOverviewPanelUpdating(state: VCMapState, isUpdating: boolean) {
       state.isOverviewPanelUpdating = isUpdating;
     },
-    backboneOrthologs(state: VCMapState, orthologs: any) {
-      state.selectedBackboneRegion.orthologData = orthologs;
-    },
     zoomLevel(state: VCMapState, zoomLevel: number) {
       state.zoomLevel = zoomLevel;
     }
@@ -242,23 +239,22 @@ export default createStore({
       context.commit('selectedGeneIds', []);
       context.commit('loadedGenes', null);
       context.commit('loadedBlocks', null);
-      context.commit('selectedBackboneRegion', new BackboneSelection(new SelectedRegion(0,0,0,0)));
+      context.commit('selectedBackboneRegion', null);
       context.commit('detailedBasePairRange', { start: 0, stop: 0 });
     },
     clearBackboneSelection(context: ActionContext<VCMapState, VCMapState>) {
-      context.commit('selectedBackboneRegion', new BackboneSelection(new SelectedRegion(0,0,0,0)));
+      context.commit('selectedBackboneRegion', null);
       context.commit('detailedBasePairRange', { start: 0, stop: 0 });
     },
     setBackboneSelection(context: ActionContext<VCMapState, VCMapState>, selection: BackboneSelection) {
-      if (selection.innerSelection == null)
+      if (selection.viewportSelection == null)
       {
-        selection.generateInnerSelection(selection.baseSelection.basePairStart, selection.baseSelection.basePairStop, context.state.overviewBasePairToHeightRatio);
+        selection.setViewportSelection(0, selection.chromosome.seqLength, context.state.overviewBasePairToHeightRatio);
       }
-      context.commit('startPosition', selection.baseSelection.basePairStart);
-      context.commit('stopPosition', selection.baseSelection.basePairStop);
+      context.commit('startPosition', 0);
+      context.commit('stopPosition', selection.chromosome.seqLength);
       context.commit('selectedBackboneRegion', selection);
       // Note: Committing a change to detailedBasePairRange will trigger an update on the Detailed panel
-      context.commit('detailedBasePairRange', { start: selection.innerSelection?.basePairStart, stop: selection.innerSelection?.basePairStop });
     },
     setDetailedBasePairRange(context: ActionContext<VCMapState, VCMapState>, range: BasePairRange) {
       // Note: Committing a change to detailedBasePairRange will trigger an update on the Detailed panel
