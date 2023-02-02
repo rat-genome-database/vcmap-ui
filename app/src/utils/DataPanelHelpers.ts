@@ -2,17 +2,8 @@ import Gene from '@/models/Gene';
 import SelectedData from '@/models/SelectedData';
 import { Store } from "vuex";
 import { VCMapState } from "@/store";
-import { GeneDatatrack, LoadedGene } from '@/models/DatatrackSection';
+import { GeneDatatrack } from '@/models/DatatrackSection';
 
-// Util methods to help process and update selection info
-export function getGeneOrthologIds(store: Store<VCMapState>, gene: Gene) {
-  const geneOrthologs = store.state.selectedBackboneRegion.orthologData.get(gene.symbol);
-  let geneOrthologIds: number[] = [];
-  if (geneOrthologs) {
-    geneOrthologIds = Object.keys(geneOrthologs).map((geneKey) => geneOrthologs[geneKey][0].geneRgdId);
-  }
-  return geneOrthologIds;
-}
 
 export function getNewSelectedData(store: Store<VCMapState>, gene: Gene): {rgdIds: number[], selectedData: SelectedData[] } {
   const comparativeSpecies = store.state.comparativeSpecies;
@@ -46,36 +37,6 @@ export function sortGeneList(geneList: Gene[]) {
     return (geneASymbol < geneBSymbol) ? -1 : (geneASymbol > geneBSymbol) ? 1 : 0;
   });
 }
-
-function getOrthologsFromComparativeSpecies(store: Store<VCMapState>, gene: Gene, mapKey: Number) {
-  const orthologData = store.state.selectedBackboneRegion.orthologData;
-  const drawnGeneData = store.state.loadedGenes;
-
-  const currGeneInfo = drawnGeneData?.get(gene.rgdId);
-
-  // Iterate through the entries in the orthologData map
-  const backboneOrthologKey = [...orthologData.entries()]
-      // Filter for an ortholog matching the selected gene's symbol
-      .filter((entry: any) => {
-        // Use the mapKey for this gene to only search the relevant ortholog results
-        if (entry[1][mapKey.toString()]) 
-        {
-          const orthologGeneIdx = entry[1][mapKey.toString()]
-            .find((ortholog: any) => { ortholog.geneSymbol.toLowerCase() == gene.symbol.toLowerCase(); }) || -1;
-          return orthologGeneIdx !== -1;
-        } 
-        else 
-        {
-          return false;
-        }
-      })
-      // And then map for the symbol (key) of the backbone gene
-      .map((entry: any) => entry[0]);
-
-  // return the symbol for the backbone gene and the ortholog data
-  return {backboneSymbol: backboneOrthologKey[0], orthologData: orthologData.get(backboneOrthologKey[0])};
-}
-
 
 function getGeneOrthologData(store: Store<VCMapState>, gene: Gene) 
 {
