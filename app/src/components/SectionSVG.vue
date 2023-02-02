@@ -8,7 +8,7 @@
       @mouseenter="onMouseEnter(blockSection, 'trackSection')"
       @mouseleave="onMouseLeave(blockSection, 'trackSection')"
       @mousemove="updatePositionLabel($event, blockSection)"
-      @click="selectOnClick ? onSectionClick(blockSection, 'trackSection') : () => {}"
+      @click="selectOnClick ? onSectionClick(blockSection) : () => {}"
       :y="blockSection.posY1"
       :x="blockSection.posX1"
       :width="blockSection.width"
@@ -139,7 +139,7 @@ import { VCMapSVGElement } from '@/models/VCMapSVGElement';
 import ChromosomeLabelSVG from './ChromosomeLabelSVG.vue';
 import SyntenyLinesSVG from './SyntenyLinesSVG.vue';
 import GapSVG from './GapSVG.vue';
-import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
+import BackboneSelection from '@/models/BackboneSelection';
 import OverviewSyntenyLabelsSVG from './OverviewSyntenyLabelsSVG.vue';
 import { PANEL_SVG_START, PANEL_SVG_STOP } from '@/utils/SVGConstants';
 import useMouseBasePairPos from '@/composables/useMouseBasePairPos';
@@ -232,17 +232,15 @@ const onMouseLeave = (section: VCMapSVGElement, type: SelectedDataType) => {
   }
 };
 
-const onSectionClick = (section: VCMapSVGElement, type: SelectedDataType) => {
-  const backboneChromose = store.state.chromosome;
-  if (backboneChromose && section.backboneSection)
+const onSectionClick = (section: VCMapSVGElement) => {
+  const selectedBackboneRegion = store.state.selectedBackboneRegion as BackboneSelection;
+  const backboneChromosome = store.state.chromosome;
+  if (backboneChromosome && section.backboneSection)
   {
-    const startSVGY = section.posY1;
-    const stopSVGY = section.posY2;
     const basePairStart = section.backboneSection.start;
     const basePairStop = section.backboneSection.stop;
-    const selectedBackboneRegion = new BackboneSelection(new SelectedRegion(startSVGY, stopSVGY - startSVGY, basePairStart, basePairStop), backboneChromose);
-    selectedBackboneRegion.generateInnerSelection(basePairStart, basePairStop, store.state.overviewBasePairToHeightRatio);
-    store.dispatch('setBackboneSelection', selectedBackboneRegion);
+    selectedBackboneRegion.setViewportSelection(basePairStart, basePairStop, store.state.overviewBasePairToHeightRatio);
+    store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: basePairStop });
   }
 };
 

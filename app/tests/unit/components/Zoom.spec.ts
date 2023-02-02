@@ -3,6 +3,7 @@ import Zoom from '@/components/Zoom.vue';
 import { VCMapState } from '@/store';
 import { ActionTree, Store } from 'vuex';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
+import Chromosome from '@/models/Chromosome';
 import { TestUtils } from '../../utils/TestUtils';
 
 describe('Zoom', () => {
@@ -16,8 +17,9 @@ describe('Zoom', () => {
       setDetailedBasePairRange: jest.fn()
     };
 
-    state.selectedBackboneRegion = new BackboneSelection(new SelectedRegion(0, 0, 0, 100));
-    state.selectedBackboneRegion.generateInnerSelection(0, 100, 1);
+    const test_chromosome = new Chromosome({ 'mapKey': 0, 'chromosome':'T', 'seqLength': 100 })
+    state.selectedBackboneRegion = new BackboneSelection(new SelectedRegion(0, 0, 0, 100), test_chromosome);
+    state.selectedBackboneRegion.setViewportSelection(0, 100, 1);
     store = TestUtils.initStore(state, actions);
   });
 
@@ -35,7 +37,10 @@ describe('Zoom', () => {
 
     store.state.isDetailedPanelUpdating = true;
     await wrapper.vm.$nextTick();
-    store.state.selectedBackboneRegion.zoomLevel = 2;
+    if (store.state.selectedBackboneRegion)
+    {
+      store.state.selectedBackboneRegion.zoomLevel = 2;
+    }
     store.state.isDetailedPanelUpdating = false;
     await wrapper.vm.$nextTick();
     expect(zoomLevelLabel.text()).toEqual('2x');

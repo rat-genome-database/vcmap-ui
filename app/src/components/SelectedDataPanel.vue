@@ -155,8 +155,8 @@ const props = defineProps<Props>();
 const searchedGene = ref<Gene | Gene[] | null>(null);
 const geneSuggestions = ref<Gene[]>([]);
 const numberOfResults = ref<number>(0);
-const overviewStart = ref<number>(store.state.selectedBackboneRegion.baseSelection.basePairStart);
-const overviewStop = ref<number>(store.state.selectedBackboneRegion.baseSelection.basePairStop);
+const overviewStart = ref<number>(0);
+const overviewStop = ref<number>(store.state.chromosome.seqLength ?? 1);
 
 // fraction of gene bp length to add to the window when jumping
 // to the gene after a search
@@ -184,11 +184,6 @@ watch(() => props.selectedData, () => {
       }
     });
   }
-});
-
-watch(() => store.state.selectedBackboneRegion.baseSelection, () => {
-  overviewStart.value = store.state.selectedBackboneRegion.baseSelection.basePairStart;
-  overviewStop.value = store.state.selectedBackboneRegion.baseSelection.basePairStop;
 });
 
 const clearSelectedGenes = () => {
@@ -261,17 +256,17 @@ const getSuggestionDisplay = (item: any) => {
 const adjustSelectionWindow = () => {
   const loadedGenes = store.state.loadedGenes;
   const selectedRegion = store.state.selectedBackboneRegion;
-  const selectionStart = selectedRegion.innerSelection?.basePairStart || selectedRegion.baseSelection.basePairStart;
+  const selectionStart = selectedRegion.viewportSelection?.basePairStart || 0;
 
   // New start and stop will be +/- some multiple of the gene's length (currently 2x)
   const geneBasePairLength = searchedGene.value.stop - searchedGene.value.start;
   // Take the max of new start position, and selected region's original start
   // to avoid jumping to outside of loaded region
   const newInnerStart = Math.max(Math.floor(searchedGene.value.start
-    - SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), selectedRegion.baseSelection.basePairStart);
+    - SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), 0);
   // Take min of new stop and selected regions original stop
   const newInnerStop = Math.min(Math.floor(searchedGene.value.stop
-    + SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), selectedRegion.baseSelection.basePairStop);
+    + SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), selectedRegion.chromosome.seqLength);
   //get orthologs for backbone gene, and determine the relative highest and lowest positioned genes to reset the window
   const orthologs = searchedGene.value.orthologs;
 
@@ -294,10 +289,10 @@ const adjustSelectionWindow = () => {
     const bottomOrthologLength = lowestOrtholog.gene.stop - lowestOrtholog.gene.start;
 
     const basePairsFromInnerSelection1 = Math.floor((highestOrtholog.posY1- SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
-    const basePairStart = Math.max(basePairsFromInnerSelection1 + selectionStart - (topOrthologLength * 5), selectedRegion.baseSelection.basePairStart);
+    const basePairStart = Math.max(basePairsFromInnerSelection1 + selectionStart - (topOrthologLength * 5), 0);
 
     const basePairsFromInnerSelection2 = Math.floor((lowestOrtholog.posY1 - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
-    const basePairStop = Math.min(basePairsFromInnerSelection2 + selectionStart + (bottomOrthologLength * 5), selectedRegion.baseSelection.basePairStop);
+    const basePairStop = Math.min(basePairsFromInnerSelection2 + selectionStart + (bottomOrthologLength * 5), selectedRegion.chromosome.seqLength);
 
 
     // confirm the searched gene is visible in the result and adjust if not
@@ -313,9 +308,6 @@ const adjustSelectionWindow = () => {
     {
       newInnerStart < basePairStart ? store.dispatch('setDetailedBasePairRange', { start: newInnerStart, stop: newInnerStop}) : store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: newInnerStop});
     }
-
-    
-    
   }
   else
   {

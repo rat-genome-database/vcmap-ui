@@ -30,7 +30,7 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
     }
 
     const selectedRegion = store.state.selectedBackboneRegion;
-    if (!selectedRegion.innerSelection)
+    if (selectedRegion && !selectedRegion.viewportSelection)
     {
       $log.warn('Cannot zoom on the detailed panel without a selection in the overview');
       return;
@@ -54,7 +54,7 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
     }
 
     const selectedRegion = store.state.selectedBackboneRegion;
-    if (!selectedRegion.innerSelection)
+    if (selectedRegion && !selectedRegion.viewportSelection)
     {
       $log.warn('Cannot zoom on the detailed panel without a selection in the overview');
       return;
@@ -98,14 +98,14 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
     inSelectMode = false;
 
     const selection = store.state.selectedBackboneRegion;
-    if (startDetailedSelectionY.value != null && stopDetailedSelectionY.value != null && selection.innerSelection != null)
+    if (startDetailedSelectionY.value != null && stopDetailedSelectionY.value != null && selection && selection.viewportSelection != null)
     {
       // Calculate start/stop base pairs based on bp to height ratio in the detailed panel
       const basePairsFromInnerSelection1 = Math.floor((startDetailedSelectionY.value - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
-      const basePairStart = basePairsFromInnerSelection1 + selection.innerSelection.basePairStart;
+      const basePairStart = basePairsFromInnerSelection1 + selection.viewportSelection.basePairStart;
 
       const basePairsFromInnerSelection2 = Math.floor((stopDetailedSelectionY.value - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
-      const basePairStop = basePairsFromInnerSelection2 + selection.innerSelection.basePairStart;
+      const basePairStop = basePairsFromInnerSelection2 + selection.viewportSelection.basePairStart;
 
       store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: basePairStop });
     }

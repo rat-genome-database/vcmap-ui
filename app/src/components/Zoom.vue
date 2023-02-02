@@ -15,7 +15,7 @@ const zoomLevel = ref(1);
 let zoomProcessTimeoutId: number | undefined;
 
 watch(() => store.state.isDetailedPanelUpdating, (isUpdating) => {
-  if (!isUpdating)
+  if (!isUpdating && store.state.selectedBackboneRegion != null)
   {
     zoomLevel.value = store.state.selectedBackboneRegion.zoomLevel;
     store.dispatch('setZoomLevel', zoomLevel.value);
@@ -30,7 +30,7 @@ watch(() => store.state.zoomLevel, () => {
 });
 
 const isZoomDisabled = computed(() => {
-  return store.state.selectedBackboneRegion.innerSelection == null;
+  return store.state.selectedBackboneRegion && store.state.selectedBackboneRegion.viewportSelection == null;
 });
 
 const onZoomChange = (zoomLevel: number) => {
@@ -54,20 +54,21 @@ const onZoomChange = (zoomLevel: number) => {
 
 const zoom = (zoomLevel: number) => {
   const selectedRegion = store.state.selectedBackboneRegion;
+  const backboneChromosome = store.state.chromosome;
 
   if (zoomLevel === 1)
   {
-    store.dispatch('setDetailedBasePairRange', { start: selectedRegion.baseSelection.basePairStart, stop: selectedRegion.baseSelection.basePairStop });
+    store.dispatch('setDetailedBasePairRange', { start: 0, stop: backboneChromosome.seqLength });
   }
   else
   {
-    let zoomedStart = selectedRegion.baseSelection.basePairStart;
-    let zoomedStop = selectedRegion.baseSelection.basePairStop;
+    let zoomedStart = selectedRegion.viewportSelection.basePairStart;
+    let zoomedStop = selectedRegion.viewportSelection.basePairStop;
     let currentLength = zoomedStop - zoomedStart;
-    if (selectedRegion.innerSelection)
+    if (selectedRegion.viewportSelection)
     {
-      zoomedStart = selectedRegion.innerSelection.basePairStart;
-      zoomedStop = selectedRegion.innerSelection.basePairStop;
+      zoomedStart = selectedRegion.viewportSelection.basePairStart;
+      zoomedStop = selectedRegion.viewportSelection.basePairStop;
       currentLength = zoomedStop - zoomedStart;
     }
 
@@ -86,17 +87,17 @@ const zoom = (zoomLevel: number) => {
       zoomedStart = zoomedStart + (lengthDiff / 2);
       zoomedStop = zoomedStop - (lengthDiff / 2);
 
-      if (zoomedStart < selectedRegion.baseSelection.basePairStart)
+      if (zoomedStart < 0)
       {
-        zoomedStart = selectedRegion.baseSelection.basePairStart;
+        zoomedStart = 0;
         // Apply the rest of the region length to the end along with a sanity check to make sure the stop doesn't extend past the base selection
-        zoomedStop = (zoomedStart - lengthDiff > selectedRegion.baseSelection.basePairStop) ? selectedRegion.baseSelection.basePairStop : zoomedStart + newRegionLength;
+        zoomedStop = (zoomedStart - lengthDiff > backboneChromosome.seqLength) ? backboneChromosome.seqLength : zoomedStart + newRegionLength;
       }
-      else if (zoomedStop > selectedRegion.baseSelection.basePairStop)
+      else if (zoomedStop > backboneChromosome.seqLength)
       {
-        zoomedStop = selectedRegion.baseSelection.basePairStop;
+        zoomedStop = backboneChromosome.seqLength;
         // Apply the rest of the region length to the start along with a sanity check to make the start doesn't extend above the base selection
-        zoomedStart = (zoomedStop + lengthDiff < selectedRegion.baseSelection.basePairStart) ? selectedRegion.baseSelection.basePairStart : zoomedStop - newRegionLength;
+        zoomedStart = (zoomedStop + lengthDiff < 0) ? 0 : zoomedStop - newRegionLength;
       }
     }
 

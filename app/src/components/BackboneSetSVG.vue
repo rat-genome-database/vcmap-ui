@@ -50,27 +50,27 @@
   </template>
 
   <!-- Inner selection that changes depending on Detailed panel zoom -->
-  <rect v-if="!isDetailed && selectedRegion.innerSelection != null && selectedRegion.innerSelection.svgHeight > 0"
+  <rect v-if="!isDetailed && selectedRegion.viewportSelection != null && selectedRegion.viewportSelection.svgHeight > 0"
     stroke="green"
     fill="green"
     fill-opacity="0.5"
-    :x="backbone.posX1 - 2" :y="selectedRegion.innerSelection.svgYPoint"
+    :x="backbone.posX1 - 2" :y="selectedRegion.viewportSelection.svgYPoint"
     :width="SVGConstants.trackWidth + INNER_SELECTION_EXTRA_WIDTH"
-    :height="selectedRegion.innerSelection.svgHeight" />
+    :height="selectedRegion.viewportSelection.svgHeight" />
 
-  <template v-if="!isDetailed && selectedRegion.innerSelection != null && selectedRegion.innerSelection.svgHeight > 0">
-    <text v-if="selectedRegion.innerSelection.svgYPoint > backbone.posY1 + 10"
+  <template v-if="!isDetailed && selectedRegion.viewportSelection != null && selectedRegion.viewportSelection.svgHeight > 0">
+    <text v-if="selectedRegion.viewportSelection.svgYPoint > backbone.posY1 + 10"
       class="label small"
       :x="backbone.posX1 - 5"
-      :y="selectedRegion.innerSelection.svgYPoint - 2">
-        {{ Formatter.convertBasePairToLabel(selectedRegion.innerSelection.basePairStart) }}
+      :y="selectedRegion.viewportSelection.svgYPoint - 2">
+        {{ Formatter.convertBasePairToLabel(selectedRegion.viewportSelection.basePairStart) }}
     </text>
     
-    <text v-if="selectedRegion.innerSelection.svgYPoint + selectedRegion.innerSelection.svgHeight < backbone.posY2 - 10"
+    <text v-if="selectedRegion.viewportSelection.svgYPoint + selectedRegion.viewportSelection.svgHeight < backbone.posY2 - 10"
       class="label small"
       :x="backbone.posX1 - 5"
-      :y="selectedRegion.innerSelection.svgYPoint + selectedRegion.innerSelection.svgHeight + 7">
-        {{ Formatter.convertBasePairToLabel(selectedRegion.innerSelection.basePairStop) }}
+      :y="selectedRegion.viewportSelection.svgYPoint + selectedRegion.viewportSelection.svgHeight + 7">
+        {{ Formatter.convertBasePairToLabel(selectedRegion.viewportSelection.basePairStop) }}
     </text>
   </template>
 
@@ -140,16 +140,16 @@ const isDetailed = computed(() => {
 
 //Converts each property in this object to its own reactive prop
 toRefs(props);
-const selectedRegion = ref(new BackboneSelection(new SelectedRegion(0,0,0,0), store.state.chromosome ?? undefined));
+const selectedRegion = ref(store.state.selectedBackboneRegion ?? new BackboneSelection(new SelectedRegion(0,0,0,0), store.state.chromosome));
 const basePairPositionLabel = ref<string>('');
 
 watch(() => store.state.selectedBackboneRegion, (newVal: BackboneSelection, oldVal: BackboneSelection) => {
   // Watch for possible clear out of the selected backbone region
-  if (!isDetailed.value && oldVal.baseSelection.svgHeight > 0 && newVal.baseSelection.svgHeight === 0)
+  if (!isDetailed.value && newVal == null)
   {
-    selectedRegion.value = new BackboneSelection(new SelectedRegion(0,0,0,0), store.state.chromosome ?? undefined);
+    selectedRegion.value = new BackboneSelection(new SelectedRegion(0,0,0,0), store.state.chromosome);
   }
-  else if (!isDetailed.value && newVal.baseSelection.svgHeight > 0)
+  else if (!isDetailed.value && newVal != null)
   {
     selectedRegion.value = newVal;
   }

@@ -114,7 +114,6 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
   //Step 1.1: Create syntenic sections for each block - 1:1 mapping returned from API
   regionInfo.forEach((region) => {
     const blockInfo = region.block;
-    const blockLength = Math.abs(blockInfo.stop - blockInfo.start);
     const blockGaps = region.gaps;
     const blockGenes = region.genes;
     const blockChromosome = blockInfo.chromosome;
@@ -292,7 +291,6 @@ function syntenicDatatrackBuilder(genomicData: Gene[], syntenyRegion: SyntenyReg
         genomicElement
       );
 
-      const geneSymbol = geneDatatrackSection.gene.symbol.toLowerCase();
       if (!processedGeneIds.includes(genomicElement.rgdId))
       {
         processedGeneIds.push(genomicElement.rgdId);
@@ -449,12 +447,6 @@ function orthologLineBuilder(masterProcessedGenes: Map<number, LoadedGene>, proc
   });
 
   return orthologLines;
-}
-
-function updateCachedData()
-{
-  //Step 1: Check if cached data is available
-
 }
 
 /**
