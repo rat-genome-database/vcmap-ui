@@ -548,7 +548,7 @@ async function prepopulateConfigOptions()
   {
     const prevGene = store.state.gene;
     backboneGene.value = (prevGene.speciesName === backboneSpecies.value.name) ? prevGene : null;
-    if (backboneSelection.baseSelection.length > 0 && backboneSelection.baseSelection.basePairStart <= prevGene.start && backboneSelection.baseSelection.basePairStop >= prevGene.stop)
+    if (backboneSelection.chromosome.seqLength > 0 && 0 <= prevGene.start && backboneSelection.chromosome.seqLength >= prevGene.stop)
     {
       // If user's last selection included this gene
       geneOptionStartPosition.value = store.state.startPos ?? 0;
