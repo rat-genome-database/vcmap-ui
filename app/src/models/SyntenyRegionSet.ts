@@ -76,7 +76,11 @@ export default class SyntenyRegionSet extends GenomicSet
       removedIds.forEach((id) => masterGeneMap.delete(id));
     }
     
-    this.processGeneLabels();
+    if (!updateCache)
+    {
+      this.processGeneLabels();
+    }
+    
   }
 
   public updateRawData(speciesSyntenyData: SpeciesSyntenyData)
