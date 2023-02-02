@@ -91,25 +91,20 @@ export default function useOverviewPanelSelection(store: Store<VCMapState>) {
       const stoppingBasePairCountFromStartOfBackbone = Math.floor((stopOverviewSelectionY.value - overviewBackbone.posY1) * store.state.overviewBasePairToHeightRatio);
       let basePairStop = stoppingBasePairCountFromStartOfBackbone + overviewBackbone.windowStart;
 
-      let startSVGY = startOverviewSelectionY.value;
       if (basePairStart < overviewBackbone.windowStart)
       {
         basePairStart = overviewBackbone.windowStart;
-        startSVGY = overviewBackbone.posY1;
       }
 
-      let stopSVGY = stopOverviewSelectionY.value;
       if (basePairStop > overviewBackbone.windowStop)
       {
         basePairStop = overviewBackbone.windowStop;
-        stopSVGY = overviewBackbone.posY2;
       }
 
-      const backboneChromosome = store.state.chromosome;
-      if (backboneChromosome)
+      const selectedBackboneRegion = store.state.selectedBackboneRegion;
+      if (selectedBackboneRegion)
       {
-        const selectedBackboneRegion = new BackboneSelection(new SelectedRegion(startSVGY, stopSVGY - startSVGY, basePairStart, basePairStop), backboneChromosome);
-        selectedBackboneRegion.generateInnerSelection(basePairStart, basePairStop, store.state.overviewBasePairToHeightRatio);
+        selectedBackboneRegion.setViewportSelection(basePairStart, basePairStop, store.state.overviewBasePairToHeightRatio);
         store.dispatch('setBackboneSelection', selectedBackboneRegion);
       }
     }
