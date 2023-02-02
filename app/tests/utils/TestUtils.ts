@@ -69,7 +69,7 @@ export namespace TestUtils
         gene: null,
         comparativeSpecies: [],
 
-        selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
+        selectedBackboneRegion: null,
         detailedBasePairRange: { start: 0, stop: 0 },
         zoomLevel: 1,
 

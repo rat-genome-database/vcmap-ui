@@ -16,7 +16,7 @@ describe('OverviewControls', () => {
     chromosome: new Chromosome({ chromosome: '1', mapKey: 38, seqLength: 1000000}),
     startPos: 1,
     stopPos: 10000,
-    selectedBackboneRegion: new BackboneSelection(new SelectedRegion(50,100,100,10000)),
+    selectedBackboneRegion: null,
   };
 
   beforeEach(() => {
