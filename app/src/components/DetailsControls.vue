@@ -28,9 +28,9 @@ const store = useStore(key);
 
 const displayedSpeciesRegionLabel = computed(() => {
   const selectedRegion = store.state.selectedBackboneRegion;
-  if (selectedRegion && selectedRegion.innerSelection && selectedRegion.innerSelection.svgHeight > 0)
+  if (selectedRegion && selectedRegion.viewPortSelection && selectedRegion.viewPortSelection.svgHeight > 0)
   {
-    return `${Formatter.addCommasToBasePair(selectedRegion.innerSelection.basePairStart)}-${Formatter.addCommasToBasePair(selectedRegion.innerSelection.basePairStop)}`;
+    return `${Formatter.addCommasToBasePair(selectedRegion.viewPortSelection.basePairStart)}-${Formatter.addCommasToBasePair(selectedRegion.viewPortSelection.basePairStop)}`;
   }
   
   return '';

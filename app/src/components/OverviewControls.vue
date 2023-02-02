@@ -3,7 +3,7 @@
     <div class="col-12">
       <h4>Overview</h4>
       <div class="grid unpadded">
-        <div class="col-5">Displaying:</div>
+        <div class="col-5">Base Selection:</div>
         <div class="col-7 bold" data-test="backbone-overview-display">{{store.state.species?.name}} chr{{store.state.chromosome?.chromosome}}:{{formattedBackboneStart}}-{{formattedBackboneStop}}</div>
         <div class="col-5">Assembly:</div>
         <div class="col-7 bold">{{store.state.species?.activeMap.name}}</div>
@@ -11,7 +11,7 @@
         <div class="col-7 bold">{{backboneLength}}bp</div>
         <div class="col-5">Synteny Threshold:</div>
         <div class="col-7 bold">{{Formatter.addCommasToBasePair(store.state.overviewSyntenyThreshold)}}bp</div>
-        <div class="col-5">Base Selection:</div>
+        <div class="col-5">Displaying:</div>
         <div class="col-7 bold"><span class="clickable-range" @click="openSelectionEditModal">{{selectionRange}}</span></div>
       </div>
     </div>
@@ -70,8 +70,8 @@ const store = useStore(key);
 const $log = useLogger();
 
 let showEditModal = ref(false);
-let startPosition = ref(store.state.selectedBackboneRegion.baseSelection.basePairStart);
-let stopPosition = ref(store.state.selectedBackboneRegion.baseSelection.basePairStop);
+let startPosition = ref(0);
+let stopPosition = ref(store.state.chromosome.seqLength ?? 1);
 
 const isValidStartStop = computed(() => {
   // Do we account for stop positions below start?
@@ -102,16 +102,20 @@ const backboneLength = computed(() => {
 
 const selectionRange = computed(() => {
   let selectedRegion = store.state.selectedBackboneRegion;
-  if (selectedRegion == null || (selectedRegion.baseSelection.basePairStop - selectedRegion.baseSelection.basePairStart <= 0))
-  {
-    return '-';
-  }
+  let chromosome = store.state.chromosome;
 
-  return `${Formatter.addCommasToBasePair(selectedRegion.baseSelection.basePairStart)}bp - ${Formatter.addCommasToBasePair(selectedRegion.baseSelection.basePairStop)}bp`;
+  if (selectedRegion)
+  {
+    return `${Formatter.addCommasToBasePair(selectedRegion.viewportSelection.basePairStart ?? 0)}bp - ${Formatter.addCommasToBasePair(selectedRegion.viewportSelection.basePairStop ?? chromosome.seqLength)}bp`;
+  }
+  else
+  {
+    return `${Formatter.addCommasToBasePair(0)}bp - ${Formatter.addCommasToBasePair(chromosome.seqLength)}bp`;
+  }
 });
 
 const openSelectionEditModal = () => {
-  startPosition.value = store.state.selectedBackboneRegion.baseSelection.basePairStart;
+  startPosition.value = store.state.selectedBackboneRegion.viewportSelection.basePairStart;
   stopPosition.value = store.state.selectedBackboneRegion.baseSelection.basePairStop;
   showEditModal.value = true;
 };
@@ -130,8 +134,8 @@ const saveSelectionChange = () => {
   if (isValidStartStop.value)
   {
     const selectedBackboneRegion = store.state.selectedBackboneRegion;
-    selectedBackboneRegion.adjustBaseSelectionByPosition(startPosition.value, stopPosition.value, store.state.chromosome?.seqLength, store.state.overviewBasePairToHeightRatio);
-    store.dispatch('setBackboneSelection', selectedBackboneRegion);
+    selectedBackboneRegion.setViewportSelection(startPosition.value, stopPosition.value);
+    store.dispatch('setDetailedBasePairRange', { start: startPosition.value, stop: stopPosition.value });
   }
   showEditModal.value = false;
 };
