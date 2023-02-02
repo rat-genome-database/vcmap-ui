@@ -254,6 +254,7 @@ export default createStore({
       context.commit('startPosition', 0);
       context.commit('stopPosition', selection.chromosome.seqLength);
       context.commit('selectedBackboneRegion', selection);
+      context.commit('detailedBasePairRange', { start: selection.viewportSelection?.basePairStart, stop: selection.viewportSelection?.basePairStop });
       // Note: Committing a change to detailedBasePairRange will trigger an update on the Detailed panel
     },
     setDetailedBasePairRange(context: ActionContext<VCMapState, VCMapState>, range: BasePairRange) {
