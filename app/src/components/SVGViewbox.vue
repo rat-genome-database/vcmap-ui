@@ -162,6 +162,8 @@ import { LoadedBlock } from '@/utils/SectionBuilder';
 import OrthologLineSVG from './OrthologLineSVG.vue';
 import LoadingSpinnerMask from './LoadingSpinnerMask.vue';
 
+const LOAD_BY_GENE_VISIBLE_SIZE_MULTIPLIER = 6;
+
 const store = useStore(key);
 const $log = useLogger();
 
@@ -494,8 +496,8 @@ const updateDetailsPanel = async () => {
   if ((loadType == 0) && (store.state.selectedGeneIds.length > 0) && (!geneReload) && loadSelectedGene != null)
   {
     const geneBasePairLength = loadSelectedGene.stop - loadSelectedGene.start;
-    const newInnerStart = Math.max(Math.floor(loadSelectedGene.start - 3 * geneBasePairLength), 0);
-    const newInnerStop = Math.min(Math.floor(loadSelectedGene.stop + 3 * geneBasePairLength), backboneChromosome.seqLength);
+    const newInnerStart = Math.max(Math.floor(loadSelectedGene.start - (LOAD_BY_GENE_VISIBLE_SIZE_MULTIPLIER * geneBasePairLength)), 0);
+    const newInnerStop = Math.min(Math.floor(loadSelectedGene.stop + (LOAD_BY_GENE_VISIBLE_SIZE_MULTIPLIER * geneBasePairLength)), backboneChromosome.seqLength);
 
     const selection = detailedBackboneSet.value.backbone.generateBackboneSelection(newInnerStart, newInnerStop, store.state.detailedBasePairToHeightRatio, backboneChromosome);
     store.dispatch('clearBackboneSelection');
@@ -587,11 +589,11 @@ const adjustDetailedVisibleSetsBasedOnZoom = async (zoomedSelection: SelectedReg
 
 const navigateUp = () => {
   const selectedRegion = store.state.selectedBackboneRegion;
-  const backboneChromosome = store.state.chromosome;
 
-  if (isNavigationUpDisabled.value || selectedRegion.viewportSelection == null) return;
+  if (isNavigationUpDisabled.value || selectedRegion?.viewportSelection == null) return;
+  const chromosome = selectedRegion.chromosome;
 
-  if (selectedRegion && selectedRegion.viewportSelection.length != backboneChromosome.seqLength)
+  if (selectedRegion && selectedRegion.viewportSelection.length != chromosome.seqLength)
   {
     // Adjust the inner selection on the selected region
     selectedRegion.moveInnerSelectionUp(store.state.overviewBasePairToHeightRatio);
@@ -601,10 +603,9 @@ const navigateUp = () => {
 
 const navigateDown = () => {
   const selectedRegion = store.state.selectedBackboneRegion;
+
+  if (isNavigationDownDisabled.value || selectedRegion?.viewportSelection == null) return;
   const chromosome = selectedRegion.chromosome;
-
-
-  if (isNavigationDownDisabled.value || selectedRegion.viewportSelection == null) return;
 
   if (selectedRegion && selectedRegion.viewportSelection.length != chromosome.seqLength)
   {
