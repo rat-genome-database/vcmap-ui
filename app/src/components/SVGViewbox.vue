@@ -161,6 +161,7 @@ import { LoadedGene } from '@/models/DatatrackSection';
 import { LoadedBlock } from '@/utils/SectionBuilder';
 import OrthologLineSVG from './OrthologLineSVG.vue';
 import LoadingSpinnerMask from './LoadingSpinnerMask.vue';
+import { getNewSelectedData } from '@/utils/DataPanelHelpers';
 
 const LOAD_BY_GENE_VISIBLE_SIZE_MULTIPLIER = 6;
 
@@ -358,7 +359,6 @@ const updateOverviewPanel = async () => {
     {
       recreatedSelection.setViewportSelection(0, backboneChromosome.seqLength, store.state.overviewBasePairToHeightRatio);
     }
-
     store.dispatch('setBackboneSelection', recreatedSelection);
   }
 
@@ -500,6 +500,11 @@ const updateDetailsPanel = async () => {
     const newInnerStop = Math.min(Math.floor(loadSelectedGene.stop + (LOAD_BY_GENE_VISIBLE_SIZE_MULTIPLIER * geneBasePairLength)), backboneChromosome.seqLength);
 
     const selection = detailedBackboneSet.value.backbone.generateBackboneSelection(newInnerStart, newInnerStop, store.state.detailedBasePairToHeightRatio, backboneChromosome);
+
+    const newData = getNewSelectedData(store, loadSelectedGene);
+
+    store.dispatch('setSelectedData', newData.selectedData);
+    store.dispatch('setSelectedGeneIds', newData.rgdIds);
     store.dispatch('clearBackboneSelection');
     store.dispatch('setBackboneSelection', selection);
 

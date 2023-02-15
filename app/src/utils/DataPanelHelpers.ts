@@ -59,9 +59,9 @@ function getGeneOrthologData(store: Store<VCMapState>, gene: Gene)
   rgdIds.push(gene.rgdId);
 
   // If the gene has orthologs, add them to the selected data
-  
-  if (!Array.isArray(gene.orthologs)) {
-    const geneValues = Object.values(gene.orthologs);
+  const geneOrthos = geneDatatracks[0].gene.orthologs;
+  if (geneOrthos) {
+    const geneValues = Object.values(geneOrthos);
     geneValues.forEach( (rgdIdx: any) => {
         const orthologGenes = masterGeneMapByRGDId?.get(rgdIdx[0]);
         orthologGenes?.forEach(geneDatatrack => {
@@ -69,9 +69,17 @@ function getGeneOrthologData(store: Store<VCMapState>, gene: Gene)
         });
         rgdIds.push(rgdIdx[0]);
       });
-    }
-
-
+    } else if (!Array.isArray(gene.orthologs)) {
+      const geneValues = Object.values(gene.orthologs);
+      geneValues.forEach( (rgdIdx: any) => {
+          const orthologGenes = masterGeneMapByRGDId?.get(rgdIdx[0]);
+          orthologGenes?.forEach(geneDatatrack => {
+            selectedDataList.push(new SelectedData(geneDatatrack.gene, 'Gene'));
+          });
+          rgdIds.push(rgdIdx[0]);
+        });
+      }
+  
   if (gene.orthologs.length > 0)
   {
     gene.orthologs.forEach((rgdId: number) => {
