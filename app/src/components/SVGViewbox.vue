@@ -373,6 +373,7 @@ const updateOverviewPanel = async () => {
 
 const updateDetailsPanel = async () => {
   $log.debug(`Updating Detailed Panel`);
+  console.log('SVGViewbox: Updating Details Panel Start');
 
   const detailedUpdateStart = Date.now();
   enableProcessingLoadMask.value = true;
@@ -438,6 +439,7 @@ const updateDetailsPanel = async () => {
   {
 
     // Create the backbone track for the entire base selection at the updated Detailed panel resolution
+    console.log('SVGViewbox: Start of creating backbone track')
     const backboneTrackStart = Date.now();
 
     const detailedBackbone = createBackboneSection(backboneSpecies, backboneChromosome, 0, backboneChromosome.seqLength, 'detailed');
@@ -445,11 +447,13 @@ const updateDetailsPanel = async () => {
 
     // Create the backbone data tracks for the entire selection at the updated Detailed panel resolution
     const queryBackboneboneGenesStart = Date.now();
+    console.log('SVGViewbox: Before querying for genes');
     const tempBackboneGenes: Gene[] = await GeneApi.getGenesByRegion(backboneChromosome.chromosome, 0, backboneChromosome.seqLength, backboneSpecies.activeMap.key, backboneSpecies.name, comparativeSpeciesIds);
 
     timeQueryBackboneGenes = Date.now() - queryBackboneboneGenesStart;
 
     const backboneDatatracksStart = Date.now();
+    console.log('SVGViewbox: Before building datatrack');
     const backboneDatatrackInfo = backboneDatatrackBuilder(tempBackboneGenes, detailedBackbone, 0, backboneChromosome.seqLength);
     masterGeneMap = backboneDatatrackInfo.masterGeneMap;
     timeCreateBackboneDatatracks = Date.now() - backboneDatatracksStart;
@@ -463,6 +467,7 @@ const updateDetailsPanel = async () => {
   if (detailedSyntenySets.value.length == 0)
   {
     const syntenyTracksStart = Date.now();
+    console.log('SVGViewbox: Before creating synteny ergions and datatracks');
     const detailedSyntenyData = await createSyntenicRegionsAndDatatracks(
       store.state.comparativeSpecies,
       backboneChromosome,
@@ -480,13 +485,17 @@ const updateDetailsPanel = async () => {
     timeSyntenyTracks = Date.now() - syntenyTracksStart;
 
     const adjustVisibleRegionStart = Date.now();
+    console.log('SVGViewbox: Before adjusting visible sets for zoom')
     await adjustDetailedVisibleSetsBasedOnZoom(zoomedSelection, false);
     timeAdjustVisibleRegion = Date.now() - adjustVisibleRegionStart;
     enableProcessingLoadMask.value = false;
   }
   else
   {
+    const adjustVisibleRegionStart = Date.now();
+    console.log('SVGViewbox: Before adjusting visible sets for zoom')
     await adjustDetailedVisibleSetsBasedOnZoom(zoomedSelection, true);
+    timeAdjustVisibleRegion = Date.now() - adjustVisibleRegionStart;
   }
 
   store.dispatch('setLoadedBlocks', masterBlockMap);
@@ -530,9 +539,20 @@ const updateDetailsPanel = async () => {
     'Adjust Visible Region': timeAdjustVisibleRegion,
     'Misc': timeDetailedUpdateOther,
   });
+
+  console.log(`Update Detailed Time: ${timeDetailedUpdate}`);
+  console.log(`Create Backbone Track: ${timeCreateBackboneTrack}`);
+  console.log(`Query Backbone Genes: ${timeQueryBackboneGenes}`);
+  console.log(`Create Backbone Datatracks: ${timeCreateBackboneDatatracks}`);
+  console.log(`Create Backbone Set: ${timeCreateBackboneSet}`);
+  console.log(`Create Synteny Tracks: ${timeSyntenyTracks}`);
+  console.log(`Adjust Visible Region': ${timeAdjustVisibleRegion}`);
+  console.log(`Misc: ${timeDetailedUpdateOther}`);
 };
 
 const adjustDetailedVisibleSetsBasedOnZoom = async (zoomedSelection: SelectedRegion, updateCache: boolean) => {
+  console.log('adjustDetailVisibleSetsBasedOnZoom: Start');
+  const visibleSetAdjustmentStart = Date.now();
   enableProcessingLoadMask.value = true;
   let masterGeneMap: Map<number, LoadedGene> | null = store.state.loadedGenes;
   let masterBlockMap: Map<number, LoadedBlock> | null = new Map<number, LoadedBlock>();
@@ -547,6 +567,7 @@ const adjustDetailedVisibleSetsBasedOnZoom = async (zoomedSelection: SelectedReg
   // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
   if (detailedBackboneSet.value)
   {
+    console.log('adjustDetailVisibleSetsBasedOnZoom: Start of if block for adjusting visible sets')
     const startTime = Date.now();
     const backboneTiming = detailedBackboneSet.value.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop);
     const backboneEndTime = Date.now();
@@ -555,14 +576,20 @@ const adjustDetailedVisibleSetsBasedOnZoom = async (zoomedSelection: SelectedReg
     });
     const endTime = Date.now();
 
-    logPerformanceReport('Visible Set Adjustment Time', endTime - startTime, {
+    logPerformanceReport('adjustDetailVisibleSetsBasedOnZoom: Visible Set Adjustment Time', endTime - startTime, {
       ...backboneTiming,
       'synteny sets adjustment': endTime -backboneEndTime,
     });
+    console.log(`Visible Set Adjustment Time: ${endTime - startTime}`);
+    console.log(`   Backbone adjustment timeing:`);
+    console.log(backboneTiming);
+    console.log(`   Synteny Sets adjustment: ${endTime - backboneEndTime}`);
   }
 
   if (updateCache)
   {
+    console.log('adjustDetailVisibleSetsBasedOnZoom: Updating Cache')
+    const syntenyDatatrackStart = Date.now();
     detailedSyntenyData = await createSyntenicRegionsAndDatatracks(
       store.state.comparativeSpecies,
       backboneChromosome,
@@ -575,12 +602,17 @@ const adjustDetailedVisibleSetsBasedOnZoom = async (zoomedSelection: SelectedReg
       masterBlockMap,
       masterGeneMap ?? undefined,
     );
+    console.log(`adjustDetailVisibleSetsBasedOnZoom Creating syntenty regions and datatracks: ${Date.now() - syntenyDatatrackStart}`);
   }
 
   if (detailedSyntenyData)
   {
+    const updatingSyntenyDataStart = Date.now();
     updateSyntenyData(detailedSyntenyData.syntenyRegionSets);
+    console.log(`adjustDetailVisibleSetsBasedOnZoom updateSyntenyData: ${Date.now()  - updatingSyntenyDataStart}`);
+    const updatingMasterGeneMapStart = Date.now();
     updateMasterGeneMap(detailedSyntenyData.masterGeneMap);
+    console.log(`adjustDetailVisibleSetsBasedOnZoom updateMasterGeneMap: ${Date.now() - updatingMasterGeneMapStart}`);
   }
 
 
@@ -590,6 +622,7 @@ const adjustDetailedVisibleSetsBasedOnZoom = async (zoomedSelection: SelectedReg
 
   store.dispatch('setZoomLevel', tempZoomLevel);
   enableProcessingLoadMask.value = false;
+  console.log(`adjustDetailVisibleSetsBasedOnZoom: ${Date.now() - visibleSetAdjustmentStart}`);
 };
 
 const navigateUp = () => {

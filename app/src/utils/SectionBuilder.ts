@@ -51,12 +51,15 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
     syntenyApiParams.optional.includeOrthologs = true;
   }
 
+  const speciesSyntenyApiStart = Date.now();
   const speciesSyntenyDataArray = await SyntenyApi.getSyntenicRegions(syntenyApiParams);
+  console.log(`createSyntenicRegionsAndDatatracks getSyntenicRegions API: ${Date.now() - speciesSyntenyApiStart}`);
 
   //Step 2: Pass data to block processing pipeline per species
   if (speciesSyntenyDataArray && speciesSyntenyDataArray.length > 0)
   {
     const syntenyRegionSets: SyntenyRegionSet[] = [];
+    const syntenicBuilderStart = Date.now();
     speciesSyntenyDataArray.forEach((speciesSyntenyData, index) => {
       const syntenyRegionSet = syntenicSectionBuilder(
         speciesSyntenyData, 
@@ -70,6 +73,7 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
       );
       syntenyRegionSets.push(syntenyRegionSet);
     });
+    console.log(`createSyntenicRegionsAndDatatracks syntenicSecitonBuilder Time: ${Date.now() - syntenicBuilderStart}`);
 
     //Step 3: Capture processed data and return to caller for drawing
     return {
@@ -462,6 +466,17 @@ function splitBlockWithGaps(block: SyntenySection, gaps: SyntenyComponent[], thr
   const chromosome = block.chromosome;
   const windowStart = block.backboneSection.windowStart; // The start bp of the corresponding backbone section in the visible window
   const windowStop = block.backboneSection.windowStop; // The stop bp of the corresponding backbone section in the visible window
+  const gapsLine = new SyntenySection({
+    start: block.backboneSection.start,
+    stop: block.backboneSection.stop,
+    backboneSection: block.backboneSection,
+    threshold: threshold,
+    type: 'gap',
+    chromosome: chromosome,
+    chainLevel: 1,
+    orientation: '+',
+  });
+  processedGaps.push(gapsLine);
 
   gaps.forEach((gap, index) => {
     const blockBackboneStart = block.backboneSection.start;
@@ -480,6 +495,7 @@ function splitBlockWithGaps(block: SyntenySection, gaps: SyntenyComponent[], thr
         windowStop: windowStop, 
         renderType: renderType 
       });
+
       const gapSyntenicSection = new SyntenySection({
         start: orientedGapStart, 
         stop: orientedGapStop, 
@@ -490,7 +506,7 @@ function splitBlockWithGaps(block: SyntenySection, gaps: SyntenyComponent[], thr
         chainLevel: gap.chainLevel, 
         orientation: gap.orientation 
       });
-      processedGaps.push(gapSyntenicSection);
+      //processedGaps.push(gapSyntenicSection);
 
       lastProcessedSection = gapSyntenicSection;
     }
@@ -533,7 +549,7 @@ function splitBlockWithGaps(block: SyntenySection, gaps: SyntenyComponent[], thr
       });
 
       processedBlocks.push(blockSyntenicSection);
-      processedGaps.push(gapSyntenicSection);
+      //processedGaps.push(gapSyntenicSection);
 
       lastProcessedSection = gapSyntenicSection;
     }
@@ -576,7 +592,7 @@ function splitBlockWithGaps(block: SyntenySection, gaps: SyntenyComponent[], thr
       });
 
       processedBlocks.push(blockSyntenicSection);
-      processedGaps.push(gapSyntenicSection);
+      //processedGaps.push(gapSyntenicSection);
       lastProcessedSection = gapSyntenicSection;
     }
     else
@@ -626,7 +642,7 @@ function splitBlockWithGaps(block: SyntenySection, gaps: SyntenyComponent[], thr
       });
 
       processedBlocks.push(blockSyntenicSection);
-      processedGaps.push(gapSyntenicSection);
+      //processedGaps.push(gapSyntenicSection);
     }
   });
 
