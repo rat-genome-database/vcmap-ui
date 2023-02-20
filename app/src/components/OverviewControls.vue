@@ -2,6 +2,10 @@
   <div class="grid unpadded col-4">
     <div class="col-12">
       <h4>Overview</h4>
+      <Button
+        label="Backbone QTLs"
+        @click="loadBackboneQtls"
+      />
       <div class="grid unpadded">
         <div class="col-5">Base Selection:</div>
         <div class="col-7 bold" data-test="backbone-overview-display">{{store.state.species?.name}} chr{{store.state.chromosome?.chromosome}}:{{formattedBackboneStart}}-{{formattedBackboneStop}}</div>
@@ -63,6 +67,7 @@ import { useStore } from 'vuex';
 import { useLogger } from 'vue-logger-plugin';
 import { key } from '@/store';
 import VCMapDialog from './VCMapDialog.vue';
+import QtlApi from '@/api/QtlApi';
 
 const store = useStore(key);
 const $log = useLogger();
@@ -137,6 +142,19 @@ const saveSelectionChange = () => {
   }
   showEditModal.value = false;
 };
+
+const loadBackboneQtls = () => {
+  const chromosome = store.state.chromosome;
+  const backboneRegion = store.state.selectedBackboneRegion;
+  const start = backboneRegion?.viewportSelection?.basePairStart;
+  const stop = backboneRegion?.viewportSelection?.basePairStop;
+  const mapKey = store.state.species?.activeMap;
+  if (chromosome && stop && mapKey)
+  {
+    console.log('going to get qtls');
+    QtlApi.getQtls(chromosome.chromosome, start || 0, stop, mapKey.key);
+  }
+}
 </script>
 
 <style lang="scss" scoped>
