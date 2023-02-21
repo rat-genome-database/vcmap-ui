@@ -472,7 +472,7 @@ function splitBlockWithGaps(block: SyntenySection, gaps: SyntenyComponent[], thr
     threshold: threshold,
     type: 'gap',
     chromosome: chromosome,
-    chainLevel: 1,
+    chainLevel: block.chainLevel,
     orientation: '+',
   });
   processedGaps.push(gapsLine);

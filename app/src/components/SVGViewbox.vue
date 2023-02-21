@@ -439,7 +439,7 @@ const updateDetailsPanel = async () => {
   {
 
     // Create the backbone track for the entire base selection at the updated Detailed panel resolution
-    console.log('SVGViewbox: Start of creating backbone track')
+    console.log('SVGViewbox: Start of creating backbone track');
     const backboneTrackStart = Date.now();
 
     const detailedBackbone = createBackboneSection(backboneSpecies, backboneChromosome, 0, backboneChromosome.seqLength, 'detailed');
@@ -485,7 +485,7 @@ const updateDetailsPanel = async () => {
     timeSyntenyTracks = Date.now() - syntenyTracksStart;
 
     const adjustVisibleRegionStart = Date.now();
-    console.log('SVGViewbox: Before adjusting visible sets for zoom')
+    console.log('SVGViewbox: Before adjusting visible sets for zoom');
     await adjustDetailedVisibleSetsBasedOnZoom(zoomedSelection, false);
     timeAdjustVisibleRegion = Date.now() - adjustVisibleRegionStart;
     enableProcessingLoadMask.value = false;
@@ -493,7 +493,7 @@ const updateDetailsPanel = async () => {
   else
   {
     const adjustVisibleRegionStart = Date.now();
-    console.log('SVGViewbox: Before adjusting visible sets for zoom')
+    console.log('SVGViewbox: Before adjusting visible sets for zoom');
     await adjustDetailedVisibleSetsBasedOnZoom(zoomedSelection, true);
     timeAdjustVisibleRegion = Date.now() - adjustVisibleRegionStart;
   }
@@ -567,7 +567,7 @@ const adjustDetailedVisibleSetsBasedOnZoom = async (zoomedSelection: SelectedReg
   // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
   if (detailedBackboneSet.value)
   {
-    console.log('adjustDetailVisibleSetsBasedOnZoom: Start of if block for adjusting visible sets')
+    console.log('adjustDetailVisibleSetsBasedOnZoom: Start of if block for adjusting visible sets');
     const startTime = Date.now();
     const backboneTiming = detailedBackboneSet.value.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop);
     const backboneEndTime = Date.now();
@@ -588,7 +588,7 @@ const adjustDetailedVisibleSetsBasedOnZoom = async (zoomedSelection: SelectedReg
 
   if (updateCache)
   {
-    console.log('adjustDetailVisibleSetsBasedOnZoom: Updating Cache')
+    console.log('adjustDetailVisibleSetsBasedOnZoom: Updating Cache');
     const syntenyDatatrackStart = Date.now();
     detailedSyntenyData = await createSyntenicRegionsAndDatatracks(
       store.state.comparativeSpecies,
