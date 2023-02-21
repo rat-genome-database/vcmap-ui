@@ -127,8 +127,8 @@ describe('SectionBuilder', () => {
     expect(region2.syntenyGaps.length).toEqual(1);
     expect(region2.syntenyBlocks[0].speciesStart).toEqual(130_000);
     expect(region2.syntenyBlocks[0].speciesStop).toEqual(130_300);
-    expect(region2.syntenyGaps[0].speciesStart).toEqual(130_300);
-    expect(region2.syntenyGaps[0].speciesStop).toEqual(130_600);
+    expect(region2.syntenyGaps[0].speciesStart).toEqual(130_000);
+    expect(region2.syntenyGaps[0].speciesStop).toEqual(131_000);
     expect(region2.syntenyBlocks[1].speciesStart).toEqual(130_600);
     expect(region2.syntenyBlocks[1].speciesStop).toEqual(131_000);
 
@@ -143,8 +143,8 @@ describe('SectionBuilder', () => {
     expect(region4.syntenyGaps.length).toEqual(1);
     expect(region4.syntenyBlocks[0].speciesStart).toEqual(85_000_000);
     expect(region4.syntenyBlocks[0].speciesStop).toEqual(83_500_000);
-    expect(region4.syntenyGaps[0].speciesStart).toEqual(83_500_000);
-    expect(region4.syntenyGaps[0].speciesStop).toEqual(82_500_000);
+    expect(region4.syntenyGaps[0].speciesStart).toEqual(85_000_000);
+    expect(region4.syntenyGaps[0].speciesStop).toEqual(82_000_000);
     expect(region4.syntenyBlocks[1].speciesStart).toEqual(82_500_000);
     expect(region4.syntenyBlocks[1].speciesStop).toEqual(82_000_000);
   });
