@@ -2,7 +2,7 @@
   <span data-test="zoom-level-label">{{zoomLevel}}x</span>
   <Slider :disabled="isZoomDisabled || store.state.isDetailedPanelUpdating" class="zoom-slider" data-test="zoom-slider" v-model="zoomLevel" :step="1" :min="1" :max="100" @change="onZoomChange" />
   <div class="zoom-options-container">
-    <div class="zoom-options" v-for="interval in zoomIntervals" :key="interval">
+    <div class="zoom-options " v-for="interval in zoomIntervals" :key="interval">
       <Button class="pi pi-angle-double-left zoom-button" @click="zoomOut(interval)"/>
       <p class="interval-label">{{interval}}x</p>
     </div>
@@ -153,6 +153,7 @@ const zoomIn = (zoomInterval: number) => {
   flex-direction: row;
   margin-top: 1rem;
   padding: 0.5rem;
+  justify-content: space-evenly;
 }
 
 .zoom-options{
