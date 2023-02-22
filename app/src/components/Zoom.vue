@@ -2,15 +2,21 @@
   <span data-test="zoom-level-label">{{zoomLevel}}x</span>
   <Slider :disabled="isZoomDisabled || store.state.isDetailedPanelUpdating" class="zoom-slider" data-test="zoom-slider" v-model="zoomLevel" :step="1" :min="1" :max="100" @change="onZoomChange" />
   <div class="zoom-options-container">
-    <div class="zoom-options " v-for="interval in zoomIntervals" :key="interval">
-      <Button class="pi pi-angle-double-left zoom-button" @click="zoomOut(interval)"/>
-      <p class="interval-label">{{interval}}x</p>
+    <div class="zoom-in-container">
+      <div class="zoom-options" v-for="interval in zoomIntervals" :key="interval">
+        <Button class="zoom-button" icon="pi pi-angle-double-right" @click="zoomIn(interval)"></Button>
+        <p class="interval-label">{{interval}}x</p>
+      </div>
+      <p class="zoom-in-label">Zoom In</p>
     </div>
-    <div class="zoom-options" v-for="interval in zoomIntervals" :key="interval">
-      <Button class="pi pi-angle-double-right zoom-button" @click="zoomIn(interval)"/>
-      <p class="interval-label">{{interval}}x</p>
+    <div class="zoom-out-container">
+      <div class="zoom-options " v-for="interval in zoomIntervals" :key="interval">
+        <Button class="zoom-button" icon="pi pi-angle-double-left" @click="zoomOut(interval)"/>
+        <p class="interval-label">{{interval}}x</p>
+      </div>
+      <p class="zoom-out-label">Zoom Out</p>
     </div>
-    <!-- <Button class="pi pi-angle-right" v-for="interval in zoomIntervals" :key="interval"/> -->
+    
   </div>
   
 
@@ -28,7 +34,7 @@ const store = useStore(key);
 
 const zoomLevel = ref(1);
 let zoomProcessTimeoutId: number | undefined;
-const zoomIntervals = [1.5, 3, 10, 25];
+const zoomIntervals = [1.5, 3, 10, 100];
 
 watch(() => store.state.isDetailedPanelUpdating, (isUpdating) => {
   if (!isUpdating && store.state.selectedBackboneRegion != null)
@@ -151,9 +157,9 @@ const zoomIn = (zoomInterval: number) => {
 .zoom-options-container{
   display: flex;
   flex-direction: row;
-  margin-top: 1rem;
-  padding: 0.5rem;
-  justify-content: space-evenly;
+  // margin-top: 1rem;
+  // padding: 0.5rem;
+  justify-content: space-around;
 }
 
 .zoom-options{
@@ -173,5 +179,22 @@ const zoomIn = (zoomInterval: number) => {
   color: black;
   margin-left: 2px;
   margin-right: 2px;
+  height: 1rem;
+}
+.zoom-in-container{
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: baseline;
+}
+.zoom-out-container{
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+}
+.zoom-in-label{
+  margin-right: 0.5rem;
+}
+.zoom-out-label{
+  margin-left: 0.5rem;
 }
 </style>
