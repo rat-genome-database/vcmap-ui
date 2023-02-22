@@ -1,6 +1,27 @@
 <template>
   <span data-test="zoom-level-label">{{zoomLevel}}x</span>
   <Slider :disabled="isZoomDisabled || store.state.isDetailedPanelUpdating" class="zoom-slider" data-test="zoom-slider" v-model="zoomLevel" :step="1" :min="1" :max="100" @change="onZoomChange" />
+  <div class="zoom-options-container">
+    <div class="zoom-out-container">
+      <div class="zoom-options " v-for="interval in zoomIntervals" :key="interval">
+        <Button class="zoom-button" icon="pi pi-angle-double-left" @click="zoomOut(interval)"/>
+        <p class="interval-label">{{interval}}x</p>
+      </div>
+      <p class="zoom-out-label">Zoom Out</p>
+    </div>
+    <div class="zoom-in-container">
+      <div class="zoom-options" v-for="interval in zoomIntervals" :key="interval">
+        <Button class="zoom-button" icon="pi pi-angle-double-right" @click="zoomIn(interval)"></Button>
+        <p class="interval-label">{{interval}}x</p>
+      </div>
+      <p class="zoom-in-label">Zoom In</p>
+    </div>
+    
+  </div>
+  
+
+  
+
 </template>
 
 <script lang="ts" setup>
@@ -13,6 +34,7 @@ const store = useStore(key);
 
 const zoomLevel = ref(1);
 let zoomProcessTimeoutId: number | undefined;
+const zoomIntervals = [1.5, 3, 10, 100];
 
 watch(() => store.state.isDetailedPanelUpdating, (isUpdating) => {
   if (!isUpdating && store.state.selectedBackboneRegion != null)
@@ -55,6 +77,9 @@ const onZoomChange = (zoomLevel: number) => {
 const zoom = (zoomLevel: number) => {
   const selectedRegion = store.state.selectedBackboneRegion;
   const backboneChromosome = store.state.chromosome;
+
+  console.log('SELECTED REGION', selectedRegion);
+  console.log('BACKBONE', backboneChromosome);
 
   if (zoomLevel === 1)
   {
@@ -104,6 +129,13 @@ const zoom = (zoomLevel: number) => {
     store.dispatch('setDetailedBasePairRange', { start: zoomedStart, stop: zoomedStop });
   }
 };
+
+const zoomOut = (zoomInterval: number) => {
+  zoom( zoomLevel.value /zoomInterval);
+};
+const zoomIn = (zoomInterval: number) => {
+  zoom( zoomLevel.value * zoomInterval);
+};
 </script>
 
 <style lang="scss" scoped>
@@ -121,5 +153,46 @@ const zoom = (zoomLevel: number) => {
 .zoom-slider
 {
   margin-top: 1rem;
+}
+.zoom-options-container{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+}
+
+.zoom-options{
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+}
+
+.interval-label{
+  margin: 0;
+  font-size: 10px;
+  align-self: center;
+}
+.zoom-button{
+  color: black;
+  color: black;
+  margin-left: 2px;
+  margin-right: 2px;
+  height: 1rem;
+}
+.zoom-in-container{
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+}
+.zoom-out-container{
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: baseline;
+}
+.zoom-in-label{
+  margin-right: 0.5rem;
+}
+.zoom-out-label{
+  margin-left: 0.5rem;
 }
 </style>
