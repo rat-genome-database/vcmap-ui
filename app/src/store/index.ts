@@ -346,7 +346,7 @@ export default createStore({
     },
   },
 
-  //plugins: process.env.NODE_ENV !== 'production'
-  //  ? [vuexLocal.plugin, logger] // Only use Vuex logger in development
-  //  : [vuexLocal.plugin]
+  plugins: process.env.NODE_ENV !== 'production'
+    ? [vuexLocal.plugin, logger] // Only use Vuex logger in development
+    : [vuexLocal.plugin]
 });

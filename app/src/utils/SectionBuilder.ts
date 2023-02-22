@@ -51,15 +51,12 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
     syntenyApiParams.optional.includeOrthologs = true;
   }
 
-  const speciesSyntenyApiStart = Date.now();
   const speciesSyntenyDataArray = await SyntenyApi.getSyntenicRegions(syntenyApiParams);
-  console.log(`createSyntenicRegionsAndDatatracks getSyntenicRegions API: ${Date.now() - speciesSyntenyApiStart}`);
 
   //Step 2: Pass data to block processing pipeline per species
   if (speciesSyntenyDataArray && speciesSyntenyDataArray.length > 0)
   {
     const syntenyRegionSets: SyntenyRegionSet[] = [];
-    const syntenicBuilderStart = Date.now();
     speciesSyntenyDataArray.forEach((speciesSyntenyData, index) => {
       const syntenyRegionSet = syntenicSectionBuilder(
         speciesSyntenyData, 
@@ -73,7 +70,6 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
       );
       syntenyRegionSets.push(syntenyRegionSet);
     });
-    console.log(`createSyntenicRegionsAndDatatracks syntenicSecitonBuilder Time: ${Date.now() - syntenicBuilderStart}`);
 
     //Step 3: Capture processed data and return to caller for drawing
     return {
