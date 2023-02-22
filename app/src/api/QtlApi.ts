@@ -6,5 +6,6 @@ export default class QtlApi
   {
     const qtlRes = await httpInstance.get<any>(`/qtls/mapped/${chr}/${start}/${stop}/${mapKey}`);
     console.log(qtlRes);
+    return qtlRes.data;
   }
 }

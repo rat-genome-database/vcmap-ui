@@ -130,6 +130,10 @@
     :on-confirm-callback="(isMissingSynteny) ? () => {allowDetailedPanelProcessing = true} : undefined"
   />
   <LoadingSpinnerMask v-if="enableProcessingLoadMask" :style="getDetailedPosition()"></LoadingSpinnerMask>
+  <Button
+    label="Backbone QTLs"
+    @click="loadBackboneQtls"
+  />
 </template>
 
 <script setup lang="ts">
@@ -156,6 +160,7 @@ import { createBackboneSection, backboneDatatrackBuilder, createBackboneSet } fr
 import BackboneSetSVG from './BackboneSetSVG.vue';
 import SyntenyRegionSet from '@/models/SyntenyRegionSet';
 import GeneApi from '@/api/GeneApi';
+import QtlApi from '@/api/QtlApi';
 import BackboneSet from '@/models/BackboneSet';
 import { LoadedGene } from '@/models/DatatrackSection';
 import { LoadedBlock } from '@/utils/SectionBuilder';
@@ -821,6 +826,18 @@ const getDetailedPosition = () =>
     return styleElement;
   }
 };
+
+const loadBackboneQtls = () => {
+  const chromosome = store.state.chromosome;
+  const backboneRegion = store.state.selectedBackboneRegion;
+  const start = backboneRegion?.viewportSelection?.basePairStart;
+  const stop = backboneRegion?.viewportSelection?.basePairStop;
+  const mapKey = store.state.species?.activeMap;
+  if (chromosome && stop && mapKey)
+  {
+    QtlApi.getQtls(chromosome.chromosome, start || 0, stop, mapKey.key);
+  }
+}
 
 document.addEventListener('scroll' , getDetailedPosition);
 
