@@ -2,6 +2,8 @@
   <template v-if="showStartStop && region.gaplessBlock.startLabel.isVisible">
     <OverviewSyntenyLabelsSVG :gapless-block="region.gaplessBlock"/>
   </template>
+  <GapSVG v-for="(gapSection,index) in level1Gaps" :key="index" :gap-section="gapSection" />
+  <GapSVG v-for="(gapSection,index) in level2Gaps" :key="index" :gap-section="gapSection" />
   <template v-for="(blockSection, index) in level1Blocks" :key="index">
     <rect
       class="block-section"
@@ -20,8 +22,6 @@
     <ChromosomeLabelSVG v-if="showChromosome" :synteny-section="blockSection" />
   </template>
 
-  <GapSVG v-for="(gapSection,index) in level1Gaps" :key="index" :gap-section="gapSection" />
-
   <template v-for="(blockSection, index) in level2Blocks" :key="index">
     <rect
       class="level-2 block-section"
@@ -37,8 +37,6 @@
 
     <ChromosomeLabelSVG v-if="showChromosome" :synteny-section="blockSection" />
   </template>
-
-  <GapSVG v-for="(gapSection,index) in level2Gaps" :key="index" :gap-section="gapSection" />
 
   <template v-if="region && showSyntenyOnHover">
     <SyntenyLinesSVG v-for="(blockSection, index) in region.syntenyBlocks" :key="index" :synteny-section="blockSection" />

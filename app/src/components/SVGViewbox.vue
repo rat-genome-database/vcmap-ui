@@ -486,7 +486,9 @@ const updateDetailsPanel = async () => {
   }
   else
   {
+    const adjustVisibleRegionStart = Date.now();
     await adjustDetailedVisibleSetsBasedOnZoom(zoomedSelection, true);
+    timeAdjustVisibleRegion = Date.now() - adjustVisibleRegionStart;
   }
 
   store.dispatch('setLoadedBlocks', masterBlockMap);
@@ -536,7 +538,6 @@ const adjustDetailedVisibleSetsBasedOnZoom = async (zoomedSelection: SelectedReg
   enableProcessingLoadMask.value = true;
   let masterGeneMap: Map<number, LoadedGene> | null = store.state.loadedGenes;
   let masterBlockMap: Map<number, LoadedBlock> | null = new Map<number, LoadedBlock>();
-  const originalSelectedBackboneRegion = store.state.selectedBackboneRegion;
 
   const selectedRegion = store.state.selectedBackboneRegion;
   const backboneChromosome = selectedRegion.chromosome;
