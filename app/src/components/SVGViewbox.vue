@@ -145,6 +145,10 @@
     label="Backbone QTLs"
     @click="loadBackboneQtls"
   />
+  <Button
+    label="Backbone Variants"
+    @click="loadBackboneVariants"
+  />
 </template>
 
 <script setup lang="ts">
@@ -172,6 +176,7 @@ import BackboneSetSVG from './BackboneSetSVG.vue';
 import SyntenyRegionSet from '@/models/SyntenyRegionSet';
 import GeneApi from '@/api/GeneApi';
 import QtlApi from '@/api/QtlApi';
+import VariantApi from '@/api/VariantApi';
 import BackboneSet from '@/models/BackboneSet';
 import { LoadedGene } from '@/models/DatatrackSection';
 import { LoadedBlock } from '@/utils/SectionBuilder';
@@ -853,7 +858,24 @@ const loadBackboneQtls = async () => {
     const qtls = await QtlApi.getQtls(chromosome.chromosome, start || 0, stop, mapKey.key);
     qtlDatatracks.value = createQtlDatatracks(qtls, backboneSpecies, chromosome);
   }
-}
+};
+
+const loadBackboneVariants = async () => {
+  const chromosome = store.state.chromosome;
+  const backboneSpecies = store.state.species;
+  const backboneRegion = store.state.selectedBackboneRegion;
+  const start = backboneRegion?.viewportSelection?.basePairStart;
+  const stop = backboneRegion?.viewportSelection?.basePairStop;
+  const mapKey = store.state.species?.activeMap;
+  console.log(mapKey);
+  console.log(start);
+  console.log(stop);
+  if (chromosome && stop && mapKey && backboneSpecies)
+  {
+    const variants = await VariantApi.getVariants(chromosome.chromosome, start || 0, stop, mapKey.key);
+    console.log(variants);
+  }
+};
 
 document.addEventListener('scroll' , getDetailedPosition);
 
