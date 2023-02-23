@@ -1,4 +1,4 @@
-import { SpeciesSyntenyData } from "@/api/SyntenyApi";
+import { SpeciesSyntenyData, SyntenyRegionData } from "@/api/SyntenyApi";
 import SVGConstants from "@/utils/SVGConstants";
 import DatatrackSection from "./DatatrackSection";
 import { LoadedGene } from "./DatatrackSection";
@@ -8,6 +8,7 @@ import OrthologLine from "./OrthologLine";
 import SyntenyRegion from "./SyntenyRegion";
 import SyntenySection from "./SyntenySection";
 import { mergeGeneLabels } from "@/utils/GeneLabelMerger";
+import { SelectedRegion } from "./BackboneSelection";
 
 const LEVEL_2_WIDTH_MULTIPLIER = 0.75;
 
@@ -53,35 +54,76 @@ export default class SyntenyRegionSet extends GenomicSet
     this.sortBasePairLabels();
   }
 
-  public adjustVisibleSet(visibleBackboneStart: number, visibleBackboneStop: number,  updateCache: boolean, masterGeneMap?: Map<number, LoadedGene>)
+  public adjustVisibleSet(visibleBackboneStart: number, visibleBackboneStop: number,  updateCache: boolean, updateData?: SyntenyRegionData[])
   {
-    let removedIds: number[] = [];
+    const removedIds: number[] = [];
     for (let index = 0; index < this.regions.length; index++)
     {
       const currRegion = this.regions[index];
       if (updateCache && this.regionIsVisible(currRegion, visibleBackboneStart, visibleBackboneStop))
       {
-        removedIds = removedIds.concat(currRegion.geneIds);
-        this.regions.splice(index, 1);
-        index--;
+        currRegion.adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
+        if (updateData)
+        {
+          const updateGaps = updateData.find(region => region.block.backboneStart == currRegion.gaplessBlock.backboneStart)
+          if (updateGaps)
+          {
+            currRegion.splitBlockWithGaps(updateGaps.gaps, visibleBackboneStart, visibleBackboneStop, 'detailed');
+          }
+        }
+      }
+      else if (updateCache)
+      {
+        currRegion.syntenyGaps = [];
+        currRegion.adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
       }
       else
       {
         currRegion.adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
       }
     }
-
-    if (updateCache && masterGeneMap && removedIds.length > 0)
-    {
-      removedIds.forEach((id) => masterGeneMap.delete(id));
-    }
     
     if (!updateCache)
     {
       this.processGeneLabels();
     }
-    
   }
+
+
+  public adjustVisibleSetOnNav(visibleBackboneStart: number, visibleBackboneStop: number, adjustedRegion: SelectedRegion, updateCache: boolean, updateData?: SyntenyRegionData[])
+  {
+    const removedIds: number[] = [];
+    console.log(adjustedRegion);
+    for (let index = 0; index < this.regions.length; index++)
+    {
+      const currRegion = this.regions[index];
+      if (updateCache && this.regionIsVisible(currRegion, visibleBackboneStart, visibleBackboneStop))
+      {
+        currRegion.adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
+        if (updateData)
+        {
+          const updateGaps = updateData.find(region => region.block.backboneStart == currRegion.gaplessBlock.backboneStart)
+          if (updateGaps && updateGaps.gaps.length > 0)
+          {
+            currRegion.splitBlockWithGaps(updateGaps.gaps, adjustedRegion.basePairStart, adjustedRegion.basePairStop, 'detailed');
+          }
+        }
+      }
+      else if (updateCache)
+      {
+        currRegion.syntenyGaps = [];
+        currRegion.adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
+      }
+      else
+      {
+        currRegion.adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
+      }
+    }
+    
+    this.processGeneLabels();
+
+  }
+
 
   public updateRawData(speciesSyntenyData: SpeciesSyntenyData)
   {
@@ -261,6 +303,6 @@ export default class SyntenyRegionSet extends GenomicSet
 
   private regionIsVisible(region: SyntenyRegion, start: number, stop: number): boolean
   {
-    return ( region.gaplessBlock.backboneSection.start >= start && region.gaplessBlock.backboneSection.start < stop ) || (region.gaplessBlock.backboneSection.stop <= stop && region.gaplessBlock.backboneSection.stop > start);
+    return ( region.gaplessBlock.backboneSection.start >= start && region.gaplessBlock.backboneSection.start < stop ) || (region.gaplessBlock.backboneSection.stop <= stop && region.gaplessBlock.backboneSection.stop > start) || (region.gaplessBlock.backboneSection.start <= start && region.gaplessBlock.backboneSection.stop >= stop);
   }
 }

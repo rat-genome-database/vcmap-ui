@@ -24,6 +24,8 @@ export default abstract class GenomicSection implements VCMapSVGElement
 
   speciesStart: number = 0;  // start basepair of the section on its original species
   speciesStop: number = 0;   // stop basepair of the section on its original species
+  backboneStart: number = 0; // start basepair of the section on the backbone species
+  backboneStop: number = 0;  // stop basepair of the section on the backbone species
   length: number = 0;        // length of the section on its original species
   type: GenomicSectionType = 'block';
 
@@ -38,6 +40,8 @@ export default abstract class GenomicSection implements VCMapSVGElement
     this.elementColor = color;
 
     this.backboneSection = backboneSection;
+    this.backboneStart = this.backboneSection.start;
+    this.backboneStop = this.backboneSection.stop;
     this.setYPositionsBasedOnBackboneSection();
 
     if (type === 'block' || type === 'gene')

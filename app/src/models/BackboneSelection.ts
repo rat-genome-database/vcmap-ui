@@ -54,7 +54,7 @@ export default class BackboneSelection
 
 
   private shiftPercent: number = 0.2; // TODO: configurable?
-  private bufferZonePercent: number = 0.15; // TODO: configurable?
+  private bufferZonePercent: number = 0.25; // TODO: configurable?
 
   constructor(baseSelection: SelectedRegion, chromosome: Chromosome, fullBackboneSelection?: SelectedRegion, viewportSelection?: SelectedRegion)
   {
@@ -63,7 +63,6 @@ export default class BackboneSelection
 
     const basePairStart = 0;
     const basePairStop = this.chromosome.seqLength;
-    const length = basePairStop - basePairStart;
   }
 
   public setViewportSelection(visibleStart: number, visibleStop: number, overviewBasePairToHeightRatio: number)
@@ -86,6 +85,7 @@ export default class BackboneSelection
     }
 
     this.viewportSelection = new SelectedRegion(innerSVGYPoint, innerSVGHeight, visibleStart, visibleStop);
+    this.setBufferzoneSelection(overviewBasePairToHeightRatio);
     return this.viewportSelection;
   }
 
@@ -106,6 +106,8 @@ export default class BackboneSelection
       newStop = 0 + innerSelectionLength;
     }
 
+      //TODO: add check for closeness of viewport to bufferzone to determine whether or not to adjust bufferzone
+    this.adjustBufferzoneSelection(overviewBasePairToHeightRatio, 'up');
     return this.setViewportSelection(newStart, newStop, overviewBasePairToHeightRatio);
   }
 
@@ -126,6 +128,57 @@ export default class BackboneSelection
       newStop = this.chromosome.seqLength;
     }
 
+    //TODO: add check for closeness of viewport to bufferzone to determine whether or not to adjust bufferzone
+    this.adjustBufferzoneSelection(overviewBasePairToHeightRatio, 'down');
     return this.setViewportSelection(newStart, newStop, overviewBasePairToHeightRatio);
+  }
+
+  public setBufferzoneSelection(overviewBasePairToHeightRatio: number,)
+  {
+    if (!this.viewportSelection)
+    {
+      return;
+    }
+
+    const viewportSelectionLength = this.viewportSelection.basePairStop - this.viewportSelection.basePairStart;
+
+    //Initial setting of the bufferzone
+   
+    const bufferZoneStart = Math.max(this.viewportSelection.basePairStart - viewportSelectionLength * this.bufferZonePercent, 0);
+    const bufferZoneStop = Math.min(this.viewportSelection.basePairStop + viewportSelectionLength * this.bufferZonePercent, this.chromosome.seqLength);
+    const bufferZoneSVGPoint = ((bufferZoneStart - 0) / overviewBasePairToHeightRatio) + SVGConstants.overviewTrackYPosition;
+    const bufferZoneSVGHeight = (bufferZoneStop - bufferZoneStart) / overviewBasePairToHeightRatio;
+
+    this.bufferZoneSelection = new SelectedRegion(bufferZoneSVGPoint, bufferZoneSVGHeight, bufferZoneStart, bufferZoneStop);
+  }
+
+  public adjustBufferzoneSelection(overviewBasePairToHeightRatio: number, navDirection: string)
+  {
+    if (!this.viewportSelection || !this.bufferZoneSelection)
+    {
+      return;
+    }
+
+    const viewportSelectionLength = this.viewportSelection.basePairStop - this.viewportSelection.basePairStart;
+
+    if (navDirection === 'up')
+    {
+      const bufferZoneStart = Math.max(this.viewportSelection.basePairStart - viewportSelectionLength * this.bufferZonePercent, 0);
+      const bufferZoneStop = Math.min(this.viewportSelection.basePairStop + viewportSelectionLength * this.bufferZonePercent, this.chromosome.seqLength);
+      const bufferZoneSVGPoint = ((bufferZoneStart - 0) / overviewBasePairToHeightRatio) + SVGConstants.overviewTrackYPosition;
+      const bufferZoneSVGHeight = (this.bufferZoneSelection.basePairStop - bufferZoneStart) / overviewBasePairToHeightRatio;
+
+      this.bufferZoneSelection = new SelectedRegion(bufferZoneSVGPoint, bufferZoneSVGHeight, bufferZoneStart, this.bufferZoneSelection.basePairStop);
+    }
+
+    if (navDirection === 'down')
+    {
+      const bufferZoneStart = Math.max(this.viewportSelection.basePairStart - viewportSelectionLength * this.bufferZonePercent, 0);
+      const bufferZoneStop = Math.min(this.viewportSelection.basePairStop + viewportSelectionLength * this.bufferZonePercent, this.chromosome.seqLength);
+      const bufferZoneSVGPoint = ((this.bufferZoneSelection.basePairStart - 0) / overviewBasePairToHeightRatio) + SVGConstants.overviewTrackYPosition;
+      const bufferZoneSVGHeight = (bufferZoneStop - this.bufferZoneSelection.basePairStart) / overviewBasePairToHeightRatio;
+
+      this.bufferZoneSelection = new SelectedRegion(bufferZoneSVGPoint, bufferZoneSVGHeight, this.bufferZoneSelection.basePairStart, bufferZoneStop);
+    }
   }
 }

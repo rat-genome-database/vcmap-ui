@@ -16,6 +16,6 @@ export abstract class GenomicSet
     this.mapName = mapName ?? '';
   }
 
-  protected abstract adjustVisibleSet(visibleBackboneStart: number, visibleBackboneStop: number, updateCache: boolean, masterGeneMap?: Map<number, LoadedGene>): void;
+  protected abstract adjustVisibleSet(visibleBackboneStart: number, visibleBackboneStop: number, updateCache: boolean): void;
   protected abstract createTitleLabels(): void;
 }
