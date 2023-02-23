@@ -67,7 +67,7 @@ export interface SyntenyComponent
 /**
  * Represents the combination of blocks, gaps, and genes in a synteny region
  */
-interface SyntenyRegionData
+export interface SyntenyRegionData
 {
   block: SyntenyComponent;
   gaps: SyntenyComponent[];
