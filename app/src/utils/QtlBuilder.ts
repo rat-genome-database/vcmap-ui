@@ -1,0 +1,14 @@
+import BackboneSection from "@/models/BackboneSection";
+import DatatrackSection from "@/models/DatatrackSection";
+import { createBackboneSection } from "./BackboneBuilder";
+
+export function createQtlDatatracks(qtls: any[], backboneSpecies: any, chromosome: any)
+{
+  const qtlDatatracks = qtls.map((qtl) => {
+    const backboneSection = new BackboneSection({ start: qtl.start, stop: qtl.stop, windowStart: 0, windowStop: chromosome.seqLength, renderType: 'detailed' });
+    const newQtl = new DatatrackSection({start: qtl.start, stop: qtl.stop, backboneSection: backboneSection}, 'block', 'blue');
+    newQtl.adjustYPositionsBasedOnVisibleStartAndStop(0, chromosome.seqLength);
+    return newQtl;
+  });
+  return qtlDatatracks;
+}

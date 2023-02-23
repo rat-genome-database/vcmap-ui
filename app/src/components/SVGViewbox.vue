@@ -85,6 +85,17 @@
       </template>
     </template>
 
+    <template v-for="(qtlDatatrack, index) in qtlDatatracks" :key="index">
+      <rect
+        :y="qtlDatatrack.posY1"
+        :x="650 + Math.round((Math.random() - 0.5) * 40) * 4"
+        width="4"
+        :height="qtlDatatrack.height"
+        :fill="qtlDatatrack.elementColor"
+        :fill-opacity="0.1"
+      />
+    </template>
+
     <!-- Navigation buttons -->
     <rect class="navigation-btn" :class="{'disabled': isNavigationUpDisabled }" @click="navigateUp" :x="SVGConstants.overviewPanelWidth" :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
     <rect class="navigation-btn" :class="{'disabled': isNavigationDownDisabled }" @click="navigateDown" :x="SVGConstants.overviewPanelWidth" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
@@ -167,6 +178,7 @@ import { LoadedBlock } from '@/utils/SectionBuilder';
 import OrthologLineSVG from './OrthologLineSVG.vue';
 import LoadingSpinnerMask from './LoadingSpinnerMask.vue';
 import { getNewSelectedData } from '@/utils/DataPanelHelpers';
+import { createQtlDatatracks } from '@/utils/QtlBuilder';
 
 const LOAD_BY_GENE_VISIBLE_SIZE_MULTIPLIER = 6;
 
@@ -185,6 +197,7 @@ let detailedBackboneSet = ref<BackboneSet>();
 let overviewSyntenySets = ref<SyntenyRegionSet[]>([]);
 let enableProcessingLoadMask = ref<boolean>(false); // Whether or not to show the processing load mask
 let isRendered = ref<boolean>(true); // Whether or not the user is adjusting the detailed panel
+let qtlDatatracks = ref<any>();
 
 let geneReload: boolean = false; //whether or not load by gene reload has occurred
 
@@ -827,15 +840,18 @@ const getDetailedPosition = () =>
   }
 };
 
-const loadBackboneQtls = () => {
+const loadBackboneQtls = async () => {
   const chromosome = store.state.chromosome;
+  const backboneSpecies = store.state.species;
   const backboneRegion = store.state.selectedBackboneRegion;
   const start = backboneRegion?.viewportSelection?.basePairStart;
   const stop = backboneRegion?.viewportSelection?.basePairStop;
   const mapKey = store.state.species?.activeMap;
-  if (chromosome && stop && mapKey)
+
+  if (chromosome && stop && mapKey && backboneSpecies)
   {
-    QtlApi.getQtls(chromosome.chromosome, start || 0, stop, mapKey.key);
+    const qtls = await QtlApi.getQtls(chromosome.chromosome, start || 0, stop, mapKey.key);
+    qtlDatatracks.value = createQtlDatatracks(qtls, backboneSpecies, chromosome);
   }
 }
 

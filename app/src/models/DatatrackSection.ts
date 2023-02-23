@@ -2,6 +2,8 @@ import Gene from './Gene';
 import Label, { GeneLabel } from './Label';
 import GenomicSection, { BackboneAlignment, GenomicSectionParams, RenderType, WindowBasePairRange } from "./GenomicSection";
 
+type DatatrackSectionType = 'gene' | 'block';
+
 export interface LoadedGene
 {
   genes: {
