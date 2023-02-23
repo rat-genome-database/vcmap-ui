@@ -655,7 +655,6 @@ const adjustDetailedVisibleSetsBasedOnNav = async (lastBufferzone: SelectedRegio
     );
   }
   
-  console.log(detailedSyntenyData);
   // Create the displayed TrackSets for the Detailed panel based on the zoomed start/stop
   if (detailedBackboneSet.value && detailedSyntenyData)
   {

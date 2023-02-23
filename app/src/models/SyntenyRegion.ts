@@ -159,7 +159,7 @@ export default class SyntenyRegion
       {
         const lastGap = gaps[gaps.length - 1];
   
-        if (lastGap.backboneStop > gap.backboneStart && lastGap.backboneStop > gap.backboneStop)
+        if (lastGap && lastGap.backboneStop > gap.backboneStart && lastGap.backboneStop > gap.backboneStop)
         {
           // current gap is encompassed by last gap (safe-guard)
           return;
@@ -189,7 +189,7 @@ export default class SyntenyRegion
   
     // Check to see if the gapless block ends with a gap. If not, then create and process the last synteny block
     const finalGap = gaps[gaps.length - 1];
-    if (finalGap.backboneStop < block.backboneSection.stop)
+    if (finalGap && finalGap.backboneStop < block.backboneSection.stop)
     {
       const blockBackboneSection = new BackboneSection({
         start: finalGap.backboneStop,

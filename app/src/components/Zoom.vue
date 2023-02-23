@@ -78,8 +78,6 @@ const zoom = (zoomLevel: number) => {
   const selectedRegion = store.state.selectedBackboneRegion;
   const backboneChromosome = store.state.chromosome;
 
-  console.log('SELECTED REGION', selectedRegion);
-  console.log('BACKBONE', backboneChromosome);
 
   if (zoomLevel === 1)
   {

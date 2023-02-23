@@ -93,7 +93,6 @@ export default class SyntenyRegionSet extends GenomicSet
   public adjustVisibleSetOnNav(visibleBackboneStart: number, visibleBackboneStop: number, adjustedRegion: SelectedRegion, updateCache: boolean, updateData?: SyntenyRegionData[])
   {
     const removedIds: number[] = [];
-    console.log(adjustedRegion);
     for (let index = 0; index < this.regions.length; index++)
     {
       const currRegion = this.regions[index];
