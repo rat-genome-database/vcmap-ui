@@ -1,4 +1,7 @@
 import { LoadedGene } from "./DatatrackSection";
+import { SelectedRegion } from "./BackboneSelection";
+import { SyntenyRegionData } from "@/api/SyntenyApi";
+
 import Label from "./Label";
 
 /**
@@ -16,6 +19,6 @@ export abstract class GenomicSet
     this.mapName = mapName ?? '';
   }
 
-  protected abstract adjustVisibleSet(visibleBackboneStart: number, visibleBackboneStop: number, updateCache: boolean): void;
+  protected abstract adjustVisibleSet(visibleBackboneStart: number, visibleBackboneStop: number, updateCache: boolean, bufferzone: SelectedRegion, updateData?: SyntenyRegionData[]): void;
   protected abstract createTitleLabels(): void;
 }

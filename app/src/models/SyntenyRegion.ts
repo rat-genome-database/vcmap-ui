@@ -17,7 +17,6 @@ interface SyntenyRegionParams
 export default class SyntenyRegion
 {
   gaplessBlock: SyntenySection;
-  rawGaps: SyntenyComponent[] = [];                           // raw synteny gaps from the API
   syntenyGaps: SyntenySection[] = [];                         // synteny gaps occupying this region
   syntenyBlocks: SyntenySection[] = [];                       // synteny blocks occupying this region
   datatrackSections: DatatrackSection[] = [];                 // DatatrackSections belonging to this SyntenyRegion
@@ -69,10 +68,10 @@ export default class SyntenyRegion
     this.orthologLines.length > 0 ? this.orthologLines = this.orthologLines.concat(orthologLine) : this.orthologLines = orthologLine;
   }
 
-  public splitBlockWithGaps(gaps: SyntenyComponent[], windowStart:number, windowStop: number, renderType: RenderType)
+  public splitBlockWithGaps(gaps: SyntenyComponent[], windowStart: number, windowStop: number, renderType: RenderType)
   {
-    this.syntenyBlocks = [];
-    this.syntenyGaps = [];
+    this.syntenyBlocks.splice(0, this.syntenyBlocks.length);
+    this.syntenyGaps.splice(0, this.syntenyGaps.length);
 
     const block = this.gaplessBlock;
     const processedGaps: SyntenySection[] = [];
@@ -93,9 +92,11 @@ export default class SyntenyRegion
     let lastGapBackboneStop = 0;
     let lastGapSpeciesStop = 0;
   
+    gaps.filter( gap => { return gap.backboneStop < windowStart || gap.backboneStart > windowStop });
     gaps.forEach((gap, index) => {
       const blockBackboneStart = block.backboneSection.start;
       const gapBackboneStart = gap.backboneStart;
+      const gapBackboneStop = gap.backboneStop;
   
       const orientedGapStart = (block.isInverted) ? gap.stop : gap.start;
       const orientedGapStop = (block.isInverted) ? gap.start : gap.stop;
@@ -210,9 +211,13 @@ export default class SyntenyRegion
   
       processedBlocks.push(blockSyntenicSection);
     }
-  
-    this.syntenyBlocks = processedBlocks;
-    this.syntenyGaps = processedGaps;
+    
+    processedBlocks.forEach(block => {
+      this.syntenyBlocks.push(block);
+    });
+    processedGaps.forEach(gap => {
+      this.syntenyGaps.push(gap);
+    });
   }
 
   public get sortedSyntenicBlocksAndGaps()
