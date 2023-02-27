@@ -68,7 +68,7 @@ export default class SyntenyRegion
     this.orthologLines.length > 0 ? this.orthologLines = this.orthologLines.concat(orthologLine) : this.orthologLines = orthologLine;
   }
 
-  public splitBlockWithGaps(gaps: SyntenyComponent[], windowStart: number, windowStop: number, renderType: RenderType)
+  public splitBlockWithGaps(gaps: SyntenyComponent[], windowStart: number, windowStop: number, threshold: number, renderType: RenderType)
   {
     this.syntenyBlocks.splice(0, this.syntenyBlocks.length);
     this.syntenyGaps.splice(0, this.syntenyGaps.length);
@@ -92,7 +92,7 @@ export default class SyntenyRegion
     let lastGapBackboneStop = 0;
     let lastGapSpeciesStop = 0;
   
-    gaps.filter( gap => { return gap.backboneStop < windowStart || gap.backboneStart > windowStop });
+    gaps.filter( gap => { return ((gap.stop - gap.start) >= (threshold * 10)) && (gap.backboneStop < windowStart || gap.backboneStart > windowStop) });
     gaps.forEach((gap, index) => {
       const blockBackboneStart = block.backboneSection.start;
       const gapBackboneStart = gap.backboneStart;

@@ -199,7 +199,7 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
       //Step 2.2: Record threshold level these gaps were returned at
 
       //Step 2.3 store processed gap data in block
-      currSyntenicRegion.splitBlockWithGaps(gaps, windowStart, windowStop, renderType);
+      currSyntenicRegion.splitBlockWithGaps(gaps, windowStart, windowStop, threshold, renderType);
       if (currSyntenicRegion.syntenyBlocks.length == 0)
       {
         currSyntenicRegion.addSyntenyBlocks([gaplessSyntenyBlock]);

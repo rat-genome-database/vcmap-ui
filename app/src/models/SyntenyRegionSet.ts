@@ -54,7 +54,7 @@ export default class SyntenyRegionSet extends GenomicSet
     this.sortBasePairLabels();
   }
 
-  public adjustVisibleSet(visibleBackboneStart: number, visibleBackboneStop: number,  updateCache: boolean, bufferzone: SelectedRegion, updateData?: SyntenyRegionData[])
+  public adjustVisibleSet(visibleBackboneStart: number, visibleBackboneStop: number,  updateCache: boolean, bufferzone: SelectedRegion, threshold: number, updateData?: SyntenyRegionData[])
   {
     for (let index = 0; index < this.regions.length; index++)
     {
@@ -67,7 +67,7 @@ export default class SyntenyRegionSet extends GenomicSet
           const updateGaps = updateData.find(region => region.block.backboneStart == currRegion.gaplessBlock.backboneStart)
           if (updateGaps)
           {
-            currRegion.splitBlockWithGaps(updateGaps.gaps, visibleBackboneStart, visibleBackboneStop, 'detailed');
+            currRegion.splitBlockWithGaps(updateGaps.gaps, visibleBackboneStart, visibleBackboneStop, threshold, 'detailed');
           }
         }
       }
@@ -88,7 +88,7 @@ export default class SyntenyRegionSet extends GenomicSet
   }
 
 
-  public adjustVisibleSetOnNav(visibleBackboneStart: number, visibleBackboneStop: number, adjustedRegion: SelectedRegion, updateCache: boolean, updateData?: SyntenyRegionData[])
+  public adjustVisibleSetOnNav(visibleBackboneStart: number, visibleBackboneStop: number, adjustedRegion: SelectedRegion, updateCache: boolean, threshold: number, updateData?: SyntenyRegionData[])
   {
     for (let index = 0; index < this.regions.length; index++)
     {
@@ -101,7 +101,7 @@ export default class SyntenyRegionSet extends GenomicSet
           const updateGaps = updateData.find(region => region.block.backboneStart == currRegion.gaplessBlock.backboneStart)
           if (updateGaps && updateGaps.gaps.length > 0)
           {
-            currRegion.splitBlockWithGaps(updateGaps.gaps, visibleBackboneStart, visibleBackboneStop, 'detailed');
+            currRegion.splitBlockWithGaps(updateGaps.gaps, visibleBackboneStart, visibleBackboneStop, threshold, 'detailed');
           }
         }
       }

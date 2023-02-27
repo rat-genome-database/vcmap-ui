@@ -19,6 +19,6 @@ export abstract class GenomicSet
     this.mapName = mapName ?? '';
   }
 
-  protected abstract adjustVisibleSet(visibleBackboneStart: number, visibleBackboneStop: number, updateCache: boolean, bufferzone: SelectedRegion, updateData?: SyntenyRegionData[]): void;
+  protected abstract adjustVisibleSet(visibleBackboneStart: number, visibleBackboneStop: number, updateCache: boolean, bufferzone: SelectedRegion, threshold: number, updateData?: SyntenyRegionData[]): void;
   protected abstract createTitleLabels(): void;
 }
