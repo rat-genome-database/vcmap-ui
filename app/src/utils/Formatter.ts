@@ -19,4 +19,12 @@ export namespace Formatter
 
     return bp.toLocaleString();
   }
+
+  export function evaluateBPInput(bp: number | null)
+  {
+    if(bp === null) {
+      return null;
+    }
+    return bp;
+  }
 }
