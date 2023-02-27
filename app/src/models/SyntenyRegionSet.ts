@@ -54,13 +54,12 @@ export default class SyntenyRegionSet extends GenomicSet
     this.sortBasePairLabels();
   }
 
-  public adjustVisibleSet(visibleBackboneStart: number, visibleBackboneStop: number,  updateCache: boolean, updateData?: SyntenyRegionData[])
+  public adjustVisibleSet(visibleBackboneStart: number, visibleBackboneStop: number,  updateCache: boolean, bufferzone: SelectedRegion, updateData?: SyntenyRegionData[])
   {
-    const removedIds: number[] = [];
     for (let index = 0; index < this.regions.length; index++)
     {
       const currRegion = this.regions[index];
-      if (updateCache && this.regionIsVisible(currRegion, visibleBackboneStart, visibleBackboneStop))
+      if (updateCache && this.regionIsVisible(currRegion, bufferzone.basePairStart, bufferzone.basePairStop))
       {
         currRegion.adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
         if (updateData)
@@ -74,7 +73,6 @@ export default class SyntenyRegionSet extends GenomicSet
       }
       else if (updateCache)
       {
-        currRegion.syntenyGaps = [];
         currRegion.adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
       }
       else
@@ -92,11 +90,10 @@ export default class SyntenyRegionSet extends GenomicSet
 
   public adjustVisibleSetOnNav(visibleBackboneStart: number, visibleBackboneStop: number, adjustedRegion: SelectedRegion, updateCache: boolean, updateData?: SyntenyRegionData[])
   {
-    const removedIds: number[] = [];
     for (let index = 0; index < this.regions.length; index++)
     {
       const currRegion = this.regions[index];
-      if (updateCache && this.regionIsVisible(currRegion, visibleBackboneStart, visibleBackboneStop))
+      if (updateCache && this.regionIsVisible(currRegion, adjustedRegion.basePairStart, adjustedRegion.basePairStop))
       {
         currRegion.adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
         if (updateData)
@@ -104,13 +101,12 @@ export default class SyntenyRegionSet extends GenomicSet
           const updateGaps = updateData.find(region => region.block.backboneStart == currRegion.gaplessBlock.backboneStart)
           if (updateGaps && updateGaps.gaps.length > 0)
           {
-            currRegion.splitBlockWithGaps(updateGaps.gaps, adjustedRegion.basePairStart, adjustedRegion.basePairStop, 'detailed');
+            currRegion.splitBlockWithGaps(updateGaps.gaps, visibleBackboneStart, visibleBackboneStop, 'detailed');
           }
         }
       }
       else if (updateCache)
       {
-        currRegion.syntenyGaps = [];
         currRegion.adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
       }
       else
@@ -120,7 +116,6 @@ export default class SyntenyRegionSet extends GenomicSet
     }
     
     this.processGeneLabels();
-
   }
 
 
