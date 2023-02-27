@@ -1,6 +1,5 @@
 import BackboneSection from "@/models/BackboneSection";
 import DatatrackSection from "@/models/DatatrackSection";
-import { createBackboneSection } from "./BackboneBuilder";
 
 export function createQtlDatatracks(qtls: any[], backboneSpecies: any, chromosome: any)
 {

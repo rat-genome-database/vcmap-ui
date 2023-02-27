@@ -68,3 +68,15 @@ export class GeneDatatrack extends DatatrackSection
     );
   }
 }
+
+export class VariantDensity extends DatatrackSection
+{
+  variantCount: number; // number of variants contained within the datatrack section
+  constructor(params: DatatrackSectionParams, variantCount: number)
+  {
+    super(params, 'block', '#39FF33');
+    this.variantCount = variantCount;
+    // this.elementColor = getColorByCount(variantCount);
+  }
+
+}
