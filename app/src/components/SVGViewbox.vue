@@ -578,7 +578,7 @@ const adjustDetailedVisibleSetsBasedOnZoom = async (zoomedSelection: SelectedReg
         updateData = detailedSyntenyData.gapData.find((s: SyntenyRegionSet) => s.speciesName == set.speciesName);
       }
 
-      set.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop, updateCache, bufferZoneSelection, updateData?.regionData);
+      set.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop, updateCache, bufferZoneSelection, store.state.detailsSyntenyThreshold, updateData?.regionData);
     });
     const endTime = Date.now();
 
@@ -666,7 +666,7 @@ const adjustDetailedVisibleSetsBasedOnNav = async (lastBufferzone: SelectedRegio
 
     detailedSyntenySets.value.forEach((set: SyntenyRegionSet) => {
       const updateData = detailedSyntenyData.gapData.find((s: SyntenyRegionSet) => s.speciesName == set.speciesName);
-      set.adjustVisibleSetOnNav(zoomedSelection.basePairStart, zoomedSelection.basePairStop, adjustedRegion, true, updateData?.regionData);
+      set.adjustVisibleSetOnNav(zoomedSelection.basePairStart, zoomedSelection.basePairStop, adjustedRegion, true, store.state.detailsSyntenyThreshold, updateData?.regionData);
     });
 
     const endTime = Date.now();
@@ -678,9 +678,7 @@ const adjustDetailedVisibleSetsBasedOnNav = async (lastBufferzone: SelectedRegio
 
     updateSyntenyData(detailedSyntenyData.syntenyRegionSets);
     updateMasterGeneMap(detailedSyntenyData.masterGeneMap);
-
   }
-
 
   enableProcessingLoadMask.value = false;
 };
