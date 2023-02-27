@@ -23,25 +23,23 @@
           <h4 class="config-label">Start Position</h4>
           <p class="label-description">Min: 0bp</p>
           <InputNumber
-            showButtons
             v-model="startPosition"
-            suffix="bp"
-            :step="500"
             :max="maxPosition - 1"
             :min="0"
+            :useGrouping="false"
           />
+          <div class="load-by-position-label">{{Formatter.addCommasToBasePair(startPosition)}}{{Formatter.evaluateBPInput(startPosition) !== null ? 'bp' : 'N/A'}}</div>
         </div>
         <div class="col-6">
           <h4 class="config-label">Stop Position</h4>
           <p class="label-description">Max: {{Formatter.addCommasToBasePair(maxPosition)}}bp</p>
           <InputNumber
-            showButtons
             v-model="stopPosition"
-            suffix="bp"
-            :step="500"
             :max="maxPosition"
             :min="1"
+            :useGrouping="false"
           />
+          <div class="load-by-position-label">{{Formatter.addCommasToBasePair(stopPosition)}}{{stopPosition ? 'bp' : 'N/A'}}</div>
         </div>
       </div>
     </template>
@@ -169,6 +167,12 @@ p.label-description
 {
   margin: 0 0 0.5rem 0;
   font-style: italic;
+}
+
+.load-by-position-label
+{
+  margin-top: 0.5em;
+  font-weight: bold;
 }
 
 .config-label
