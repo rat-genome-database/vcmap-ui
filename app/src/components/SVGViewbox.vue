@@ -42,7 +42,7 @@
       </template>
     </template>
 
-    <template v-if="detailedSyntenySets.length">
+    <template v-if="detailedSyntenySets.length && isRendered">
       <template v-for="(syntenySet, index) in detailedSyntenySets" :key="index">
         <template v-for="(syntenicRegion, index) in syntenySet.regions" :key="index">
           <SectionSVG show-chromosome :region="syntenicRegion as SyntenyRegion" />
@@ -133,7 +133,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch, nextTick } from 'vue';
 import { useStore } from 'vuex';
 import SectionSVG from './SectionSVG.vue';
 import SVGConstants from '@/utils/SVGConstants';
@@ -179,6 +179,7 @@ let overviewBackboneSet = ref<BackboneSet>();
 let detailedBackboneSet = ref<BackboneSet>();
 let overviewSyntenySets = ref<SyntenyRegionSet[]>([]);
 let enableProcessingLoadMask = ref<boolean>(false); // Whether or not to show the processing load mask
+let isRendered = ref<boolean>(true); // Whether or not the user is adjusting the detailed panel
 
 let geneReload: boolean = false; //whether or not load by gene reload has occurred
 
@@ -551,8 +552,8 @@ const adjustDetailedVisibleSetsBasedOnZoom = async (zoomedSelection: SelectedReg
     detailedSyntenyData = await createSyntenicRegionsAndDatatracks(
       store.state.comparativeSpecies,
       backboneChromosome,
-      zoomedSelection.basePairStart,
-      zoomedSelection.basePairStop,
+      bufferZoneSelection.basePairStart,
+      bufferZoneSelection.basePairStop,
       zoomedSelection.basePairStart,
       zoomedSelection.basePairStop,
       store.state.detailsSyntenyThreshold,
@@ -577,7 +578,7 @@ const adjustDetailedVisibleSetsBasedOnZoom = async (zoomedSelection: SelectedReg
         updateData = detailedSyntenyData.gapData.find((s: SyntenyRegionSet) => s.speciesName == set.speciesName);
       }
 
-      set.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop, updateCache, updateData?.regionData);
+      set.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop, updateCache, bufferZoneSelection, updateData?.regionData);
     });
     const endTime = Date.now();
 
@@ -591,6 +592,7 @@ const adjustDetailedVisibleSetsBasedOnZoom = async (zoomedSelection: SelectedReg
   {
     updateSyntenyData(detailedSyntenyData.syntenyRegionSets);
     updateMasterGeneMap(detailedSyntenyData.masterGeneMap);
+    store.dispatch('setLoadedBlocks', detailedSyntenyData.masterBlockMap);
   }
 
   const originalRegionLength = (backboneChromosome.seqLength);
@@ -625,7 +627,7 @@ const adjustDetailedVisibleSetsBasedOnNav = async (lastBufferzone: SelectedRegio
       store.state.comparativeSpecies,
       backboneChromosome,
       currBufferzone.basePairStart,
-      lastBufferzone.basePairStart,
+      currBufferzone.basePairStop,
       zoomedSelection.basePairStart,
       zoomedSelection.basePairStop,
       store.state.detailsSyntenyThreshold,
@@ -643,8 +645,8 @@ const adjustDetailedVisibleSetsBasedOnNav = async (lastBufferzone: SelectedRegio
     detailedSyntenyData = await createSyntenicRegionsAndDatatracks(
       store.state.comparativeSpecies,
       backboneChromosome,
-      lastBufferzone.basePairStop,
-      currBufferzone.basePairStop,
+      zoomedSelection.basePairStart,
+      zoomedSelection.basePairStop,
       zoomedSelection.basePairStart,
       zoomedSelection.basePairStop,
       store.state.detailsSyntenyThreshold,
@@ -664,10 +666,9 @@ const adjustDetailedVisibleSetsBasedOnNav = async (lastBufferzone: SelectedRegio
 
     detailedSyntenySets.value.forEach((set: SyntenyRegionSet) => {
       const updateData = detailedSyntenyData.gapData.find((s: SyntenyRegionSet) => s.speciesName == set.speciesName);
-  
-
-      set.adjustVisibleSetOnNav(zoomedSelection.basePairStart, zoomedSelection.basePairStop, adjustedRegion,  true, updateData?.regionData);
+      set.adjustVisibleSetOnNav(zoomedSelection.basePairStart, zoomedSelection.basePairStop, adjustedRegion, true, updateData?.regionData);
     });
+
     const endTime = Date.now();
 
     logPerformanceReport('Visible Set Adjustment Time', endTime - startTime, {
@@ -677,7 +678,9 @@ const adjustDetailedVisibleSetsBasedOnNav = async (lastBufferzone: SelectedRegio
 
     updateSyntenyData(detailedSyntenyData.syntenyRegionSets);
     updateMasterGeneMap(detailedSyntenyData.masterGeneMap);
+
   }
+
 
   enableProcessingLoadMask.value = false;
 };
@@ -693,7 +696,7 @@ const navigateUp = () => {
     const currBufferzone = new SelectedRegion(selectedRegion.bufferZoneSelection.SVGYPoint, selectedRegion.bufferZoneSelection.SVGHeight, selectedRegion.bufferZoneSelection.basePairStart, selectedRegion.bufferZoneSelection.basePairStop);
     // Adjust the inner selection on the selected region
     selectedRegion.moveInnerSelectionUp(store.state.overviewBasePairToHeightRatio);
-    adjustDetailedVisibleSetsBasedOnZoom(selectedRegion.viewportSelection, false);
+    adjustDetailedVisibleSetsBasedOnNav(currBufferzone, 'up');
   }
 };
 
@@ -708,7 +711,7 @@ const navigateDown = () => {
     const currBufferzone = new SelectedRegion(selectedRegion.bufferZoneSelection.SVGYPoint, selectedRegion.bufferZoneSelection.SVGHeight, selectedRegion.bufferZoneSelection.basePairStart, selectedRegion.bufferZoneSelection.basePairStop);
     // Adjust the inner selection on the selected region
     selectedRegion.moveInnerSelectionDown(store.state.overviewBasePairToHeightRatio);
-    adjustDetailedVisibleSetsBasedOnZoom(selectedRegion.viewportSelection, false);
+    adjustDetailedVisibleSetsBasedOnNav(currBufferzone, 'down');
   }
 };
 
