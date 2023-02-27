@@ -1,6 +1,7 @@
 import BackboneSection from '@/models/BackboneSection';
 import SyntenySection from './SyntenySection';
 import DatatrackSection from './DatatrackSection';
+import DatatrackSet from './DatatrackSet';
 import Label from './Label';
 import OrthologLine from './OrthologLine';
 import GenomicSection from './GenomicSection';
@@ -22,7 +23,7 @@ export default class SyntenyRegion
   gaplessBlock: SyntenySection;
   syntenyGaps: SyntenySection[] = [];                         // synteny gaps occupying this region
   syntenyBlocks: SyntenySection[] = [];                       // synteny blocks occupying this region
-  datatrackSections: DatatrackSection[] = [];                 // DatatrackSections belonging to this SyntenyRegion
+  datatrackSets: DatatrackSet[] = [];                         // Set of DatatrackSections belonging to this SytenyRegion
   geneIds: number[] = [];                                     // Gene IDs belonging to genes in this SyntenyRegion
   orthologLines: OrthologLine[] = [];                         // OrthologLines belonging to this SyntenyRegion
   backboneSection: BackboneSection | undefined;               // backbone section that this synteny region is aligned to
@@ -61,9 +62,10 @@ export default class SyntenyRegion
     this.syntenyBlocks.sort((a, b) => a.posY1 - b.posY1);
   }
 
-  public addDatatrackSections(datatrackSection: DatatrackSection[])
+  public addDatatrackSections(datatrackSection: DatatrackSection[], datatrackSetIdx: number)
   {
-    this.datatrackSections.length > 0 ? this.datatrackSections = this.datatrackSections.concat(datatrackSection) : this.datatrackSections = datatrackSection;
+    this.datatrackSets[datatrackSetIdx] && this.datatrackSets[datatrackSetIdx].datatracks.length > 0 ?
+      this.datatrackSets[datatrackSetIdx].addDatatrackSections(datatrackSection) : this.datatrackSets[datatrackSetIdx] = new DatatrackSet(datatrackSection);
   }
 
   public addOrthologLines(orthologLine: OrthologLine[])
@@ -210,7 +212,9 @@ export default class SyntenyRegion
   private get genomicSections()
   {
     let genomicSections: GenomicSection[] = [this.gaplessBlock];
-    genomicSections = genomicSections.concat(this.syntenyBlocks).concat(this.syntenyGaps).concat(this.datatrackSections);
-    return genomicSections; 
+    const allDatatracks = this.datatrackSets.flatMap((set) => set.datatracks);
+    // TODO: need to make sure that this properly gives the correct information
+    genomicSections = genomicSections.concat(this.syntenyBlocks).concat(this.syntenyGaps).concat(allDatatracks);
+    return genomicSections;
   }
 }

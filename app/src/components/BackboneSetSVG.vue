@@ -32,21 +32,24 @@
     </text>
   </template>
 
+  <!-- TODO: This will likely be its own component soon to handle different datatrack types -->
   <!-- Datatracks -->
-  <template v-for="(datatrack, index) in datatracks" :key="index">
-    <rect
-      class="section clickable"
-      @mouseenter="() => onMouseEnter(datatrack, 'Gene')"
-      @mouseleave="() => onMouseLeave(datatrack)"
-      @click="onClick($event, datatrack)"
+  <template v-for="(datatrackSet, index) in datatrackSets" :key="index">
+    <template v-for="(datatrack, index) in datatrackSet.datatracks" :key="index">
+      <rect
+        class="section clickable"
+        @mouseenter="() => onMouseEnter(datatrack, 'Gene')"
+        @mouseleave="() => onMouseLeave(datatrack)"
+        @click="onClick($event, datatrack)"
 
-      :y="datatrack.posY1"
-      :x="datatrack.posX1"
-      :width="datatrack.width"
-      :height="datatrack.height"
-      :fill="getSectionFill(datatrack)"
-      :fill-opacity=".7"
-    />
+        :y="datatrack.posY1"
+        :x="datatrack.posX1"
+        :width="datatrack.width"
+        :height="datatrack.height"
+        :fill="getSectionFill(datatrack)"
+        :fill-opacity=".7"
+      />
+    </template>
   </template>
 
   <!-- Inner selection that changes depending on Detailed panel zoom -->
@@ -130,8 +133,8 @@ const backbone = computed(() => {
   return props.backboneSet.backbone;
 });
 
-const datatracks = computed(() => {
-  return (props.backboneSet.datatracks as GeneDatatrack[]);
+const datatrackSets = computed(() => {
+  return (props.backboneSet.datatrackSets);
 });
 
 const isDetailed = computed(() => {
@@ -230,19 +233,24 @@ const onClick = (event: any, section: GeneDatatrack) => {
 
 const highlightSelections = (selectedGeneIds: number[]) => {
   // Look through the sections and highlight based on selected genes
-  datatracks.value.forEach((section) => {
-    if (section.gene == null)
+  datatrackSets.value.forEach((set) => {
+    if (set.datatracks[0].type === 'gene')
     {
-      return;
-    }
+      set.datatracks.forEach((section) => {
+        if (section.gene == null)
+        {
+          return;
+        }
 
-    if (selectedGeneIds.includes(section.gene.rgdId)) 
-    {
-      section.isSelected = true;
-    } 
-    else 
-    {
-      section.isSelected = false;
+        if (selectedGeneIds.includes(section.gene.rgdId)) 
+        {
+          section.isSelected = true;
+        } 
+        else 
+        {
+          section.isSelected = false;
+        }
+      });
     }
   });
 };

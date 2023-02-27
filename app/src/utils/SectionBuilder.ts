@@ -193,7 +193,8 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
       //Step 3.1: Pass block data and gene data to gene processing pipeline
       //NOTE: We might want to instead associate block data with gene data, store data in an array, and pass all gene data at once for processing in order to avoid multiple passes of gene data for initial processing and then finding orthologs
       const processedGeneInfo = syntenicDatatrackBuilder(factory, blockGenes, currSyntenicRegion, true, masterGeneMap);
-      currSyntenicRegion.addDatatrackSections(processedGeneInfo.genomicData);
+      // TODO: defaulting genes to go on datatrackSet with index zero, might need a smarter way to handle this
+      currSyntenicRegion.addDatatrackSections(processedGeneInfo.genomicData, 0 /* datatrackSet indx */);
       currSyntenicRegion.addOrthologLines(processedGeneInfo.orthologLines);
       currSyntenicRegion.geneIds = processedGeneInfo.geneIds;
 

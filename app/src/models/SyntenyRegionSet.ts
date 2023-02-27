@@ -9,6 +9,7 @@ import SyntenySection from "./SyntenySection";
 import { mergeGeneLabels } from "@/utils/GeneLabelMerger";
 import { SelectedRegion } from "./BackboneSelection";
 import { GenomicSectionFactory } from "./GenomicSectionFactory";
+import DatatrackSet from "./DatatrackSet";
 
 const LEVEL_2_WIDTH_MULTIPLIER = 0.75;
 
@@ -22,9 +23,9 @@ function getDetailedPanelXPositionForSynteny(order: number)
   return (order * 120) + SVGConstants.selectedBackboneXPosition;
 }
 
-function getDetailedPanelXPositionForDatatracks(order: number)
+function getDetailedPanelXPositionForDatatracks(order: number, index: number)
 {
-  return getDetailedPanelXPositionForSynteny(order) + 30;
+  return getDetailedPanelXPositionForSynteny(order) + 30 * (index + 1);
 }
 
 /**
@@ -182,7 +183,7 @@ export default class SyntenyRegionSet extends GenomicSet
         this.setGaplessSyntenyBlockXPositions(region.gaplessBlock);
         this.setSyntenyBlockXPositions(region.syntenyBlocks);
         this.setSyntenyGapXPositions(region.syntenyGaps);
-        this.setDatatrackSectionXPositions(region.datatrackSections, region.orthologLines);
+        this.setDatatrackSectionXPositions(region.datatrackSets, region.orthologLines);
       });
     }
   }
@@ -239,35 +240,41 @@ export default class SyntenyRegionSet extends GenomicSet
     section.stopLabel.posX = section.posX2;
   }
 
-  private setDatatrackSectionXPositions(sections: DatatrackSection[], lines: OrthologLine[])
+  private setDatatrackSectionXPositions(datatrackSets: DatatrackSet[], lines: OrthologLine[])
   {
-    sections.forEach(section => {
+    datatrackSets.forEach((set, index) => {
+      let posX1 = 0;
       if (this.renderType === 'overview')
       {
-        section.posX1 = getOverviewPanelXPosition(this.order);
+        posX1 = getOverviewPanelXPosition(this.order);
       }
       else if (this.renderType === 'detailed')
       {
-        section.posX1 = getDetailedPanelXPositionForDatatracks(this.order);
+        posX1 = getDetailedPanelXPositionForDatatracks(this.order, index);
       }
 
-      section.posX2 = section.posX1 + SVGConstants.dataTrackWidth;
-      // set the label x position if there is one
-      if (section.label)
-      {
-        section.label.posX = section.posX2;
-      }
-      section.width = Math.abs(section.posX2 - section.posX1);
+      set.datatracks.forEach((section) => {
+        section.posX1 = posX1;
+
+        section.posX2 = section.posX1 + SVGConstants.dataTrackWidth;
+        // set the label x position if there is one
+        if (section.label)
+        {
+          section.label.posX = section.posX2;
+        }
+        section.width = Math.abs(section.posX2 - section.posX1);
+      });
     });
 
     lines.forEach(line => {
+      const geneDatatrackIdx = datatrackSets.findIndex((set) => set.datatracks[0].type === 'gene');
       if (this.renderType === 'overview')
       {
         line.posX2 = getOverviewPanelXPosition(this.order);
       }
       else if (this.renderType === 'detailed')
       {
-        line.posX2 = getDetailedPanelXPositionForDatatracks(this.order);
+        line.posX2 = getDetailedPanelXPositionForDatatracks(this.order, geneDatatrackIdx);
       }
     });
   }
@@ -298,10 +305,15 @@ export default class SyntenyRegionSet extends GenomicSet
     const allLabels: any[] = [];
     this.datatrackLabels = [];
     this.regions.forEach((region: SyntenyRegion) => {
-      region.datatrackSections.forEach((section) => {
-        if (section.label)
+      region.datatrackSets.forEach((set) => {
+        if (set.datatracks && set.datatracks.length > 0 && set.datatracks[0].type === 'gene')
         {
-          allLabels.push(section.label);
+          set.datatracks.forEach(section => {
+            if (section.label)
+            {
+              allLabels.push(section.label);
+            }
+          });
         }
       });
     });
