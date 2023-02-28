@@ -10,6 +10,7 @@ import Label, { GeneLabel } from "./Label";
 
 
 const DataTrack_X_OFFSET = 10;
+const LABEL_OFFSET = 60;
 
 /**
  * Model for representing a set of Backbone sections and its datatrack sections
@@ -121,7 +122,7 @@ export default class BackboneSet extends GenomicSet
   {
     this.datatrackSets.forEach((set, index) => {
       set.datatracks.forEach((section) => {
-        section.posX1 = this.backbone.posX2 + DataTrack_X_OFFSET * (index + 1);
+        section.posX1 = this.backbone.posX2 + (DataTrack_X_OFFSET) * (index + 1) + LABEL_OFFSET * index;
         section.posX2 = section.posX1 + SVGConstants.dataTrackWidth;
         section.width = SVGConstants.dataTrackWidth;
         if (section.label)
@@ -149,6 +150,12 @@ export default class BackboneSet extends GenomicSet
     this.datatrackLabels = allLabels;
 
     mergeGeneLabels(this.datatrackLabels as GeneLabel[]);
+  }
+
+  public addNewDatatrackSet(datatrackSections: DatatrackSection[])
+  {
+    this.datatrackSets.push(new DatatrackSet(datatrackSections));
+    this.setDatatrackXPositions();
   }
 
   public addToDatatrackSet(datatrackSections: DatatrackSection[], datatrackSetIdx: number)

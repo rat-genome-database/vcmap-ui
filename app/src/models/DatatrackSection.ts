@@ -2,7 +2,7 @@ import Gene from './Gene';
 import Label, { GeneLabel } from './Label';
 import GenomicSection, { BackboneAlignment, GenomicSectionParams, RenderType, WindowBasePairRange } from "./GenomicSection";
 
-type DatatrackSectionType = 'gene' | 'block';
+type DatatrackSectionType = 'gene' | 'block' | 'qtl';
 
 export interface LoadedGene
 {
@@ -52,6 +52,7 @@ export class GeneDatatrack extends DatatrackSection
     });
 
     this.gene = gene;
+    this.opacity = 0.7;
     this.createGeneLabel();
   }
 
@@ -72,11 +73,16 @@ export class GeneDatatrack extends DatatrackSection
 export class VariantDensity extends DatatrackSection
 {
   variantCount: number; // number of variants contained within the datatrack section
-  constructor(params: DatatrackSectionParams, variantCount: number)
+  constructor(params: DatatrackSectionParams, variantCount: number, maxCount: number)
   {
     super(params, 'block', '#39FF33');
     this.variantCount = variantCount;
-    // this.elementColor = getColorByCount(variantCount);
+    this.opacity = this.getOpacityByCount(variantCount, maxCount);
+  }
+
+  getOpacityByCount(count: number, maxCount: number)
+  {
+    return count / maxCount;
   }
 
 }

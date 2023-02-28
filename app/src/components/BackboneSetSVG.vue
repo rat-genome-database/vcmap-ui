@@ -47,7 +47,7 @@
         :width="datatrack.width"
         :height="datatrack.height"
         :fill="getSectionFill(datatrack)"
-        :fill-opacity=".7"
+        :fill-opacity="datatrack.opacity"
       />
     </template>
   </template>
@@ -174,7 +174,8 @@ const onMouseEnter = (section: BackboneSection | DatatrackSection, type: Selecte
   }
 
   // Only set selected data if there are no selected genes
-  if (store.state.selectedGeneIds.length === 0)
+  // NOTE: disable selected data for qtls for now
+  if (store.state.selectedGeneIds.length === 0 && section.type !== 'qtl')
   {
     const selectedData = new SelectedData(section, type);
     store.dispatch('setSelectedData', [selectedData]);
@@ -200,7 +201,8 @@ const getSectionFill = (section: VCMapSVGElement) => {
 };
 
 const onClick = (event: any, section: GeneDatatrack) => {
-  if (!section.gene?.rgdId) {
+  // NOTE: disable selected data for qtls for now
+  if (!section.gene?.rgdId && section.type !== 'qtl') {
     return;
   }
   // If clicked section already selected, just reset the selectedGeneId state
