@@ -75,14 +75,18 @@ export class VariantDensity extends DatatrackSection
   variantCount: number; // number of variants contained within the datatrack section
   constructor(params: DatatrackSectionParams, variantCount: number, maxCount: number)
   {
-    super(params, 'variant', '#FD8888');
+    super(params, 'variant', '#FFFFFF');
     this.variantCount = variantCount;
-    this.opacity = this.getOpacityByCount(variantCount, maxCount);
+    // NOTE: setting the color is very preliminary, this will likely change
+    // and I want to add a lot more structure around it.
+    const blueVal = Math.round((this.variantCount / maxCount) * 255);
+    const redVal = Math.round(((maxCount - this.variantCount) / maxCount) * 255);
+    let redHex = redVal.toString(16);
+    redHex = redHex.length === 1 ? `0${redHex}` : redHex;
+    let blueHex = blueVal.toString(16);
+    blueHex = blueHex.length === 1 ? `0${blueHex}` : blueHex;
+    this.elementColor = `#${redHex}00${blueHex}`;
   }
 
-  getOpacityByCount(count: number, maxCount: number)
-  {
-    return count / maxCount;
-  }
 
 }

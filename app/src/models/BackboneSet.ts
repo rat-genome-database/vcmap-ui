@@ -122,7 +122,7 @@ export default class BackboneSet extends GenomicSet
   {
     this.datatrackSets.forEach((set, index) => {
       set.datatracks.forEach((section) => {
-        section.posX1 = this.backbone.posX2 + (DataTrack_X_OFFSET) * (index + 1) + LABEL_OFFSET * index;
+        section.posX1 = this.backbone.posX2 + (DataTrack_X_OFFSET) * (index + 1) + (DataTrack_X_OFFSET * index);
         section.posX2 = section.posX1 + SVGConstants.dataTrackWidth;
         section.width = SVGConstants.dataTrackWidth;
         if (section.label)
@@ -152,9 +152,15 @@ export default class BackboneSet extends GenomicSet
     mergeGeneLabels(this.datatrackLabels as GeneLabel[]);
   }
 
-  public addNewDatatrackSet(datatrackSections: DatatrackSection[])
+  public addNewDatatrackSetToEnd(datatrackSections: DatatrackSection[])
   {
     this.datatrackSets.push(new DatatrackSet(datatrackSections));
+    this.setDatatrackXPositions();
+  }
+
+  public addNewDatatrackSetToStart(datatrackSections: DatatrackSection[])
+  {
+    this.datatrackSets.unshift(new DatatrackSet(datatrackSections));
     this.setDatatrackXPositions();
   }
 

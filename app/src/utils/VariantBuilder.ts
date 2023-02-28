@@ -5,7 +5,6 @@ const BIN_SIZE = 1000000;
 
 export function createVariantDatatracks(positions: number[], chromosome: any)
 {
-  console.log('starting creatVariantDatatracks');
   const variantCounts: number[] = [];
   let binStart = 0;
   while (binStart < chromosome.seqLength)

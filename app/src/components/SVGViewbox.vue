@@ -849,7 +849,7 @@ const loadBackboneQtls = async () => {
   {
     const qtls = await QtlApi.getQtls(chromosome.chromosome, start || 0, stop, mapKey.key);
     const qtlDatatracks = createQtlDatatracks(qtls, backboneSpecies, chromosome);
-    detailedBackboneSet.value?.addNewDatatrackSet(qtlDatatracks);
+    detailedBackboneSet.value?.addNewDatatrackSetToStart(qtlDatatracks);
   }
 };
 
@@ -863,8 +863,20 @@ const loadBackboneVariants = async () => {
   if (chromosome && stop && mapKey && backboneSpecies)
   {
     const variantPositions = await VariantApi.getVariants(chromosome.chromosome, start || 0, stop, mapKey.key);
-    const variantDatatracks = createVariantDatatracks(variantPositions, chromosome);
-    detailedBackboneSet.value?.addNewDatatrackSet(variantDatatracks);
+    if (variantPositions.length > 0)
+    {
+      const variantDatatracks = createVariantDatatracks(variantPositions, chromosome);
+      detailedBackboneSet.value?.addNewDatatrackSetToStart(variantDatatracks);
+      // NOTE: because we're shifting the genes when adding to start, we also need to shift lines
+      if (orthologLines.value)
+      {
+        orthologLines.value.forEach((line) => line.posX1 += 20)
+      }
+    }
+    else
+    {
+      onError(null, 'No variants found for the requested region.');
+    }
   }
 };
 
