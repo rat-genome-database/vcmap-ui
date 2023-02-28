@@ -6,6 +6,6 @@ export default class VariantApi
   {
     const variantStartPositions = await httpInstance.get<any>(`/vcmap/variants/position/${chr}/${start}/${stop}/${mapKey}`);
 
-    return variantStartPositions;
+    return variantStartPositions.data;
   }
 }

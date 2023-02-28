@@ -176,7 +176,7 @@ import OrthologLineSVG from './OrthologLineSVG.vue';
 import LoadingSpinnerMask from './LoadingSpinnerMask.vue';
 import { getNewSelectedData } from '@/utils/DataPanelHelpers';
 import { createQtlDatatracks } from '@/utils/QtlBuilder';
-import DatatrackSet from '@/models/DatatrackSet';
+import { createVariantDatatracks } from '@/utils/VariantBuilder';
 
 const LOAD_BY_GENE_VISIBLE_SIZE_MULTIPLIER = 6;
 
@@ -860,13 +860,11 @@ const loadBackboneVariants = async () => {
   const start = backboneRegion?.viewportSelection?.basePairStart;
   const stop = backboneRegion?.viewportSelection?.basePairStop;
   const mapKey = store.state.species?.activeMap;
-  console.log(mapKey);
-  console.log(start);
-  console.log(stop);
   if (chromosome && stop && mapKey && backboneSpecies)
   {
-    const variants = await VariantApi.getVariants(chromosome.chromosome, start || 0, stop, mapKey.key);
-    console.log(variants);
+    const variantPositions = await VariantApi.getVariants(chromosome.chromosome, start || 0, stop, mapKey.key);
+    const variantDatatracks = createVariantDatatracks(variantPositions, chromosome);
+    detailedBackboneSet.value?.addNewDatatrackSet(variantDatatracks);
   }
 };
 

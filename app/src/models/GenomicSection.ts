@@ -1,8 +1,9 @@
 import SVGConstants, { PANEL_SVG_START, PANEL_SVG_STOP } from "@/utils/SVGConstants";
 import { SVGShape, VCMapSVGElement } from "./VCMapSVGElement";
+import { DatatrackSectionType } from "./DatatrackSection";
 
 export type RenderType = 'overview' | 'detailed';
-type GenomicSectionType = 'block' | 'gap' | 'gene' | 'qtl';
+type GenomicSectionType = 'gap' | DatatrackSectionType;
 
 export type BackboneAlignment = {
   start: number;
