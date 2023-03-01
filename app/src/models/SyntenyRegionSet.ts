@@ -111,7 +111,7 @@ export default class SyntenyRegionSet extends GenomicSet
               this.speciesName, 
               this.mapName,
               currRegion.gaplessBlock.chromosome, 
-              { start: adjustedRegion.basePairStart, stop: adjustedRegion.basePairStop },
+              { start: visibleBackboneStart, stop: visibleBackboneStop },
               this.renderType
             );
             currRegion.splitBlockWithGaps(factory, updateGaps.gaps, threshold);

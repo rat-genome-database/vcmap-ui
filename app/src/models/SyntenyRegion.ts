@@ -7,6 +7,8 @@ import GenomicSection from './GenomicSection';
 import { SyntenyComponent } from '@/api/SyntenyApi';
 import { GenomicSectionFactory } from './GenomicSectionFactory';
 
+const GAPS_THRESHOLD_MULTIPLIER = 10;
+
 interface SyntenyRegionParams
 {
   species: string;
@@ -69,15 +71,13 @@ export default class SyntenyRegion
     this.orthologLines.length > 0 ? this.orthologLines = this.orthologLines.concat(orthologLine) : this.orthologLines = orthologLine;
   }
 
-  public splitBlockWithGaps(factory: GenomicSectionFactory, gaps: SyntenyComponent[], threshold?: number)
+  public splitBlockWithGaps(factory: GenomicSectionFactory, gaps: SyntenyComponent[], threshold: number)
   {
+    // Clear old blocks and gaps in this region without losing reactivity
     this.syntenyBlocks.splice(0, this.syntenyBlocks.length);
     this.syntenyGaps.splice(0, this.syntenyGaps.length);
 
     const block = this.gaplessBlock;
-    const processedGaps: SyntenySection[] = [];
-    const processedBlocks: SyntenySection[] = [];
-    const chromosome = block.chromosome;
 
     const gapsLine = factory.createSyntenySection({
       start: block.speciesStart,
@@ -87,7 +87,7 @@ export default class SyntenyRegion
       orientation: '+',
       chainLevel: block.chainLevel,
     });
-    processedGaps.push(gapsLine);
+    this.syntenyGaps.push(gapsLine);
   
     let lastGapBackboneStop = 0;
     let lastGapSpeciesStop = 0;
@@ -96,15 +96,22 @@ export default class SyntenyRegion
     if (threshold != null)
     {
       gaps = gaps.filter(gap => {
-        return ((gap.stop - gap.start) >= (threshold * 10)) 
-          && (gap.backboneStop < this.gaplessBlock.windowBasePairRange.start || gap.backboneStart > this.gaplessBlock.windowBasePairRange.stop)
+        return ((gap.stop - gap.start) >= (threshold * GAPS_THRESHOLD_MULTIPLIER)) 
+          && block.chainLevel === gap.chainLevel
+          && (gap.backboneStop > block.windowBasePairRange.start || gap.backboneStart < block.windowBasePairRange.stop)
       });
+    }
+
+    if (gaps.length === 0)
+    {
+      // No gaps to split block with...
+      this.syntenyBlocks.push(block);
+      return;
     }
 
     gaps.forEach((gap, index) => {
       const blockBackboneStart = block.backboneAlignment.start;
       const gapBackboneStart = gap.backboneStart;
-      const gapBackboneStop = gap.backboneStop;
   
       const orientedGapStart = (block.isInverted) ? gap.stop : gap.start;
       const orientedGapStop = (block.isInverted) ? gap.start : gap.stop;
@@ -127,7 +134,7 @@ export default class SyntenyRegion
           chainLevel: block.chainLevel,
         });
   
-        processedBlocks.push(blockSyntenicSection);
+        this.syntenyBlocks.push(blockSyntenicSection);
   
         lastGapBackboneStop = gap.backboneStop;
         lastGapSpeciesStop = orientedGapStop;
@@ -143,7 +150,7 @@ export default class SyntenyRegion
           orientation: block.orientation,
           chainLevel: block.chainLevel,
         });
-        processedBlocks.push(blockSyntenicSection);
+        this.syntenyBlocks.push(blockSyntenicSection);
         lastGapBackboneStop = gap.backboneStop;
         lastGapSpeciesStop = orientedGapStop;
       }
@@ -167,7 +174,7 @@ export default class SyntenyRegion
           chainLevel: block.chainLevel,
         });
   
-        processedBlocks.push(blockSyntenicSection);
+        this.syntenyBlocks.push(blockSyntenicSection);
       }
     });
   
@@ -184,15 +191,8 @@ export default class SyntenyRegion
         chainLevel: block.chainLevel,
       });
   
-      processedBlocks.push(blockSyntenicSection);
+      this.syntenyBlocks.push(blockSyntenicSection);
     }
-    
-    processedBlocks.forEach(block => {
-      this.syntenyBlocks.push(block);
-    });
-    processedGaps.forEach(gap => {
-      this.syntenyGaps.push(gap);
-    });
   }
 
   public get sortedSyntenicBlocksAndGaps()

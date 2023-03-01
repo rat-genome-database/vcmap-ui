@@ -183,30 +183,8 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
       gaplessBlock: gaplessSyntenyBlock,
     });
 
-    //filter gap sizes to only include gaps that are larger than the threshold
-    const gaps = blockGaps.filter(g => { 
-      return (g.stop - g.start) >= (threshold * GAPS_THRESHOLD_MULTIPLIER) && g.chainLevel === blockInfo.chainLevel; 
-    });
-
-    //Step 2: For each (now processed) block, create syntenic sections for each gap
-    if (gaps.length > 0)
-    {
-      //Step 2.1: Create syntenic sections for each gap - 1:1 mapping returned from API
-
-      //Step 2.2: Record threshold level these gaps were returned at
-
-      //Step 2.3 store processed gap data in block
-      currSyntenicRegion.splitBlockWithGaps(factory, gaps);
-      if (currSyntenicRegion.syntenyBlocks.length == 0)
-      {
-        currSyntenicRegion.addSyntenyBlocks([gaplessSyntenyBlock]);
-      }
-    }
-    else
-    {
-      //no gaps for this section
-      currSyntenicRegion.addSyntenyBlocks([gaplessSyntenyBlock]);
-    }
+    // Step 2: Split up the gapless blocks with their gaps
+    currSyntenicRegion.splitBlockWithGaps(factory, blockGaps, threshold);
       
 
     //Step 3: For each (now processed) block, create syntenic sections for each gene
@@ -228,17 +206,7 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
           allGeneLabels.push(geneData.label);
         }
       }
-
-      /* if(region.block.backboneStart == 68121445)
-      {
-        console.log('GENES', processedGeneInfo);
-      } */
-      
-      //Step 3.2: Capture processed gene data and store in block
-      //Step 3.3: Capture returned map of processed genes and add to master map of processed genes
     }
-
-    currSyntenicRegion.gaplessBlock = gaplessSyntenyBlock;
     
     processedSyntenicRegions.push(currSyntenicRegion);
 
