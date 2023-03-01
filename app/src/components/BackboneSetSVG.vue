@@ -49,16 +49,16 @@
     />
   </template>
 
-  <!-- Inner selection that changes depending on Detailed panel zoom -->
-  <rect v-if="!isDetailed && selectedRegion.viewportSelection != null && selectedRegion.viewportSelection.svgHeight > 0"
-    stroke="green"
-    fill="green"
-    fill-opacity="0.5"
-    :x="backbone.posX1 - 2" :y="selectedRegion.viewportSelection.svgYPoint"
-    :width="SVGConstants.trackWidth + INNER_SELECTION_EXTRA_WIDTH"
-    :height="selectedRegion.viewportSelection.svgHeight" />
-
-  <template v-if="!isDetailed && selectedRegion.viewportSelection != null && selectedRegion.viewportSelection.svgHeight > 0">
+  <!-- Visible selection that changes depending on Detailed panel zoom -->
+  <template v-if="!isDetailed && selectedRegion?.viewportSelection != null && selectedRegion.viewportSelection.svgHeight > 0">
+    <rect
+      stroke="green"
+      fill="green"
+      fill-opacity="0.5"
+      :x="backbone.posX1 - 2" :y="selectedRegion.viewportSelection.svgYPoint"
+      :width="SVGConstants.trackWidth + INNER_SELECTION_EXTRA_WIDTH"
+      :height="selectedRegion.viewportSelection.svgHeight" />
+    
     <text v-if="selectedRegion.viewportSelection.svgYPoint > backbone.posY1 + 10"
       class="label small"
       :x="backbone.posX1 - 5"
@@ -140,12 +140,16 @@ const isDetailed = computed(() => {
 
 //Converts each property in this object to its own reactive prop
 toRefs(props);
-const selectedRegion = ref(store.state.selectedBackboneRegion ?? new BackboneSelection(new SelectedRegion(0,0,0,0), store.state.chromosome));
+let selectedRegion = ref<BackboneSelection>();
+if (store.state.chromosome)
+{
+  selectedRegion.value = store.state.selectedBackboneRegion ?? new BackboneSelection(new SelectedRegion(0,0,0,0), store.state.chromosome);
+}
 const basePairPositionLabel = ref<string>('');
 
-watch(() => store.state.selectedBackboneRegion, (newVal: BackboneSelection) => {
+watch(() => store.state.selectedBackboneRegion, (newVal: BackboneSelection | null) => {
   // Watch for possible clear out of the selected backbone region
-  if (!isDetailed.value && newVal == null)
+  if (!isDetailed.value && newVal == null && store.state.chromosome != null)
   {
     selectedRegion.value = new BackboneSelection(new SelectedRegion(0,0,0,0), store.state.chromosome);
   }
