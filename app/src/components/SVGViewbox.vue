@@ -350,8 +350,7 @@ const updateOverviewPanel = async () => {
 
   //TODO: Change so that we are using the new full chromosome/bufferzone/viewport selection options to check for and rebuild selections
   const prevBackboneSelection = store.state.selectedBackboneRegion;
-  
-  if (overviewBackbone != null && prevBackboneSelection == null)
+  if (prevBackboneSelection == null)
   {
     const selection = new BackboneSelection(
       new SelectedRegion(SVGConstants.overviewTrackYPosition, ( backboneChromosome.seqLength / store.state.overviewBasePairToHeightRatio ), 0, backboneChromosome.seqLength), 
