@@ -139,10 +139,9 @@
   />
   -->
   <Button
-    :disabled="backboneVariantsLoaded"
     class="p-button-info"
-    label="Load Backbone Variants"
-    @click="loadBackboneVariants"
+    :label="backboneVariantsLoaded ? 'Remove Backbone Variants' : 'Load Backbone Variants'"
+    @click="handleBackboneVariantClick"
   />
 </template>
 
@@ -886,6 +885,25 @@ const loadBackboneVariants = async () => {
     }
   }
 };
+
+const removeBackboneVariants = () => {
+  const variantSetIdx = detailedBackboneSet.value?.datatrackSets.findIndex((set) => set.type === 'variant') ?? -1;
+  if (variantSetIdx !== -1)
+  {
+    detailedBackboneSet.value?.removeDatatrackSet(variantSetIdx);
+
+      // NOTE: this only works because we are always adding the variants first/before the genes,
+      // Long term we'll want to make this more general
+      if (orthologLines.value)
+      {
+        orthologLines.value.forEach((line) => line.posX1 -= 20)
+      }
+  }
+}
+
+const handleBackboneVariantClick = () => {
+  backboneVariantsLoaded.value ? removeBackboneVariants() : loadBackboneVariants();
+}
 
 document.addEventListener('scroll' , getDetailedPosition);
 

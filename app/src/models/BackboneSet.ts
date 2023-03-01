@@ -168,4 +168,10 @@ export default class BackboneSet extends GenomicSet
     this.datatrackSets[datatrackSetIdx].addDatatrackSections(datatrackSections);
     this.setDatatrackXPositions();
   }
+
+  public removeDatatrackSet(datatrackSetIdx: number)
+  {
+    this.datatrackSets.splice(datatrackSetIdx, 1);
+    this.setDatatrackXPositions();
+  }
 }
