@@ -73,6 +73,7 @@ export default class SyntenyRegionSet extends GenomicSet
               this.renderType
             );
             currRegion.splitBlockWithGaps(factory, updateGaps.gaps, threshold);
+            // TODO: Adjust backbone alignments of genes when gaps change
           }
         }
       }
@@ -114,6 +115,7 @@ export default class SyntenyRegionSet extends GenomicSet
               this.renderType
             );
             currRegion.splitBlockWithGaps(factory, updateGaps.gaps, threshold);
+            // TODO: Adjust backbone alignments of genes when gaps change
           }
         }
       }

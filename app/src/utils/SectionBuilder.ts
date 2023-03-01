@@ -9,6 +9,7 @@ import SyntenyRegionSet from '@/models/SyntenyRegionSet';
 import OrthologLine from '@/models/OrthologLine';
 import Label from '@/models/Label';
 import { GenomicSectionFactory } from '@/models/GenomicSectionFactory';
+import { BackboneAlignment } from '@/models/GenomicSection';
 
 export interface LoadedBlock
 {
@@ -279,7 +280,7 @@ function syntenicDatatrackBuilder(factory: GenomicSectionFactory, genomicData: G
   {
     genomicData.forEach((genomicElement: Gene) => {
       //Get backbone equivalents for gene data
-      const backboneEquivalents = convertSyntenicDataToBackboneData(genomicElement, syntenyRegion);
+      const geneBackboneAlignment = convertSyntenicDataToBackboneData(genomicElement, syntenyRegion);
       const currSpecies = genomicElement.speciesName.toLowerCase();
 
       //Create DatatrackSection for each gene (account for inversion in start/stops)
@@ -287,7 +288,7 @@ function syntenicDatatrackBuilder(factory: GenomicSectionFactory, genomicData: G
         gene: genomicElement, 
         start: (syntenyRegion.gaplessBlock.isInverted) ? genomicElement.stop : genomicElement.start,
         stop: (syntenyRegion.gaplessBlock.isInverted) ? genomicElement.start : genomicElement.stop,
-        backboneAlignment: { start: backboneEquivalents.backboneStart, stop: backboneEquivalents.backboneStop }
+        backboneAlignment: geneBackboneAlignment,
       });
 
       if (!processedGeneIds.includes(genomicElement.rgdId))
@@ -354,7 +355,7 @@ function syntenicDatatrackBuilder(factory: GenomicSectionFactory, genomicData: G
   //Step 4: Capture gene as processed in a map to return for finding ortholog
 }
 
-function convertSyntenicDataToBackboneData(genomicObject: SyntenyComponent | Gene, syntenyRegion: SyntenyRegion)
+function convertSyntenicDataToBackboneData(genomicObject: SyntenyComponent | Gene, syntenyRegion: SyntenyRegion): BackboneAlignment
 {
   const syntenySections = syntenyRegion.sortedSyntenicBlocksAndGaps;
   const isInverted = syntenyRegion.gaplessBlock.isInverted;
@@ -428,8 +429,8 @@ function convertSyntenicDataToBackboneData(genomicObject: SyntenyComponent | Gen
   }
 
   return {
-    backboneStart,
-    backboneStop,
+    start: backboneStart,
+    stop: backboneStop,
   };
 }
 
