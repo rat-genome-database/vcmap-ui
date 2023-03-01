@@ -868,7 +868,9 @@ const loadBackboneVariants = async () => {
   const mapKey = store.state.species?.activeMap;
   if (chromosome && stop && mapKey && backboneSpecies)
   {
-    const variantPositions = await VariantApi.getVariants(chromosome.chromosome, start || 0, stop, mapKey.key);
+    // NOTE: for now, we always query for the whole chrom to get maxCount for chrom
+    // This should/could probably get moved the VariantBuilder
+    const variantPositions = await VariantApi.getVariants(chromosome.chromosome, 0, chromosome.seqLength, mapKey.key);
     if (variantPositions.length > 0)
     {
       const variantDatatracks = createVariantDatatracks(variantPositions, chromosome, start || 0, stop);
