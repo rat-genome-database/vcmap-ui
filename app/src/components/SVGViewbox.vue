@@ -130,15 +130,17 @@
     :on-confirm-callback="(isMissingSynteny) ? () => {allowDetailedPanelProcessing = true} : undefined"
   />
   <LoadingSpinnerMask v-if="enableProcessingLoadMask" :style="getDetailedPosition()"></LoadingSpinnerMask>
+  <!--
   <Button
     style="margin-right: 20px;"
     class="p-button-info"
     label="Backbone QTLs"
     @click="loadBackboneQtls"
   />
+  -->
   <Button
     class="p-button-info"
-    label="Backbone Variants"
+    label="Load Backbone Variants"
     @click="loadBackboneVariants"
   />
 </template>
@@ -849,7 +851,7 @@ const loadBackboneQtls = async () => {
   {
     const qtls = await QtlApi.getQtls(chromosome.chromosome, start || 0, stop, mapKey.key);
     const qtlDatatracks = createQtlDatatracks(qtls, backboneSpecies, chromosome);
-    detailedBackboneSet.value?.addNewDatatrackSetToStart(qtlDatatracks);
+    detailedBackboneSet.value?.addNewDatatrackSetToStart(qtlDatatracks, 'qtl');
   }
 };
 
@@ -865,8 +867,8 @@ const loadBackboneVariants = async () => {
     const variantPositions = await VariantApi.getVariants(chromosome.chromosome, start || 0, stop, mapKey.key);
     if (variantPositions.length > 0)
     {
-      const variantDatatracks = createVariantDatatracks(variantPositions, chromosome);
-      detailedBackboneSet.value?.addNewDatatrackSetToStart(variantDatatracks);
+      const variantDatatracks = createVariantDatatracks(variantPositions, chromosome, start || 0, stop);
+      detailedBackboneSet.value?.addNewDatatrackSetToStart(variantDatatracks, 'variant');
       // NOTE: because we're shifting the genes when adding to start, we also need to shift lines
       if (orthologLines.value)
       {

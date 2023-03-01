@@ -1,12 +1,14 @@
-import DatatrackSection from "./DatatrackSection"
+import DatatrackSection, { DatatrackSectionType } from "./DatatrackSection"
 
 export default class DatatrackSet
 {
   datatracks: DatatrackSection[] = [];
+  type: DatatrackSectionType;
 
-  constructor(datatracks: DatatrackSection[])
+  constructor(datatracks: DatatrackSection[], type: DatatrackSectionType)
   {
     this.datatracks = datatracks;
+    this.type = type;
   }
 
   public addDatatrackSections(datatrackSections: DatatrackSection[])

@@ -3,14 +3,13 @@ import SVGConstants from "@/utils/SVGConstants";
 import { mergeGeneLabels } from "@/utils/GeneLabelMerger";
 import BackboneSection from "./BackboneSection";
 import Gene from "./Gene";
-import DatatrackSection from "./DatatrackSection";
+import DatatrackSection, { DatatrackSectionType } from "./DatatrackSection";
 import DatatrackSet from "./DatatrackSet";
 import { GenomicSet } from "./GenomicSet";
 import Label, { GeneLabel } from "./Label";
 
 
 const DataTrack_X_OFFSET = 10;
-const LABEL_OFFSET = 60;
 
 /**
  * Model for representing a set of Backbone sections and its datatrack sections
@@ -28,7 +27,7 @@ export default class BackboneSet extends GenomicSet
     this.backbone = backboneSection;
     if (processedGenomicData?.datatracks)
     {
-      this.datatrackSets.push(new DatatrackSet(processedGenomicData.datatracks));
+      this.datatrackSets.push(new DatatrackSet(processedGenomicData.datatracks, 'gene'));
     }
     if (processedGenomicData && processedGenomicData.datatracks.length > 0)
     {
@@ -152,22 +151,21 @@ export default class BackboneSet extends GenomicSet
     mergeGeneLabels(this.datatrackLabels as GeneLabel[]);
   }
 
-  public addNewDatatrackSetToEnd(datatrackSections: DatatrackSection[])
+  public addNewDatatrackSetToEnd(datatrackSections: DatatrackSection[], type: DatatrackSectionType)
   {
-    this.datatrackSets.push(new DatatrackSet(datatrackSections));
+    this.datatrackSets.push(new DatatrackSet(datatrackSections, type));
     this.setDatatrackXPositions();
   }
 
-  public addNewDatatrackSetToStart(datatrackSections: DatatrackSection[])
+  public addNewDatatrackSetToStart(datatrackSections: DatatrackSection[], type: DatatrackSectionType)
   {
-    this.datatrackSets.unshift(new DatatrackSet(datatrackSections));
+    this.datatrackSets.unshift(new DatatrackSet(datatrackSections, type));
     this.setDatatrackXPositions();
   }
 
   public addToDatatrackSet(datatrackSections: DatatrackSection[], datatrackSetIdx: number)
   {
     this.datatrackSets[datatrackSetIdx].addDatatrackSections(datatrackSections);
-    // FIXME: This will set x positions for every DatatrackSet, which really shouldn't be necessary
     this.setDatatrackXPositions();
   }
 }

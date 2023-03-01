@@ -267,7 +267,7 @@ export default class SyntenyRegionSet extends GenomicSet
     });
 
     lines.forEach(line => {
-      const geneDatatrackIdx = datatrackSets.findIndex((set) => set.datatracks[0].type === 'gene');
+      const geneDatatrackIdx = datatrackSets.findIndex((set) => set.type === 'gene');
       if (this.renderType === 'overview')
       {
         line.posX2 = getOverviewPanelXPosition(this.order);

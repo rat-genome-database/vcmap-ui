@@ -1,6 +1,6 @@
 import BackboneSection from '@/models/BackboneSection';
 import SyntenySection from './SyntenySection';
-import DatatrackSection from './DatatrackSection';
+import DatatrackSection, { DatatrackSectionType } from './DatatrackSection';
 import DatatrackSet from './DatatrackSet';
 import Label from './Label';
 import OrthologLine from './OrthologLine';
@@ -62,10 +62,10 @@ export default class SyntenyRegion
     this.syntenyBlocks.sort((a, b) => a.posY1 - b.posY1);
   }
 
-  public addDatatrackSections(datatrackSection: DatatrackSection[], datatrackSetIdx: number)
+  public addDatatrackSections(datatrackSection: DatatrackSection[], datatrackSetIdx: number, type: DatatrackSectionType)
   {
     this.datatrackSets[datatrackSetIdx] && this.datatrackSets[datatrackSetIdx].datatracks.length > 0 ?
-      this.datatrackSets[datatrackSetIdx].addDatatrackSections(datatrackSection) : this.datatrackSets[datatrackSetIdx] = new DatatrackSet(datatrackSection);
+      this.datatrackSets[datatrackSetIdx].addDatatrackSections(datatrackSection) : this.datatrackSets[datatrackSetIdx] = new DatatrackSet(datatrackSection, type);
   }
 
   public addOrthologLines(orthologLine: OrthologLine[])
