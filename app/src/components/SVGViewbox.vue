@@ -137,12 +137,12 @@
     label="Backbone QTLs"
     @click="loadBackboneQtls"
   />
-  -->
   <Button
     class="p-button-info"
     :label="backboneVariantsLoaded ? 'Remove Backbone Variants' : 'Load Backbone Variants'"
     @click="handleBackboneVariantClick"
   />
+  -->
 </template>
 
 <script setup lang="ts">
