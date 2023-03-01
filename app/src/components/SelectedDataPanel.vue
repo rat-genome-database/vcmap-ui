@@ -55,7 +55,7 @@
           <template v-if="(dataObject.type === 'trackSection')">
             <GeneInfo
               :gene="dataObject?.genomicSection.gene ? dataObject?.genomicSection.gene : null"
-              :chromosome="dataObject.genomicSection.chromosome.chromosome"
+              :chromosome="dataObject.genomicSection.chromosome"
               :start="dataObject.genomicSection.speciesStart"
               :stop="dataObject.genomicSection.speciesStop"
               :chain-level="dataObject.genomicSection.chainLevel"
