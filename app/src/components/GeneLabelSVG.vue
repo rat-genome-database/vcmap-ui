@@ -20,7 +20,6 @@ import { GeneLabel } from '@/models/Label';
 import Gene from '@/models/Gene';
 import SelectedData from '@/models/SelectedData';
 import { getNewSelectedData, sortGeneList } from '@/utils/DataPanelHelpers';
-import { labeledStatement } from '@babel/types';
 
 const store = useStore(key);
 

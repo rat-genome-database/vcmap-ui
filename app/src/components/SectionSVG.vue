@@ -141,6 +141,7 @@ import BackboneSelection from '@/models/BackboneSelection';
 import OverviewSyntenyLabelsSVG from './OverviewSyntenyLabelsSVG.vue';
 import { PANEL_SVG_START, PANEL_SVG_STOP } from '@/utils/SVGConstants';
 import useMouseBasePairPos from '@/composables/useMouseBasePairPos';
+import GenomicSection from '@/models/GenomicSection';
 
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
 const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
@@ -230,13 +231,13 @@ const onMouseLeave = (section: VCMapSVGElement, type: SelectedDataType) => {
   }
 };
 
-const onSectionClick = (section: VCMapSVGElement) => {
+const onSectionClick = (section: GenomicSection) => {
   const selectedBackboneRegion = store.state.selectedBackboneRegion as BackboneSelection;
   const backboneChromosome = store.state.chromosome;
-  if (backboneChromosome && section.backboneSection)
+  if (backboneChromosome && section.backboneAlignment)
   {
-    const basePairStart = section.backboneSection.start;
-    const basePairStop = section.backboneSection.stop;
+    const basePairStart = section.backboneAlignment.start;
+    const basePairStop = section.backboneAlignment.stop;
     selectedBackboneRegion.setViewportSelection(basePairStart, basePairStop, store.state.overviewBasePairToHeightRatio);
     store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: basePairStop });
   }

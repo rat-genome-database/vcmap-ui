@@ -10,8 +10,7 @@ beforeEach(() => {
   backboneSectionParams = {
     start: 100,
     stop: 10000,
-    windowStart: 100,
-    windowStop: 10000,
+    windowBasePairRange: { start: 100, stop: 10000 },
     chromosome: '2',
     species: new Species({ typeKey: 1, name: 'Human', maps: [new SpeciesMap({ key: 1, name: 'Map', primaryRefAssembly: true })] }),
     renderType: 'overview',
@@ -70,8 +69,7 @@ describe('BackboneSection', () => {
         // Use friendly start/stop numbers for this test
         start: 0,
         stop: 3000,
-        windowStart: 1000,
-        windowStop: 2000,
+        windowBasePairRange: { start: 1000, stop: 2000 },
         renderType: 'detailed',
       });
 
@@ -87,8 +85,7 @@ describe('BackboneSection', () => {
         // Use friendly start/stop numbers for this test
         start: 500,
         stop: 1500,
-        windowStart: 0,
-        windowStop: 2000,
+        windowBasePairRange: { start: 0, stop: 2000 },
         renderType: 'detailed',
       });
 

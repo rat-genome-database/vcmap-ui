@@ -1,7 +1,6 @@
 import { SpeciesSyntenyData, SyntenyRegionData } from "@/api/SyntenyApi";
 import SVGConstants from "@/utils/SVGConstants";
 import DatatrackSection from "./DatatrackSection";
-import { LoadedGene } from "./DatatrackSection";
 import { GenomicSet } from "./GenomicSet";
 import Label, { GeneLabel } from "./Label";
 import OrthologLine from "./OrthologLine";
@@ -9,6 +8,7 @@ import SyntenyRegion from "./SyntenyRegion";
 import SyntenySection from "./SyntenySection";
 import { mergeGeneLabels } from "@/utils/GeneLabelMerger";
 import { SelectedRegion } from "./BackboneSelection";
+import { GenomicSectionFactory } from "./GenomicSectionFactory";
 
 const LEVEL_2_WIDTH_MULTIPLIER = 0.75;
 
@@ -36,17 +36,15 @@ export default class SyntenyRegionSet extends GenomicSet
   order: number = 1;
   renderType: 'overview' | 'detailed' = 'overview';
   speciesSyntenyData: SpeciesSyntenyData; // Raw synteny data for the species represented by this SyntenyRegionSet
-  threshold: number; // The synteny threshold that was used to create this SyntenyRegionSet
   datatrackLabels: Label[] = []; // array of Label objects associated with the datatrackSections in every SyntenyRegion
 
-  constructor(speciesName: string, mapName: string, regions: SyntenyRegion[], order: number, renderType: 'overview' | 'detailed', speciesSyntenyData: SpeciesSyntenyData, threshold: number, geneLabels?: Label[])
+  constructor(regions: SyntenyRegion[], order: number, renderType: 'overview' | 'detailed', speciesSyntenyData: SpeciesSyntenyData, geneLabels?: Label[])
   {
-    super(speciesName, mapName);
+    super(speciesSyntenyData.speciesName, speciesSyntenyData.mapName);
     this.regions = regions;
     this.order = order;
     this.renderType = renderType;
     this.speciesSyntenyData = speciesSyntenyData;
-    this.threshold = threshold;
     this.datatrackLabels = geneLabels ?? [];
 
     this.setRegionXPositionsBasedOnOrder();
@@ -64,10 +62,18 @@ export default class SyntenyRegionSet extends GenomicSet
         currRegion.adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
         if (updateData)
         {
-          const updateGaps = updateData.find(region => region.block.backboneStart == currRegion.gaplessBlock.backboneStart)
+          const updateGaps = updateData.find(region => region.block.backboneStart == currRegion.gaplessBlock.backboneAlignment.start)
           if (updateGaps)
           {
-            currRegion.splitBlockWithGaps(updateGaps.gaps, visibleBackboneStart, visibleBackboneStop, threshold, 'detailed');
+            const factory = new GenomicSectionFactory(
+              this.speciesName, 
+              this.mapName,
+              currRegion.gaplessBlock.chromosome, 
+              { start: visibleBackboneStart, stop: visibleBackboneStop },
+              this.renderType
+            );
+            currRegion.splitBlockWithGaps(factory, updateGaps.gaps, threshold);
+            // TODO: Adjust backbone alignments of genes when gaps change
           }
         }
       }
@@ -98,10 +104,18 @@ export default class SyntenyRegionSet extends GenomicSet
         currRegion.adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
         if (updateData)
         {
-          const updateGaps = updateData.find(region => region.block.backboneStart == currRegion.gaplessBlock.backboneStart)
+          const updateGaps = updateData.find(region => region.block.backboneStart == currRegion.gaplessBlock.backboneAlignment.start)
           if (updateGaps && updateGaps.gaps.length > 0)
           {
-            currRegion.splitBlockWithGaps(updateGaps.gaps, visibleBackboneStart, visibleBackboneStop, threshold, 'detailed');
+            const factory = new GenomicSectionFactory(
+              this.speciesName, 
+              this.mapName,
+              currRegion.gaplessBlock.chromosome, 
+              { start: visibleBackboneStart, stop: visibleBackboneStop },
+              this.renderType
+            );
+            currRegion.splitBlockWithGaps(factory, updateGaps.gaps, threshold);
+            // TODO: Adjust backbone alignments of genes when gaps change
           }
         }
       }
@@ -297,6 +311,6 @@ export default class SyntenyRegionSet extends GenomicSet
 
   private regionIsVisible(region: SyntenyRegion, start: number, stop: number): boolean
   {
-    return ( region.gaplessBlock.backboneSection.start >= start && region.gaplessBlock.backboneSection.start < stop ) || (region.gaplessBlock.backboneSection.stop <= stop && region.gaplessBlock.backboneSection.stop > start) || (region.gaplessBlock.backboneSection.start <= start && region.gaplessBlock.backboneSection.stop >= stop);
+    return ( region.gaplessBlock.backboneAlignment.start >= start && region.gaplessBlock.backboneAlignment.start < stop ) || (region.gaplessBlock.backboneAlignment.stop <= stop && region.gaplessBlock.backboneAlignment.stop > start) || (region.gaplessBlock.backboneAlignment.start <= start && region.gaplessBlock.backboneAlignment.stop >= stop);
   }
 }

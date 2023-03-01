@@ -21,7 +21,7 @@ export default class BackboneSet extends GenomicSet
 
   constructor(backboneSection: BackboneSection, processedGenomicData?: ProcessedGenomicData)
   {
-    super(backboneSection.species?.name, backboneSection.species?.activeMap.name);
+    super(backboneSection.speciesName, backboneSection.mapName);
 
     this.backbone = backboneSection;
     this.datatracks = processedGenomicData?.datatracks ?? [];
@@ -46,11 +46,18 @@ export default class BackboneSet extends GenomicSet
     const startTime = Date.now();
 
     // Change visible backbone section
-    this.backbone.changeWindowStartAndStop(visibleBackboneStart, visibleBackboneStop);
+    this.backbone.adjustYPositionsBasedOnVisibleStartAndStop({
+      start: visibleBackboneStart,
+      stop: visibleBackboneStop,
+    })
+    this.backbone.recalculateLabelYPositions();
     const backboneEndTime = Date.now();
 
     this.datatracks.forEach(datatrack => {
-      datatrack.adjustYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
+      datatrack.adjustYPositionsBasedOnVisibleStartAndStop({
+        start: visibleBackboneStart,
+        stop: visibleBackboneStop,
+      });
       datatrack.recalculateLabelYPositions();
     });
     const datatracksEndTime = Date.now();

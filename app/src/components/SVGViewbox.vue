@@ -451,7 +451,7 @@ const updateDetailsPanel = async () => {
     timeQueryBackboneGenes = Date.now() - queryBackboneboneGenesStart;
 
     const backboneDatatracksStart = Date.now();
-    const backboneDatatrackInfo = backboneDatatrackBuilder(tempBackboneGenes, detailedBackbone, 0, backboneChromosome.seqLength);
+    const backboneDatatrackInfo = backboneDatatrackBuilder(backboneSpecies, tempBackboneGenes, detailedBackbone, 0, backboneChromosome.seqLength);
     masterGeneMap = backboneDatatrackInfo.masterGeneMap;
     timeCreateBackboneDatatracks = Date.now() - backboneDatatracksStart;
 

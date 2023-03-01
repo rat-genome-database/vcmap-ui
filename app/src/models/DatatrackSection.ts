@@ -1,9 +1,6 @@
-import BackboneSection from "./BackboneSection";
 import Gene from './Gene';
 import Label, { GeneLabel } from './Label';
-import GenomicSection from "./GenomicSection";
-
-type DatatrackSectionType = 'gene';
+import GenomicSection, { BackboneAlignment, GenomicSectionParams, RenderType, WindowBasePairRange } from "./GenomicSection";
 
 export interface LoadedGene
 {
@@ -13,20 +10,15 @@ export interface LoadedGene
   backboneOrtholog?: GeneDatatrack,
 }
 
-interface DatatrackSectionParams
-{
-  start: number;
-  stop: number;
-  backboneSection: BackboneSection;
-}
+type DatatrackSectionParams = GenomicSectionParams;
 
 export default class DatatrackSection extends GenomicSection
 {
   label?: Label;
 
-  constructor(params: DatatrackSectionParams, type: DatatrackSectionType, elementColor: string)
+  constructor(params: DatatrackSectionParams)
   {
-    super(params.start, params.stop, type, elementColor, params.backboneSection);
+    super(params);
   }
 
   public recalculateLabelYPositions()
@@ -42,9 +34,21 @@ export class GeneDatatrack extends DatatrackSection
 {
   gene: Gene; // gene that this datatrack represents
 
-  constructor(params: DatatrackSectionParams, gene: Gene)
+  constructor(gene: Gene, start: number, stop: number, backboneAlignment: BackboneAlignment, speciesName: string, mapName: string, chromosome: string, windowBasePairRange: WindowBasePairRange, renderType: RenderType)
   {
-    super(params, 'gene', '#00000');
+    super({
+      start: start,
+      stop: stop,
+      backboneAlignment: backboneAlignment,
+      speciesName: speciesName,
+      mapName: mapName,
+      chromosome: chromosome,
+      windowBasePairRange: windowBasePairRange,
+      renderType: renderType,
+      type: 'gene',
+      color: '#00000',
+    });
+
     this.gene = gene;
     this.createGeneLabel();
   }

@@ -1,7 +1,5 @@
-import { LoadedGene } from "./DatatrackSection";
 import { SelectedRegion } from "./BackboneSelection";
 import { SyntenyRegionData } from "@/api/SyntenyApi";
-
 import Label from "./Label";
 
 /**

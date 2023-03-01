@@ -5,7 +5,7 @@
     :y="syntenySection.posY1 + (syntenySection.height / 2)"
     dominant-baseline="middle"
     text-anchor="middle">
-    {{syntenySection.chromosome.chromosome}}
+    {{syntenySection.chromosome}}
   </text>
 </template>
 
