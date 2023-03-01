@@ -91,6 +91,11 @@ export default abstract class GenomicSection implements VCMapSVGElement
     return Math.abs(this.speciesStop - this.speciesStart);
   }
 
+  public get backboneAlignmentLength()
+  {
+    return Math.abs(this.backboneAlignment.stop - this.backboneAlignment.start);
+  } 
+
   /**
    * Ratio of backbone basepairs to this section's basepairs
    * e.g. if this section is 50bp and aligns against a backbone region that is 100bp long, the ratio would be 2
@@ -159,7 +164,7 @@ export default abstract class GenomicSection implements VCMapSVGElement
     const bpToSVGRatio = bpVisibleWindowLength / svgLength;
 
     // Calculate the start and stop SVG positions of this backbone section
-    const basepairDiff =  this.backboneAlignment.start < this.windowStart ? this.windowStart - this.backboneAlignment.start : this.backboneAlignment.start - this.windowStart;
+    const basepairDiff = Math.abs(this.windowStart - this.backboneAlignment.start);
     const svgDiff = basepairDiff / bpToSVGRatio;
 
     if (this.backboneAlignment.start < this.windowStart)
@@ -175,7 +180,7 @@ export default abstract class GenomicSection implements VCMapSVGElement
       this.posY1 = this.windowSVGStart;
     }
 
-    this.posY2 = this.posY1 + (this.length / bpToSVGRatio);
+    this.posY2 = this.posY1 + (this.backboneAlignmentLength / bpToSVGRatio);
 
     this.height = Math.abs(this.posY2 - this.posY1);
   }
