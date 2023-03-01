@@ -659,7 +659,7 @@ const adjustDetailedVisibleSetsBasedOnNav = async (lastBufferzone: SelectedRegio
       masterBlockMap,
       masterGeneMap ?? undefined,
       true
-    )
+    );
   }
   else if (navDirection == 'down')
   {

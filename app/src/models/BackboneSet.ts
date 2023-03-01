@@ -53,7 +53,7 @@ export default class BackboneSet extends GenomicSet
     this.backbone.adjustYPositionsBasedOnVisibleStartAndStop({
       start: visibleBackboneStart,
       stop: visibleBackboneStop,
-    })
+    });
     this.backbone.recalculateLabelYPositions();
     const backboneEndTime = Date.now();
 

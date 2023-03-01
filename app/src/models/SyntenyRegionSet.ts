@@ -63,7 +63,7 @@ export default class SyntenyRegionSet extends GenomicSet
         currRegion.adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
         if (updateData)
         {
-          const updateGaps = updateData.find(region => region.block.backboneStart == currRegion.gaplessBlock.backboneAlignment.start)
+          const updateGaps = updateData.find(region => region.block.backboneStart == currRegion.gaplessBlock.backboneAlignment.start);
           if (updateGaps)
           {
             const factory = new GenomicSectionFactory(
@@ -105,7 +105,7 @@ export default class SyntenyRegionSet extends GenomicSet
         currRegion.adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
         if (updateData)
         {
-          const updateGaps = updateData.find(region => region.block.backboneStart == currRegion.gaplessBlock.backboneAlignment.start)
+          const updateGaps = updateData.find(region => region.block.backboneStart == currRegion.gaplessBlock.backboneAlignment.start);
           if (updateGaps && updateGaps.gaps.length > 0)
           {
             const factory = new GenomicSectionFactory(
