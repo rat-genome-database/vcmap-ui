@@ -1,4 +1,4 @@
-import DatatrackSection, { DatatrackSectionType } from "./DatatrackSection"
+import DatatrackSection, { DatatrackSectionType } from "./DatatrackSection";
 
 export default class DatatrackSet
 {

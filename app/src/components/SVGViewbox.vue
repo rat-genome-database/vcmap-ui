@@ -213,7 +213,7 @@ const orthologLines = computed(() => {
 
 const backboneVariantsLoaded = computed(() => {
   return detailedBackboneSet.value?.datatrackSets.some((set) => set.type === 'variant');
-})
+});
 
 async function attachToProgressLoader(storeLoadingActionName: string, func: () => Promise<any>)
 {
@@ -878,7 +878,7 @@ const loadBackboneVariants = async () => {
       // NOTE: because we're shifting the genes when adding to start, we also need to shift lines
       if (orthologLines.value)
       {
-        orthologLines.value.forEach((line) => line.posX1 += 20)
+        orthologLines.value.forEach((line) => line.posX1 += 20);
       }
     }
     else
@@ -898,14 +898,14 @@ const removeBackboneVariants = () => {
       // Long term we'll want to make this more general
       if (orthologLines.value)
       {
-        orthologLines.value.forEach((line) => line.posX1 -= 20)
+        orthologLines.value.forEach((line) => line.posX1 -= 20);
       }
   }
-}
+};
 
 const handleBackboneVariantClick = () => {
   backboneVariantsLoaded.value ? removeBackboneVariants() : loadBackboneVariants();
-}
+};
 
 document.addEventListener('scroll' , getDetailedPosition);
 
