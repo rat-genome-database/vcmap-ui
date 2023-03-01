@@ -60,9 +60,6 @@ export default class BackboneSelection
   {
     this.chromosome = chromosome;
     this.viewportSelection = viewportSelection;
-
-    const basePairStart = 0;
-    const basePairStop = this.chromosome.seqLength;
   }
 
   public setViewportSelection(visibleStart: number, visibleStop: number, overviewBasePairToHeightRatio: number)
@@ -164,7 +161,6 @@ export default class BackboneSelection
     if (navDirection === 'up')
     {
       const bufferZoneStart = Math.max(this.viewportSelection.basePairStart - viewportSelectionLength * this.bufferZonePercent, 0);
-      const bufferZoneStop = Math.min(this.viewportSelection.basePairStop + viewportSelectionLength * this.bufferZonePercent, this.chromosome.seqLength);
       const bufferZoneSVGPoint = ((bufferZoneStart - 0) / overviewBasePairToHeightRatio) + SVGConstants.overviewTrackYPosition;
       const bufferZoneSVGHeight = (this.bufferZoneSelection.basePairStop - bufferZoneStart) / overviewBasePairToHeightRatio;
 
@@ -173,7 +169,6 @@ export default class BackboneSelection
 
     if (navDirection === 'down')
     {
-      const bufferZoneStart = Math.max(this.viewportSelection.basePairStart - viewportSelectionLength * this.bufferZonePercent, 0);
       const bufferZoneStop = Math.min(this.viewportSelection.basePairStop + viewportSelectionLength * this.bufferZonePercent, this.chromosome.seqLength);
       const bufferZoneSVGPoint = ((this.bufferZoneSelection.basePairStart - 0) / overviewBasePairToHeightRatio) + SVGConstants.overviewTrackYPosition;
       const bufferZoneSVGHeight = (bufferZoneStop - this.bufferZoneSelection.basePairStart) / overviewBasePairToHeightRatio;

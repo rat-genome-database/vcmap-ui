@@ -2,7 +2,6 @@ import { onMounted, ref } from "vue";
 import { getMousePosSVG } from '@/utils/SVGHelpers';
 import { Store } from "vuex";
 import { VCMapState } from "@/store";
-import BackboneSelection, { SelectedRegion } from "@/models/BackboneSelection";
 import BackboneSection from "@/models/BackboneSection";
 
 export default function useOverviewPanelSelection(store: Store<VCMapState>) {

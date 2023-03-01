@@ -13,11 +13,6 @@ import { LoadedBlock } from '@/utils/SectionBuilder';
 
 export const key: InjectionKey<Store<VCMapState>> = Symbol();
 
-type VCMapGetters = {
-  masterGeneMapByRGDId: Map<number, GeneDatatrack[]>,
-  masterGeneMapBySymbol: Map<string, number[]>,
-}
-
 export interface VCMapState
 {
   species: Species | null; // backbone species
@@ -270,7 +265,7 @@ export default createStore({
   },
 
   getters: {
-    masterGeneMapByRGDId: (state: VCMapState, getters: VCMapGetters) => {
+    masterGeneMapByRGDId: (state: VCMapState) => {
       const loadedGenes = state.loadedGenes;
 
       const mapByRGDId = new Map<number, GeneDatatrack[]>();
@@ -300,7 +295,7 @@ export default createStore({
       return mapByRGDId;
     },
 
-    masterGeneMapBySymbol: (state: VCMapState, getters: VCMapGetters) => {
+    masterGeneMapBySymbol: (state: VCMapState) => {
       const loadedGenes = state.loadedGenes;
       // Map of RGD Ids keyed by gene symbol
       const mapBySymbol = new Map<string, number[]>();

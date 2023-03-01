@@ -204,13 +204,6 @@ export default class SyntenyApi
       console.error(error);
     }
   }
-
-  static async adjustForCachedThreshold(threshold: number)
-  {
-    //get cached data from store
-    //determine min and max of loaded thresholds
-    //adjust requested threshold to only return data that is not already loaded
-  }
 }
 
 

@@ -143,7 +143,7 @@ toRefs(props);
 const selectedRegion = ref(store.state.selectedBackboneRegion ?? new BackboneSelection(new SelectedRegion(0,0,0,0), store.state.chromosome));
 const basePairPositionLabel = ref<string>('');
 
-watch(() => store.state.selectedBackboneRegion, (newVal: BackboneSelection, oldVal: BackboneSelection) => {
+watch(() => store.state.selectedBackboneRegion, (newVal: BackboneSelection) => {
   // Watch for possible clear out of the selected backbone region
   if (!isDetailed.value && newVal == null)
   {

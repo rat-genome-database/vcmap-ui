@@ -133,7 +133,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, nextTick } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import SectionSVG from './SectionSVG.vue';
 import SVGConstants from '@/utils/SVGConstants';
@@ -635,7 +635,7 @@ const adjustDetailedVisibleSetsBasedOnNav = async (lastBufferzone: SelectedRegio
       masterBlockMap,
       masterGeneMap ?? undefined,
       true
-    )
+    );
   }
   else if (navDirection == 'down')
   {

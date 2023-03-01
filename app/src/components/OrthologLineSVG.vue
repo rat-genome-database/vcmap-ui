@@ -5,8 +5,8 @@
     :x1="line.posX1" :x2="line.posX2"
     :y1="line.posY1" :y2="line.posY2"
     @click="onClick($event, line)"
-    @mouseenter="onMouseEnter(line, 'Gene')"
-    @mouseleave="onMouseLeave(line, 'Gene')"
+    @mouseenter="onMouseEnter(line)"
+    @mouseleave="onMouseLeave(line)"
   />
 </template>
 
@@ -14,7 +14,7 @@
 import OrthologLine from '@/models/OrthologLine';
 import { useStore } from 'vuex';
 import { key } from '@/store';
-import SelectedData, { SelectedDataType } from '@/models/SelectedData';
+import SelectedData from '@/models/SelectedData';
 import { getNewSelectedData } from '@/utils/DataPanelHelpers';
 
 const store = useStore(key);
@@ -29,7 +29,7 @@ interface Props
 
 defineProps<Props>();
 
-const onMouseEnter = (line: OrthologLine, type: SelectedDataType) => {
+const onMouseEnter = (line: OrthologLine) => {
 
   line.isHovered = true;
   line.comparativeGene.elementColor = HOVER_HIGHLIGHT_COLOR;
@@ -44,7 +44,7 @@ const onMouseEnter = (line: OrthologLine, type: SelectedDataType) => {
 
 };
 
-const onMouseLeave = (line: OrthologLine, type: SelectedDataType) => {
+const onMouseLeave = (line: OrthologLine) => {
   if (line) {
     line.isHovered = false;
     line.comparativeGene.elementColor = '#000000';

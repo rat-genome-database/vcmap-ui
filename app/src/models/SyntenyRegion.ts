@@ -98,7 +98,7 @@ export default class SyntenyRegion
       gaps = gaps.filter(gap => {
         return ((gap.stop - gap.start) >= (threshold * GAPS_THRESHOLD_MULTIPLIER)) 
           && block.chainLevel === gap.chainLevel
-          && (gap.backboneStop > block.windowBasePairRange.start || gap.backboneStart < block.windowBasePairRange.stop)
+          && (gap.backboneStop > block.windowBasePairRange.start || gap.backboneStart < block.windowBasePairRange.stop);
       });
     }
 
