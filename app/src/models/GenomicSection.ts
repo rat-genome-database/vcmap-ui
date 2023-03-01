@@ -1,8 +1,9 @@
 import SVGConstants, { PANEL_SVG_START, PANEL_SVG_STOP } from "@/utils/SVGConstants";
 import { SVGShape, VCMapSVGElement } from "./VCMapSVGElement";
+import { DatatrackSectionType } from "./DatatrackSection";
 
 export type RenderType = 'overview' | 'detailed';
-type GenomicSectionType = 'block' | 'gap' | 'gene';
+type GenomicSectionType = 'gap' | DatatrackSectionType;
 
 export type BackboneAlignment = {
   start: number;
@@ -45,6 +46,7 @@ export default abstract class GenomicSection implements VCMapSVGElement
   isHovered: boolean = false;
   isSelected: boolean = false;
   elementColor: string = '';
+  opacity: number = 1;
 
   // GenomicSection props
   speciesName: string;
@@ -73,7 +75,7 @@ export default abstract class GenomicSection implements VCMapSVGElement
 
     // Set color and shape of VCMapSVGElement
     this.elementColor = params.color;
-    if (params.type === 'block' || params.type === 'gene')
+    if (params.type === 'block' || params.type === 'gene' || params.type === 'qtl')
     {
       this.shape = 'rect';
     }

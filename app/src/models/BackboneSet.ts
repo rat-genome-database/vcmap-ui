@@ -3,7 +3,8 @@ import SVGConstants from "@/utils/SVGConstants";
 import { mergeGeneLabels } from "@/utils/GeneLabelMerger";
 import BackboneSection from "./BackboneSection";
 import Gene from "./Gene";
-import DatatrackSection from "./DatatrackSection";
+import DatatrackSection, { DatatrackSectionType } from "./DatatrackSection";
+import DatatrackSet from "./DatatrackSet";
 import { GenomicSet } from "./GenomicSet";
 import Label, { GeneLabel } from "./Label";
 
@@ -16,7 +17,7 @@ const DataTrack_X_OFFSET = 10;
 export default class BackboneSet extends GenomicSet
 {
   backbone: BackboneSection;
-  datatracks: DatatrackSection[];
+  datatrackSets: DatatrackSet[] = [];
   datatrackLabels: Label[] = [];
 
   constructor(backboneSection: BackboneSection, processedGenomicData?: ProcessedGenomicData)
@@ -24,8 +25,11 @@ export default class BackboneSet extends GenomicSet
     super(backboneSection.speciesName, backboneSection.mapName);
 
     this.backbone = backboneSection;
-    this.datatracks = processedGenomicData?.datatracks ?? [];
-    if (this.datatracks.length > 0 && processedGenomicData)
+    if (processedGenomicData?.datatracks)
+    {
+      this.datatrackSets.push(new DatatrackSet(processedGenomicData.datatracks, 'gene'));
+    }
+    if (processedGenomicData && processedGenomicData.datatracks.length > 0)
     {
       this.backbone.setBackboneGenes(processedGenomicData.genes);
     }
@@ -49,16 +53,18 @@ export default class BackboneSet extends GenomicSet
     this.backbone.adjustYPositionsBasedOnVisibleStartAndStop({
       start: visibleBackboneStart,
       stop: visibleBackboneStop,
-    })
+    });
     this.backbone.recalculateLabelYPositions();
     const backboneEndTime = Date.now();
 
-    this.datatracks.forEach(datatrack => {
-      datatrack.adjustYPositionsBasedOnVisibleStartAndStop({
-        start: visibleBackboneStart,
-        stop: visibleBackboneStop,
+    this.datatrackSets.forEach(set => {
+      set.datatracks.forEach(datatrack => {
+        datatrack.adjustYPositionsBasedOnVisibleStartAndStop({
+          start: visibleBackboneStart,
+          stop: visibleBackboneStop
+        });
+        datatrack.recalculateLabelYPositions();
       });
-      datatrack.recalculateLabelYPositions();
     });
     const datatracksEndTime = Date.now();
 
@@ -113,24 +119,31 @@ export default class BackboneSet extends GenomicSet
 
   private setDatatrackXPositions()
   {
-    this.datatracks.forEach(section => {
-      section.posX1 = this.backbone.posX2 + DataTrack_X_OFFSET;
-      section.posX2 = section.posX1 + SVGConstants.dataTrackWidth;
-      section.width = SVGConstants.dataTrackWidth;
-      if (section.label)
-      {
-        section.label.posX = section.posX2;
-      }
+    this.datatrackSets.forEach((set, index) => {
+      set.datatracks.forEach((section) => {
+        section.posX1 = this.backbone.posX2 + (DataTrack_X_OFFSET) * (index + 1) + (DataTrack_X_OFFSET * index);
+        section.posX2 = section.posX1 + SVGConstants.dataTrackWidth;
+        section.width = SVGConstants.dataTrackWidth;
+        if (section.label)
+        {
+          section.label.posX = section.posX2;
+        }
+      });
     });
   }
 
   private processGeneLabels()
   {
     const allLabels: Label[] = [];
-    this.datatracks.forEach((section) => {
-      if (section.label)
+    this.datatrackSets.forEach((set) => {
+      if (set.datatracks[0].type === 'gene')
       {
-        allLabels.push(section.label);
+        set.datatracks.forEach((section) => {
+          if (section.label)
+          {
+            allLabels.push(section.label);
+          }
+        });
       }
     });
     this.datatrackLabels = allLabels;
@@ -138,9 +151,27 @@ export default class BackboneSet extends GenomicSet
     mergeGeneLabels(this.datatrackLabels as GeneLabel[]);
   }
 
-  public addDatatrackSections(datatrackSections: DatatrackSection[])
+  public addNewDatatrackSetToEnd(datatrackSections: DatatrackSection[], type: DatatrackSectionType)
   {
-    this.datatracks = this.datatracks.concat(datatrackSections);
+    this.datatrackSets.push(new DatatrackSet(datatrackSections, type));
+    this.setDatatrackXPositions();
+  }
+
+  public addNewDatatrackSetToStart(datatrackSections: DatatrackSection[], type: DatatrackSectionType)
+  {
+    this.datatrackSets.unshift(new DatatrackSet(datatrackSections, type));
+    this.setDatatrackXPositions();
+  }
+
+  public addToDatatrackSet(datatrackSections: DatatrackSection[], datatrackSetIdx: number)
+  {
+    this.datatrackSets[datatrackSetIdx].addDatatrackSections(datatrackSections);
+    this.setDatatrackXPositions();
+  }
+
+  public removeDatatrackSet(datatrackSetIdx: number)
+  {
+    this.datatrackSets.splice(datatrackSetIdx, 1);
     this.setDatatrackXPositions();
   }
 }

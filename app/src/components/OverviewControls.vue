@@ -137,6 +137,7 @@ const saveSelectionChange = () => {
   }
   showEditModal.value = false;
 };
+
 </script>
 
 <style lang="scss" scoped>

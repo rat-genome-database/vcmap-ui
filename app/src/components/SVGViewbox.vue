@@ -130,6 +130,21 @@
     :on-confirm-callback="(isMissingSynteny) ? () => {allowDetailedPanelProcessing = true} : undefined"
   />
   <LoadingSpinnerMask v-if="enableProcessingLoadMask" :style="getDetailedPosition()"></LoadingSpinnerMask>
+  <!--
+  <Button
+    style="margin-right: 20px;"
+    class="p-button-info"
+    label="Backbone QTLs"
+    @click="loadBackboneQtls"
+  />
+  -->
+  <!--
+  <Button
+    class="p-button-info"
+    :label="backboneVariantsLoaded ? 'Remove Backbone Variants' : 'Load Backbone Variants'"
+    @click="handleBackboneVariantClick"
+  />
+  -->
 </template>
 
 <script setup lang="ts">
@@ -156,12 +171,17 @@ import { createBackboneSection, backboneDatatrackBuilder, createBackboneSet } fr
 import BackboneSetSVG from './BackboneSetSVG.vue';
 import SyntenyRegionSet from '@/models/SyntenyRegionSet';
 import GeneApi from '@/api/GeneApi';
+import QtlApi from '@/api/QtlApi';
+import VariantApi from '@/api/VariantApi';
 import BackboneSet from '@/models/BackboneSet';
 import { LoadedGene } from '@/models/DatatrackSection';
 import { LoadedBlock } from '@/utils/SectionBuilder';
 import OrthologLineSVG from './OrthologLineSVG.vue';
 import LoadingSpinnerMask from './LoadingSpinnerMask.vue';
 import { getNewSelectedData } from '@/utils/DataPanelHelpers';
+import { createQtlDatatracks } from '@/utils/QtlBuilder';
+import { createVariantDatatracks } from '@/utils/VariantBuilder';
+import { GenomicSectionFactory } from '@/models/GenomicSectionFactory';
 
 const LOAD_BY_GENE_VISIBLE_SIZE_MULTIPLIER = 6;
 
@@ -192,6 +212,10 @@ const orthologLines = computed(() => {
   });
 
   return lines;
+});
+
+const backboneVariantsLoaded = computed(() => {
+  return detailedBackboneSet.value?.datatrackSets.some((set) => set.type === 'variant');
 });
 
 async function attachToProgressLoader(storeLoadingActionName: string, func: () => Promise<any>)
@@ -635,7 +659,7 @@ const adjustDetailedVisibleSetsBasedOnNav = async (lastBufferzone: SelectedRegio
       masterBlockMap,
       masterGeneMap ?? undefined,
       true
-    )
+    );
   }
   else if (navDirection == 'down')
   {
@@ -820,6 +844,84 @@ const getDetailedPosition = () =>
 
     return styleElement;
   }
+};
+
+const loadBackboneQtls = async () => {
+  const chromosome = store.state.chromosome;
+  const backboneSpecies = store.state.species;
+  const backboneRegion = store.state.selectedBackboneRegion;
+  const start = backboneRegion?.viewportSelection?.basePairStart;
+  const stop = backboneRegion?.viewportSelection?.basePairStop;
+  const speciesMap = store.state.species?.activeMap;
+
+  if (chromosome && stop && speciesMap && backboneSpecies)
+  {
+    const factory = new GenomicSectionFactory(
+      backboneSpecies.name,
+      speciesMap.name,
+      chromosome.chromosome,
+      { start: start || 0, stop: stop },
+      'detailed'
+    );
+    const qtls = await QtlApi.getQtls(chromosome.chromosome, start || 0, stop, speciesMap.key);
+    const qtlDatatracks = createQtlDatatracks(factory, qtls, backboneSpecies, chromosome);
+    detailedBackboneSet.value?.addNewDatatrackSetToStart(qtlDatatracks, 'qtl');
+  }
+};
+
+const loadBackboneVariants = async () => {
+  const chromosome = store.state.chromosome;
+  const backboneSpecies = store.state.species;
+  const backboneRegion = store.state.selectedBackboneRegion;
+  const start = backboneRegion?.viewportSelection?.basePairStart;
+  const stop = backboneRegion?.viewportSelection?.basePairStop;
+  const speciesMap = store.state.species?.activeMap;
+  if (chromosome && stop && speciesMap && backboneSpecies)
+  {
+    // NOTE: for now, we always query for the whole chrom to get maxCount for chrom
+    // This should/could probably get moved the VariantBuilder
+    const variantPositions = await VariantApi.getVariants(chromosome.chromosome, 0, chromosome.seqLength, speciesMap.key);
+    if (variantPositions.length > 0)
+    {
+      const factory = new GenomicSectionFactory(
+        backboneSpecies.name,
+        speciesMap.name,
+        chromosome.chromosome,
+        { start: start || 0, stop: stop },
+        'detailed'
+      );
+      const variantDatatracks = createVariantDatatracks(factory, variantPositions, chromosome, start || 0, stop);
+      detailedBackboneSet.value?.addNewDatatrackSetToStart(variantDatatracks, 'variant');
+      // NOTE: because we're shifting the genes when adding to start, we also need to shift lines
+      if (orthologLines.value)
+      {
+        orthologLines.value.forEach((line) => line.posX1 += 20);
+      }
+    }
+    else
+    {
+      onError(null, 'No variants found for the requested region.');
+    }
+  }
+};
+
+const removeBackboneVariants = () => {
+  const variantSetIdx = detailedBackboneSet.value?.datatrackSets.findIndex((set) => set.type === 'variant') ?? -1;
+  if (variantSetIdx !== -1)
+  {
+    detailedBackboneSet.value?.removeDatatrackSet(variantSetIdx);
+
+      // NOTE: this only works because we are always adding the variants first/before the genes,
+      // Long term we'll want to make this more general
+      if (orthologLines.value)
+      {
+        orthologLines.value.forEach((line) => line.posX1 -= 20);
+      }
+  }
+};
+
+const handleBackboneVariantClick = () => {
+  backboneVariantsLoaded.value ? removeBackboneVariants() : loadBackboneVariants();
 };
 
 document.addEventListener('scroll' , getDetailedPosition);
