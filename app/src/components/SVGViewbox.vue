@@ -139,6 +139,7 @@
   />
   -->
   <Button
+    :disabled="backboneVariantsLoaded"
     class="p-button-info"
     label="Load Backbone Variants"
     @click="loadBackboneVariants"
@@ -210,6 +211,10 @@ const orthologLines = computed(() => {
 
   return lines;
 });
+
+const backboneVariantsLoaded = computed(() => {
+  return detailedBackboneSet.value?.datatrackSets.some((set) => set.type === 'variant');
+})
 
 async function attachToProgressLoader(storeLoadingActionName: string, func: () => Promise<any>)
 {
