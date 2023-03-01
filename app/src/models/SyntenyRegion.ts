@@ -1,10 +1,11 @@
-import BackboneSection, { RenderType } from '@/models/BackboneSection';
+import BackboneSection from '@/models/BackboneSection';
 import SyntenySection from './SyntenySection';
 import DatatrackSection from './DatatrackSection';
 import Label from './Label';
 import OrthologLine from './OrthologLine';
 import GenomicSection from './GenomicSection';
 import { SyntenyComponent } from '@/api/SyntenyApi';
+import { GenomicSectionFactory } from './GenomicSectionFactory';
 
 interface SyntenyRegionParams
 {
@@ -38,7 +39,7 @@ export default class SyntenyRegion
   public adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart: number, visibleBackboneStop: number)
   {
     this.genomicSections.forEach(section => {
-      section.adjustYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
+      section.adjustYPositionsBasedOnVisibleStartAndStop({ start: visibleBackboneStart, stop: visibleBackboneStop});
       section.recalculateLabelYPositions();
     });
     this.orthologLines.forEach(line => {
@@ -68,7 +69,7 @@ export default class SyntenyRegion
     this.orthologLines.length > 0 ? this.orthologLines = this.orthologLines.concat(orthologLine) : this.orthologLines = orthologLine;
   }
 
-  public splitBlockWithGaps(gaps: SyntenyComponent[], windowStart: number, windowStop: number, threshold: number, renderType: RenderType)
+  public splitBlockWithGaps(factory: GenomicSectionFactory, gaps: SyntenyComponent[], threshold?: number)
   {
     this.syntenyBlocks.splice(0, this.syntenyBlocks.length);
     this.syntenyGaps.splice(0, this.syntenyGaps.length);
@@ -78,23 +79,30 @@ export default class SyntenyRegion
     const processedBlocks: SyntenySection[] = [];
     const chromosome = block.chromosome;
 
-    const gapsLine = new SyntenySection({
+    const gapsLine = factory.createSyntenySection({
       start: block.speciesStart,
       stop: block.speciesStop,
-      backboneSection: block.backboneSection,
+      backboneAlignment: block.backboneAlignment,
       type: 'gap',
-      chromosome: chromosome,
-      chainLevel: block.chainLevel,
       orientation: '+',
+      chainLevel: block.chainLevel,
     });
     processedGaps.push(gapsLine);
   
     let lastGapBackboneStop = 0;
     let lastGapSpeciesStop = 0;
-  
-    gaps.filter( gap => { return ((gap.stop - gap.start) >= (threshold * 10)) && (gap.backboneStop < windowStart || gap.backboneStart > windowStop) });
+
+    // Filter gaps according to synteny threshold if present
+    if (threshold != null)
+    {
+      gaps = gaps.filter(gap => {
+        return ((gap.stop - gap.start) >= (threshold * 10)) 
+          && (gap.backboneStop < this.gaplessBlock.windowBasePairRange.start || gap.backboneStart > this.gaplessBlock.windowBasePairRange.stop)
+      });
+    }
+
     gaps.forEach((gap, index) => {
-      const blockBackboneStart = block.backboneSection.start;
+      const blockBackboneStart = block.backboneAlignment.start;
       const gapBackboneStart = gap.backboneStart;
       const gapBackboneStop = gap.backboneStop;
   
@@ -110,20 +118,12 @@ export default class SyntenyRegion
       else if (index === 0)
       {
         //First gap start not before block start, so create block section and then gap section
-        const blockBackboneSection = new BackboneSection({
-          start: block.backboneSection.start,
-          stop: gap.backboneStart,
-          windowStart: windowStart,
-          windowStop: windowStop,
-          renderType: renderType
-        });
-        const blockSyntenicSection = new SyntenySection({
+        const blockSyntenicSection = factory.createSyntenySection({
           start: block.speciesStart, // Should be oriented correctly regardless of inversion since it was taken into account during gapless block creation
           stop: orientedGapStart,
-          backboneSection: blockBackboneSection,
+          backboneAlignment: { start: block.backboneAlignment.start, stop: gap.backboneStart },
           type: 'block',
           orientation: block.orientation,
-          chromosome: chromosome,
           chainLevel: block.chainLevel,
         });
   
@@ -135,23 +135,14 @@ export default class SyntenyRegion
       else if (lastGapBackboneStop && lastGapSpeciesStop && gap.backboneStart >= lastGapBackboneStop)
       {
         // Next gap start is after last processed section stop, so create block section and then gap section
-        const blockBackboneSection = new BackboneSection({
-          start: lastGapBackboneStop,
-          stop: gap.backboneStart,
-          windowStart: windowStart,
-          windowStop: windowStop,
-          renderType: renderType,
-        });
-        const blockSyntenicSection = new SyntenySection({
+        const blockSyntenicSection = factory.createSyntenySection({
           start: lastGapSpeciesStop, // Should be oriented correctly regardless of inversion, since previous processed section would take it into account
           stop: orientedGapStart,
-          backboneSection: blockBackboneSection,
+          backboneAlignment: { start: lastGapBackboneStop, stop: gap.backboneStart, },
           type: 'block',
           orientation: block.orientation,
-          chromosome: chromosome,
           chainLevel: block.chainLevel,
         });
-  
         processedBlocks.push(blockSyntenicSection);
         lastGapBackboneStop = gap.backboneStop;
         lastGapSpeciesStop = orientedGapStop;
@@ -165,22 +156,14 @@ export default class SyntenyRegion
           // current gap is encompassed by last gap (safe-guard)
           return;
         }
-  
+
         // TODO: Unsure if anything ever makes it here... may need to investigate
-        const blockBackboneSection = new BackboneSection({
-          start: lastGap.backboneStop,
-          stop: gap.backboneStart,
-          windowStart: windowStart,
-          windowStop: windowStop,
-          renderType: renderType,
-        });
-        const blockSyntenicSection = new SyntenySection({
+        const blockSyntenicSection = factory.createSyntenySection({
           start: lastGap.stop, // Should be oriented correctly regardless of inversion, since previous processed section would take it into account
           stop: gap.start,
-          backboneSection: blockBackboneSection,
+          backboneAlignment: { start: lastGap.backboneStop, stop: gap.backboneStart, },
           type: 'block',
           orientation: block.orientation,
-          chromosome: chromosome,
           chainLevel: block.chainLevel,
         });
   
@@ -190,22 +173,14 @@ export default class SyntenyRegion
   
     // Check to see if the gapless block ends with a gap. If not, then create and process the last synteny block
     const finalGap = gaps[gaps.length - 1];
-    if (finalGap && finalGap.backboneStop < block.backboneSection.stop)
+    if (finalGap && finalGap.backboneStop < block.backboneAlignment.stop)
     {
-      const blockBackboneSection = new BackboneSection({
-        start: finalGap.backboneStop,
-        stop: block.backboneSection.stop,
-        windowStart: windowStart,
-        windowStop: windowStop,
-        renderType: renderType,
-      });
-      const blockSyntenicSection = new SyntenySection({
+      const blockSyntenicSection = factory.createSyntenySection({
         start: block.isInverted ? finalGap.start : finalGap.stop,
         stop: block.speciesStop, // Should be oriented correctly regardless of inversion since it was taken into account during gapless block creation
-        backboneSection: blockBackboneSection,
+        backboneAlignment: { start: finalGap.backboneStop, stop: block.backboneAlignment.stop, },
         type: 'block',
         orientation: block.orientation,
-        chromosome: chromosome,
         chainLevel: block.chainLevel,
       });
   

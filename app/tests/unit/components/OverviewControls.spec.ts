@@ -5,7 +5,6 @@ import Map from '@/models/SpeciesMap';
 import { VCMapState } from '@/store';
 import { ActionTree, Store } from 'vuex';
 import Chromosome from '@/models/Chromosome';
-import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 import { TestUtils } from '../../utils/TestUtils';
 
 describe('OverviewControls', () => {

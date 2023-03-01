@@ -1,11 +1,35 @@
-import BackboneSection from "./BackboneSection";
+import SVGConstants, { PANEL_SVG_START, PANEL_SVG_STOP } from "@/utils/SVGConstants";
 import { SVGShape, VCMapSVGElement } from "./VCMapSVGElement";
 
+export type RenderType = 'overview' | 'detailed';
 type GenomicSectionType = 'block' | 'gap' | 'gene';
+
+export type BackboneAlignment = {
+  start: number;
+  stop: number;
+};
+
+export type WindowBasePairRange = {
+  start: number;
+  stop: number;
+};
+
+export type GenomicSectionParams = {
+  speciesName: string;
+  mapName: string;
+  chromosome: string;
+  start: number;
+  stop: number;
+  type: GenomicSectionType;
+  color: string;
+  backboneAlignment: BackboneAlignment;
+  windowBasePairRange: WindowBasePairRange;
+  renderType: RenderType;
+};
 
 /**
  * Represents an individual Genomic Section of data. 
- * This could be a syntenic section (block or gap), a datatrack section, etc...
+ * This could be an off-backbone syntenic section (block or gap), a backbone section, a datatrack section, etc...
  */
 export default abstract class GenomicSection implements VCMapSVGElement
 {
@@ -22,29 +46,34 @@ export default abstract class GenomicSection implements VCMapSVGElement
   isSelected: boolean = false;
   elementColor: string = '';
 
+  // GenomicSection props
+  speciesName: string;
+  mapName: string;
+  chromosome: string;
   speciesStart: number = 0;  // start basepair of the section on its original species
   speciesStop: number = 0;   // stop basepair of the section on its original species
-  backboneStart: number = 0; // start basepair of the section on the backbone species
-  backboneStop: number = 0;  // stop basepair of the section on the backbone species
-  length: number = 0;        // length of the section on its original species
-  type: GenomicSectionType = 'block';
-
-  backboneSection: BackboneSection;  // backbone section that this genomic section is aligned against
+  type: GenomicSectionType = 'block'; // TODO: see if we can remove this prop
+  backboneAlignment: BackboneAlignment;
+  windowBasePairRange: WindowBasePairRange;
+  renderType: RenderType;
   
-  constructor(speciesStart: number, speciesStop: number, type: GenomicSectionType, color: string, backboneSection: BackboneSection)
+  constructor(params: GenomicSectionParams)
   {
-    this.speciesStart = speciesStart;
-    this.speciesStop = speciesStop;
-    this.length = Math.abs(this.speciesStop - this.speciesStart);
-    this.type = type;
-    this.elementColor = color;
+    this.speciesName = params.speciesName;
+    this.mapName = params.mapName;
+    this.chromosome = params.chromosome;
+    this.speciesStart = params.start;
+    this.speciesStop = params.stop;
+    this.type = params.type;
+    this.backboneAlignment = params.backboneAlignment;
+    this.windowBasePairRange = params.windowBasePairRange;
+    this.renderType = params.renderType;
 
-    this.backboneSection = backboneSection;
-    this.backboneStart = this.backboneSection.start;
-    this.backboneStop = this.backboneSection.stop;
-    this.setYPositionsBasedOnBackboneSection();
+    this.calculateYPositionsBasedOnBackboneAlignment();
 
-    if (type === 'block' || type === 'gene')
+    // Set color and shape of VCMapSVGElement
+    this.elementColor = params.color;
+    if (params.type === 'block' || params.type === 'gene')
     {
       this.shape = 'rect';
     }
@@ -54,19 +83,100 @@ export default abstract class GenomicSection implements VCMapSVGElement
     }
   }
 
-  public abstract recalculateLabelYPositions(): void;
-
-  public adjustYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart: number, visibleBackboneStop: number)
+  /**
+   * Length of this genomic section (in basepairs)
+   */
+  public get length()
   {
-    this.backboneSection.changeWindowStartAndStop(visibleBackboneStart, visibleBackboneStop);
-    this.setYPositionsBasedOnBackboneSection();
+    return Math.abs(this.speciesStop - this.speciesStart);
   }
 
-  private setYPositionsBasedOnBackboneSection()
+  /**
+   * Ratio of backbone basepairs to this section's basepairs
+   * e.g. if this section is 50bp and aligns against a backbone region that is 100bp long, the ratio would be 2
+   */
+  public get blockRatio()
   {
-    // This synteny section adopts the Y positions of its respective backbone section
-    this.posY1 = this.backboneSection.posY1;
-    this.posY2 = this.backboneSection.posY2;
-    this.height = this.backboneSection.height;
+    return Math.abs(this.backboneAlignment.stop - this.backboneAlignment.start) / this.length;
+  }
+
+  /**
+   * SVG start position of the visible part of the backbone
+   */
+  public get windowSVGStart()
+  {
+    return (this.renderType === 'overview') ? PANEL_SVG_START + SVGConstants.overviewTrackPadding : PANEL_SVG_START;
+  }
+
+  /**
+   * SVG stop position of the visible part of the backbone
+   */
+  public get windowSVGStop()
+  {
+    return (this.renderType === 'overview') ? PANEL_SVG_STOP - SVGConstants.overviewTrackPadding : PANEL_SVG_STOP;
+  }
+
+  /**
+   * SVG middle position of the visible part of the backbone
+   */
+  public get windowSVGMiddle()
+  {
+    return this.windowSVGStart + ((this.windowSVGStop - this.windowSVGStart) / 2);
+  }
+
+  /**
+   * Backbone start basepair at top of the visible window
+   */
+  public get windowStart()
+  {
+    return this.windowBasePairRange.start;
+  }
+
+  /**
+   * Backbone stop basepair at the bottom of the visible window
+   */
+  public get windowStop()
+  {
+    return this.windowBasePairRange.stop;
+  }
+
+  public abstract recalculateLabelYPositions(): void;
+
+  public adjustYPositionsBasedOnVisibleStartAndStop(visibleBackboneBasePairRange: WindowBasePairRange)
+  {
+    //this.changeWindowStartAndStop(visibleBackboneBasePairRange);
+    this.windowBasePairRange = visibleBackboneBasePairRange;
+    this.calculateYPositionsBasedOnBackboneAlignment();
+  }
+
+  /**
+   * Function determines the start and stop SVG positions of this genomic section by using the ratio of known windowStart and svgStart
+   */
+  private calculateYPositionsBasedOnBackboneAlignment()
+  {
+    const svgLength = this.windowSVGStop - this.windowSVGStart;
+    const bpVisibleWindowLength = Math.abs(this.windowStop - this.windowStart);
+    const bpToSVGRatio = bpVisibleWindowLength / svgLength;
+
+    // Calculate the start and stop SVG positions of this backbone section
+    const basepairDiff =  this.backboneAlignment.start < this.windowStart ? this.windowStart - this.backboneAlignment.start : this.backboneAlignment.start - this.windowStart;
+    const svgDiff = basepairDiff / bpToSVGRatio;
+
+    if (this.backboneAlignment.start < this.windowStart)
+    {
+      this.posY1 = this.windowSVGStart - svgDiff;
+    }
+    else if (this.backboneAlignment.start > this.windowStart)
+    {
+      this.posY1 = this.windowSVGStart + svgDiff;
+    }
+    else if (this.backboneAlignment.start === this.windowStart)
+    {
+      this.posY1 = this.windowSVGStart;
+    }
+
+    this.posY2 = this.posY1 + (this.length / bpToSVGRatio);
+
+    this.height = Math.abs(this.posY2 - this.posY1);
   }
 }
