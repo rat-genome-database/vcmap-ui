@@ -147,8 +147,8 @@ import { GeneLabel } from '@/models/Label';
 import SelectedData from '@/models/SelectedData';
 import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
 import { key } from '@/store';
-import { backboneDetailedError, backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError } from '@/utils/VCMapErrors';
-import { createSyntenicRegionsAndDatatracks,  } from '@/utils/SectionBuilder';
+import { backboneDetailedError, backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError, selectionError } from '@/utils/VCMapErrors';
+import { createSyntenicRegionsAndDatatracks, CreateSyntenicRegionsResult,  } from '@/utils/SectionBuilder';
 import useOverviewPanelSelection from '@/composables/useOverviewPanelSelection';
 import { useLogger } from 'vue-logger-plugin';
 import SyntenyRegion from '@/models/SyntenyRegion';
@@ -378,13 +378,20 @@ const updateDetailsPanel = async () => {
   const detailedUpdateStart = Date.now();
   enableProcessingLoadMask.value = true;
 
+  const originalSelectedBackboneRegion: BackboneSelection | null = store.state.selectedBackboneRegion;
+  if (originalSelectedBackboneRegion == null)
+  {
+    onError(selectionError, selectionError.message);
+    enableProcessingLoadMask.value = false;
+    return;
+  }
+
   const backboneSpecies = store.state.species;
   const backboneChromosome = store.state.chromosome;
   const loadType = store.state.configTab;
-  const originalSelectedBackboneRegion: BackboneSelection = store.state.selectedBackboneRegion;
   const detailedBasePairRange = store.state.detailedBasePairRange;
 
-  const masterBlockMap: Map<number, LoadedBlock> = store.state.LoadedBlocks ?? new Map<number, LoadedBlock>();
+  const masterBlockMap = new Map<number, LoadedBlock>();
 
   // Get comparison species Ids for ortholog API call parameter
   const comparativeSpeciesIds: number[] = [];
@@ -451,7 +458,7 @@ const updateDetailsPanel = async () => {
     timeQueryBackboneGenes = Date.now() - queryBackboneboneGenesStart;
 
     const backboneDatatracksStart = Date.now();
-    const backboneDatatrackInfo = backboneDatatrackBuilder(backboneSpecies, tempBackboneGenes, detailedBackbone, 0, backboneChromosome.seqLength);
+    const backboneDatatrackInfo = backboneDatatrackBuilder(backboneSpecies, tempBackboneGenes, detailedBackbone);
     masterGeneMap = backboneDatatrackInfo.masterGeneMap;
     timeCreateBackboneDatatracks = Date.now() - backboneDatatracksStart;
 
@@ -538,14 +545,20 @@ const updateDetailsPanel = async () => {
 const adjustDetailedVisibleSetsBasedOnZoom = async (zoomedSelection: SelectedRegion, updateCache: boolean) => {
   enableProcessingLoadMask.value = true;
   let masterGeneMap: Map<number, LoadedGene> | null = store.state.loadedGenes;
-  let masterBlockMap: Map<number, LoadedBlock> = store.state.loadedBlocks;
+  let masterBlockMap: Map<number, LoadedBlock> = store.state.loadedBlocks ?? new Map<number, LoadedBlock>();
 
   const selectedRegion = store.state.selectedBackboneRegion;
+  if (selectedRegion == null || selectedRegion.bufferZoneSelection == null)
+  {
+    console.error('SelectedRegion or buffer zone is null when adjusting detailed visible sets based on zoom');
+    return;
+  }
+
   const backboneChromosome = selectedRegion.chromosome;
   const bufferZoneSelection = selectedRegion.bufferZoneSelection;
 
   //need to query for data in the new viewport to update it with new gaps + blocks + genes data
-  let detailedSyntenyData = null;
+  let detailedSyntenyData: CreateSyntenicRegionsResult | null = null;
 
   if (updateCache)
   {
@@ -571,11 +584,13 @@ const adjustDetailedVisibleSetsBasedOnZoom = async (zoomedSelection: SelectedReg
     const backboneTiming = detailedBackboneSet.value.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop);
     const backboneEndTime = Date.now();
 
-    detailedSyntenySets.value.forEach((set: SyntenyRegionSet) => {
+    // Note: private methods in SyntenyRegionSet causes detailedSyntenySets to have a slightly different type
+    // https://github.com/vuejs/core/issues/2981
+    (detailedSyntenySets.value as SyntenyRegionSet[]).forEach(set => {
       let updateData = null;
-      if (detailedSyntenyData && updateCache)
+      if (detailedSyntenyData && updateCache && detailedSyntenyData.gapData)
       {
-        updateData = detailedSyntenyData.gapData.find((s: SyntenyRegionSet) => s.speciesName == set.speciesName);
+        updateData = detailedSyntenyData.gapData.find(s => s.speciesName == set.speciesName);
       }
 
       set.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop, updateCache, bufferZoneSelection, store.state.detailsSyntenyThreshold, updateData?.regionData);
@@ -588,7 +603,7 @@ const adjustDetailedVisibleSetsBasedOnZoom = async (zoomedSelection: SelectedReg
     });
   }
 
-  if (detailedSyntenyData)
+  if (detailedSyntenyData && detailedSyntenyData.masterGeneMap)
   {
     updateSyntenyData(detailedSyntenyData.syntenyRegionSets);
     updateMasterGeneMap(detailedSyntenyData.masterGeneMap);
@@ -607,15 +622,21 @@ const adjustDetailedVisibleSetsBasedOnNav = async (lastBufferzone: SelectedRegio
 {
   enableProcessingLoadMask.value = true;
   let masterGeneMap: Map<number, LoadedGene> | null = store.state.loadedGenes;
-  let masterBlockMap: Map<number, LoadedBlock> = store.state.loadedBlocks;
+  let masterBlockMap: Map<number, LoadedBlock> = store.state.loadedBlocks ?? new Map<number, LoadedBlock>();
 
   const selectedRegion = store.state.selectedBackboneRegion;
+  if (selectedRegion == null || selectedRegion.bufferZoneSelection == null || selectedRegion.viewportSelection == null)
+  {
+    console.error('SelectedRegion, buffer zone, or viewport selection is null when adjusting detailed visible sets based on nav');
+    return;
+  }
+
   const currBufferzone = selectedRegion.bufferZoneSelection;
   const zoomedSelection = selectedRegion.viewportSelection;
   const backboneChromosome = selectedRegion.chromosome;
 
   //need to query for data in the new viewport to update it with new gaps + blocks + genes data
-  let detailedSyntenyData = null;
+  let detailedSyntenyData: CreateSyntenicRegionsResult | null = null;
   let adjustedRegion: SelectedRegion = currBufferzone;
 
   if (navDirection == 'up')
@@ -664,8 +685,10 @@ const adjustDetailedVisibleSetsBasedOnNav = async (lastBufferzone: SelectedRegio
     const backboneTiming = detailedBackboneSet.value.adjustVisibleSet(zoomedSelection.basePairStart, zoomedSelection.basePairStop);
     const backboneEndTime = Date.now();
 
-    detailedSyntenySets.value.forEach((set: SyntenyRegionSet) => {
-      const updateData = detailedSyntenyData.gapData.find((s: SyntenyRegionSet) => s.speciesName == set.speciesName);
+    // Note: private methods in SyntenyRegionSet causes detailedSyntenySets to have a slightly different type
+    // https://github.com/vuejs/core/issues/2981
+    (detailedSyntenySets.value as SyntenyRegionSet[]).forEach(set => {
+      const updateData = detailedSyntenyData?.gapData?.find(s => s.speciesName == set.speciesName);
       set.adjustVisibleSetOnNav(zoomedSelection.basePairStart, zoomedSelection.basePairStop, adjustedRegion, true, store.state.detailsSyntenyThreshold, updateData?.regionData);
     });
 
@@ -677,7 +700,10 @@ const adjustDetailedVisibleSetsBasedOnNav = async (lastBufferzone: SelectedRegio
     });
 
     updateSyntenyData(detailedSyntenyData.syntenyRegionSets);
-    updateMasterGeneMap(detailedSyntenyData.masterGeneMap);
+    if (detailedSyntenyData.masterGeneMap)
+    {
+      updateMasterGeneMap(detailedSyntenyData.masterGeneMap);
+    }
   }
 
   enableProcessingLoadMask.value = false;
@@ -689,9 +715,9 @@ const navigateUp = () => {
   if (isNavigationUpDisabled.value || selectedRegion?.viewportSelection == null) return;
   const chromosome = selectedRegion.chromosome;
 
-  if (selectedRegion && selectedRegion.viewportSelection.length != chromosome.seqLength)
+  if (selectedRegion && selectedRegion.bufferZoneSelection != null && selectedRegion.viewportSelection.length != chromosome.seqLength)
   {
-    const currBufferzone = new SelectedRegion(selectedRegion.bufferZoneSelection.SVGYPoint, selectedRegion.bufferZoneSelection.SVGHeight, selectedRegion.bufferZoneSelection.basePairStart, selectedRegion.bufferZoneSelection.basePairStop);
+    const currBufferzone = new SelectedRegion(selectedRegion.bufferZoneSelection.svgYPoint, selectedRegion.bufferZoneSelection.svgHeight, selectedRegion.bufferZoneSelection.basePairStart, selectedRegion.bufferZoneSelection.basePairStop);
     // Adjust the inner selection on the selected region
     selectedRegion.moveInnerSelectionUp(store.state.overviewBasePairToHeightRatio);
     adjustDetailedVisibleSetsBasedOnNav(currBufferzone, 'up');
@@ -704,9 +730,9 @@ const navigateDown = () => {
   if (isNavigationDownDisabled.value || selectedRegion?.viewportSelection == null) return;
   const chromosome = selectedRegion.chromosome;
 
-  if (selectedRegion && selectedRegion.viewportSelection.length != chromosome.seqLength)
+  if (selectedRegion && selectedRegion.bufferZoneSelection != null && selectedRegion.viewportSelection.length != chromosome.seqLength)
   {
-    const currBufferzone = new SelectedRegion(selectedRegion.bufferZoneSelection.SVGYPoint, selectedRegion.bufferZoneSelection.SVGHeight, selectedRegion.bufferZoneSelection.basePairStart, selectedRegion.bufferZoneSelection.basePairStop);
+    const currBufferzone = new SelectedRegion(selectedRegion.bufferZoneSelection.svgYPoint, selectedRegion.bufferZoneSelection.svgHeight, selectedRegion.bufferZoneSelection.basePairStart, selectedRegion.bufferZoneSelection.basePairStop);
     // Adjust the inner selection on the selected region
     selectedRegion.moveInnerSelectionDown(store.state.overviewBasePairToHeightRatio);
     adjustDetailedVisibleSetsBasedOnNav(currBufferzone, 'down');
@@ -718,7 +744,7 @@ const updateSyntenyData = (syntenyRegionSets: SyntenyRegionSet[]) =>
 {
   if (detailedSyntenySets.value)
   {
-    detailedSyntenySets.value.forEach((syntenySet: SyntenyRegionSet) => {
+    (detailedSyntenySets.value as SyntenyRegionSet[]).forEach(syntenySet => {
       // TODO: What if there are two of the same species off-backbone? I don't think speciesName will be reliable enough
       const newSyntenySet = syntenyRegionSets.find((newSet: SyntenyRegionSet) => newSet.speciesName === syntenySet.speciesName);
       if (newSyntenySet)
@@ -770,17 +796,18 @@ const isNavigationDownDisabled = computed(() => {
 
 const updateMasterGeneMap = (newMappedGenes: Map<number, LoadedGene>) =>
 {
-  const masterGeneMap: Map<number, LoadedGene> = store.state.loadedGenes;
+  const masterGeneMap: Map<number, LoadedGene> | null = store.state.loadedGenes;
 
-  if (!newMappedGenes)
+  if (!masterGeneMap)
   {
+    console.error(`Master gene map is null. Cannot be updated.`);
     return;
   }
   
   for (const [key, value] of newMappedGenes.entries())
   {
     const geneRgdId: number = key;
-    const loadedGene: LoadedGene = masterGeneMap.get(geneRgdId);
+    const loadedGene: LoadedGene | undefined = masterGeneMap.get(geneRgdId);
     if (loadedGene)
     {
       //backbone genes will not have multiple fragments and thus not need to update the master gene map

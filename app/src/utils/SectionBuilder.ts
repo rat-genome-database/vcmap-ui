@@ -16,6 +16,13 @@ export interface LoadedBlock
   [speciesName:string]: { [chromosome: string]: [SyntenySection] }
 }
 
+export type CreateSyntenicRegionsResult = {
+  syntenyRegionSets: SyntenyRegionSet[];
+  masterGeneMap?: Map<number, LoadedGene>;
+  masterBlockMap: Map<number, LoadedBlock>;
+  gapData?: SpeciesSyntenyData[];
+};
+
 /**
  * This function retrieves syntenic data and initiates the processing pipeline to create syntenic regions. 
  * Syntenic regions are comprised of syntenic sections representing blocks and gaps.  
@@ -30,7 +37,7 @@ export interface LoadedBlock
  * @param isComparative         whether or not to draw comparative data NOTE: worth separating into two functions for overview and detailed panel (or datatracks and no datatracks)
  * @returns                     processed syntenic regions for each species
  */
-export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Species[], backboneChr: Chromosome, backboneStart: number, backboneStop: number, windowStart: number, windowStop: number, syntenyThreshold: number, isComparative: boolean, masterBlockMap: Map<number, LoadedBlock>, masterGeneMap?: Map<number, LoadedGene>, updateCache?: boolean)
+export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Species[], backboneChr: Chromosome, backboneStart: number, backboneStop: number, windowStart: number, windowStop: number, syntenyThreshold: number, isComparative: boolean, masterBlockMap: Map<number, LoadedBlock>, masterGeneMap?: Map<number, LoadedGene>, updateCache?: boolean): Promise<CreateSyntenicRegionsResult>
 {
   //Step 1: Get syntenic data for each species
   const syntenyApiParams: SyntenyRequestParams = {
