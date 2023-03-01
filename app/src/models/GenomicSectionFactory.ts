@@ -1,4 +1,4 @@
-import { GeneDatatrack } from "./DatatrackSection";
+import { GeneDatatrack, VariantDensity } from "./DatatrackSection";
 import Gene from "./Gene";
 import { WindowBasePairRange, RenderType, BackboneAlignment } from "./GenomicSection";
 import SyntenySection, { Orientation, SyntenySectionType } from "./SyntenySection";
@@ -68,5 +68,13 @@ export class GenomicSectionFactory
     } = params;
 
     return new GeneDatatrack(gene, start, stop, backboneAlignment, this.speciesName, this.mapName, this.chromosome, this.windowBasePairRange, this.renderType);
+  }
+
+  /**
+   * Creates a new VaraintDensity datatrack section
+   */
+  createVariantDensitySection(variantCount: number, maxCount: number, start: number, stop: number, backboneAlignment: BackboneAlignment): VariantDensity
+  {
+    return new VariantDensity(variantCount, maxCount, start, stop, backboneAlignment, this.speciesName, this.mapName, this.chromosome, this.windowBasePairRange, this.renderType);
   }
 }

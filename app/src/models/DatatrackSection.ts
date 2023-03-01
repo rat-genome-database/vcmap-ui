@@ -73,9 +73,20 @@ export class GeneDatatrack extends DatatrackSection
 export class VariantDensity extends DatatrackSection
 {
   variantCount: number; // number of variants contained within the datatrack section
-  constructor(params: DatatrackSectionParams, variantCount: number, maxCount: number)
+  constructor(variantCount: number, maxCount: number, start: number, stop: number, backboneAlignment: BackboneAlignment, speciesName: string, mapName: string, chromosome: string, windowBasePairRange: WindowBasePairRange, renderType: RenderType)
   {
-    super(params, 'variant', '#FFFFFF');
+    super({
+      start: start,
+      stop: stop,
+      backboneAlignment: backboneAlignment,
+      speciesName: speciesName,
+      mapName: mapName,
+      chromosome: chromosome,
+      windowBasePairRange: windowBasePairRange,
+      renderType: renderType,
+      type: 'variant',
+      color: '#FFFFFF',
+    });
     this.variantCount = variantCount;
     // NOTE: setting the color is very preliminary, this will likely change
     // and I want to add a lot more structure around it.
@@ -87,6 +98,4 @@ export class VariantDensity extends DatatrackSection
     blueHex = blueHex.length === 1 ? `0${blueHex}` : blueHex;
     this.elementColor = `#${redHex}00${blueHex}`;
   }
-
-
 }

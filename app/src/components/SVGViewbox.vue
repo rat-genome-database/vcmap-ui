@@ -137,6 +137,8 @@
     label="Backbone QTLs"
     @click="loadBackboneQtls"
   />
+  -->
+  <!--
   <Button
     class="p-button-info"
     :label="backboneVariantsLoaded ? 'Remove Backbone Variants' : 'Load Backbone Variants'"
@@ -179,6 +181,7 @@ import LoadingSpinnerMask from './LoadingSpinnerMask.vue';
 import { getNewSelectedData } from '@/utils/DataPanelHelpers';
 import { createQtlDatatracks } from '@/utils/QtlBuilder';
 import { createVariantDatatracks } from '@/utils/VariantBuilder';
+import { GenomicSectionFactory } from '@/models/GenomicSectionFactory';
 
 const LOAD_BY_GENE_VISIBLE_SIZE_MULTIPLIER = 6;
 
@@ -849,12 +852,19 @@ const loadBackboneQtls = async () => {
   const backboneRegion = store.state.selectedBackboneRegion;
   const start = backboneRegion?.viewportSelection?.basePairStart;
   const stop = backboneRegion?.viewportSelection?.basePairStop;
-  const mapKey = store.state.species?.activeMap;
+  const speciesMap = store.state.species?.activeMap;
 
-  if (chromosome && stop && mapKey && backboneSpecies)
+  if (chromosome && stop && speciesMap && backboneSpecies)
   {
-    const qtls = await QtlApi.getQtls(chromosome.chromosome, start || 0, stop, mapKey.key);
-    const qtlDatatracks = createQtlDatatracks(qtls, backboneSpecies, chromosome);
+    const factory = new GenomicSectionFactory(
+      backboneSpecies.name,
+      speciesMap.name,
+      chromosome.chromosome,
+      { start: start || 0, stop: stop },
+      'detailed'
+    );
+    const qtls = await QtlApi.getQtls(chromosome.chromosome, start || 0, stop, speciesMap.key);
+    const qtlDatatracks = createQtlDatatracks(factory, qtls, backboneSpecies, chromosome);
     detailedBackboneSet.value?.addNewDatatrackSetToStart(qtlDatatracks, 'qtl');
   }
 };
@@ -865,15 +875,22 @@ const loadBackboneVariants = async () => {
   const backboneRegion = store.state.selectedBackboneRegion;
   const start = backboneRegion?.viewportSelection?.basePairStart;
   const stop = backboneRegion?.viewportSelection?.basePairStop;
-  const mapKey = store.state.species?.activeMap;
-  if (chromosome && stop && mapKey && backboneSpecies)
+  const speciesMap = store.state.species?.activeMap;
+  if (chromosome && stop && speciesMap && backboneSpecies)
   {
     // NOTE: for now, we always query for the whole chrom to get maxCount for chrom
     // This should/could probably get moved the VariantBuilder
-    const variantPositions = await VariantApi.getVariants(chromosome.chromosome, 0, chromosome.seqLength, mapKey.key);
+    const variantPositions = await VariantApi.getVariants(chromosome.chromosome, 0, chromosome.seqLength, speciesMap.key);
     if (variantPositions.length > 0)
     {
-      const variantDatatracks = createVariantDatatracks(variantPositions, chromosome, start || 0, stop);
+      const factory = new GenomicSectionFactory(
+        backboneSpecies.name,
+        speciesMap.name,
+        chromosome.chromosome,
+        { start: start || 0, stop: stop },
+        'detailed'
+      );
+      const variantDatatracks = createVariantDatatracks(factory, variantPositions, chromosome, start || 0, stop);
       detailedBackboneSet.value?.addNewDatatrackSetToStart(variantDatatracks, 'variant');
       // NOTE: because we're shifting the genes when adding to start, we also need to shift lines
       if (orthologLines.value)
