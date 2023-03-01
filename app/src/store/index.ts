@@ -4,7 +4,7 @@ import Species from '@/models/Species';
 import Chromosome from '@/models/Chromosome';
 import Gene from '@/models/Gene';
 import BackboneSelection, { BasePairRange } from '@/models/BackboneSelection';
-import SVGConstants from '@/utils/SVGConstants';
+import SVGConstants, { PANEL_HEIGHT } from '@/utils/SVGConstants';
 import SelectedData from '@/models/SelectedData';
 import { InjectionKey } from 'vue';
 import { createLogger } from 'vuex';
@@ -20,28 +20,27 @@ export interface VCMapState
   startPos: number | null; // backbone start position
   stopPos: number | null; // backbone stop position
   gene: Gene | null; // backbone gene
-
   comparativeSpecies: Species[];
-  loadedGenes: Map<number, LoadedGene> | null;
-  loadedBlocks: Map<number, LoadedBlock> | null;
+  configTab: number;
 
   selectedBackboneRegion: BackboneSelection | null;
+  detailedBasePairRange: BasePairRange;
+  zoomLevel: number;
 
   overviewBasePairToHeightRatio: number;
   overviewSyntenyThreshold: number;
   detailedBasePairToHeightRatio: number;
   detailsSyntenyThreshold: number;
 
-  configTab: number;
-
-  selectedData: SelectedData[] | null;
-  selectedGeneIds: number[];
-
-  detailedBasePairRange: BasePairRange;
-  zoomLevel: number;
-
   isDetailedPanelUpdating: boolean;
   isOverviewPanelUpdating: boolean;
+
+  selectedGeneIds: number[];
+  selectedData: SelectedData[] | null;
+
+  /* These data structures have the potential to be pretty large */
+  loadedGenes: Map<number, LoadedGene> | null;
+  loadedBlocks: Map<number, LoadedBlock> | null;
 }
 
 const vuexLocal = new VuexPersistence<VCMapState>({
@@ -65,28 +64,27 @@ export default createStore({
     startPos: null,
     stopPos: null,
     gene: null,
-
     comparativeSpecies: [],
-    loadedGenes: null,
-    loadedBlocks: null,
+    configTab: 0,
 
     selectedBackboneRegion: null,
+    detailedBasePairRange: { start: 0, stop: 0 },
+    zoomLevel: 1,
 
     overviewBasePairToHeightRatio: 1000,
     overviewSyntenyThreshold: 0,
     detailedBasePairToHeightRatio: 1000,
     detailsSyntenyThreshold: 0,
 
-    configTab: 0,
-
-    selectedData: null,
-    selectedGeneIds: [],
-
-    detailedBasePairRange: { start: 0, stop: 0 },
-    zoomLevel: 1,
-
     isDetailedPanelUpdating: false,
     isOverviewPanelUpdating: false,
+
+    selectedGeneIds: [],
+    selectedData: null,
+
+    /* These data structures have the potential to be pretty large */
+    loadedGenes: null,
+    loadedBlocks: null,
   }),
 
   mutations: {
@@ -177,8 +175,7 @@ export default createStore({
     },
     setDetailsResolution(context: ActionContext<VCMapState, VCMapState>, backboneLength: number) {
       // The tracks in the detailed panel should have no top or bottom margins
-      const detailedTrackHeight = SVGConstants.viewboxHeight - (SVGConstants.panelTitleHeight + SVGConstants.navigationButtonHeight);
-      context.commit('detailedBasePairToHeightRatio', backboneLength / detailedTrackHeight);
+      context.commit('detailedBasePairToHeightRatio', backboneLength / PANEL_HEIGHT);
       // Note: Dividing by 8,000 is arbitary when calculating synteny threshold
       context.commit('detailsSyntenyThreshold', (backboneLength > 250000) ? Math.floor((backboneLength) / 8000) : 0);
     },
