@@ -16,7 +16,12 @@ export interface LoadedBlock
   [speciesName:string]: { [chromosome: string]: [SyntenySection] }
 }
 
-const GAPS_THRESHOLD_MULTIPLIER = 10;
+export type CreateSyntenicRegionsResult = {
+  syntenyRegionSets: SyntenyRegionSet[];
+  masterGeneMap?: Map<number, LoadedGene>;
+  masterBlockMap: Map<number, LoadedBlock>;
+  gapData?: SpeciesSyntenyData[];
+};
 
 /**
  * This function retrieves syntenic data and initiates the processing pipeline to create syntenic regions. 
@@ -32,7 +37,7 @@ const GAPS_THRESHOLD_MULTIPLIER = 10;
  * @param isComparative         whether or not to draw comparative data NOTE: worth separating into two functions for overview and detailed panel (or datatracks and no datatracks)
  * @returns                     processed syntenic regions for each species
  */
-export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Species[], backboneChr: Chromosome, backboneStart: number, backboneStop: number, windowStart: number, windowStop: number, syntenyThreshold: number, isComparative: boolean, masterBlockMap: Map<number, LoadedBlock>, masterGeneMap?: Map<number, LoadedGene>, updateCache?: boolean)
+export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Species[], backboneChr: Chromosome, backboneStart: number, backboneStop: number, windowStart: number, windowStop: number, syntenyThreshold: number, isComparative: boolean, masterBlockMap: Map<number, LoadedBlock>, masterGeneMap?: Map<number, LoadedGene>, updateCache?: boolean): Promise<CreateSyntenicRegionsResult>
 {
   //Step 1: Get syntenic data for each species
   const syntenyApiParams: SyntenyRequestParams = {
@@ -422,18 +427,4 @@ function orthologLineBuilder(masterProcessedGenes: Map<number, LoadedGene>, proc
   });
 
   return orthologLines;
-}
-
-function checkIfNewBlock(block: SyntenySection, blocks: SyntenySection[])
-{
-  let isNewBlock = true;
-  blocks.forEach((loadedBlock: SyntenySection) => {
-    if (loadedBlock.backboneAlignment.start == block.backboneAlignment.start && loadedBlock.backboneAlignment.stop == block.backboneAlignment.stop)
-    {
-      isNewBlock = false;
-      return;
-    }
-  });
-
-  return isNewBlock;
 }

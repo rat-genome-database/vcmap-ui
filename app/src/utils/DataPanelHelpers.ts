@@ -89,6 +89,7 @@ function getGeneOrthologData(store: Store<VCMapState>, gene: Gene)
 
         // Backbone gene might have multiple orthos to check
         if (orthos) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           for (const [key, value] of Object.entries(orthos)) {
             if (Number(`${value}`) !== gene.rgdId) {
               const newOrthoData = masterGeneMapByRGDId?.get(Number(`${value}`));

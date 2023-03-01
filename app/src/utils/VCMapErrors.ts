@@ -9,3 +9,5 @@ export const backboneDetailedError = new Error('Cannot render the detailed panel
 export const noRegionLengthError = new Error('Region length must be greater than zero');
 
 export const missingComparativeSpeciesError = new Error('Cannot load synteny without any comparative species maps selected');
+
+export const selectionError = new Error('An error occurred while making a selection');
