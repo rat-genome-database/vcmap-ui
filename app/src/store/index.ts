@@ -19,8 +19,6 @@ export interface VCMapState
   chromosome: Chromosome | null; // backbone chromosome
   startPos: number | null; // backbone start position
   stopPos: number | null; // backbone stop position
-  loadStart: number | null; // load start position
-  loadStop: number | null; // load stop position
   gene: Gene | null; // backbone gene
 
   comparativeSpecies: Species[];
@@ -66,8 +64,6 @@ export default createStore({
     chromosome: null,
     startPos: null,
     stopPos: null,
-    loadStart: null,
-    loadStop: null,
     gene: null,
 
     comparativeSpecies: [],
@@ -105,12 +101,6 @@ export default createStore({
     },
     stopPosition (state: VCMapState, stopPos: number) {
       state.stopPos = stopPos;
-    },
-    loadStart (state: VCMapState, loadStart: number) {
-      state.loadStart = loadStart;
-    },
-    loadStop (state: VCMapState, loadStop: number) {
-      state.loadStop = loadStop;
     },
     gene (state: VCMapState, gene: Gene) {
       state.gene = gene;
@@ -175,12 +165,6 @@ export default createStore({
     setStopPosition(context: ActionContext<VCMapState, VCMapState>, stopPos: number) {
       context.commit('stopPosition', stopPos);
     },
-    setLoadStart(context: ActionContext<VCMapState, VCMapState>, loadStart: number) {
-      context.commit('loadStart', loadStart);
-    },
-    setLoadStop(context: ActionContext<VCMapState, VCMapState>, loadStop: number) {
-      context.commit('loadStop', loadStop);
-    },
     setGene(context: ActionContext<VCMapState, VCMapState>, gene: Gene) {
       context.commit('gene', gene);
     },
@@ -228,8 +212,6 @@ export default createStore({
       context.commit('chromosome', null);
       context.commit('startPosition', null);
       context.commit('stopPosition', null);
-      context.commit('loadStart', null);
-      context.commit('loadStop', null);
       context.commit('comparativeSpecies', []);
       context.commit('selectedGeneIds', []);
       context.commit('loadedGenes', null);

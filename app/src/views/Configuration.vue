@@ -599,15 +599,11 @@ function saveConfigToStoreAndGoToMainScreen()
 
   store.dispatch('setSpecies', backboneSpecies.value);
   // Always reset loaded genes before loading VCMap
-  store.dispatch('setLoadedGenes', []);
+  store.dispatch('setLoadedGenes', null);
   if (activeTab.value === TABS.GENE)
   {
     store.dispatch('setGene', backboneGene.value);
     store.dispatch('setChromosome', geneChromosome.value);
-    store.dispatch('setStartPosition', geneOptionStartPosition.value ?? backboneGene.value?.start);
-    store.dispatch('setStopPosition', geneOptionStopPosition.value ?? backboneGene.value?.stop);
-    store.dispatch('setLoadStart', geneOptionStartPosition.value ?? backboneGene.value?.start);
-    store.dispatch('setLoadStop', geneOptionStopPosition.value ?? backboneGene.value?.stop);
     // If loading by gene, set the selectedGeneIds based on search, and selected data panel
     store.dispatch('setSelectedGeneIds', [backboneGene.value?.rgdId] || []);
   }

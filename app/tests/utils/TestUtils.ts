@@ -1,4 +1,3 @@
-import BackboneSelection, { SelectedRegion } from "@/models/BackboneSelection";
 import { VCMapState } from "@/store";
 import { ExternalComponentsHandler } from "@/utils/ExternalComponentsHandler";
 import { GlobalMountOptions } from "@vue/test-utils/dist/types";
@@ -64,8 +63,6 @@ export namespace TestUtils
         chromosome: null,
         startPos: null,
         stopPos: null,
-        loadStart: null,
-        loadStop: null,
         gene: null,
         comparativeSpecies: [],
 

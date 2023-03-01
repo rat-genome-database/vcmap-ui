@@ -285,18 +285,19 @@ const updateOverviewPanel = async () => {
 
   const backboneSpecies = store.state.species;
   const backboneChromosome = store.state.chromosome;
-  const backboneStart = store.state.startPos;
-  const backboneStop = store.state.stopPos;
   const loadType = store.state.configTab;
 
   //error if backbone is not set
-  if (backboneSpecies == null || backboneChromosome == null || backboneStart == null || backboneStop == null)
+  if (backboneSpecies == null || backboneChromosome == null)
   {
     onError(backboneOverviewError, backboneOverviewError.message);
     overviewSyntenySets.value = [];
     enableProcessingLoadMask.value = false;
     return;
   }
+
+  const backboneStart = store.state.startPos ?? 0;
+  const backboneStop = store.state.stopPos ?? backboneChromosome.seqLength;
 
   //error if backbone info is invalid length
   if (backboneStop - backboneStart <= 0)
