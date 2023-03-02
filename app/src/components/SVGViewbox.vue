@@ -633,7 +633,7 @@ const adjustDetailedVisibleSetsBasedOnZoom = async (zoomedSelection: SelectedReg
     updateMasterGeneMap(detailedSyntenyData.masterGeneMap);
     store.dispatch('setLoadedBlocks', detailedSyntenyData.masterBlockMap);
   }
-  
+
   enableProcessingLoadMask.value = false;
 };
 
@@ -868,6 +868,8 @@ const getDetailedPosition = () =>
   }
 };
 
+// TODO: temp ignore here, should remove once this method is actively being used
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const loadBackboneQtls = async () => {
   const chromosome = store.state.chromosome;
   const backboneSpecies = store.state.species;
@@ -942,6 +944,8 @@ const removeBackboneVariants = () => {
   }
 };
 
+// TODO: temp ignore here, should remove once this method is actively being used
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const handleBackboneVariantClick = () => {
   backboneVariantsLoaded.value ? removeBackboneVariants() : loadBackboneVariants();
 };

@@ -1,5 +1,3 @@
-import BackboneSection from "@/models/BackboneSection";
-import { VariantDensity } from "@/models/DatatrackSection";
 import { GenomicSectionFactory } from "@/models/GenomicSectionFactory";
 import { BackboneAlignment } from "@/models/GenomicSection";
 

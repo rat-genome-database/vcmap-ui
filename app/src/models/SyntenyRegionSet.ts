@@ -1,6 +1,5 @@
 import { SpeciesSyntenyData, SyntenyRegionData } from "@/api/SyntenyApi";
 import SVGConstants from "@/utils/SVGConstants";
-import DatatrackSection from "./DatatrackSection";
 import { GenomicSet } from "./GenomicSet";
 import Label, { GeneLabel } from "./Label";
 import OrthologLine from "./OrthologLine";
