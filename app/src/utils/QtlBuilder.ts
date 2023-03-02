@@ -1,4 +1,3 @@
-import BackboneSection from "@/models/BackboneSection";
 import DatatrackSection from "@/models/DatatrackSection";
 import { GenomicSectionFactory } from "@/models/GenomicSectionFactory";
 import { BackboneAlignment } from "@/models/GenomicSection";

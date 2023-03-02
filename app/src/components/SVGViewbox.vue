@@ -285,18 +285,19 @@ const updateOverviewPanel = async () => {
 
   const backboneSpecies = store.state.species;
   const backboneChromosome = store.state.chromosome;
-  const backboneStart = store.state.startPos;
-  const backboneStop = store.state.stopPos;
   const loadType = store.state.configTab;
 
   //error if backbone is not set
-  if (backboneSpecies == null || backboneChromosome == null || backboneStart == null || backboneStop == null)
+  if (backboneSpecies == null || backboneChromosome == null)
   {
     onError(backboneOverviewError, backboneOverviewError.message);
     overviewSyntenySets.value = [];
     enableProcessingLoadMask.value = false;
     return;
   }
+
+  const backboneStart = store.state.startPos ?? 0;
+  const backboneStop = store.state.stopPos ?? backboneChromosome.seqLength;
 
   //error if backbone info is invalid length
   if (backboneStop - backboneStart <= 0)
@@ -350,8 +351,7 @@ const updateOverviewPanel = async () => {
 
   //TODO: Change so that we are using the new full chromosome/bufferzone/viewport selection options to check for and rebuild selections
   const prevBackboneSelection = store.state.selectedBackboneRegion;
-  
-  if (overviewBackbone != null && prevBackboneSelection == null)
+  if (prevBackboneSelection == null)
   {
     const selection = new BackboneSelection(
       new SelectedRegion(SVGConstants.overviewTrackYPosition, ( backboneChromosome.seqLength / store.state.overviewBasePairToHeightRatio ), 0, backboneChromosome.seqLength), 
@@ -634,11 +634,6 @@ const adjustDetailedVisibleSetsBasedOnZoom = async (zoomedSelection: SelectedReg
     store.dispatch('setLoadedBlocks', detailedSyntenyData.masterBlockMap);
   }
 
-  const originalRegionLength = (backboneChromosome.seqLength);
-  const detailedRegionLength = (zoomedSelection.basePairStop - zoomedSelection.basePairStart);
-  const tempZoomLevel = parseFloat((1 / (detailedRegionLength / originalRegionLength)).toFixed(2));
-
-  store.dispatch('setZoomLevel', tempZoomLevel);
   enableProcessingLoadMask.value = false;
 };
 
@@ -873,6 +868,8 @@ const getDetailedPosition = () =>
   }
 };
 
+// TODO: temp ignore here, should remove once this method is actively being used
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const loadBackboneQtls = async () => {
   const chromosome = store.state.chromosome;
   const backboneSpecies = store.state.species;
@@ -947,6 +944,8 @@ const removeBackboneVariants = () => {
   }
 };
 
+// TODO: temp ignore here, should remove once this method is actively being used
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const handleBackboneVariantClick = () => {
   backboneVariantsLoaded.value ? removeBackboneVariants() : loadBackboneVariants();
 };

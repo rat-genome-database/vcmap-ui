@@ -151,7 +151,6 @@ export default abstract class GenomicSection implements VCMapSVGElement
 
   public adjustYPositionsBasedOnVisibleStartAndStop(visibleBackboneBasePairRange: WindowBasePairRange)
   {
-    //this.changeWindowStartAndStop(visibleBackboneBasePairRange);
     this.windowBasePairRange = visibleBackboneBasePairRange;
     this.calculateYPositionsBasedOnBackboneAlignment();
   }
