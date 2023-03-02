@@ -68,7 +68,6 @@ export namespace TestUtils
 
         selectedBackboneRegion: null,
         detailedBasePairRange: { start: 0, stop: 0 },
-        zoomLevel: 1,
 
         overviewBasePairToHeightRatio: 1000,
         overviewSyntenyThreshold: 0,

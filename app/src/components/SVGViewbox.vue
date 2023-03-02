@@ -633,12 +633,7 @@ const adjustDetailedVisibleSetsBasedOnZoom = async (zoomedSelection: SelectedReg
     updateMasterGeneMap(detailedSyntenyData.masterGeneMap);
     store.dispatch('setLoadedBlocks', detailedSyntenyData.masterBlockMap);
   }
-
-  const originalRegionLength = (backboneChromosome.seqLength);
-  const detailedRegionLength = (zoomedSelection.basePairStop - zoomedSelection.basePairStart);
-  const tempZoomLevel = parseFloat((1 / (detailedRegionLength / originalRegionLength)).toFixed(2));
-
-  store.dispatch('setZoomLevel', tempZoomLevel);
+  
   enableProcessingLoadMask.value = false;
 };
 

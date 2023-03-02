@@ -1,27 +1,22 @@
 <template>
   <span data-test="zoom-level-label">{{zoomLevel}}x</span>
-  <Slider :disabled="isZoomDisabled || store.state.isDetailedPanelUpdating" class="zoom-slider" data-test="zoom-slider" v-model="zoomLevel" :step="1" :min="1" :max="100" @change="onZoomChange" />
+  <Slider :disabled="isZoomDisabled" class="zoom-slider" data-test="zoom-slider" v-model="zoomLevel" :step="1" :min="1" :max="100" @change="onZoomChange" />
   <div class="zoom-options-container">
     <div class="zoom-out-container">
       <div class="zoom-options " v-for="interval in zoomIntervals" :key="interval">
-        <Button class="zoom-button" icon="pi pi-angle-double-left" @click="zoomOut(interval)"/>
+        <Button class="zoom-button" icon="pi pi-angle-double-left" :disabled="isZoomDisabled" @click="zoomOut(interval)" />
         <p class="interval-label">{{interval}}x</p>
       </div>
       <p class="zoom-out-label">Zoom Out</p>
     </div>
     <div class="zoom-in-container">
       <div class="zoom-options" v-for="interval in zoomIntervals" :key="interval">
-        <Button class="zoom-button" icon="pi pi-angle-double-right" @click="zoomIn(interval)"></Button>
+        <Button class="zoom-button" icon="pi pi-angle-double-right" :disabled="isZoomDisabled" @click="zoomIn(interval)"></Button>
         <p class="interval-label">{{interval}}x</p>
       </div>
       <p class="zoom-in-label">Zoom In</p>
     </div>
-    
   </div>
-  
-
-  
-
 </template>
 
 <script lang="ts" setup>
@@ -39,20 +34,13 @@ const zoomIntervals = [1.5, 3, 10, 100];
 watch(() => store.state.isDetailedPanelUpdating, (isUpdating) => {
   if (!isUpdating && store.state.selectedBackboneRegion != null)
   {
+    // Update the zoom level shown in the Slider to match what was calculated based on an overview/detailed panel selection
     zoomLevel.value = store.state.selectedBackboneRegion.zoomLevel;
-    store.dispatch('setZoomLevel', zoomLevel.value);
-  }
-});
-
-watch(() => store.state.zoomLevel, () => {
-  if (zoomLevel.value != store.state.zoomLevel)
-  {
-    zoomLevel.value = store.state.zoomLevel;
   }
 });
 
 const isZoomDisabled = computed(() => {
-  return store.state.selectedBackboneRegion && store.state.selectedBackboneRegion.viewportSelection == null;
+  return store.state.isDetailedPanelUpdating || store.state.selectedBackboneRegion?.viewportSelection == null;
 });
 
 const onZoomChange = (zoomLevel: number) => {
@@ -78,8 +66,11 @@ const zoom = (zoomLevel: number) => {
   const selectedRegion = store.state.selectedBackboneRegion;
   const backboneChromosome = store.state.chromosome;
 
-
-  if (zoomLevel === 1)
+  if (selectedRegion == null || selectedRegion.viewportSelection == null || backboneChromosome == null)
+  {
+    console.error('Cannot zoom if selectedRegion, viewportSelection, or backboneChromosome is null');
+  }
+  else if (zoomLevel === 1)
   {
     store.dispatch('setDetailedBasePairRange', { start: 0, stop: backboneChromosome.seqLength });
   }

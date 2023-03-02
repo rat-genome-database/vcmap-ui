@@ -25,7 +25,6 @@ export interface VCMapState
 
   selectedBackboneRegion: BackboneSelection | null;
   detailedBasePairRange: BasePairRange;
-  zoomLevel: number;
 
   overviewBasePairToHeightRatio: number;
   overviewSyntenyThreshold: number;
@@ -69,7 +68,6 @@ export default createStore({
 
     selectedBackboneRegion: null,
     detailedBasePairRange: { start: 0, stop: 0 },
-    zoomLevel: 1,
 
     overviewBasePairToHeightRatio: 1000,
     overviewSyntenyThreshold: 0,
@@ -145,9 +143,6 @@ export default createStore({
     isOverviewPanelUpdating(state: VCMapState, isUpdating: boolean) {
       state.isOverviewPanelUpdating = isUpdating;
     },
-    zoomLevel(state: VCMapState, zoomLevel: number) {
-      state.zoomLevel = zoomLevel;
-    }
   },
 
   actions: {
@@ -238,9 +233,6 @@ export default createStore({
     setBackboneOrthologData(context: ActionContext<VCMapState, VCMapState>, orthologs: any) {
       context.commit('backboneOrthologs', orthologs);
     },
-    setZoomLevel(context: ActionContext<VCMapState, VCMapState>, zoomLevel: number) {
-      context.commit('zoomLevel', zoomLevel);
-    }
   },
 
   getters: {
