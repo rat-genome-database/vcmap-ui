@@ -1,6 +1,6 @@
 <template>
   <span data-test="zoom-level-label">{{zoomLevel}}x</span>
-  <Slider :disabled="isZoomDisabled" class="zoom-slider" data-test="zoom-slider" v-model="zoomLevel" :step="1" :min="1" :max="100" @change="onZoomChange" />
+  <Slider :disabled="isZoomDisabled" class="zoom-slider" data-test="zoom-slider" v-model="zoomLevel" :step="1" :min="1" :max="100" @slideend="onZoomSliderEnd" />
   <div class="zoom-options-container">
     <div class="zoom-out-container">
       <div class="zoom-options " v-for="interval in zoomIntervals" :key="interval">
@@ -23,12 +23,11 @@
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import { computed, ref, watch } from 'vue';
+import { SliderSlideEndEvent } from 'primevue/slider';
 
-const ZOOM_DEBOUNCE_MILLIS = 500;
 const store = useStore(key);
 
 const zoomLevel = ref(1);
-let zoomProcessTimeoutId: number | undefined;
 const zoomIntervals = [1.5, 3, 10, 100];
 
 watch(() => store.state.isDetailedPanelUpdating, (isUpdating) => {
@@ -37,29 +36,21 @@ watch(() => store.state.isDetailedPanelUpdating, (isUpdating) => {
     // Update the zoom level shown in the Slider to match what was calculated based on an overview/detailed panel selection
     zoomLevel.value = store.state.selectedBackboneRegion.zoomLevel;
   }
+}, {
+  immediate: true,
 });
 
 const isZoomDisabled = computed(() => {
   return store.state.isDetailedPanelUpdating || store.state.selectedBackboneRegion?.viewportSelection == null;
 });
 
-const onZoomChange = (zoomLevel: number) => {
-  // Sort of manual debounce here... the change event fires frequently as someone drags the slider
-  // so we need to only processing the zoom when the user has stopped moving the slider for a certain
-  // period of time
-  if (zoomProcessTimeoutId != undefined)
-  {
-    clearTimeout(zoomProcessTimeoutId);
-  }
-
+const onZoomSliderEnd = (event: SliderSlideEndEvent) => {
   if (store.state.isDetailedPanelUpdating)
   {
     return;
   }
 
-  zoomProcessTimeoutId = setTimeout(() => {
-    zoom(zoomLevel);
-  }, ZOOM_DEBOUNCE_MILLIS);
+  zoom(event.value);
 };
 
 const zoom = (zoomLevel: number) => {
@@ -115,6 +106,7 @@ const zoom = (zoomLevel: number) => {
       }
     }
 
+    // Trigger detailed panel update
     store.dispatch('setDetailedBasePairRange', { start: zoomedStart, stop: zoomedStop });
   }
 };
