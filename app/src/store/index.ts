@@ -46,13 +46,16 @@ const vuexLocal = new VuexPersistence<VCMapState>({
   storage: window.localStorage
 });
 
+const actionsToLog = ['setDetailedBasePairRange'];
+const mutationsToLog = ['detailedBasePairRange'];
+
 const logger = createLogger({
   // Filter out frequently occurring actions/mutations (makes the console really noisy for not much benefit)
   filter: (mutation) => {
-    return !['selectedData', 'loadedGenes', 'loadedBlocks'].includes(mutation.type);
+    return mutationsToLog.includes(mutation.type);
   },
   actionFilter: (action) => {
-    return !['setSelectedData', 'setLoadedGenes', 'setLoadedBlocks'].includes(action.type);
+    return actionsToLog.includes(action.type);
   },
 });
 
