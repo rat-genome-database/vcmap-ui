@@ -62,7 +62,10 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
   //Step 2: Pass data to block processing pipeline per species
   if (speciesSyntenyDataArray && speciesSyntenyDataArray.length > 0)
   {
+    console.debug(`Found ${speciesSyntenyDataArray.length} Syntenic regions`);
+
     const syntenyRegionSets: SyntenyRegionSet[] = [];
+
     speciesSyntenyDataArray.forEach((speciesSyntenyData, index) => {
       const syntenyRegionSet = syntenicSectionBuilder(
         speciesSyntenyData, 
@@ -75,12 +78,14 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
         masterGeneMap,
         updateCache ?? false
       );
+      console.log(`Completed build of Synteny for ${syntenyRegionSet.mapName}, with ${syntenyRegionSet.regions.length} regions`);
 
       if (syntenyRegionSet)
       {
         syntenyRegionSets.push(syntenyRegionSet);
       }
     });
+    console.debug(`Synteny build completed (cache update? ${updateCache})`);
 
     //Step 3: Capture processed data and return to caller for drawing
     if (updateCache)
@@ -123,7 +128,9 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
  * @param renderType               overview or detailed
  * @returns                        processed syntenic regions for each species
  */
-export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, windowStart: number,  windowStop: number, threshold: number, renderType: 'overview' | 'detailed', setOrder: number, masterBlockMap: Map<number, LoadedBlock>, masterGeneMap?: Map<number, LoadedGene>, updateCache?: boolean)
+export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, windowStart: number,  windowStop: number,
+                                       threshold: number, renderType: 'overview' | 'detailed', setOrder: number,
+                                       masterBlockMap: Map<number, LoadedBlock>, masterGeneMap?: Map<number, LoadedGene>, updateCache?: boolean)
 {
   //Step 1: For each species synteny data, create syntenic sections for each block
   const processedSyntenicRegions: SyntenyRegion[] = [];
@@ -131,7 +138,9 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
   const currSpecies = speciesSyntenyData.speciesName;
   const currMap = speciesSyntenyData.mapName;
   // Only process level 1 and level 2 blocks
+console.time("Filter");
   const regionInfo = speciesSyntenyData.regionData.filter(r => r.block.chainLevel === 1 || r.block.chainLevel === 2);
+console.timeEnd("Filter");
   const allGeneLabels: Label[] = [];
   
   //Step 1.1: Create syntenic sections for each block - 1:1 mapping returned from API
@@ -189,24 +198,34 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
     });
 
     // Step 2: Split up the gapless blocks with their gaps
+// console.time("splitBlockWithGaps");
     currSyntenicRegion.splitBlockWithGaps(factory, blockGaps, threshold);
-      
+// console.timeEnd("splitBlockWithGaps");
+
 
     //Step 3: For each (now processed) block, create syntenic sections for each gene
     if (blockGenes && blockGenes.length > 0 && gaplessSyntenyBlock.chainLevel == 1 && masterGeneMap != null)
     {
+console.debug("Step 3: Create Syntenic Sections for each gene")
       //Step 3.1: Pass block data and gene data to gene processing pipeline
       //NOTE: We might want to instead associate block data with gene data, store data in an array, and pass all gene data at once for processing in order to avoid multiple passes of gene data for initial processing and then finding orthologs
+console.time("syntenicDataTrackBuilder");
       const processedGeneInfo = syntenicDatatrackBuilder(factory, blockGenes, currSyntenicRegion, true, masterGeneMap);
+console.timeEnd("syntenicDataTrackBuilder");
 
       // Get the index for the gene data track set, otherwise default to 0
+// console.time("addDatatrackSections");
       let geneTrackIdx = currSyntenicRegion.datatrackSets.findIndex((set) => set.type === 'gene');
       geneTrackIdx = geneTrackIdx === -1 ? 0 : geneTrackIdx;
       currSyntenicRegion.addDatatrackSections(processedGeneInfo.genomicData, geneTrackIdx, 'gene');
+// console.timeEnd("addDatatrackSections");
+console.time("addOrthologLines");
       currSyntenicRegion.addOrthologLines(processedGeneInfo.orthologLines);
+console.timeEnd("addOrthologLines");
       currSyntenicRegion.geneIds = processedGeneInfo.geneIds;
 
       currSyntenicRegion.datatrackLabels = [];
+// console.time("geneDataLabels");
       for (let i = 0; i < processedGeneInfo.genomicData.length; i++)
       {
         const geneData = processedGeneInfo.genomicData[i];
@@ -215,9 +234,12 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
           allGeneLabels.push(geneData.label);
         }
       }
+// console.timeEnd("geneDataLabels");
     }
-    
-    processedSyntenicRegions.push(currSyntenicRegion);
+
+console.time("processedPush");
+      processedSyntenicRegions.push(currSyntenicRegion);
+console.timeEnd("processedPush");
 
     if (updateCache)
     {
@@ -226,15 +248,19 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
     }
   }
 
-  const syntenyRegionSet = new SyntenyRegionSet(
+
+  console.debug("Kicking off build for SyntenyRegionSet");
+  console.time("new SyntenyRegionSet");
+  const syntenyRegions =  new SyntenyRegionSet(
     processedSyntenicRegions, 
     setOrder, 
     renderType, 
     speciesSyntenyData,
     allGeneLabels
   );
-  
-  return syntenyRegionSet;
+  console.timeEnd("new SyntenyRegionSet");
+
+  return syntenyRegions;
 }
 
 

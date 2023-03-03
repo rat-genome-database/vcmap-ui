@@ -195,7 +195,8 @@ export default class SyntenyApi
           console.error(result.status, result.reason);
         }
       });
-      console.debug(`[DEBUG] Synteny API: ${Date.now() - start} ms`, params);
+      console.debug(`[DEBUG] Synteny API: ${Date.now() - start} ms`, params.backboneChromosome.chromosome, params.start, params.stop, params.optional.threshold);
+      // console.debug(`[DEBUG] Synteny API: ${Date.now() - start} ms`, params);
 
       return speciesSyntenyData;
     }

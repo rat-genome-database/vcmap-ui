@@ -73,7 +73,7 @@ export default createStore({
     detailedBasePairRange: { start: 0, stop: 0 },
 
     overviewBasePairToHeightRatio: 1000,
-    overviewSyntenyThreshold: 0,
+    overviewSyntenyThreshold: 30000,
     detailedBasePairToHeightRatio: 1000,
     detailsSyntenyThreshold: 0,
 
@@ -169,7 +169,7 @@ export default createStore({
       const overviewTrackHeight = SVGConstants.viewboxHeight - (SVGConstants.overviewTrackYPosition + SVGConstants.navigationButtonHeight + (SVGConstants.overviewTrackYPosition - SVGConstants.panelTitleHeight));
       context.commit('overviewBasePairToHeightRatio', backboneLength / overviewTrackHeight);
       // Note: Dividing by 8,000 is arbitary when calculating synteny threshold
-      context.commit('overviewSyntenyThreshold', (backboneLength > 250000) ? Math.floor((backboneLength) / 8000) : 0);
+      context.commit('overviewSyntenyThreshold', (backboneLength > 250000) ? Math.floor((backboneLength) / 8000) : 30000);
     },
     setDetailsResolution(context: ActionContext<VCMapState, VCMapState>, backboneLength: number) {
       // The tracks in the detailed panel should have no top or bottom margins
