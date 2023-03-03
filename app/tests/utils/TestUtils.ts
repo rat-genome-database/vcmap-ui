@@ -70,7 +70,7 @@ export namespace TestUtils
         detailedBasePairRange: { start: 0, stop: 0 },
 
         overviewBasePairToHeightRatio: 1000,
-        overviewSyntenyThreshold: 0,
+        overviewSyntenyThreshold: 30000,
         detailedBasePairToHeightRatio: 1000,
         detailsSyntenyThreshold: 0,
 

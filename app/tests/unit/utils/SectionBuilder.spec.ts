@@ -1,5 +1,4 @@
 import { SpeciesSyntenyData } from "@/api/SyntenyApi";
-import { LoadedBlock, syntenicSectionBuilder } from "@/utils/SectionBuilder";
 
 const speciesSyntenyData: SpeciesSyntenyData = {
   speciesName: 'Bonobo',
