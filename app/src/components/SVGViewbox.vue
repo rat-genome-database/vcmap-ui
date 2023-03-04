@@ -566,6 +566,7 @@ const updateDetailsPanel = async () => {
   });
 };
 
+// NOTE: We might need to start removing elements that are off-screen...
 const adjustDetailedVisibleSetsBasedOnZoom = async (zoomedSelection: SelectedRegion, updateCache: boolean) => {
   enableProcessingLoadMask.value = true;
   let masterGeneMap: Map<number, LoadedGene> | null = store.state.loadedGenes;

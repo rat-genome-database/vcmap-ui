@@ -33,11 +33,17 @@ export type CreateSyntenicRegionsResult = {
  * @param backboneStop          backbone stop basepair
  * @param windowStart           window start basepair
  * @param windowStop            window stop basepair
- * @param syntenyThreshold      synteny threshold for querying synteny data NOTE: this could become a range for cached requerying
- * @param isComparative         whether or not to draw comparative data NOTE: worth separating into two functions for overview and detailed panel (or datatracks and no datatracks)
+ * @param syntenyThreshold      synteny threshold for querying synteny data.
+ *   NOTE: this could become a range for cached requerying
+ * @param isComparative         whether or not to draw comparative data.
+ *   NOTE: worth separating into two functions for overview and detailed panel (or datatracks and no datatracks)
+ *
  * @returns                     processed syntenic regions for each species
  */
-export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Species[], backboneChr: Chromosome, backboneStart: number, backboneStop: number, windowStart: number, windowStop: number, syntenyThreshold: number, isComparative: boolean, masterBlockMap: Map<number, LoadedBlock>, masterGeneMap?: Map<number, LoadedGene>, updateCache?: boolean): Promise<CreateSyntenicRegionsResult>
+export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Species[], backboneChr: Chromosome,
+    backboneStart: number, backboneStop: number, windowStart: number, windowStop: number, syntenyThreshold: number,
+    isComparative: boolean, masterBlockMap: Map<number, LoadedBlock>, masterGeneMap?: Map<number, LoadedGene>,
+    updateCache?: boolean): Promise<CreateSyntenicRegionsResult>
 {
   //Step 1: Get syntenic data for each species
   const syntenyApiParams: SyntenyRequestParams = {
@@ -138,14 +144,14 @@ export function syntenicSectionBuilder(speciesSyntenyData: SpeciesSyntenyData, w
   const currSpecies = speciesSyntenyData.speciesName;
   const currMap = speciesSyntenyData.mapName;
   // Only process level 1 and level 2 blocks
-console.time("Filter");
   const regionInfo = speciesSyntenyData.regionData.filter(r => r.block.chainLevel === 1 || r.block.chainLevel === 2);
-console.timeEnd("Filter");
   const allGeneLabels: Label[] = [];
   
+console.debug(`About to loop over ${regionInfo.length} regions`);
   //Step 1.1: Create syntenic sections for each block - 1:1 mapping returned from API
   for (let index = 0; index < regionInfo.length; index++)
   {
+
     const region: SyntenyRegionData = regionInfo[index];
     const blockInfo = region.block;
     const blockGaps = region.gaps;
@@ -206,11 +212,13 @@ console.timeEnd("Filter");
     //Step 3: For each (now processed) block, create syntenic sections for each gene
     if (blockGenes && blockGenes.length > 0 && gaplessSyntenyBlock.chainLevel == 1 && masterGeneMap != null)
     {
-console.debug("Step 3: Create Syntenic Sections for each gene")
-      //Step 3.1: Pass block data and gene data to gene processing pipeline
-      //NOTE: We might want to instead associate block data with gene data, store data in an array, and pass all gene data at once for processing in order to avoid multiple passes of gene data for initial processing and then finding orthologs
+// console.debug("Step 3: Create Syntenic Sections for each gene")
+      // Step 3.1: Pass block data and gene data to gene processing pipeline
+      // NOTE: We might want to instead associate block data with gene data, store data in an array, and pass all gene
+      //   data at once for processing in order to avoid multiple passes of gene data for initial processing and then finding orthologs
 console.time("syntenicDataTrackBuilder");
-      const processedGeneInfo = syntenicDatatrackBuilder(factory, blockGenes, currSyntenicRegion, true, masterGeneMap);
+      const processedGeneInfo = {genomicData: [], orthologLines: [], geneIds: []};
+      //const processedGeneInfo = syntenicDatatrackBuilder(factory, blockGenes, currSyntenicRegion, true, masterGeneMap);
 console.timeEnd("syntenicDataTrackBuilder");
 
       // Get the index for the gene data track set, otherwise default to 0
@@ -219,27 +227,27 @@ console.timeEnd("syntenicDataTrackBuilder");
       geneTrackIdx = geneTrackIdx === -1 ? 0 : geneTrackIdx;
       currSyntenicRegion.addDatatrackSections(processedGeneInfo.genomicData, geneTrackIdx, 'gene');
 // console.timeEnd("addDatatrackSections");
-console.time("addOrthologLines");
+// console.time("addOrthologLines");
       currSyntenicRegion.addOrthologLines(processedGeneInfo.orthologLines);
-console.timeEnd("addOrthologLines");
+// console.timeEnd("addOrthologLines");
       currSyntenicRegion.geneIds = processedGeneInfo.geneIds;
 
       currSyntenicRegion.datatrackLabels = [];
 // console.time("geneDataLabels");
       for (let i = 0; i < processedGeneInfo.genomicData.length; i++)
       {
-        const geneData = processedGeneInfo.genomicData[i];
-        if (geneData.label)
-        {
-          allGeneLabels.push(geneData.label);
-        }
+        //const geneData = processedGeneInfo.genomicData[i];
+        // if (geneData.label)
+        // {
+        //   allGeneLabels.push(geneData.label);
+        // }
       }
 // console.timeEnd("geneDataLabels");
     }
 
-console.time("processedPush");
+// console.time("processedPush");
       processedSyntenicRegions.push(currSyntenicRegion);
-console.timeEnd("processedPush");
+// console.timeEnd("processedPush");
 
     if (updateCache)
     {
@@ -249,8 +257,8 @@ console.timeEnd("processedPush");
   }
 
 
-  console.debug("Kicking off build for SyntenyRegionSet");
-  console.time("new SyntenyRegionSet");
+  // console.debug("Kicking off build for SyntenyRegionSet");
+  // console.time("new SyntenyRegionSet");
   const syntenyRegions =  new SyntenyRegionSet(
     processedSyntenicRegions, 
     setOrder, 
@@ -258,7 +266,7 @@ console.timeEnd("processedPush");
     speciesSyntenyData,
     allGeneLabels
   );
-  console.timeEnd("new SyntenyRegionSet");
+  // console.timeEnd("new SyntenyRegionSet");
 
   return syntenyRegions;
 }
@@ -272,7 +280,9 @@ console.timeEnd("processedPush");
  * @param genomicData             genomic data for current block
  * @param blockInfo               info about block (start, stop, etc)
  */
-function syntenicDatatrackBuilder(factory: GenomicSectionFactory, genomicData: Gene[], syntenyRegion: SyntenyRegion, isGene: boolean, masterGeneMap: Map<number, LoadedGene>)
+// eslint-disable-next-line
+function syntenicDatatrackBuilder(factory: GenomicSectionFactory, genomicData: Gene[], syntenyRegion: SyntenyRegion,
+                                  isGene: boolean, masterGeneMap: Map<number, LoadedGene>)
 {
   //Step 1: For each gene, convert to backbone equivalents using blockInfo and blockRatio
   const processedGenomicData: GeneDatatrack[] = [];
@@ -288,7 +298,7 @@ function syntenicDatatrackBuilder(factory: GenomicSectionFactory, genomicData: G
 
       //Create DatatrackSection for each gene (account for inversion in start/stops)
       const geneDatatrackSection = factory.createGeneDatatrackSection({
-        gene: genomicElement, 
+        gene: genomicElement,
         start: (syntenyRegion.gaplessBlock.isInverted) ? genomicElement.stop : genomicElement.start,
         stop: (syntenyRegion.gaplessBlock.isInverted) ? genomicElement.start : genomicElement.stop,
         backboneAlignment: geneBackboneAlignment,
@@ -304,7 +314,7 @@ function syntenicDatatrackBuilder(factory: GenomicSectionFactory, genomicData: G
         if (loadedGene.genes[currSpecies])
         {
           /* let newGeneFlag = true;
-          loadedGene.genes[currSpecies].forEach((gene: GeneDatatrack) => 
+          loadedGene.genes[currSpecies].forEach((gene: GeneDatatrack) =>
           {
             if (gene.backboneSection.start == geneDatatrackSection.backboneSection.start)
             {
@@ -336,7 +346,7 @@ function syntenicDatatrackBuilder(factory: GenomicSectionFactory, genomicData: G
       if (geneOrthologs && geneOrthologs.length > 0)
       {
         const orthologLines: OrthologLine[] = orthologLineBuilder(masterGeneMap, currSpecies, geneDatatrackSection);
-        
+
         if (orthologLines)
         {
           orthologLines.forEach((orthologLine: OrthologLine) => {
