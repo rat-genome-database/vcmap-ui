@@ -21,7 +21,7 @@ import HeaderPanel from '@/components/HeaderPanel.vue';
 import SelectedDataPanel from '@/components/SelectedDataPanel.vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
-import { ref, shallowRef, triggerRef } from 'vue';
+import {ref, shallowRef, triggerRef, watch} from 'vue';
 import Gene from "@/models/Gene";
 
 const store = useStore(key);
@@ -54,4 +54,11 @@ const newGenesFromChild = (newGenes: Gene[]) => {
     geneList.value.set(newGene.rgdId, newGene);
   });
 };
+
+watch(() => store.state.detailedBasePairRange, () => {
+  console.log('Detailed Base Pair range just changed...');
+  console.log('  If this were instead a "requested" change, I would kick off API processing');
+  console.log('  and once completed, I would actually change detailedBasePairRange resulting');
+  console.log('  in SVG changes based on my current data in Main');
+});
 </script>

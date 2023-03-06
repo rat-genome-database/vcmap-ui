@@ -431,6 +431,8 @@ const updateOverviewPanel = async () => {
 
 const updateDetailsPanel = async () => {
   $log.debug(`Updating Detailed Panel`);
+// eslint-disable-next-line no-constant-condition
+//if(true) return;
 
   const detailedUpdateStart = Date.now();
   enableProcessingLoadMask.value = true;
