@@ -983,20 +983,22 @@ const tempReplace = () => {
         const svgLength = PANEL_SVG_STOP - PANEL_SVG_START;
         const bpVisibleWindowLength = Math.abs(viewportStop - viewportStart);
         const pixelsToBpRatio = svgLength / bpVisibleWindowLength;
-        console.log(`Visible: num pixels (${svgLength}), num bp (${bpVisibleWindowLength}) starting at (${viewportStart})`);
+        console.debug(`Visible: num pixels (${svgLength}), num bp (${bpVisibleWindowLength}) starting at (${viewportStart})`);
         newRect.posY1 = (gene.start - viewportStart) * pixelsToBpRatio + PANEL_SVG_START;
         newRect.posY2 = (gene.stop - viewportStart) * pixelsToBpRatio + PANEL_SVG_START;
         newRect.start = gene.start;
         newRect.stop = gene.stop;
         newRect.name = gene.symbol;
 
-        // Add to our special Datatrack (first on Backbone)
-        // NOTE: This proof of concept will always add all new DatatrackSections to the
-        //   detailed panel on each call. This is not performant because we should attempt
-        //   to adjust existing, remove those that are now off-screen, and only add new ones
-        //   that were previously not on-screen.
-        //   Sounds like a lot of work, but less DOM manipulation and reactivity makes this
-        //   more performant because there are fewer microtasks generated as side effects (Maybe??)
+        // Add to our special list (rendered as red rectangles in the template)
+        // NOTE: This proof of concept will always add all new SVG `rect`s to the SVG on each
+        //   call. This is not performant because we should attempt to adjust existing, remove
+        //   those that are now off-screen, and only add new ones that were previously not
+        //   on-screen.
+        //   Sounds like a lot of work, but less DOM manipulation and reactivity might make
+        //   this more performant because there are fewer microtasks generated as side
+        //   effects.
+        //   However, for now this will demonstrate the concepts needed for the reorganization.
         testRects.value?.push(newRect);
       }
     }
