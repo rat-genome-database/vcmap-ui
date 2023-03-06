@@ -26,10 +26,17 @@ import Gene from "@/models/Gene";
 import Block from "@/models/Block";
 import SyntenyApi from "@/api/SyntenyApi";
 import { PANEL_SVG_START, PANEL_SVG_STOP} from '@/utils/SVGConstants';
+import Chromosome from "@/models/Chromosome";
 
 const store = useStore(key);
 
-const syntenyTree = ref(new Map<number, Block>());
+// Our synteny tree keyed by MapId
+const syntenyTree = ref(new Map<number, Block[]>());
+
+
+// Our gene list keyed by rgdId
+// TODO: Need to prefix this list with species to ensure no collisions across different assemblies
+const geneList = ref(new Map<number, Gene>());
 // NOTE: Switch to a shallow ref to see the genelist size get out of sync on the child components
 //   despite the inspect button showing the correct Map in the console. This is the classic loss
 //   of reactivity, which we should be okay with since this data will only be used internally
@@ -43,9 +50,11 @@ const syntenyTree = ref(new Map<number, Block>());
 //   In theory, we could use triggerRef when we are ready too, but I cannot seem to get that to
 //   work the way I expect (only updates the template for Main, not SelectedDataPanel)
 // const geneList = shallowRef(new Map<number, Gene>());
-const geneList = ref(new Map<number, Gene>());
+
+// TODO TEMP
 const onInspectPressed = () => {
   console.debug(geneList);
+  console.debug(syntenyTree);
   // NOTE: I cannot seem to get this to force child updates when using a shallowRef???
   //triggerRef(geneList);
 };
@@ -58,7 +67,9 @@ const newGenesFromChild = (newGenes: Gene[]) => {
     geneList.value.set(newGene.rgdId, newGene);
   });
 };
+// TODO endTEMP
 
+// Watch for requested navigation operations (zoom in/out, navigate up/down stream)
 watch(() => store.state.detailedBasePairRange, async () => {
   console.log('Detailed Base Pair range just changed...');
   console.log('  If this were instead a "requested" change, I would kick off API processing');
@@ -81,9 +92,44 @@ watch(() => store.state.detailedBasePairRange, async () => {
     });
 
     // Process response
-    // TODO For each off-backbone species, loop the region data
-    // TODO For each region (block), compare to our existing structures, if new -- create and add
-    // TODO For each gene in geneList, identify appropriate block and reference it
+    // TODO WIP: For each off-backbone species, loop the region data
+    if (speciesSyntenyDataArray)
+    {
+      let tree:Map<number, Block[]> = syntenyTree.value;
+      let backboneChr = store.state.chromosome; // TODO: This is proxied, I think.
+
+      speciesSyntenyDataArray.forEach((species) => {
+        // Need to create a new structure for this mapKey
+        if (!tree.has(species.mapKey)) tree.set(species.mapKey, []);
+        let knownSpecies = tree.get(species.mapKey) ?? [];
+
+        // For each region (block), compare to *all* our existing structures, if new -- create and add
+        species.regionData.forEach((blockData) => {
+          if (knownSpecies.filter((b) => {
+            return (b.chainLevel == blockData.block.chainLevel && b.start == blockData.block.start && b.stop == blockData.block.stop);
+          }).length == 0)
+          {
+            let newBlock = new Block({
+              backbone: backboneChr,
+              chromosome: new Chromosome({mapKey: blockData.block.mapKey, chromosome: blockData.block.chromosome}),
+              chainLevel: blockData.block.chainLevel,
+              backboneStart: blockData.block.backboneStart,
+              backboneStop: blockData.block.backboneStop,
+              start: blockData.block.start,
+              stop: blockData.block.stop,
+            });
+            knownSpecies.push(newBlock);
+          }
+        });
+        // NOTE: we consider a block the same if the "chainLevel", "start", and "stop" are identical
+
+        // if (!tree.get(blockData.mapKey).values().has((knownBlock: Block) => {
+        //     return false; // TODO
+        //   }))
+
+        // TODO For each gene in geneList, identify appropriate block and reference it
+      });
+    }
   }
 });
 </script>
