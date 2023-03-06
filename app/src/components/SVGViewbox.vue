@@ -513,8 +513,8 @@ const updateDetailsPanel = async () => {
     const queryBackboneboneGenesStart = Date.now();
     const tempBackboneGenes: Gene[] = await GeneApi.getGenesByRegion(backboneChromosome.chromosome, 0,
         backboneChromosome.seqLength, backboneSpecies.activeMap.key, backboneSpecies.name, comparativeSpeciesIds);
-    // TEMP
-    // NOTE: The event code will not be needed once this API call happens on the parent,
+    // TODO TEMP
+    //   NOTE: The event code will not be needed once this API call happens on the parent,
     //   and we can inspect the existing list to then push a new copy of the Gene
     //   immediately.
     console.log(`(detail) Inspecting backbone genes (${tempBackboneGenes.length})`);
@@ -527,7 +527,7 @@ const updateDetailsPanel = async () => {
       console.debug(`(detail) Adding ${newGenes.length} backbone genes`);
       emit('newGenes', newGenes);
     }
-    // endTEMP
+    // TODO endTEMP
 
     timeQueryBackboneGenes = Date.now() - queryBackboneboneGenesStart;
 
@@ -558,7 +558,7 @@ const updateDetailsPanel = async () => {
       masterGeneMap ?? undefined,
     );
 
-    // TEMP
+    // TODO TEMP
     // NOTE: This "initial load" cannot happen before / during the detailed bp change
     //   because we haven't gathered and processed all data yet.
     //   Moving this to Main so that the API call can occur and finish before the
@@ -569,7 +569,7 @@ const updateDetailsPanel = async () => {
     //   Creating a TEMP region set to append for testing
 
     detailedSyntenyData.syntenyRegionSets.push();
-    // end TEMP
+    // TODO endTEMP
 
     // NOTE: adding to this reactive ref will update our view
     detailedSyntenySets.value = detailedSyntenyData.syntenyRegionSets;
@@ -587,21 +587,20 @@ const updateDetailsPanel = async () => {
     timeAdjustVisibleRegion = Date.now() - adjustVisibleRegionStart;
   }
 
-  store.dispatch('setLoadedBlocks', masterBlockMap);
+  //store.dispatch('setLoadedBlocks', masterBlockMap);
   //store.dispatch('setLoadedGenes', masterGeneMap);
-
-  // TEMP
-  // NOTE: Let's attempt to add / move / remove genes here (only when navigating)
-  // end TEMP
 
   const loadSelectedGene = store.state.gene;
   if ((loadType == 0) && (store.state.selectedGeneIds.length > 0) && (!geneReload) && loadSelectedGene != null)
   {
     const geneBasePairLength = loadSelectedGene.stop - loadSelectedGene.start;
-    const newInnerStart = Math.max(Math.floor(loadSelectedGene.start - (LOAD_BY_GENE_VISIBLE_SIZE_MULTIPLIER * geneBasePairLength)), 0);
-    const newInnerStop = Math.min(Math.floor(loadSelectedGene.stop + (LOAD_BY_GENE_VISIBLE_SIZE_MULTIPLIER * geneBasePairLength)), backboneChromosome.seqLength);
+    const newInnerStart = Math.max(Math.floor(loadSelectedGene.start -
+        (LOAD_BY_GENE_VISIBLE_SIZE_MULTIPLIER * geneBasePairLength)), 0);
+    const newInnerStop = Math.min(Math.floor(loadSelectedGene.stop +
+        (LOAD_BY_GENE_VISIBLE_SIZE_MULTIPLIER * geneBasePairLength)), backboneChromosome.seqLength);
 
-    const selection = detailedBackboneSet.value.backbone.generateBackboneSelection(newInnerStart, newInnerStop, store.state.detailedBasePairToHeightRatio, backboneChromosome);
+    const selection = detailedBackboneSet.value.backbone.generateBackboneSelection(newInnerStart, newInnerStop,
+        store.state.detailedBasePairToHeightRatio, backboneChromosome);
 
     const newData = getNewSelectedData(store, loadSelectedGene);
 
@@ -634,7 +633,7 @@ const updateDetailsPanel = async () => {
   });
 };
 
-// NOTE: We might need to start removing elements that are off-screen...
+// TODO: We might need to start removing elements that are off-screen...
 const adjustDetailedVisibleSetsBasedOnZoom = async (zoomedSelection: SelectedRegion, updateCache: boolean) => {
   enableProcessingLoadMask.value = true;
   let masterGeneMap: Map<number, LoadedGene> | null = store.state.loadedGenes;
@@ -700,7 +699,7 @@ const adjustDetailedVisibleSetsBasedOnZoom = async (zoomedSelection: SelectedReg
   {
     updateSyntenyData(detailedSyntenyData.syntenyRegionSets);
     //updateMasterGeneMap(detailedSyntenyData.masterGeneMap);
-    store.dispatch('setLoadedBlocks', detailedSyntenyData.masterBlockMap);
+    //store.dispatch('setLoadedBlocks', detailedSyntenyData.masterBlockMap);
   }
 
   enableProcessingLoadMask.value = false;

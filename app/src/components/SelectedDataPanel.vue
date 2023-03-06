@@ -287,13 +287,13 @@ const adjustSelectionWindow = () => {
   const orthologs = searchedGene.value.orthologs;
 
   const orthologInfo: any[] = [];
-  Object.entries(orthologs).forEach((ortholog) => {
-    const currentOrtholog = loadedGenes.get(ortholog[1][0]);
-    orthologInfo.push(currentOrtholog['genes'][Object.keys(currentOrtholog['genes'])][0]);
-  });
+  // Object.entries(orthologs).forEach((ortholog) => {
+  //   const currentOrtholog = loadedGenes.get(ortholog[1][0]);
+  //   orthologInfo.push(currentOrtholog['genes'][Object.keys(currentOrtholog['genes'])][0]);
+  // });
   
-  // if (orthologs.length > 0)
-  if (Object.entries(orthologs).length > 0)
+  if (orthologs.length > 0)
+  // if (Object.entries(orthologs).length > 0)
   {
 
     orthologInfo.sort((a, b) => a.posY1 - b.posY1);
