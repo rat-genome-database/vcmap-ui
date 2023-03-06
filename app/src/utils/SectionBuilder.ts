@@ -65,9 +65,6 @@ export async function createSyntenicRegionsAndDatatracks(geneListInParent: Map<n
     syntenyApiParams.optional.includeOrthologs = true;
   }
 
-
-  // TEMP:
-  syntenyApiParams.optional.includeGenes = true; // endTEMP
   const speciesSyntenyDataArray = await SyntenyApi.getSyntenicRegions(syntenyApiParams);
 
   //Step 2: Pass data to block processing pipeline per species
