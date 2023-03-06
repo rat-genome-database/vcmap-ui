@@ -142,11 +142,10 @@ import Gene from '@/models/Gene';
 import GeneInfo from '@/components/GeneInfo.vue';
 import { Formatter } from '@/utils/Formatter';
 import SVGConstants from '@/utils/SVGConstants';
-import {computed, ref, watch} from 'vue';
+import { ref, watch} from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import { getNewSelectedData, sortGeneList } from '@/utils/DataPanelHelpers';
-import { GeneDatatrack } from '@/models/DatatrackSection';
 
 const store = useStore(key);
 
@@ -270,7 +269,7 @@ const getSuggestionDisplay = (item: any) => {
 };
 
 const adjustSelectionWindow = () => {
-  const loadedGenes = store.state.loadedGenes;
+  // const loadedGenes = store.state.loadedGenes;
   const selectedRegion = store.state.selectedBackboneRegion;
   const selectionStart = selectedRegion.viewportSelection?.basePairStart || 0;
 

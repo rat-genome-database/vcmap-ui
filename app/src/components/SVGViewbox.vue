@@ -497,7 +497,7 @@ const updateDetailsPanel = async () => {
 
   //checkAndUpdateForBufferzone(zoomedSelection.basePairStart, zoomedSelection.basePairStop);
 
-  //Check if we have loaded synteny sets, if not, load them (initial)
+  //Check if we have loaded backbone sets, if not, load them (initial)
   let masterGeneMap: Map<number, LoadedGene> | null = store.state.loadedGenes;
   if (detailedBackboneSet.value == null)
   {
@@ -541,7 +541,7 @@ const updateDetailsPanel = async () => {
     timeCreateBackboneSet = Date.now() - backboneSetStart;
   }
 
-  //no previously processed data, so we need to create the synteny tracks/inital load
+  //no previously processed data, so we need to create the synteny tracks/initial load
   if (detailedSyntenySets.value.length == 0)
   {
     const syntenyTracksStart = Date.now();
@@ -881,37 +881,6 @@ const isNavigationDownDisabled = computed(() => {
   return false;
 });
 
-const updateMasterGeneMap = (newMappedGenes: Map<number, LoadedGene>) =>
-{
-  const masterGeneMap: Map<number, LoadedGene> | null = store.state.loadedGenes;
-
-  if (!masterGeneMap)
-  {
-    console.error(`Master gene map is null. Cannot be updated.`);
-    return;
-  }
-  
-  for (const [key, value] of newMappedGenes.entries())
-  {
-    const geneRgdId: number = key;
-    const loadedGene: LoadedGene | undefined = masterGeneMap.get(geneRgdId);
-    if (loadedGene)
-    {
-      //backbone genes will not have multiple fragments and thus not need to update the master gene map
-      //only backbone genes should have the backboneOrtholog property populated
-      if (loadedGene.backboneOrtholog)
-      {
-        continue;
-      }
-      //TODO: Verify comparative gene map additions are valid and not duplicates 
-    }
-    else
-    {
-      masterGeneMap.set(geneRgdId, value);
-    }
-  }
-  store.dispatch('setLoadedGenes', masterGeneMap);
-};
 
 const getDetailedPosition = () =>
 {
