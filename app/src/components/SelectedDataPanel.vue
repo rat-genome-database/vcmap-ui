@@ -206,32 +206,37 @@ const clearSelectedGenes = () => {
 
 const searchGene = (event: {query: string}) => {
   // Need to figure out how to more efficiently type vuex getters
-  const loadedGenesByRGDId = store.getters.masterGeneMapByRGDId as Map<number, GeneDatatrack[]>;
-  const loadedGeneSymbols = store.getters.masterGeneMapBySymbol as Map<string, number[]>;
+  // const loadedGenesByRGDId = store.getters.masterGeneMapByRGDId as Map<number, GeneDatatrack[]>;
+  // const loadedGeneSymbols = store.getters.masterGeneMapBySymbol as Map<string, number[]>;
 
   let matches: Gene[] = [];
-  for (const symbol of loadedGeneSymbols.keys()) 
-  {
-    if (symbol.toLowerCase().includes(event.query.toLowerCase()))
-    {
-      const rgdIds = loadedGeneSymbols.get(symbol);
-      if (rgdIds == null)
-      {
-        continue;
-      }
-
-      for (let rgdId of rgdIds) 
-      {
-        const genes = loadedGenesByRGDId.get(rgdId);
-        if (genes == null)
-        {
-          continue;
-        }
-
-        genes.forEach(geneDatatrack => matches.push(geneDatatrack.gene));
-      }
-    }
-  }
+  props.geneList.forEach((gene) => {
+    if (gene.symbol.toLowerCase().includes(event.query.toLowerCase()))
+      // TODO: we may need to push a clone of the Gene here to break other relationships
+      matches.push(gene);
+  });
+  // for (const symbol of loadedGeneSymbols.keys())
+  // {
+  //   if (symbol.toLowerCase().includes(event.query.toLowerCase()))
+  //   {
+  //     const rgdIds = loadedGeneSymbols.get(symbol);
+  //     if (rgdIds == null)
+  //     {
+  //       continue;
+  //     }
+  //
+  //     for (let rgdId of rgdIds)
+  //     {
+  //       const genes = loadedGenesByRGDId.get(rgdId);
+  //       if (genes == null)
+  //       {
+  //         continue;
+  //       }
+  //
+  //       genes.forEach(geneDatatrack => matches.push(geneDatatrack.gene));
+  //     }
+  //   }
+  // }
   geneSuggestions.value = matches;
 };
 
