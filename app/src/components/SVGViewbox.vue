@@ -953,7 +953,8 @@ const tempReplace = () => {
   props.geneList.forEach((gene) => {
     //console.log(`Inspecting gene: `, gene);
 
-    if (viewportStart && viewportStop && gene.speciesName == backboneSpecies?.name && gene.chromosome == chromosome?.chromosome)
+    if (viewportStart !== undefined && viewportStop !== undefined
+        && gene.speciesName == backboneSpecies?.name && gene.chromosome == chromosome?.chromosome)
     {
       // Create new Rectangle for each gene that should be visible
       let visible = false;
