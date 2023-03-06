@@ -1,4 +1,9 @@
 <template>
+  <Button
+      label="INSPECT (Sel)"
+      @click="onInspectPressed"
+  />
+  <p>Gene List size: {{ geneList.size }}</p>
   <Panel>
     <template #header>
       <div class="selected-data-header">
@@ -137,7 +142,7 @@ import Gene from '@/models/Gene';
 import GeneInfo from '@/components/GeneInfo.vue';
 import { Formatter } from '@/utils/Formatter';
 import SVGConstants from '@/utils/SVGConstants';
-import { ref, watch } from 'vue';
+import {computed, ref, watch} from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import { getNewSelectedData, sortGeneList } from '@/utils/DataPanelHelpers';
@@ -148,6 +153,7 @@ const store = useStore(key);
 interface Props
 {
   selectedData: SelectedData[] | null;
+  geneList: Map<number, Gene>;
 }
 
 const props = defineProps<Props>();
@@ -185,6 +191,11 @@ watch(() => props.selectedData, () => {
     });
   }
 });
+
+const onInspectPressed = () => {
+  console.log(props.geneList);
+};
+
 
 const clearSelectedGenes = () => {
   store.dispatch('setSelectedGeneIds', []);

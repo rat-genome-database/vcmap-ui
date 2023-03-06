@@ -16,7 +16,8 @@ export interface ProcessedGenomicData
 /**
  * Creates a BackboneSection model
  */
-export function createBackboneSection(species: Species, chromosome: Chromosome, startPos: number, stopPos: number, renderType: RenderType)
+export function createBackboneSection(species: Species, chromosome: Chromosome, startPos: number, stopPos: number,
+                                      renderType: RenderType)
 {
   const backbone = new BackboneSection({
     chromosome: chromosome.chromosome,

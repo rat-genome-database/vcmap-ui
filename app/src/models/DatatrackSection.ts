@@ -36,7 +36,8 @@ export class GeneDatatrack extends DatatrackSection
 {
   gene: Gene; // gene that this datatrack represents
 
-  constructor(gene: Gene, start: number, stop: number, backboneAlignment: BackboneAlignment, speciesName: string, mapName: string, chromosome: string, windowBasePairRange: WindowBasePairRange, renderType: RenderType)
+  constructor(gene: Gene, start: number, stop: number, backboneAlignment: BackboneAlignment, speciesName: string,
+              mapName: string, chromosome: string, windowBasePairRange: WindowBasePairRange, renderType: RenderType)
   {
     super({
       start: start,

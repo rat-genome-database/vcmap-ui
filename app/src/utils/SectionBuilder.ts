@@ -20,6 +20,7 @@ export type CreateSyntenicRegionsResult = {
   syntenyRegionSets: SyntenyRegionSet[];
   masterGeneMap?: Map<number, LoadedGene>;
   masterBlockMap: Map<number, LoadedBlock>;
+  newGenes?: Gene[];
   gapData?: SpeciesSyntenyData[];
 };
 
@@ -40,10 +41,11 @@ export type CreateSyntenicRegionsResult = {
  *
  * @returns                     processed syntenic regions for each species
  */
-export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Species[], backboneChr: Chromosome,
+export async function createSyntenicRegionsAndDatatracks(geneListInParent: Map<number, Gene>,
+    comparativeSpecies: Species[], backboneChr: Chromosome,
     backboneStart: number, backboneStop: number, windowStart: number, windowStop: number, syntenyThreshold: number,
     isComparative: boolean, masterBlockMap: Map<number, LoadedBlock>, masterGeneMap?: Map<number, LoadedGene>,
-    updateCache?: boolean): Promise<CreateSyntenicRegionsResult>
+    updateCache?: boolean, ): Promise<CreateSyntenicRegionsResult>
 {
   //Step 1: Get syntenic data for each species
   const syntenyApiParams: SyntenyRequestParams = {
@@ -63,6 +65,9 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
     syntenyApiParams.optional.includeOrthologs = true;
   }
 
+
+  // TEMP:
+  syntenyApiParams.optional.includeGenes = true; // endTEMP
   const speciesSyntenyDataArray = await SyntenyApi.getSyntenicRegions(syntenyApiParams);
 
   //Step 2: Pass data to block processing pipeline per species
@@ -71,6 +76,7 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
     console.debug(`Found ${speciesSyntenyDataArray.length} Syntenic regions`);
 
     const syntenyRegionSets: SyntenyRegionSet[] = [];
+    const newGenes: Gene[] = [];
 
     speciesSyntenyDataArray.forEach((speciesSyntenyData, index) => {
       const syntenyRegionSet = syntenicSectionBuilder(
@@ -90,8 +96,19 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
       {
         syntenyRegionSets.push(syntenyRegionSet);
       }
+
+      // TEMP
+      if (speciesSyntenyData.allGenes)
+      {
+        speciesSyntenyData.allGenes.forEach((gene) => {
+          if (!geneListInParent.has(gene.rgdId)) newGenes.push(gene);
+        });
+      }
+      // endTEMP
     });
     console.debug(`Synteny build completed (cache update? ${updateCache})`);
+    if (masterGeneMap) console.debug(`MasterGeneMap size: ${masterGeneMap.size}`);
+    console.debug(`GeneListInParent size: ${geneListInParent.size}`);
 
     //Step 3: Capture processed data and return to caller for drawing
     if (updateCache)
@@ -101,6 +118,7 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
         gapData: speciesSyntenyDataArray, 
         masterGeneMap: masterGeneMap,
         masterBlockMap: masterBlockMap,
+        newGenes: newGenes,
       };
     }
     else
@@ -109,6 +127,7 @@ export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Spe
         syntenyRegionSets: syntenyRegionSets, 
         masterGeneMap: masterGeneMap,
         masterBlockMap: masterBlockMap,
+        newGenes: newGenes,
       };
     }
   }
