@@ -23,9 +23,13 @@ import { useStore } from 'vuex';
 import { key } from '@/store';
 import {ref, shallowRef, triggerRef, watch} from 'vue';
 import Gene from "@/models/Gene";
+import Block from "@/models/Block";
+import SyntenyApi from "@/api/SyntenyApi";
+import { PANEL_SVG_START, PANEL_SVG_STOP} from '@/utils/SVGConstants';
 
 const store = useStore(key);
 
+const syntenyTree = ref(new Map<number, Block>());
 // NOTE: Switch to a shallow ref to see the genelist size get out of sync on the child components
 //   despite the inspect button showing the correct Map in the console. This is the classic loss
 //   of reactivity, which we should be okay with since this data will only be used internally
@@ -55,10 +59,31 @@ const newGenesFromChild = (newGenes: Gene[]) => {
   });
 };
 
-watch(() => store.state.detailedBasePairRange, () => {
+watch(() => store.state.detailedBasePairRange, async () => {
   console.log('Detailed Base Pair range just changed...');
   console.log('  If this were instead a "requested" change, I would kick off API processing');
   console.log('  and once completed, I would actually change detailedBasePairRange resulting');
   console.log('  in SVG changes based on my current data in Main');
+
+
+  // Example call -- Grab blocks with using a high threshold (.25 of a pixel)
+  if (store.state.chromosome)
+  {
+    let threshold = Math.round(store.state.chromosome.seqLength / (PANEL_SVG_STOP - PANEL_SVG_START) / 4);
+    const speciesSyntenyDataArray = await SyntenyApi.getSyntenicRegions({
+      backboneChromosome: store.state.chromosome,
+      start: store.state.detailedBasePairRange.start,
+      stop: store.state.detailedBasePairRange.stop,
+      optional: {
+        threshold: threshold,
+      },
+      comparativeSpecies: store.state.comparativeSpecies,
+    });
+
+    // Process response
+    // TODO For each off-backbone species, loop the region data
+    // TODO For each region (block), compare to our existing structures, if new -- create and add
+    // TODO For each gene in geneList, identify appropriate block and reference it
+  }
 });
 </script>
