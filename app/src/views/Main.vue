@@ -31,6 +31,9 @@ import Chromosome from "@/models/Chromosome";
 const store = useStore(key);
 
 // Our synteny tree keyed by MapId
+// TODO: Consider adding a map for mapKey -> Species
+// TODO: Where to keep the backbone? Always index == 0?? (confusing)
+// TODO: Combined with above, we could create a structure that has these properties
 const syntenyTree = ref(new Map<number, Block[]>());
 
 
@@ -148,13 +151,13 @@ watch(() => store.state.detailedBasePairRange, async () => {
           {
             // Keep the reference to this block from our tree
             targetBlock = blockSearch[1];
-            // TODO: Add any new gaps for this block
-            // TODO: Add any new genes for this block
+            // TODO: Inspect and add any new gaps for this block
+            // TODO: Inspect and add any new genes for this block
           }
           else
           {
-            // Shouldn't ever happen (warn the user)
-            console.error('Discovered duplicate blocks in our tree!');
+            // Shouldn't ever happen (TODO: warn the user)
+            console.error('OH NO! Discovered duplicate blocks in our tree!');
           }
 
           // Add any new genes to our geneList (cross-referencing our Blocks)
