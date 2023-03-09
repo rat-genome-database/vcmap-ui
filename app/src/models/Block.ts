@@ -10,6 +10,7 @@ interface BlockParams
   stop: number;
   backboneStart?: number;
   backboneStop?: number;
+  orientation?: '+' | '-';
   gaps?: [{start: number, stop:number}];
   genes?: [Gene];
 }
@@ -24,6 +25,7 @@ export default class Block
   stop: number = 0;
   backboneStart: number = -1;
   backboneStop: number = -1;
+  orientation: "+" | "-" = '+';
   gaps: [{start: number, stop:number}?] = [];
   genes: [Gene?] = [];
 
@@ -37,6 +39,7 @@ export default class Block
     this.stop = params.stop;
     this.backboneStart = params.backboneStart ?? this.backboneStart;
     this.backboneStop = params.backboneStop ?? this.backboneStop;
+    this.orientation = params.orientation ?? this.orientation;
     this.gaps = params.gaps ?? this.gaps;
     this.genes = params.genes ?? this.genes;
   }

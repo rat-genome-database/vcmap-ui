@@ -80,7 +80,10 @@ watch(() => store.state.detailedBasePairRange, async () => {
   // Example call -- Grab blocks with using a high threshold (.25 of a pixel)
   if (store.state.chromosome)
   {
-    let threshold = Math.round(store.state.chromosome.seqLength / (PANEL_SVG_STOP - PANEL_SVG_START) / 4);
+    let threshold = Math.round(
+        (store.state.detailedBasePairRange.stop - store.state.detailedBasePairRange.start) /
+        (PANEL_SVG_STOP - PANEL_SVG_START) / 4
+    );
     const speciesSyntenyDataArray = await SyntenyApi.getSyntenicRegions({
       backboneChromosome: store.state.chromosome,
       start: store.state.detailedBasePairRange.start,
@@ -92,42 +95,74 @@ watch(() => store.state.detailedBasePairRange, async () => {
     });
 
     // Process response
-    // TODO WIP: For each off-backbone species, loop the region data
     if (speciesSyntenyDataArray)
     {
       let tree:Map<number, Block[]> = syntenyTree.value;
-      let backboneChr = store.state.chromosome; // TODO: This is proxied, I think.
+      let backboneChr = store.state.chromosome; // TODO: This is proxied, not sure why? Also not sure it matters...
 
-      speciesSyntenyDataArray.forEach((species) => {
-        // Need to create a new structure for this mapKey
-        if (!tree.has(species.mapKey)) tree.set(species.mapKey, []);
-        let knownSpecies = tree.get(species.mapKey) ?? [];
+      // For each off-backbone species in our response, loop the region data
+      speciesSyntenyDataArray.forEach((speciesResponse) => {
+        // Check if we need to create a new structure for this mapKey (species)
+        if (!tree.has(speciesResponse.mapKey)) tree.set(speciesResponse.mapKey, []);
+        let knownSpeciesBlocks = tree.get(speciesResponse.mapKey) ?? [];
 
-        // For each region (block), compare to *all* our existing structures, if new -- create and add
-        species.regionData.forEach((blockData) => {
-          if (knownSpecies.filter((b) => {
-            return (b.chainLevel == blockData.block.chainLevel && b.start == blockData.block.start && b.stop == blockData.block.stop);
-          }).length == 0)
+        // For each region (block), compare to *all* our existing structures
+        // NOTE: If we can afford to do it, might make sense to change our SyntenyApi to build
+        //   our block structure, so we can more quickly identify new data and add to our tree.
+        speciesResponse.regionData.forEach((blockData) => {
+          let targetBlock;
+
+          let blockSearch = knownSpeciesBlocks.filter((b) => {
+            // NOTE: we consider two blocks the same if the "chainLevel", "backboneStart", and "backboneStop" are identical
+            //   There are potentially situations where start & stop are identical but this duplicated off-backbone
+            //   syntenic region appears in multiple different places on the same backbone.
+            // TODO: In these cases we need to handle our gene references differently (by grabbing from
+            //   our existing dataset instead of using the new objects from the SyntenyApi)
+            return (b.chainLevel == blockData.block.chainLevel &&
+                b.backboneStart == blockData.block.backboneStart && b.backboneStop == blockData.block.backboneStop);
+          });
+
+          if (blockSearch.length == 0)
           {
+            // Add a newly discovered block
+            console.debug(`Found new Synteny block for ${speciesResponse.speciesName} (chr ${blockData.block.chromosome})`);
             let newBlock = new Block({
               backbone: backboneChr,
               chromosome: new Chromosome({mapKey: blockData.block.mapKey, chromosome: blockData.block.chromosome}),
               chainLevel: blockData.block.chainLevel,
+              orientation: blockData.block.orientation,
               backboneStart: blockData.block.backboneStart,
               backboneStop: blockData.block.backboneStop,
               start: blockData.block.start,
               stop: blockData.block.stop,
             });
-            knownSpecies.push(newBlock);
+            // Gaps
+            blockData.gaps.forEach((gapData) => {
+              newBlock.gaps.push({ start: gapData.start, stop: gapData.stop });
+            });
+            // TODO: newBlock.genes = blockData.genes;
+            knownSpeciesBlocks.push(newBlock);
+            targetBlock = newBlock;
           }
+          else if (blockSearch.length == 1)
+          {
+            // Keep the reference to this block from our tree
+            targetBlock = blockSearch[1];
+            // TODO: Add any new gaps for this block
+            // TODO: Add any new genes for this block
+          }
+          else
+          {
+            // Shouldn't ever happen (warn the user)
+            console.error('Discovered duplicate blocks in our tree!');
+          }
+
+          // Add any new genes to our geneList (cross-referencing our Blocks)
+          targetBlock?.genes.forEach((gene) => {
+            if (gene && !geneList.value.get(gene.rgdId)) geneList.value.set(gene.rgdId, gene);
+          });
         });
-        // NOTE: we consider a block the same if the "chainLevel", "start", and "stop" are identical
 
-        // if (!tree.get(blockData.mapKey).values().has((knownBlock: Block) => {
-        //     return false; // TODO
-        //   }))
-
-        // TODO For each gene in geneList, identify appropriate block and reference it
       });
     }
   }
