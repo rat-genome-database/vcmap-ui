@@ -92,12 +92,14 @@ watch(() => store.state.detailedBasePairRange, async () => {
       start: store.state.detailedBasePairRange.start,
       stop: store.state.detailedBasePairRange.stop,
       optional: {
+        includeGenes: true,
         threshold: threshold,
       },
       comparativeSpecies: store.state.comparativeSpecies,
     });
 
     // Process response
+    // TODO: Handle orthologs
     if (speciesSyntenyDataArray)
     {
       let tree:Map<number, Block[]> = syntenyTree.value;
@@ -113,7 +115,7 @@ watch(() => store.state.detailedBasePairRange, async () => {
         // NOTE: If we can afford to do it, might make sense to change our SyntenyApi to build
         //   our block structure, so we can more quickly identify new data and add to our tree.
         speciesResponse.regionData.forEach((blockData) => {
-          let targetBlock;
+          let targetBlock: Block | null = null;
 
           let blockSearch = knownSpeciesBlocks.filter((b) => {
             // NOTE: we consider two blocks the same if the "chainLevel", "backboneStart", and "backboneStop" are identical
@@ -139,26 +141,45 @@ watch(() => store.state.detailedBasePairRange, async () => {
               start: blockData.block.start,
               stop: blockData.block.stop,
             });
-            // Gaps
+            // Gaps (add ALL)
             blockData.gaps.forEach((gapData) => {
               newBlock.gaps.push({ start: gapData.start, stop: gapData.stop });
             });
-            // TODO: newBlock.genes = blockData.genes;
             knownSpeciesBlocks.push(newBlock);
             targetBlock = newBlock;
           }
           else if (blockSearch.length == 1)
           {
             // Keep the reference to this block from our tree
-            targetBlock = blockSearch[1];
-            // TODO: Inspect and add any new gaps for this block
-            // TODO: Inspect and add any new genes for this block
+            targetBlock = blockSearch[0];
+            blockData.gaps.forEach((gapData) => {
+              // Inspect and add any new gaps for this block
+              if (targetBlock?.gaps.filter((gap) => {
+                return gapData.start === gap?.start && gapData.stop === gap?.stop;
+              }).length == 0)
+                targetBlock.gaps.push(gapData);
+            });
           }
           else
           {
             // Shouldn't ever happen (TODO: warn the user)
             console.error('OH NO! Discovered duplicate blocks in our tree!');
           }
+
+          // Handle genes (we need to inspect all of them even in the case of a new block)
+          blockData.genes.forEach((geneData) => {
+            // Use any existing genes if we have already loaded one
+            let gene = geneList.value.get(geneData.rgdId) ?? geneData;
+            // NOTE: It is possible for a gene from a new block to exist on another block
+            //   This situation comes up often when there are small blocks that a representing
+            //   a region of a chromosome that is already part of a larger block we have loaded.
+            //   In that case, we consider want to consider the larger block the "primary" block.
+            // TODO: This code is assuming the largest block is loaded first, but that is not
+            //   going to always be the case. However, it should work for most situations and
+            //   is a reasonable initial implementation.
+            if (gene.block === null) gene.block = targetBlock;
+            targetBlock?.genes.push(gene);
+          });
 
           // Add any new genes to our geneList (cross-referencing our Blocks)
           targetBlock?.genes.forEach((gene) => {

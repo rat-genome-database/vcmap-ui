@@ -1,3 +1,5 @@
+import Block from "@/models/Block";
+
 interface GeneParams
 {
   speciesName?: string;
@@ -8,6 +10,7 @@ interface GeneParams
   start: number;
   stop: number;
   orthologs?: number[];
+  block?: Block;
 }
 
 export default class Gene
@@ -20,7 +23,7 @@ export default class Gene
   start: number = 0;
   stop: number = 0;
   orthologs: number[] = []; // RGD IDs -- Note: will only be populated if Gene was received from the Synteny API with the includeOrthologs param
-
+  block: Block | null = null;
   constructor(params: GeneParams)
   {
     params.speciesName ? this.speciesName = params.speciesName : this.speciesName = '';
@@ -31,5 +34,6 @@ export default class Gene
     this.start = params.start;
     this.stop = params.stop;
     this.orthologs = params.orthologs ?? [];
+    this.block = params.block?? this.block;
   }
 }
