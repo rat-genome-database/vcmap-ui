@@ -24,6 +24,7 @@ export interface VCMapState
   configTab: number;
 
   selectedBackboneRegion: BackboneSelection | null;
+  detailedBasePairRequest: BasePairRange | null;
   detailedBasePairRange: BasePairRange;
 
   overviewBasePairToHeightRatio: number;
@@ -46,7 +47,7 @@ const vuexLocal = new VuexPersistence<VCMapState>({
   storage: window.localStorage
 });
 
-const actionsToLog = ['setDetailedBasePairRange'];
+const actionsToLog = ['setDetailedBasePairRange', 'setDetailedBasePairRequest'];
 const mutationsToLog = ['detailedBasePairRange'];
 
 const logger = createLogger({
@@ -70,6 +71,7 @@ export default createStore({
     configTab: 0,
 
     selectedBackboneRegion: null,
+    detailedBasePairRequest: { start: 0, stop: 0 } ?? null,
     detailedBasePairRange: { start: 0, stop: 0 },
 
     overviewBasePairToHeightRatio: 1000,
@@ -115,6 +117,9 @@ export default createStore({
     },
     selectedBackboneRegion ( state: VCMapState, selection: BackboneSelection) {
       state.selectedBackboneRegion = selection;
+    },
+    detailedBasePairRequest(state: VCMapState, range: BasePairRange) {
+      state.detailedBasePairRequest = range;
     },
     detailedBasePairRange(state: VCMapState, range: BasePairRange) {
       state.detailedBasePairRange = range;
@@ -228,6 +233,10 @@ export default createStore({
       context.commit('selectedBackboneRegion', selection);
       context.commit('detailedBasePairRange', { start: selection.viewportSelection?.basePairStart, stop: selection.viewportSelection?.basePairStop });
       // Note: Committing a change to detailedBasePairRange will trigger an update on the Detailed panel
+    },
+    setDetailedBasePairRequest(context: ActionContext<VCMapState, VCMapState>, range: BasePairRange) {
+      // Note: Committing a change to detailedBasePairRange will trigger an update on the Detailed panel
+      context.commit('detailedBasePairRequest', range);
     },
     setDetailedBasePairRange(context: ActionContext<VCMapState, VCMapState>, range: BasePairRange) {
       // Note: Committing a change to detailedBasePairRange will trigger an update on the Detailed panel

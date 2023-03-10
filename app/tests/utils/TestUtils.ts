@@ -67,6 +67,7 @@ export namespace TestUtils
         comparativeSpecies: [],
 
         selectedBackboneRegion: null,
+        detailedBasePairRequest: null,
         detailedBasePairRange: { start: 0, stop: 0 },
 
         overviewBasePairToHeightRatio: 1000,

@@ -132,8 +132,11 @@ const saveSelectionChange = () => {
   if (isValidStartStop.value)
   {
     const selectedBackboneRegion = store.state.selectedBackboneRegion;
-    selectedBackboneRegion.setViewportSelection(startPosition.value, stopPosition.value);
-    store.dispatch('setDetailedBasePairRange', { start: startPosition.value, stop: stopPosition.value });
+    // FIXME:
+    selectedBackboneRegion?.setViewportSelection(startPosition.value, stopPosition.value);
+
+    store.dispatch('setDetailedBasePairRequest', { start: startPosition.value, stop: stopPosition.value });
+    // store.dispatch('setDetailedBasePairRange', { start: startPosition.value, stop: stopPosition.value });
   }
   showEditModal.value = false;
 };

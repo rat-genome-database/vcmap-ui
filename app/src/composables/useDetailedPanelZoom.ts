@@ -107,7 +107,8 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
       const basePairsFromInnerSelection2 = Math.floor((stopDetailedSelectionY.value - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
       const basePairStop = basePairsFromInnerSelection2 + selection.viewportSelection.basePairStart;
 
-      store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: basePairStop });
+      store.dispatch('setDetailedBasePairRequest', { start: basePairStart, stop: basePairStop });
+      // store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: basePairStop });
     }
 
     // Clear selection box

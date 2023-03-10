@@ -1,6 +1,5 @@
 <template>
   <HeaderPanel />
-  <p>Gene List size: {{ geneList.size }}</p>
   <Button
     label="INSPECT (Main)"
     @click="onInspectPressed"
@@ -73,18 +72,14 @@ const newGenesFromChild = (newGenes: Gene[]) => {
 // TODO endTEMP
 
 // Watch for requested navigation operations (zoom in/out, navigate up/down stream)
-watch(() => store.state.detailedBasePairRange, async () => {
-  console.log('Detailed Base Pair range just changed...');
-  console.log('  If this were instead a "requested" change, I would kick off API processing');
-  console.log('  and once completed, I would actually change detailedBasePairRange resulting');
-  console.log('  in SVG changes based on my current data in Main');
+watch(() => store.state.detailedBasePairRequest, async () => {
+  console.log('Detailed Base Pair range change request detected.');
 
-
-  // Example call -- Grab blocks with using a high threshold (.25 of a pixel)
-  if (store.state.chromosome)
+  // Grab blocks and genes with using a threshold of approximately .25 of a pixel
+  if (store.state.detailedBasePairRequest && store.state.chromosome)
   {
     let threshold = Math.round(
-        (store.state.detailedBasePairRange.stop - store.state.detailedBasePairRange.start) /
+        (store.state.detailedBasePairRequest.stop - store.state.detailedBasePairRequest.start) /
         (PANEL_SVG_STOP - PANEL_SVG_START) / 4
     );
     const speciesSyntenyDataArray = await SyntenyApi.getSyntenicRegions({
@@ -189,6 +184,12 @@ watch(() => store.state.detailedBasePairRange, async () => {
 
       });
     }
+
+    // Data processing done, ready to complete request
+    store.dispatch('setDetailedBasePairRange', {
+      start: store.state.detailedBasePairRequest.start, stop: store.state.detailedBasePairRequest.stop
+    });
+    store.dispatch('setDetailedBasePairRequest', null);
   }
 });
 </script>

@@ -1,9 +1,4 @@
 <template>
-  <Button
-      label="INSPECT (Sel)"
-      @click="onInspectPressed"
-  />
-  <p>Gene List size: {{ geneList.size }}</p>
   <Panel>
     <template #header>
       <div class="selected-data-header">
@@ -161,7 +156,7 @@ const searchedGene = ref<Gene | Gene[] | null>(null);
 const geneSuggestions = ref<Gene[]>([]);
 const numberOfResults = ref<number>(0);
 const overviewStart = ref<number>(0);
-const overviewStop = ref<number>(store.state.chromosome.seqLength ?? 1);
+const overviewStop = ref<number>(store.state.chromosome?.seqLength ?? 1);
 
 // fraction of gene bp length to add to the window when jumping
 // to the gene after a search
@@ -191,11 +186,6 @@ watch(() => props.selectedData, () => {
   }
 });
 
-const onInspectPressed = () => {
-  console.log(props.geneList);
-};
-
-
 const clearSelectedGenes = () => {
   store.dispatch('setSelectedGeneIds', []);
   store.dispatch('setSelectedData', null);
@@ -214,28 +204,6 @@ const searchGene = (event: {query: string}) => {
       // TODO: we may need to push a clone of the Gene here to break other relationships
       matches.push(gene);
   });
-  // for (const symbol of loadedGeneSymbols.keys())
-  // {
-  //   if (symbol.toLowerCase().includes(event.query.toLowerCase()))
-  //   {
-  //     const rgdIds = loadedGeneSymbols.get(symbol);
-  //     if (rgdIds == null)
-  //     {
-  //       continue;
-  //     }
-  //
-  //     for (let rgdId of rgdIds)
-  //     {
-  //       const genes = loadedGenesByRGDId.get(rgdId);
-  //       if (genes == null)
-  //       {
-  //         continue;
-  //       }
-  //
-  //       genes.forEach(geneDatatrack => matches.push(geneDatatrack.gene));
-  //     }
-  //   }
-  // }
   geneSuggestions.value = matches;
 };
 

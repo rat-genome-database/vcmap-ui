@@ -63,7 +63,8 @@ const zoom = (zoomLevel: number) => {
   }
   else if (zoomLevel === 1)
   {
-    store.dispatch('setDetailedBasePairRange', { start: 0, stop: backboneChromosome.seqLength });
+    store.dispatch('setDetailedBasePairRequest', { start: 0, stop: backboneChromosome.seqLength });
+    // store.dispatch('setDetailedBasePairRange', { start: 0, stop: backboneChromosome.seqLength });
   }
   else
   {
@@ -107,7 +108,8 @@ const zoom = (zoomLevel: number) => {
     }
 
     // Trigger detailed panel update
-    store.dispatch('setDetailedBasePairRange', { start: zoomedStart, stop: zoomedStop });
+    store.dispatch('setDetailedBasePairRequest', { start: zoomedStart, stop: zoomedStop });
+    // store.dispatch('setDetailedBasePairRange', { start: zoomedStart, stop: zoomedStop });
   }
 };
 

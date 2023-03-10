@@ -1,13 +1,8 @@
 <template>
   <Button
-      label="INSPECT (SVG)"
-      @click="onInspectPressed"
-  />
-  <Button
-      label="TEST (SVG)"
+      label="DRAW GENES"
       @click="tempReplace"
   />
-  <p>Gene List size: {{ geneList.size }}</p>
   <svg :viewBox="'0 0 800 ' + SVGConstants.viewboxHeight" xmlns="http://www.w3.org/2000/svg" id="svg-wrapper" width="100%">
 
     <!-- Outside panel -->
@@ -64,7 +59,11 @@
       </template>
     </template>
 
-
+<!--TEMP-->
+    <template v-for="(rectangle, index) in testRects" :key="index">
+      <rect :fill="rectangle.elementColor" fill-opacity="0.8" x="340.0" width="10.0" :height="rectangle.posY2 - rectangle.posY1" :y="rectangle.posY1"/>
+    </template>
+<!--endTEMP-->
     <!-- Title panels -->
     <rect class="panel" x="0" :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.panelTitleHeight" />
     <rect class="panel" :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.panelTitleHeight" />
@@ -108,10 +107,6 @@
     <rect v-if="currentlySelectingRegion()" id="selecting-detailed" class="selecting-panel" :class="{'is-loading': arePanelsLoading}"
       @mousemove="updateZoomSelection" @contextmenu.prevent @click.right="cancelDetailedSelection" @click.left="(event) => detailedSelectionHandler(event)"
       :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.viewboxHeight" />
-
-    <template v-for="(rectangle, index) in testRects" :key="index">
-      <rect :fill="rectangle.elementColor" fill-opacity="0.8" x="10.0" width="10.0" :height="rectangle.posY2 - rectangle.posY1" :y="rectangle.posY1"/>
-    </template>
 
     <!-- Detailed panel selection svg for zoom -->
     <rect v-if="startDetailedSelectionY && stopDetailedSelectionY" 
@@ -431,8 +426,10 @@ const updateOverviewPanel = async () => {
 
 const updateDetailsPanel = async () => {
   $log.debug(`Updating Detailed Panel`);
+  tempReplace();
+
 // eslint-disable-next-line no-constant-condition
-//if(true) return;
+// if(true) return;
 
   const detailedUpdateStart = Date.now();
   enableProcessingLoadMask.value = true;
