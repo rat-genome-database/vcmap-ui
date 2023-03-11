@@ -6,7 +6,7 @@
   />
   <div class="grid">
     <div class="col-9">
-      <SVGViewbox :geneList="geneList" @new-genes="newGenesFromChild"/>
+      <SVGViewbox :geneList="geneList"/>
     </div>
     <div class="col-3">
       <SelectedDataPanel :selected-data="store.state.selectedData" :geneList="geneList"/>
@@ -20,12 +20,14 @@ import HeaderPanel from '@/components/HeaderPanel.vue';
 import SelectedDataPanel from '@/components/SelectedDataPanel.vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
-import {ref, shallowRef, triggerRef, watch} from 'vue';
+import {onMounted, ref, shallowRef, triggerRef, watch} from 'vue';
 import Gene from "@/models/Gene";
 import Block from "@/models/Block";
 import SyntenyApi from "@/api/SyntenyApi";
 import { PANEL_SVG_START, PANEL_SVG_STOP} from '@/utils/SVGConstants';
 import Chromosome from "@/models/Chromosome";
+import router from "@/router";
+import GeneApi from "@/api/GeneApi";
 
 const store = useStore(key);
 
@@ -60,16 +62,49 @@ const onInspectPressed = () => {
   // NOTE: I cannot seem to get this to force child updates when using a shallowRef???
   //triggerRef(geneList);
 };
-
-const newGenesFromChild = (newGenes: Gene[]) => {
-  console.log(`New genes from Child (${newGenes.length})`);
-  newGenes.forEach((newGene) => {
-    //if (geneList.value.has(newGene.rgdId)) console.debug(`Event contained Duplicate`, newGene);
-    // TODO: Important that we clone the "newGene" object here in the future
-    geneList.value.set(newGene.rgdId, newGene);
-  });
-};
 // TODO endTEMP
+
+/**
+ * Main watches this hook for the appropriate time to query the API and construct our
+ * memory models representing the Comparative Map Configuration. If Main is getting
+ * mounted, it is safe to clear out our old data structures
+ * (Lifecycle hook)
+ */
+onMounted(async () => {
+  console.debug('Creating memory models for our Comparative Map view');
+
+  // Clear out old structures
+  // TODO: Ensure circular references are not going to cause memory leaks
+  syntenyTree.value = new Map();
+  geneList.value = new Map();
+
+  // Check for required data
+  if (!store.state.chromosome || !store.state.species)
+  {
+    // FIXME: Improve this UX / notify the user / etc
+    console.error('Cannot load Main -- no chromosome in state');
+    await router.push('/');
+    return;
+  }
+
+  // Query the Genes API
+  let comparativeSpeciesIds: number[] = [];
+  store.state.comparativeSpecies.map((species: { defaultMapKey: number; }) => comparativeSpeciesIds.push(species.defaultMapKey));
+  const backboneGenes: Gene[] = await GeneApi.getGenesByRegion(
+      store.state.chromosome.chromosome,
+      0, store.state.chromosome.seqLength,
+      store.state.species.activeMap.key, store.state.species.name,
+      comparativeSpeciesIds);
+
+  // Process response
+  // TODO: Should we add a "Block" for the backbone first?
+  backboneGenes.forEach((geneData) => {
+    geneList.value.set(geneData.rgdId, geneData);
+  });
+
+  // Preload off-backbone large blocks and genes
+  // TODO: wip
+});
 
 // Watch for requested navigation operations (zoom in/out, navigate up/down stream)
 watch(() => store.state.detailedBasePairRequest, async () => {
@@ -117,7 +152,7 @@ watch(() => store.state.detailedBasePairRequest, async () => {
             //   There are potentially situations where start & stop are identical but this duplicated off-backbone
             //   syntenic region appears in multiple different places on the same backbone.
             // TODO: In these cases we need to handle our gene references differently (by grabbing from
-            //   our existing dataset instead of using the new objects from the SyntenyApi)
+            //  our existing dataset instead of using the new objects from the SyntenyApi)
             return (b.chainLevel == blockData.block.chainLevel &&
                 b.backboneStart == blockData.block.backboneStart && b.backboneStop == blockData.block.backboneStop);
           });

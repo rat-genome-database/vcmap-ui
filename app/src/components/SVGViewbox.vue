@@ -208,9 +208,7 @@ interface Props
 }
 
 const props = defineProps<Props>();
-const emit = defineEmits<{
-  (e: 'newGenes', newGene: Gene[]): void
-}>();
+
 let isMissingSynteny = ref<boolean>(false);
 let allowDetailedPanelProcessing = ref<boolean>(false);
 let detailedSyntenySets = ref<SyntenyRegionSet[]>([]); // The currently displayed SyntenicRegions in the detailed panel
@@ -355,7 +353,7 @@ const updateOverviewPanel = async () => {
   const emptyBlockMap = new Map<number, LoadedBlock>();
 
   //build overview synteny sets
-  const overviewSyntenyData = await createSyntenicRegionsAndDatatracks(props.geneList,
+  const overviewSyntenyData = await createSyntenicRegionsAndDatatracks(
     store.state.comparativeSpecies,
     backboneChromosome,
     0,
@@ -368,9 +366,6 @@ const updateOverviewPanel = async () => {
   );
 
   overviewSyntenySets.value = overviewSyntenyData.syntenyRegionSets;
-  console.log(`(overview) Adding genes (${overviewSyntenyData.newGenes?.length})`);
-  console.log(overviewSyntenyData.newGenes);
-  if (overviewSyntenyData.newGenes) emit('newGenes', overviewSyntenyData.newGenes);
 
   const overviewSyntenyTrackCreationTime = Date.now();
 
@@ -512,21 +507,6 @@ const updateDetailsPanel = async () => {
     const queryBackboneboneGenesStart = Date.now();
     const tempBackboneGenes: Gene[] = await GeneApi.getGenesByRegion(backboneChromosome.chromosome, 0,
         backboneChromosome.seqLength, backboneSpecies.activeMap.key, backboneSpecies.name, comparativeSpeciesIds);
-    // TODO TEMP
-    //   NOTE: The event code will not be needed once this API call happens on the parent,
-    //   and we can inspect the existing list to then push a new copy of the Gene
-    //   immediately.
-    console.log(`(detail) Inspecting backbone genes (${tempBackboneGenes.length})`);
-    const newGenes: Gene[] = [];
-    tempBackboneGenes.forEach((tempGene) => {
-      if (!props.geneList.has(tempGene.rgdId)) newGenes.push(tempGene);
-    });
-    if (newGenes.length)
-    {
-      console.debug(`(detail) Adding ${newGenes.length} backbone genes`);
-      emit('newGenes', newGenes);
-    }
-    // TODO endTEMP
 
     timeQueryBackboneGenes = Date.now() - queryBackboneboneGenesStart;
 
@@ -544,7 +524,7 @@ const updateDetailsPanel = async () => {
   if (detailedSyntenySets.value.length == 0)
   {
     const syntenyTracksStart = Date.now();
-    const detailedSyntenyData = await createSyntenicRegionsAndDatatracks(props.geneList,
+    const detailedSyntenyData = await createSyntenicRegionsAndDatatracks(
       store.state.comparativeSpecies,
       backboneChromosome,
       0,
@@ -557,18 +537,7 @@ const updateDetailsPanel = async () => {
       masterGeneMap ?? undefined,
     );
 
-    // TODO TEMP
-    // NOTE: This "initial load" cannot happen before / during the detailed bp change
-    //   because we haven't gathered and processed all data yet.
-    //   Moving this to Main so that the API call can occur and finish before the
-    //   detailed bp position changes (through store commit) will resolve this.
-    //   (I THINK... at least)
-    console.log(`(detail) Adding off-backbone genes (${detailedSyntenyData.newGenes?.length})`);
-    if (detailedSyntenyData.newGenes) emit('newGenes', detailedSyntenyData.newGenes);
-    //   Creating a TEMP region set to append for testing
-
     detailedSyntenyData.syntenyRegionSets.push();
-    // TODO endTEMP
 
     // NOTE: adding to this reactive ref will update our view
     detailedSyntenySets.value = detailedSyntenyData.syntenyRegionSets;
@@ -653,7 +622,7 @@ const adjustDetailedVisibleSetsBasedOnZoom = async (zoomedSelection: SelectedReg
 
   if (updateCache)
   {
-    detailedSyntenyData = await createSyntenicRegionsAndDatatracks(props.geneList,
+    detailedSyntenyData = await createSyntenicRegionsAndDatatracks(
       store.state.comparativeSpecies,
       backboneChromosome,
       bufferZoneSelection.basePairStart,
@@ -701,6 +670,7 @@ const adjustDetailedVisibleSetsBasedOnZoom = async (zoomedSelection: SelectedReg
     //store.dispatch('setLoadedBlocks', detailedSyntenyData.masterBlockMap);
   }
 
+  tempReplace(); // TEMP
   enableProcessingLoadMask.value = false;
 };
 
@@ -730,7 +700,7 @@ const adjustDetailedVisibleSetsBasedOnNav = async (lastBufferzone: SelectedRegio
     adjustedRegion = new SelectedRegion(
       currBufferzone.svgYPoint, currBufferzone.svgHeight, currBufferzone.basePairStart, lastBufferzone.basePairStart
     );
-    detailedSyntenyData = await createSyntenicRegionsAndDatatracks(props.geneList,
+    detailedSyntenyData = await createSyntenicRegionsAndDatatracks(
       store.state.comparativeSpecies,
       backboneChromosome,
       currBufferzone.basePairStart,
@@ -749,7 +719,7 @@ const adjustDetailedVisibleSetsBasedOnNav = async (lastBufferzone: SelectedRegio
     adjustedRegion = new SelectedRegion(
       currBufferzone.svgYPoint, currBufferzone.svgHeight, lastBufferzone.basePairStart, currBufferzone.basePairStop
     );
-    detailedSyntenyData = await createSyntenicRegionsAndDatatracks(props.geneList,
+    detailedSyntenyData = await createSyntenicRegionsAndDatatracks(
       store.state.comparativeSpecies,
       backboneChromosome,
       zoomedSelection.basePairStart,
@@ -792,6 +762,7 @@ const adjustDetailedVisibleSetsBasedOnNav = async (lastBufferzone: SelectedRegio
     }
   }
 
+  tempReplace(); // TEMP
   enableProcessingLoadMask.value = false;
 };
 

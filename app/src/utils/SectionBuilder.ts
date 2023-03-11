@@ -41,8 +41,7 @@ export type CreateSyntenicRegionsResult = {
  *
  * @returns                     processed syntenic regions for each species
  */
-export async function createSyntenicRegionsAndDatatracks(geneListInParent: Map<number, Gene>,
-    comparativeSpecies: Species[], backboneChr: Chromosome,
+export async function createSyntenicRegionsAndDatatracks(comparativeSpecies: Species[], backboneChr: Chromosome,
     backboneStart: number, backboneStop: number, windowStart: number, windowStop: number, syntenyThreshold: number,
     isComparative: boolean, masterBlockMap: Map<number, LoadedBlock>, masterGeneMap?: Map<number, LoadedGene>,
     updateCache?: boolean, ): Promise<CreateSyntenicRegionsResult>
@@ -73,7 +72,6 @@ export async function createSyntenicRegionsAndDatatracks(geneListInParent: Map<n
     console.debug(`Found ${speciesSyntenyDataArray.length} Syntenic regions`);
 
     const syntenyRegionSets: SyntenyRegionSet[] = [];
-    const newGenes: Gene[] = [];
 
     speciesSyntenyDataArray.forEach((speciesSyntenyData, index) => {
       const syntenyRegionSet = syntenicSectionBuilder(
@@ -94,18 +92,7 @@ export async function createSyntenicRegionsAndDatatracks(geneListInParent: Map<n
         syntenyRegionSets.push(syntenyRegionSet);
       }
 
-      // TEMP
-      if (speciesSyntenyData.allGenes)
-      {
-        speciesSyntenyData.allGenes.forEach((gene) => {
-          if (!geneListInParent.has(gene.rgdId)) newGenes.push(gene);
-        });
-      }
-      // endTEMP
     });
-    console.debug(`Synteny build completed (cache update? ${updateCache})`);
-    if (masterGeneMap) console.debug(`MasterGeneMap size: ${masterGeneMap.size}`);
-    console.debug(`GeneListInParent size: ${geneListInParent.size}`);
 
     //Step 3: Capture processed data and return to caller for drawing
     if (updateCache)
@@ -115,7 +102,6 @@ export async function createSyntenicRegionsAndDatatracks(geneListInParent: Map<n
         gapData: speciesSyntenyDataArray, 
         masterGeneMap: masterGeneMap,
         masterBlockMap: masterBlockMap,
-        newGenes: newGenes,
       };
     }
     else
@@ -124,7 +110,6 @@ export async function createSyntenicRegionsAndDatatracks(geneListInParent: Map<n
         syntenyRegionSets: syntenyRegionSets, 
         masterGeneMap: masterGeneMap,
         masterBlockMap: masterBlockMap,
-        newGenes: newGenes,
       };
     }
   }
