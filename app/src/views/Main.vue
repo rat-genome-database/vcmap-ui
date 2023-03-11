@@ -207,7 +207,26 @@ watch(() => store.state.detailedBasePairRequest, async () => {
             // TODO: This code is assuming the largest block is loaded first, but that is not
             //   going to always be the case. However, it should work for most situations and
             //   is a reasonable initial implementation.
-            if (gene.block === null) gene.block = targetBlock;
+            if (gene.block === null && targetBlock)
+            {
+              // This gene is new -- assign a Block and calculate backbone positioning
+              gene.block = targetBlock;
+              let blockRatio = Math.abs(targetBlock.backboneStop - targetBlock.backboneStart) / Math.abs(targetBlock.stop - targetBlock.start);
+              if (targetBlock.orientation == '+')
+              {
+                // Forward oriented block
+                // TODO: Some edge cases might not be handled properly with this simplification
+                gene.backboneStart = targetBlock.backboneStart + (gene.start - targetBlock.start) * blockRatio;
+                gene.backboneStop = targetBlock.backboneStart + (gene.stop - targetBlock.start) * blockRatio;
+              }
+              else
+              {
+                // Reverse oriented block
+                // TODO: Some edge cases might not be handled properly with this simplification
+                gene.backboneStart = targetBlock.backboneStart + (targetBlock.stop - gene.stop) * blockRatio;
+                gene.backboneStop = targetBlock.backboneStart + (targetBlock.stop - gene.start) * blockRatio;
+              }
+            }
             targetBlock?.genes.push(gene);
           });
 

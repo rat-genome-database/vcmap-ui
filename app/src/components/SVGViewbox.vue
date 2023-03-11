@@ -63,6 +63,9 @@
     <template v-for="(rectangle, index) in testRects" :key="index">
       <rect :fill="rectangle.elementColor" fill-opacity="0.8" x="340.0" width="10.0" :height="rectangle.posY2 - rectangle.posY1" :y="rectangle.posY1"/>
     </template>
+    <template v-for="(rectangle, index) in testRects2" :key="index">
+      <rect :fill="rectangle.elementColor" fill-opacity="0.8" x="460.0" width="10.0" :height="rectangle.posY2 - rectangle.posY1" :y="rectangle.posY1"/>
+    </template>
 <!--endTEMP-->
     <!-- Title panels -->
     <rect class="panel" x="0" :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.panelTitleHeight" />
@@ -216,6 +219,7 @@ let overviewBackboneSet = ref<BackboneSet>();
 let detailedBackboneSet = ref<BackboneSet>();
 let overviewSyntenySets = ref<SyntenyRegionSet[]>([]);
 let testRects = ref<VCMapSVGEl[]>();
+let testRects2 = ref<VCMapSVGEl[]>();
 let enableProcessingLoadMask = ref<boolean>(false); // Whether or not to show the processing load mask
 let isRendered = ref<boolean>(true); // Whether or not the user is adjusting the detailed panel
 
@@ -239,6 +243,7 @@ const backboneVariantsLoaded = computed(() => {
 const onInspectPressed = () => {
   console.log(props.geneList);
   console.log(testRects.value);
+  console.log(testRects2.value);
 };
 
 async function attachToProgressLoader(storeLoadingActionName: string, func: () => Promise<any>)
@@ -882,63 +887,74 @@ const tempReplace = () => {
   const backboneRegion = store.state.selectedBackboneRegion;
   const viewportStart = backboneRegion?.viewportSelection?.basePairStart;
   const viewportStop = backboneRegion?.viewportSelection?.basePairStop;
+  if (viewportStart == undefined || viewportStop == undefined) return;
 
   console.log(`Looking at (${viewportStart}, ${viewportStop})`);
   // Remove all Rectangles from our special Array
   testRects.value = [];
+  testRects2.value = [];
 
-  // Loop loaded gene data from Main
+  // (Backbone) Loop loaded gene data from Main
   props.geneList.forEach((gene) => {
     //console.log(`Inspecting gene: `, gene);
-
-    if (viewportStart !== undefined && viewportStop !== undefined
-        && gene.speciesName == backboneSpecies?.name && gene.chromosome == chromosome?.chromosome)
+    let start, stop, list:VCMapSVGEl[];
+    if (gene.speciesName == backboneSpecies?.name && gene.chromosome == chromosome?.chromosome)
     {
-      // Create new Rectangle for each gene that should be visible
-      let visible = false;
-      if (gene.start >= viewportStart && gene.start <= viewportStop)
-      {
-        console.debug(`Gene start (${gene.start}) is in viewport`);
-        visible = true;
-      }
-      else if (gene.stop >= viewportStart && gene.stop <= viewportStop)
-      {
-        console.debug(`Gene stop (${gene.stop}) is in viewport`);
-        visible = true;
-      }
-      else if (gene.start < viewportStart && gene.stop > viewportStop)
-      {
-        console.debug(`Gene surrounds viewport (${gene.start}, ${gene.stop})`);
-        visible = true;
-      }
-      else
-      {
-        // console.debug(`Gene is NOT in viewport`);
-      }
-      if (visible)
-      {
-        let newRect = new VCMapSVGEl();
-        const svgLength = PANEL_SVG_STOP - PANEL_SVG_START;
-        const bpVisibleWindowLength = Math.abs(viewportStop - viewportStart);
-        const pixelsToBpRatio = svgLength / bpVisibleWindowLength;
-        console.debug(`Visible: num pixels (${svgLength}), num bp (${bpVisibleWindowLength}) starting at (${viewportStart})`);
-        newRect.posY1 = (gene.start - viewportStart) * pixelsToBpRatio + PANEL_SVG_START;
-        newRect.posY2 = (gene.stop - viewportStart) * pixelsToBpRatio + PANEL_SVG_START;
-        newRect.start = gene.start;
-        newRect.stop = gene.stop;
-        newRect.name = gene.symbol;
+      start = gene.start;
+      stop = gene.stop;
+      list = testRects.value ?? [];
+    }
+    else
+    {
+      start = gene.backboneStart ?? -1;
+      stop = gene.backboneStop ?? -1;
+      list = testRects2.value ?? [];
+    }
+    // Create new Rectangle for each gene that should be visible
+    let visible = false;
+    if (start >= viewportStart && start <= viewportStop)
+    {
+      // console.debug(`Gene start (${start}) is in viewport`);
+      visible = true;
+    }
+    else if (stop >= viewportStart && stop <= viewportStop)
+    {
+      // console.debug(`Gene stop (${stop}) is in viewport`);
+      visible = true;
+    }
+    else if (start < viewportStart && stop > viewportStop)
+    {
+      // console.debug(`Gene surrounds viewport (${start}, ${stop})`);
+      visible = true;
+    }
+    else
+    {
+      // console.debug(`Gene is NOT in viewport`);
+    }
 
-        // Add to our special list (rendered as red rectangles in the template)
-        // NOTE: This proof of concept will always add all new SVG `rect`s to the SVG on each
-        //   call. This is not performant because we should attempt to adjust existing, remove
-        //   those that are now off-screen, and only add new ones that were previously not
-        //   on-screen.
-        //   Sounds like a lot of work, but less DOM manipulation and reactivity might make
-        //   this more performant because there are fewer microtasks generated as side
-        //   effects.
-        //   However, for now this will demonstrate the concepts needed for the reorganization.
-        testRects.value?.push(newRect);
-      }
+    if (visible)
+    {
+      let newRect = new VCMapSVGEl();
+      const svgLength = PANEL_SVG_STOP - PANEL_SVG_START;
+      const bpVisibleWindowLength = Math.abs(viewportStop - viewportStart);
+      const pixelsToBpRatio = svgLength / bpVisibleWindowLength;
+      console.debug(`Visible: num pixels (${svgLength}), num bp (${bpVisibleWindowLength}) starting at (${viewportStart})`);
+      newRect.posY1 = (start - viewportStart) * pixelsToBpRatio + PANEL_SVG_START;
+      newRect.posY2 = (stop - viewportStart) * pixelsToBpRatio + PANEL_SVG_START;
+      newRect.start = start;
+      newRect.stop = stop;
+      newRect.name = gene.symbol;
+
+      // Add to our special list (rendered as red rectangles in the template)
+      // NOTE: This proof of concept will always add all new SVG `rect`s to the SVG on each
+      //   call. This is not performant because we should attempt to adjust existing, remove
+      //   those that are now off-screen, and only add new ones that were previously not
+      //   on-screen.
+      //   Sounds like a lot of work, but less DOM manipulation and reactivity might make
+      //   this more performant because there are fewer microtasks generated as side
+      //   effects.
+      //   However, for now this will demonstrate the concepts needed for the reorganization.
+      list.push(newRect);
     }
   });
 };

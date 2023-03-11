@@ -218,8 +218,8 @@ console.debug(`About to loop over ${regionInfo.length} regions`);
       // NOTE: We might want to instead associate block data with gene data, store data in an array, and pass all gene
       //   data at once for processing in order to avoid multiple passes of gene data for initial processing and then finding orthologs
 console.time("syntenicDataTrackBuilder");
-      const processedGeneInfo = {genomicData: [], orthologLines: [], geneIds: []};
-      //const processedGeneInfo = syntenicDatatrackBuilder(factory, blockGenes, currSyntenicRegion, true, masterGeneMap);
+      // const processedGeneInfo = {genomicData: [], orthologLines: [], geneIds: []};
+      const processedGeneInfo = syntenicDatatrackBuilder(factory, blockGenes, currSyntenicRegion, true, masterGeneMap);
 console.timeEnd("syntenicDataTrackBuilder");
 
       // Get the index for the gene data track set, otherwise default to 0
