@@ -66,6 +66,9 @@
     <template v-for="(rectangle, index) in testRects2" :key="index">
       <rect :fill="rectangle.elementColor" fill-opacity="0.8" x="460.0" width="10.0" :height="rectangle.posY2 - rectangle.posY1" :y="rectangle.posY1"/>
     </template>
+    <template v-for="(rectangle, index) in testRects3" :key="index">
+      <rect :fill="rectangle.elementColor" fill-opacity="0.8" x="435.0" width="5.0" :height="rectangle.posY2 - rectangle.posY1" :y="rectangle.posY1"/>
+    </template>
 <!--endTEMP-->
     <!-- Title panels -->
     <rect class="panel" x="0" :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.panelTitleHeight" />
@@ -228,6 +231,7 @@ let detailedBackboneSet = ref<BackboneSet>();
 let overviewSyntenySets = ref<SyntenyRegionSet[]>([]);
 let testRects = ref<VCMapSVGEl[]>();
 let testRects2 = ref<VCMapSVGEl[]>();
+let testRects3 = ref<VCMapSVGEl[]>();
 let enableProcessingLoadMask = ref<boolean>(false); // Whether or not to show the processing load mask
 let isRendered = ref<boolean>(true); // Whether or not the user is adjusting the detailed panel
 
@@ -976,6 +980,55 @@ const tempReplace = () => {
       //   However, for now this will demonstrate the concepts needed for the reorganization.
       list.push(newRect);
     }
+  });
+
+  // And Blocks
+  testRects3.value = [];
+  props.syntenyTree.forEach((blocks, mapKey) => {
+    console.log(`Processing mapKey ${mapKey}`);
+    blocks.forEach((block) => {
+      if (block.chainLevel == 1)
+      {
+        let visible = false;
+        if (block.backboneStart >= viewportStart && block.backboneStart <= viewportStop)
+        {
+          // console.debug(`Block start (${start}) is in viewport`);
+          visible = true;
+        }
+        else if (block.backboneStop >= viewportStart && block.backboneStop <= viewportStop)
+        {
+          // console.debug(`Block stop (${stop}) is in viewport`);
+          visible = true;
+        }
+        else if (block.backboneStart < viewportStart && block.backboneStop > viewportStop)
+        {
+          // console.debug(`Block surrounds viewport (${start}, ${stop})`);
+          visible = true;
+        }
+        else
+        {
+          // console.debug(`Block is NOT in viewport`);
+        }
+        if (visible)
+        {
+          let newRect = new VCMapSVGEl();
+          const svgLength = PANEL_SVG_STOP - PANEL_SVG_START;
+          const bpVisibleWindowLength = Math.abs(viewportStop - viewportStart);
+          const pixelsToBpRatio = svgLength / bpVisibleWindowLength;
+          // console.debug(`Visible: num pixels (${svgLength}), num bp (${bpVisibleWindowLength}) starting at (${viewportStart})`);
+          newRect.posY1 = (block.backboneStart - viewportStart) * pixelsToBpRatio + PANEL_SVG_START;
+          newRect.posY2 = (block.backboneStop - viewportStart) * pixelsToBpRatio + PANEL_SVG_START;
+          newRect.start = block.backboneStart;
+          newRect.stop = block.backboneStop;
+
+          testRects3.value?.push(newRect);
+        }
+      }
+      // else if (block.chainLevel == 2)
+      // {
+      //
+      // }
+    });
   });
 };
 
