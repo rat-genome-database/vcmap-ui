@@ -30,6 +30,9 @@ import router from "@/router";
 import GeneApi from "@/api/GeneApi";
 import {useLogger} from "vue-logger-plugin";
 
+// TODO: Can we figure out a better way to handle blocks with a high chainlevel?
+const MAX_CHAINLEVEL = 2;
+
 const store = useStore(key);
 const $log = useLogger();
 
@@ -122,7 +125,9 @@ onMounted(async () => {
   processSynteny(speciesSyntenyDataArray);
 });
 
-// Watch for requested navigation operations (zoom in/out, navigate up/down stream)
+/**
+ * Watch for requested navigation operations (zoom in/out, navigate up/down stream).
+ */
 watch(() => store.state.detailedBasePairRequest, async () => {
   $log.debug('Detailed Base Pair range change request detected.');
 
@@ -159,6 +164,7 @@ watch(() => store.state.detailedBasePairRequest, async () => {
 
 /**
  * Process a synteny block response (with genes, gaps, and orthologs) from the API.
+ * TODO: We might need to control the number of chainLevel >= 2 we add, these are excessive...
  */
 // TODO: Handle orthologs
 function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefined)
@@ -189,6 +195,9 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
     // NOTE: If we can afford to do it, might make sense to change our SyntenyApi to build
     //   our block structure, so we can more quickly identify new data and add to our tree.
     speciesResponse.regionData.forEach((blockData) => {
+      //
+      if (blockData.block.chainLevel > MAX_CHAINLEVEL) return;
+
       let targetBlock: Block | null = null;
 
       let blockSearch = knownSpeciesBlocks.filter((b) => {

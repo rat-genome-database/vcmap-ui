@@ -300,11 +300,21 @@ onMounted(async () => {
   }
 });
 
+/**
+ * Have a progress loader for the Details Panel update process.
+ */
 watch([() => store.state.detailedBasePairRange, allowDetailedPanelProcessing], () => {
   if (allowDetailedPanelProcessing.value)
   {
     attachToProgressLoader('setIsDetailedPanelUpdating', updateDetailsPanel);
   }
+});
+
+/**
+ * Ensure the load mask occurs during the Main API calls
+ */
+watch(() => store.state.detailedBasePairRequest, async () => {
+  if (store.state.detailedBasePairRequest) enableProcessingLoadMask.value = true;
 });
 
 const arePanelsLoading = computed(() => {
