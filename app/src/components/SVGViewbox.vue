@@ -157,6 +157,12 @@
     @click="handleBackboneVariantClick"
   />
   -->
+  <h2>Blocks</h2>
+  <template v-for="(mapKey, index) in props.syntenyTree.keys()" :key="index">
+    <p>{{mapKey}}: {{ props.syntenyTree.get(mapKey).length }} </p>
+  </template>
+  <h2>Genes</h2>
+  <p>{{ props.geneList.size }}</p>
 </template>
 
 <script setup lang="ts">
@@ -195,6 +201,7 @@ import { createQtlDatatracks } from '@/utils/QtlBuilder';
 import { createVariantDatatracks } from '@/utils/VariantBuilder';
 import { GenomicSectionFactory } from '@/models/GenomicSectionFactory';
 import {VCMapSVGEl} from "@/models/VCMapSVGElement";
+import Block from "@/models/Block";
 
 const LOAD_BY_GENE_VISIBLE_SIZE_MULTIPLIER = 6;
 
@@ -208,6 +215,7 @@ const { startOverviewSelectionY, stopOverviewSelectionY, updateOverviewSelection
 interface Props
 {
   geneList: Map<number, Gene>;
+  syntenyTree: Map<number, Block[]>;
 }
 
 const props = defineProps<Props>();
@@ -241,7 +249,9 @@ const backboneVariantsLoaded = computed(() => {
 });
 
 const onInspectPressed = () => {
+  console.log('Inspect pressed from SVG');
   console.log(props.geneList);
+  console.log(props.syntenyTree);
   console.log(testRects.value);
   console.log(testRects2.value);
 };
@@ -938,7 +948,7 @@ const tempReplace = () => {
       const svgLength = PANEL_SVG_STOP - PANEL_SVG_START;
       const bpVisibleWindowLength = Math.abs(viewportStop - viewportStart);
       const pixelsToBpRatio = svgLength / bpVisibleWindowLength;
-      console.debug(`Visible: num pixels (${svgLength}), num bp (${bpVisibleWindowLength}) starting at (${viewportStart})`);
+      // console.debug(`Visible: num pixels (${svgLength}), num bp (${bpVisibleWindowLength}) starting at (${viewportStart})`);
       newRect.posY1 = (start - viewportStart) * pixelsToBpRatio + PANEL_SVG_START;
       newRect.posY2 = (stop - viewportStart) * pixelsToBpRatio + PANEL_SVG_START;
       newRect.start = start;

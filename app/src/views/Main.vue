@@ -6,10 +6,10 @@
   />
   <div class="grid">
     <div class="col-9">
-      <SVGViewbox :geneList="geneList"/>
+      <SVGViewbox :geneList="geneList" :synteny-tree="syntenyTree"/>
     </div>
     <div class="col-3">
-      <SelectedDataPanel :selected-data="store.state.selectedData" :geneList="geneList"/>
+      <SelectedDataPanel :selected-data="store.state.selectedData" :gene-list="geneList"/>
     </div>
   </div>
 </template>
@@ -23,13 +23,16 @@ import { key } from '@/store';
 import {onMounted, ref, shallowRef, triggerRef, watch} from 'vue';
 import Gene from "@/models/Gene";
 import Block from "@/models/Block";
-import SyntenyApi from "@/api/SyntenyApi";
+import SyntenyApi, {SpeciesSyntenyData} from "@/api/SyntenyApi";
 import { PANEL_SVG_START, PANEL_SVG_STOP} from '@/utils/SVGConstants';
 import Chromosome from "@/models/Chromosome";
 import router from "@/router";
 import GeneApi from "@/api/GeneApi";
+import {useLogger} from "vue-logger-plugin";
 
 const store = useStore(key);
+const $log = useLogger();
+
 
 // Our synteny tree keyed by MapId
 // TODO: Consider adding a map for mapKey -> Species
@@ -71,7 +74,7 @@ const onInspectPressed = () => {
  * (Lifecycle hook)
  */
 onMounted(async () => {
-  console.debug('Creating memory models for our Comparative Map view');
+  $log.debug('Creating memory models for our Comparative Map view');
 
   // Clear out old structures
   // TODO: Ensure circular references are not going to cause memory leaks
@@ -82,7 +85,7 @@ onMounted(async () => {
   if (!store.state.chromosome || !store.state.species)
   {
     // FIXME: Improve this UX / notify the user / etc
-    console.error('Cannot load Main -- no chromosome in state');
+    $log.error('Cannot load Main -- no chromosome in state');
     await router.push('/');
     return;
   }
@@ -103,12 +106,25 @@ onMounted(async () => {
   });
 
   // Preload off-backbone large blocks and genes
-  // TODO: wip
+  let threshold = Math.round((store.state.chromosome.seqLength) / (PANEL_SVG_STOP - PANEL_SVG_START) / 4
+  );
+  const speciesSyntenyDataArray = await SyntenyApi.getSyntenicRegions({
+    backboneChromosome: store.state.chromosome,
+    start: 0,
+    stop: store.state.chromosome.seqLength,
+    optional: {
+      includeGenes: true,
+      includeOrthologs: true,
+      threshold: threshold,
+    },
+    comparativeSpecies: store.state.comparativeSpecies,
+  });
+  processSynteny(speciesSyntenyDataArray);
 });
 
 // Watch for requested navigation operations (zoom in/out, navigate up/down stream)
 watch(() => store.state.detailedBasePairRequest, async () => {
-  console.log('Detailed Base Pair range change request detected.');
+  $log.debug('Detailed Base Pair range change request detected.');
 
   // Grab blocks and genes with using a threshold of approximately .25 of a pixel
   if (store.state.detailedBasePairRequest && store.state.chromosome)
@@ -123,121 +139,15 @@ watch(() => store.state.detailedBasePairRequest, async () => {
       stop: store.state.detailedBasePairRange.stop,
       optional: {
         includeGenes: true,
+        includeOrthologs: true,
         threshold: threshold,
       },
       comparativeSpecies: store.state.comparativeSpecies,
     });
 
     // Process response
-    // TODO: Handle orthologs
-    if (speciesSyntenyDataArray)
-    {
-      let tree:Map<number, Block[]> = syntenyTree.value;
-      let backboneChr = store.state.chromosome; // TODO: This is proxied, not sure why? Also not sure it matters...
+    processSynteny(speciesSyntenyDataArray);
 
-      // For each off-backbone species in our response, loop the region data
-      speciesSyntenyDataArray.forEach((speciesResponse) => {
-        // Check if we need to create a new structure for this mapKey (species)
-        if (!tree.has(speciesResponse.mapKey)) tree.set(speciesResponse.mapKey, []);
-        let knownSpeciesBlocks = tree.get(speciesResponse.mapKey) ?? [];
-
-        // For each region (block), compare to *all* our existing structures
-        // NOTE: If we can afford to do it, might make sense to change our SyntenyApi to build
-        //   our block structure, so we can more quickly identify new data and add to our tree.
-        speciesResponse.regionData.forEach((blockData) => {
-          let targetBlock: Block | null = null;
-
-          let blockSearch = knownSpeciesBlocks.filter((b) => {
-            // NOTE: we consider two blocks the same if the "chainLevel", "backboneStart", and "backboneStop" are identical
-            //   There are potentially situations where start & stop are identical but this duplicated off-backbone
-            //   syntenic region appears in multiple different places on the same backbone.
-            // TODO: In these cases we need to handle our gene references differently (by grabbing from
-            //  our existing dataset instead of using the new objects from the SyntenyApi)
-            return (b.chainLevel == blockData.block.chainLevel &&
-                b.backboneStart == blockData.block.backboneStart && b.backboneStop == blockData.block.backboneStop);
-          });
-
-          if (blockSearch.length == 0)
-          {
-            // Add a newly discovered block
-            console.debug(`Found new Synteny block for ${speciesResponse.speciesName} (chr ${blockData.block.chromosome})`);
-            let newBlock = new Block({
-              backbone: backboneChr,
-              chromosome: new Chromosome({mapKey: blockData.block.mapKey, chromosome: blockData.block.chromosome}),
-              chainLevel: blockData.block.chainLevel,
-              orientation: blockData.block.orientation,
-              backboneStart: blockData.block.backboneStart,
-              backboneStop: blockData.block.backboneStop,
-              start: blockData.block.start,
-              stop: blockData.block.stop,
-            });
-            // Gaps (add ALL)
-            blockData.gaps.forEach((gapData) => {
-              newBlock.gaps.push({ start: gapData.start, stop: gapData.stop });
-            });
-            knownSpeciesBlocks.push(newBlock);
-            targetBlock = newBlock;
-          }
-          else if (blockSearch.length == 1)
-          {
-            // Keep the reference to this block from our tree
-            targetBlock = blockSearch[0];
-            blockData.gaps.forEach((gapData) => {
-              // Inspect and add any new gaps for this block
-              if (targetBlock?.gaps.filter((gap) => {
-                return gapData.start === gap?.start && gapData.stop === gap?.stop;
-              }).length == 0)
-                targetBlock.gaps.push(gapData);
-            });
-          }
-          else
-          {
-            // Shouldn't ever happen (TODO: warn the user)
-            console.error('OH NO! Discovered duplicate blocks in our tree!');
-          }
-
-          // Handle genes (we need to inspect all of them even in the case of a new block)
-          blockData.genes.forEach((geneData) => {
-            // Use any existing genes if we have already loaded one
-            let gene = geneList.value.get(geneData.rgdId) ?? geneData;
-            // NOTE: It is possible for a gene from a new block to exist on another block
-            //   This situation comes up often when there are small blocks that a representing
-            //   a region of a chromosome that is already part of a larger block we have loaded.
-            //   In that case, we consider want to consider the larger block the "primary" block.
-            // TODO: This code is assuming the largest block is loaded first, but that is not
-            //   going to always be the case. However, it should work for most situations and
-            //   is a reasonable initial implementation.
-            if (gene.block === null && targetBlock)
-            {
-              // This gene is new -- assign a Block and calculate backbone positioning
-              gene.block = targetBlock;
-              let blockRatio = Math.abs(targetBlock.backboneStop - targetBlock.backboneStart) / Math.abs(targetBlock.stop - targetBlock.start);
-              if (targetBlock.orientation == '+')
-              {
-                // Forward oriented block
-                // TODO: Some edge cases might not be handled properly with this simplification
-                gene.backboneStart = targetBlock.backboneStart + (gene.start - targetBlock.start) * blockRatio;
-                gene.backboneStop = targetBlock.backboneStart + (gene.stop - targetBlock.start) * blockRatio;
-              }
-              else
-              {
-                // Reverse oriented block
-                // TODO: Some edge cases might not be handled properly with this simplification
-                gene.backboneStart = targetBlock.backboneStart + (targetBlock.stop - gene.stop) * blockRatio;
-                gene.backboneStop = targetBlock.backboneStart + (targetBlock.stop - gene.start) * blockRatio;
-              }
-            }
-            targetBlock?.genes.push(gene);
-          });
-
-          // Add any new genes to our geneList (cross-referencing our Blocks)
-          targetBlock?.genes.forEach((gene) => {
-            if (gene && !geneList.value.get(gene.rgdId)) geneList.value.set(gene.rgdId, gene);
-          });
-        });
-
-      });
-    }
 
     // Data processing done, ready to complete request
     store.dispatch('setDetailedBasePairRange', {
@@ -246,4 +156,130 @@ watch(() => store.state.detailedBasePairRequest, async () => {
     store.dispatch('setDetailedBasePairRequest', null);
   }
 });
+
+/**
+ * Process a synteny block response (with genes, gaps, and orthologs) from the API.
+ */
+// TODO: Handle orthologs
+function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefined)
+{
+  // Make sure we have something to do
+  if (!speciesSyntenyDataArray)
+  {
+    $log.debug('Process Synteny called without an array of SpeciesSyntenyData (check API response)')
+    return;
+  }
+  if (!store.state.chromosome)
+  {
+    $log.error('Process Synteny called without a Chromosome on the state');
+    return;
+  }
+
+  let tree:Map<number, Block[]> = syntenyTree.value;
+  let backboneChr = store.state.chromosome; // TODO: This is proxied, not sure why? Also not sure it matters...
+  $log.debug(`Processing ${speciesSyntenyDataArray.length} blocks of Synteny Data...`);
+
+  // For each off-backbone species in our response, loop the region data
+  speciesSyntenyDataArray.forEach((speciesResponse) => {
+    // Check if we need to create a new structure for this mapKey (species)
+    if (!tree.has(speciesResponse.mapKey)) tree.set(speciesResponse.mapKey, []);
+    let knownSpeciesBlocks = tree.get(speciesResponse.mapKey) ?? [];
+
+    // For each region (block), compare to *all* our existing structures
+    // NOTE: If we can afford to do it, might make sense to change our SyntenyApi to build
+    //   our block structure, so we can more quickly identify new data and add to our tree.
+    speciesResponse.regionData.forEach((blockData) => {
+      let targetBlock: Block | null = null;
+
+      let blockSearch = knownSpeciesBlocks.filter((b) => {
+        // NOTE: we consider two blocks the same if the "chainLevel", "backboneStart", and "backboneStop" are identical
+        //   There are potentially situations where start & stop are identical but this duplicated off-backbone
+        //   syntenic region appears in multiple different places on the same backbone.
+        // TODO: In these cases we need to handle our gene references differently (by grabbing from
+        //  our existing dataset instead of using the new objects from the SyntenyApi)
+        return (b.chainLevel == blockData.block.chainLevel &&
+            b.backboneStart == blockData.block.backboneStart && b.backboneStop == blockData.block.backboneStop);
+      });
+
+      if (blockSearch.length == 0)
+      {
+        // Add a newly discovered block
+        $log.debug(`Found new Synteny block for ${speciesResponse.speciesName} (chr ${blockData.block.chromosome})`);
+        let newBlock = new Block({
+          backbone: backboneChr,
+          chromosome: new Chromosome({mapKey: blockData.block.mapKey, chromosome: blockData.block.chromosome}),
+          chainLevel: blockData.block.chainLevel,
+          orientation: blockData.block.orientation,
+          backboneStart: blockData.block.backboneStart,
+          backboneStop: blockData.block.backboneStop,
+          start: blockData.block.start,
+          stop: blockData.block.stop,
+        });
+        // Gaps (add ALL)
+        blockData.gaps.forEach((gapData) => {
+          newBlock.gaps.push({ start: gapData.start, stop: gapData.stop });
+        });
+        knownSpeciesBlocks.push(newBlock);
+        targetBlock = newBlock;
+      }
+      else if (blockSearch.length == 1)
+      {
+        // Keep the reference to this block from our tree
+        targetBlock = blockSearch[0];
+        blockData.gaps.forEach((gapData) => {
+          // Inspect and add any new gaps for this block
+          if (targetBlock?.gaps.filter((gap) => {
+            return gapData.start === gap?.start && gapData.stop === gap?.stop;
+          }).length == 0)
+            targetBlock.gaps.push(gapData);
+        });
+      }
+      else
+      {
+        // Shouldn't ever happen (TODO: warn the user)
+        $log.error('OH NO! Discovered duplicate blocks in our tree!');
+      }
+
+      // Handle genes (we need to inspect all of them even in the case of a new block)
+      blockData.genes.forEach((geneData) => {
+        // Use any existing genes if we have already loaded one
+        let gene = geneList.value.get(geneData.rgdId) ?? geneData;
+        // NOTE: It is possible for a gene from a new block to exist on another block
+        //   This situation comes up often when there are small blocks that a representing
+        //   a region of a chromosome that is already part of a larger block we have loaded.
+        //   In that case, we consider want to consider the larger block the "primary" block.
+        // TODO: This code is assuming the largest block is loaded first, but that is not
+        //   going to always be the case. However, it should work for most situations and
+        //   is a reasonable initial implementation.
+        if (gene.block === null && targetBlock)
+        {
+          // This gene is new -- assign a Block and calculate backbone positioning
+          gene.block = targetBlock;
+          let blockRatio = Math.abs(targetBlock.backboneStop - targetBlock.backboneStart) / Math.abs(targetBlock.stop - targetBlock.start);
+          if (targetBlock.orientation == '+')
+          {
+            // Forward oriented block
+            // TODO: Some edge cases might not be handled properly with this simplification
+            gene.backboneStart = targetBlock.backboneStart + (gene.start - targetBlock.start) * blockRatio;
+            gene.backboneStop = targetBlock.backboneStart + (gene.stop - targetBlock.start) * blockRatio;
+          }
+          else
+          {
+            // Reverse oriented block
+            // TODO: Some edge cases might not be handled properly with this simplification
+            gene.backboneStart = targetBlock.backboneStart + (targetBlock.stop - gene.stop) * blockRatio;
+            gene.backboneStop = targetBlock.backboneStart + (targetBlock.stop - gene.start) * blockRatio;
+          }
+        }
+        targetBlock?.genes.push(gene);
+      });
+
+      // Add any new genes to our geneList (cross-referencing our Blocks)
+      targetBlock?.genes.forEach((gene) => {
+        if (gene && !geneList.value.get(gene.rgdId)) geneList.value.set(gene.rgdId, gene);
+      });
+    });
+
+  });
+}
 </script>
