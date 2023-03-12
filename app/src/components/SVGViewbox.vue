@@ -61,13 +61,28 @@
 
 <!--TEMP-->
     <template v-for="(rectangle, index) in testRects" :key="index">
-      <rect :fill="rectangle.elementColor" fill-opacity="0.8" x="340.0" width="10.0" :height="rectangle.posY2 - rectangle.posY1" :y="rectangle.posY1"/>
+      <rect :fill="rectangle.elementColor" fill-opacity="0.8" x="340.0" width="10.0"
+            :height="rectangle.posY2 - rectangle.posY1" :y="rectangle.posY1"
+            :data-name="rectangle.name"
+      />
     </template>
     <template v-for="(rectangle, index) in testRects2" :key="index">
-      <rect :fill="rectangle.elementColor" fill-opacity="0.8" x="460.0" width="10.0" :height="rectangle.posY2 - rectangle.posY1" :y="rectangle.posY1"/>
+      <rect :fill="rectangle.elementColor" fill-opacity="0.8" x="460.0" width="10.0"
+            :height="rectangle.posY2 - rectangle.posY1" :y="rectangle.posY1"
+            :data-name="rectangle.name"
+      />
     </template>
     <template v-for="(rectangle, index) in testRects3" :key="index">
-      <rect :fill="rectangle.elementColor" fill-opacity="0.8" x="435.0" width="5.0" :height="rectangle.posY2 - rectangle.posY1" :y="rectangle.posY1"/>
+      <rect :fill="rectangle.elementColor" fill-opacity="0.8" x="435.0" width="5.0"
+            :height="rectangle.posY2 - rectangle.posY1" :y="rectangle.posY1"
+            :data-name="rectangle.name"
+      />
+    </template>
+    <template v-for="(rectangle, index) in testRects4" :key="index">
+      <rect :fill="rectangle.elementColor" fill-opacity="1.0" x="437.5" width="1.0"
+            :height="rectangle.posY2 - rectangle.posY1" :y="rectangle.posY1"
+            :data-name="rectangle.name"
+      />
     </template>
 <!--endTEMP-->
     <!-- Title panels -->
@@ -232,6 +247,7 @@ let overviewSyntenySets = ref<SyntenyRegionSet[]>([]);
 let testRects = ref<VCMapSVGEl[]>();
 let testRects2 = ref<VCMapSVGEl[]>();
 let testRects3 = ref<VCMapSVGEl[]>();
+let testRects4 = ref<VCMapSVGEl[]>();
 let enableProcessingLoadMask = ref<boolean>(false); // Whether or not to show the processing load mask
 let isRendered = ref<boolean>(true); // Whether or not the user is adjusting the detailed panel
 
@@ -251,14 +267,6 @@ const orthologLines = computed(() => {
 const backboneVariantsLoaded = computed(() => {
   return detailedBackboneSet.value?.datatrackSets.some((set) => set.type === 'variant');
 });
-
-const onInspectPressed = () => {
-  console.log('Inspect pressed from SVG');
-  console.log(props.geneList);
-  console.log(props.syntenyTree);
-  console.log(testRects.value);
-  console.log(testRects2.value);
-};
 
 async function attachToProgressLoader(storeLoadingActionName: string, func: () => Promise<any>)
 {
@@ -453,7 +461,7 @@ const updateDetailsPanel = async () => {
   tempReplace();
 
 // eslint-disable-next-line no-constant-condition
-// if(true) return;
+// if (true) { enableProcessingLoadMask.value = false; return; }
 
   const detailedUpdateStart = Date.now();
   enableProcessingLoadMask.value = true;
@@ -934,29 +942,9 @@ const tempReplace = () => {
       stop = gene.backboneStop ?? -1;
       list = testRects2.value ?? [];
     }
-    // Create new Rectangle for each gene that should be visible
-    let visible = false;
-    if (start >= viewportStart && start <= viewportStop)
-    {
-      // console.debug(`Gene start (${start}) is in viewport`);
-      visible = true;
-    }
-    else if (stop >= viewportStart && stop <= viewportStop)
-    {
-      // console.debug(`Gene stop (${stop}) is in viewport`);
-      visible = true;
-    }
-    else if (start < viewportStart && stop > viewportStop)
-    {
-      // console.debug(`Gene surrounds viewport (${start}, ${stop})`);
-      visible = true;
-    }
-    else
-    {
-      // console.debug(`Gene is NOT in viewport`);
-    }
 
-    if (visible)
+    // Create new Rectangle for each gene that should be visible
+    if (isBpRangeVisible(start, stop))
     {
       let newRect = new VCMapSVGEl();
       const svgLength = PANEL_SVG_STOP - PANEL_SVG_START;
@@ -983,33 +971,14 @@ const tempReplace = () => {
   });
 
   // And Blocks
-  testRects3.value = [];
+  testRects3.value = []; // Gapless blocks
+  testRects4.value = []; // Gaps
   props.syntenyTree.forEach((blocks, mapKey) => {
     console.log(`Processing mapKey ${mapKey}`);
     blocks.forEach((block) => {
       if (block.chainLevel == 1)
       {
-        let visible = false;
-        if (block.backboneStart >= viewportStart && block.backboneStart <= viewportStop)
-        {
-          // console.debug(`Block start (${start}) is in viewport`);
-          visible = true;
-        }
-        else if (block.backboneStop >= viewportStart && block.backboneStop <= viewportStop)
-        {
-          // console.debug(`Block stop (${stop}) is in viewport`);
-          visible = true;
-        }
-        else if (block.backboneStart < viewportStart && block.backboneStop > viewportStop)
-        {
-          // console.debug(`Block surrounds viewport (${start}, ${stop})`);
-          visible = true;
-        }
-        else
-        {
-          // console.debug(`Block is NOT in viewport`);
-        }
-        if (visible)
+        if (isBpRangeVisible(block.backboneStart, block.backboneStop))
         {
           let newRect = new VCMapSVGEl();
           const svgLength = PANEL_SVG_STOP - PANEL_SVG_START;
@@ -1021,6 +990,45 @@ const tempReplace = () => {
           newRect.start = block.backboneStart;
           newRect.stop = block.backboneStop;
 
+          // Now handle gaps
+          // TODO: Gaps should actually adjust the ratio as they would add to the aligned bp for the block...
+          let blockRatio = Math.abs(block.backboneStop - block.backboneStart) /
+              Math.abs(block.stop - block.start);
+          if (block.orientation == '+')
+          {
+            for (let i = 0, len = block.gaps.length; i < len; i++)
+            {
+              let gapStart = block.backboneStart + (block.gaps[i].start - block.start) * blockRatio;
+              let gapStop = block.backboneStart + (block.gaps[i].stop - block.start) * blockRatio;
+              if (gapStop > viewportStop) break;
+              if (isBpRangeVisible(gapStart, gapStop))
+              {
+                let gapRect = new VCMapSVGEl();
+                gapRect.elementColor = 'black';
+                gapRect.posY1 = (gapStart - viewportStart) * pixelsToBpRatio + PANEL_SVG_START;
+                gapRect.posY2 = (gapStop - viewportStart) * pixelsToBpRatio + PANEL_SVG_START;
+                testRects4.value?.push(gapRect);
+              }
+            }
+          }
+          else if (block.orientation == '-')
+          {
+            for (let i = block.gaps.length - 1; i >= 0; i--)
+            {
+              let gapStart = block.backboneStart + (block.stop - block.gaps[i].stop) * blockRatio;
+              let gapStop = block.backboneStart + (block.stop - block.gaps[i].start) * blockRatio;
+              if (gapStop > viewportStop) break;
+              if (isBpRangeVisible(gapStart, gapStop))
+              {
+                let gapRect = new VCMapSVGEl();
+                gapRect.elementColor = 'black';
+                gapRect.posY1 = (gapStart - viewportStart) * pixelsToBpRatio + PANEL_SVG_START;
+                gapRect.posY2 = (gapStop - viewportStart) * pixelsToBpRatio + PANEL_SVG_START;
+                testRects4.value?.push(gapRect);
+              }
+            }
+          }
+
           testRects3.value?.push(newRect);
         }
       }
@@ -1030,6 +1038,27 @@ const tempReplace = () => {
       // }
     });
   });
+};
+
+/**
+ * Helper function to determine if a Range of bp position in the Backbone
+ * is visible in any part of the viewport. There are three possibilities:
+ *   1) Start is inside the viewport
+ *   2) Stop is inside the viewport
+ *   3) Start & Stop surround the viewport
+ */
+const isBpRangeVisible = (start: number, stop: number) => {
+  const backboneRegion = store.state.selectedBackboneRegion;
+  const viewportStart = backboneRegion?.viewportSelection?.basePairStart ?? -1;
+  const viewportStop = backboneRegion?.viewportSelection?.basePairStop ?? -1;
+  if (start >= viewportStart && start <= viewportStop)
+    return true;
+  else if (stop >= viewportStart && stop <= viewportStop)
+    return true;
+  else if (start < viewportStart && stop > viewportStop)
+    return true;
+
+  return false;
 };
 
 // TODO: temp ignore here, should remove once this method is actively being used

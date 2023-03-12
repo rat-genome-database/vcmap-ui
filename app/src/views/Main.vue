@@ -22,7 +22,7 @@ import { useStore } from 'vuex';
 import { key } from '@/store';
 import {onMounted, ref, shallowRef, triggerRef, watch} from 'vue';
 import Gene from "@/models/Gene";
-import Block from "@/models/Block";
+import Block, {Gap} from "@/models/Block";
 import SyntenyApi, {SpeciesSyntenyData} from "@/api/SyntenyApi";
 import { PANEL_SVG_START, PANEL_SVG_STOP} from '@/utils/SVGConstants';
 import Chromosome from "@/models/Chromosome";
@@ -172,7 +172,7 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
   // Make sure we have something to do
   if (!speciesSyntenyDataArray)
   {
-    $log.debug('Process Synteny called without an array of SpeciesSyntenyData (check API response)')
+    $log.debug('Process Synteny called without an array of SpeciesSyntenyData (check API response)');
     return;
   }
   if (!store.state.chromosome)
@@ -212,7 +212,7 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
 
       if (blockSearch.length == 0)
       {
-        // Add a newly discovered block
+        // Create a newly discovered block
         $log.debug(`Found new Synteny block for ${speciesResponse.speciesName} (chr ${blockData.block.chromosome})`);
         let newBlock = new Block({
           backbone: backboneChr,
@@ -224,24 +224,36 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
           start: blockData.block.start,
           stop: blockData.block.stop,
         });
+
+        console.time("AddGapsNewBlock");
         // Gaps (add ALL)
-        blockData.gaps.forEach((gapData) => {
-          newBlock.gaps.push({ start: gapData.start, stop: gapData.stop });
-        });
+        // NOTE: Avoiding callback based forEach here for performance reasons
+        let gaps: Gap[] = [];
+        for (let i = 0, len = blockData.gaps.length; i < len; i++)
+        {
+          gaps.push(new Gap({start: blockData.gaps[i].start, stop: blockData.gaps[i].stop}));
+        }
+        newBlock.addGaps(gaps);
+        console.timeEnd("AddGapsNewBlock");
+
         knownSpeciesBlocks.push(newBlock);
         targetBlock = newBlock;
       }
       else if (blockSearch.length == 1)
       {
+        // Use an existing block
         // Keep the reference to this block from our tree
         targetBlock = blockSearch[0];
-        blockData.gaps.forEach((gapData) => {
-          // Inspect and add any new gaps for this block
-          if (targetBlock?.gaps.filter((gap) => {
-            return gapData.start === gap?.start && gapData.stop === gap?.stop;
-          }).length == 0)
-            targetBlock.gaps.push(gapData);
-        });
+
+        console.time("AddGapsExistingBlock");
+        // NOTE: Avoiding callback based forEach here for performance reasons
+        let gaps: Gap[] = [];
+        for (let i = 0, len = blockData.gaps.length; i < len; i++)
+        {
+          gaps.push(new Gap({start: blockData.gaps[i].start, stop: blockData.gaps[i].stop}));
+        }
+        targetBlock?.addGaps(gaps);
+        console.timeEnd("AddGapsExistingBlock");
       }
       else
       {
@@ -279,8 +291,14 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
             gene.backboneStart = targetBlock.backboneStart + (targetBlock.stop - gene.stop) * blockRatio;
             gene.backboneStop = targetBlock.backboneStart + (targetBlock.stop - gene.start) * blockRatio;
           }
+
+          // Ensure genes don't extend beyond the range of our block
+          // NOTE: This is very important for small block sections near break points
+          if (gene.backboneStart < targetBlock.backboneStart) gene.backboneStart = targetBlock.backboneStart;
+          if (gene.backboneStop > targetBlock.backboneStop) gene.backboneStop = targetBlock.backboneStop;
         }
         targetBlock?.genes.push(gene);
+        // TODO: sort OR use addGene() approach here
       });
 
       // Add any new genes to our geneList (cross-referencing our Blocks)
