@@ -223,6 +223,7 @@ import Block from "@/models/Block";
 // TODO: Unneeded? (Need to rework how to "Load by Gene")
 import { getNewSelectedData } from '@/utils/DataPanelHelpers';
 const LOAD_BY_GENE_VISIBLE_SIZE_MULTIPLIER = 6;
+const NAV_SHIFT_PERCENT = 0.333;
 
 const store = useStore(key);
 const $log = useLogger();
@@ -460,7 +461,6 @@ const updateDetailsPanel = async () => {
   tempReplace();
 // eslint-disable-next-line no-constant-condition
 // if (true) return;
-
   const originalSelectedBackboneRegion: BackboneSelection | null = store.state.selectedBackboneRegion;
   if (originalSelectedBackboneRegion == null)
   {
@@ -775,15 +775,23 @@ const navigateUp = () => {
   const selectedRegion = store.state.selectedBackboneRegion;
 
   if (isNavigationUpDisabled.value || selectedRegion?.viewportSelection == null) return;
-  const chromosome = selectedRegion.chromosome;
+  // const chromosome = selectedRegion.chromosome;
 
-  if (selectedRegion && selectedRegion.bufferZoneSelection != null && selectedRegion.viewportSelection.length != chromosome.seqLength)
+  if (store.state.detailedBasePairRange)
   {
-    const currBufferzone = new SelectedRegion(selectedRegion.bufferZoneSelection.svgYPoint, selectedRegion.bufferZoneSelection.svgHeight, selectedRegion.bufferZoneSelection.basePairStart, selectedRegion.bufferZoneSelection.basePairStop);
-    // Adjust the inner selection on the selected region
-    selectedRegion.moveInnerSelectionUp(store.state.overviewBasePairToHeightRatio);
-    adjustDetailedVisibleSetsBasedOnNav(currBufferzone, 'up');
+    const currRange = store.state.detailedBasePairRange;
+    let adjust = NAV_SHIFT_PERCENT * (currRange.stop - currRange.start);
+    if (currRange.start < adjust) adjust = currRange.start;
+    store.dispatch('setDetailedBasePairRange', { start: currRange.start - adjust, stop: currRange.stop - adjust });
   }
+
+  // if (selectedRegion && selectedRegion.bufferZoneSelection != null && selectedRegion.viewportSelection.length != chromosome.seqLength)
+  // {
+  //   const currBufferzone = new SelectedRegion(selectedRegion.bufferZoneSelection.svgYPoint, selectedRegion.bufferZoneSelection.svgHeight, selectedRegion.bufferZoneSelection.basePairStart, selectedRegion.bufferZoneSelection.basePairStop);
+  //   // Adjust the inner selection on the selected region
+  //   selectedRegion.moveInnerSelectionUp(store.state.overviewBasePairToHeightRatio);
+  //   adjustDetailedVisibleSetsBasedOnNav(currBufferzone, 'up');
+  // }
 };
 
 const navigateDown = () => {
@@ -792,13 +800,21 @@ const navigateDown = () => {
   if (isNavigationDownDisabled.value || selectedRegion?.viewportSelection == null) return;
   const chromosome = selectedRegion.chromosome;
 
-  if (selectedRegion && selectedRegion.bufferZoneSelection != null && selectedRegion.viewportSelection.length != chromosome.seqLength)
+  if (store.state.detailedBasePairRange)
   {
-    const currBufferzone = new SelectedRegion(selectedRegion.bufferZoneSelection.svgYPoint, selectedRegion.bufferZoneSelection.svgHeight, selectedRegion.bufferZoneSelection.basePairStart, selectedRegion.bufferZoneSelection.basePairStop);
-    // Adjust the inner selection on the selected region
-    selectedRegion.moveInnerSelectionDown(store.state.overviewBasePairToHeightRatio);
-    adjustDetailedVisibleSetsBasedOnNav(currBufferzone, 'down');
+    const currRange = store.state.detailedBasePairRange;
+    let adjust = NAV_SHIFT_PERCENT * (currRange.stop - currRange.start);
+    if (currRange.stop + adjust > chromosome.seqLength) adjust = chromosome.seqLength - currRange.stop;
+    store.dispatch('setDetailedBasePairRange', { start: currRange.start + adjust, stop: currRange.stop + adjust });
   }
+
+  // if (selectedRegion && selectedRegion.bufferZoneSelection != null && selectedRegion.viewportSelection.length != chromosome.seqLength)
+  // {
+  //   const currBufferzone = new SelectedRegion(selectedRegion.bufferZoneSelection.svgYPoint, selectedRegion.bufferZoneSelection.svgHeight, selectedRegion.bufferZoneSelection.basePairStart, selectedRegion.bufferZoneSelection.basePairStop);
+  //   // Adjust the inner selection on the selected region
+  //   selectedRegion.moveInnerSelectionDown(store.state.overviewBasePairToHeightRatio);
+  //   adjustDetailedVisibleSetsBasedOnNav(currBufferzone, 'down');
+  // }
 };
 
 
