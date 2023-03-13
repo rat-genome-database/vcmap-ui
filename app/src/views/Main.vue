@@ -129,11 +129,12 @@ onMounted(async () => {
  * Watch for requested navigation operations (zoom in/out, navigate up/down stream).
  */
 watch(() => store.state.detailedBasePairRequest, async () => {
-  $log.debug('Detailed Base Pair range change request detected.');
-
   // Grab blocks and genes with using a threshold of approximately .25 of a pixel
   if (store.state.detailedBasePairRequest && store.state.chromosome)
   {
+    $log.debug(`Detailed Base Pair range change request detected (${store.state.detailedBasePairRequest?.start},
+       ${store.state.detailedBasePairRequest?.stop}).`);
+
     let threshold = Math.round(
         (store.state.detailedBasePairRequest.stop - store.state.detailedBasePairRequest.start) /
         (PANEL_SVG_STOP - PANEL_SVG_START) / 4
@@ -155,9 +156,11 @@ watch(() => store.state.detailedBasePairRequest, async () => {
 
 
     // Data processing done, ready to complete request
-    store.dispatch('setDetailedBasePairRange', {
-      start: store.state.detailedBasePairRequest.start, stop: store.state.detailedBasePairRequest.stop
-    });
+    let selection = store.state.selectedBackboneRegion;
+    selection?.setViewportSelection(store.state.detailedBasePairRequest.start, store.state.detailedBasePairRequest.stop,
+        store.state.overviewBasePairToHeightRatio);
+    console.log('Backbone selection', selection);
+    store.dispatch('setBackboneSelection', selection);
     store.dispatch('setDetailedBasePairRequest', null);
   }
 });

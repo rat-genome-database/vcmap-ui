@@ -5,7 +5,7 @@ import { VCMapState } from "@/store";
 import { GeneDatatrack } from '@/models/DatatrackSection';
 
 
-export function getNewSelectedData(store: Store<VCMapState>, gene: Gene): {rgdIds: number[], selectedData: SelectedData[] } {
+export function getNewSelectedData(store: Store<VCMapState>, gene: Gene): { rgdIds: number[], selectedData: SelectedData[] } {
   const comparativeSpecies = store.state.comparativeSpecies;
   const compSpeciesNameMap = new Map<Number, string>();
 
@@ -16,7 +16,7 @@ export function getNewSelectedData(store: Store<VCMapState>, gene: Gene): {rgdId
 }
 
 export function sortGeneList(geneList: Gene[]) {
-  // for combined or hiddent gene lists, sort LOC
+  // for combined or hidden gene lists, sort LOC
   // genes to end of list, otherwise sort alphabetically
   geneList.sort((geneA, geneB) => {
     const isGeneALOC = geneA.symbol.startsWith('LOC') || false;

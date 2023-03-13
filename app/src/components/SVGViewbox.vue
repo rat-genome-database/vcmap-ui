@@ -26,7 +26,7 @@
     <!-- Overview panel SVGs ------------------------------------------->
     <template v-for="(syntenySet, index) in overviewSyntenySets" :key="index">
       <template v-for="(region, index) in syntenySet.regions" :key="index">
-        <SectionSVG show-chromosome show-synteny-on-hover show-start-stop select-on-click :region="(region as SyntenyRegion)" />
+        <SectionSVG show-chromosome show-synteny-on-hover show-start-stop select-on-click :region="region" />
       </template>
     </template>
 
@@ -40,20 +40,20 @@
       <template v-if="detailedBackboneSet.datatrackLabels">
         <template v-for="(label, index) in detailedBackboneSet.datatrackLabels" :key="index">
           <template v-if="(label.isVisible)">
-            <GeneLabelSVG :label="(label as GeneLabel)" />
+            <GeneLabelSVG :label="label" />
           </template>
         </template>
       </template>
     </template>
 
-    <template v-if="detailedSyntenySets.length && isRendered">
+    <template v-if="detailedSyntenySets.length">
       <template v-for="(syntenySet, index) in detailedSyntenySets" :key="index">
         <template v-for="(syntenicRegion, index) in syntenySet.regions" :key="index">
-          <SectionSVG show-chromosome :region="syntenicRegion as SyntenyRegion" />
+          <SectionSVG show-chromosome :region="syntenicRegion" />
         </template>
         <template v-for="(label, index) in syntenySet.datatrackLabels" :key="index">
           <template v-if="label.isVisible">
-            <GeneLabelSVG :label="(label as GeneLabel)"/>
+            <GeneLabelSVG :label="label"/>
           </template>
         </template>
       </template>
@@ -194,7 +194,7 @@ import GeneLabelSVG from '@/components/GeneLabelSVG.vue';
 import useDialog from '@/composables/useDialog';
 import Gene from '@/models/Gene';
 import OrthologLine from '@/models/OrthologLine';
-import { GeneLabel } from '@/models/Label';
+// import { GeneLabel } from '@/models/Label';
 import SelectedData from '@/models/SelectedData';
 import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
 import { key } from '@/store';
@@ -202,7 +202,7 @@ import { backboneDetailedError, backboneOverviewError, missingComparativeSpecies
 import { createSyntenicRegionsAndDatatracks, CreateSyntenicRegionsResult,  } from '@/utils/SectionBuilder';
 import useOverviewPanelSelection from '@/composables/useOverviewPanelSelection';
 import { useLogger } from 'vue-logger-plugin';
-import SyntenyRegion from '@/models/SyntenyRegion';
+// import SyntenyRegion from '@/models/SyntenyRegion';
 import { createBackboneSection, backboneDatatrackBuilder, createBackboneSet } from '@/utils/BackboneBuilder';
 import BackboneSetSVG from './BackboneSetSVG.vue';
 import SyntenyRegionSet from '@/models/SyntenyRegionSet';
@@ -214,13 +214,14 @@ import { LoadedGene } from '@/models/DatatrackSection';
 import { LoadedBlock } from '@/utils/SectionBuilder';
 import OrthologLineSVG from './OrthologLineSVG.vue';
 import LoadingSpinnerMask from './LoadingSpinnerMask.vue';
-import { getNewSelectedData } from '@/utils/DataPanelHelpers';
 import { createQtlDatatracks } from '@/utils/QtlBuilder';
 import { createVariantDatatracks } from '@/utils/VariantBuilder';
 import { GenomicSectionFactory } from '@/models/GenomicSectionFactory';
 import {VCMapSVGEl} from "@/models/VCMapSVGElement";
 import Block from "@/models/Block";
 
+// TODO: Unneeded? (Need to rework how to "Load by Gene")
+import { getNewSelectedData } from '@/utils/DataPanelHelpers';
 const LOAD_BY_GENE_VISIBLE_SIZE_MULTIPLIER = 6;
 
 const store = useStore(key);
@@ -248,10 +249,9 @@ let testRects = ref<VCMapSVGEl[]>();
 let testRects2 = ref<VCMapSVGEl[]>();
 let testRects3 = ref<VCMapSVGEl[]>();
 let testRects4 = ref<VCMapSVGEl[]>();
-let enableProcessingLoadMask = ref<boolean>(false); // Whether or not to show the processing load mask
-let isRendered = ref<boolean>(true); // Whether or not the user is adjusting the detailed panel
 
-let geneReload: boolean = false; //whether or not load by gene reload has occurred
+let enableProcessingLoadMask = ref<boolean>(false); // Whether or not to show the processing load mask
+
 
 const orthologLines = computed(() => {
   let lines: OrthologLine[] = [];
@@ -288,15 +288,7 @@ async function attachToProgressLoader(storeLoadingActionName: string, func: () =
 onMounted(async () => {
   // Clear any prior selections or set as the searched gene
   const gene = store.state.gene;
-  if (gene) 
-  {
-    let selectedData = new SelectedData(gene, 'Gene');
-    store.dispatch('setSelectedData', [selectedData]);
-  } 
-  else 
-  {
-    store.dispatch('setSelectedData', null);
-  }
+  store.dispatch('setSelectedData', gene ? [new SelectedData(gene, 'Gene')] : null);
 
   await attachToProgressLoader('setIsOverviewPanelUpdating', updateOverviewPanel);
 
@@ -414,7 +406,10 @@ const updateOverviewPanel = async () => {
   if (prevBackboneSelection == null)
   {
     const selection = new BackboneSelection(
-      new SelectedRegion(SVGConstants.overviewTrackYPosition, ( backboneChromosome.seqLength / store.state.overviewBasePairToHeightRatio ), 0, backboneChromosome.seqLength), 
+      new SelectedRegion(SVGConstants.overviewTrackYPosition,
+          ( backboneChromosome.seqLength / store.state.overviewBasePairToHeightRatio ),
+          0, backboneChromosome.seqLength
+      ),
       backboneChromosome
     );
 
@@ -458,13 +453,13 @@ const updateOverviewPanel = async () => {
 
 const updateDetailsPanel = async () => {
   $log.debug(`Updating Detailed Panel`);
-  tempReplace();
-
-// eslint-disable-next-line no-constant-condition
-// if (true) { enableProcessingLoadMask.value = false; return; }
 
   const detailedUpdateStart = Date.now();
   enableProcessingLoadMask.value = true;
+
+  tempReplace();
+// eslint-disable-next-line no-constant-condition
+// if (true) return;
 
   const originalSelectedBackboneRegion: BackboneSelection | null = store.state.selectedBackboneRegion;
   if (originalSelectedBackboneRegion == null)
@@ -476,7 +471,6 @@ const updateDetailsPanel = async () => {
 
   const backboneSpecies = store.state.species;
   const backboneChromosome = store.state.chromosome;
-  const loadType = store.state.configTab;
   const detailedBasePairRange = store.state.detailedBasePairRange;
 
   const masterBlockMap = new Map<number, LoadedBlock>();
@@ -590,32 +584,6 @@ const updateDetailsPanel = async () => {
     const adjustVisibleRegionStart = Date.now();
     await adjustDetailedVisibleSetsBasedOnZoom(zoomedSelection, true);
     timeAdjustVisibleRegion = Date.now() - adjustVisibleRegionStart;
-  }
-
-  //store.dispatch('setLoadedBlocks', masterBlockMap);
-  //store.dispatch('setLoadedGenes', masterGeneMap);
-
-  const loadSelectedGene = store.state.gene;
-  if ((loadType == 0) && (store.state.selectedGeneIds.length > 0) && (!geneReload) && loadSelectedGene != null)
-  {
-    const geneBasePairLength = loadSelectedGene.stop - loadSelectedGene.start;
-    const newInnerStart = Math.max(Math.floor(loadSelectedGene.start -
-        (LOAD_BY_GENE_VISIBLE_SIZE_MULTIPLIER * geneBasePairLength)), 0);
-    const newInnerStop = Math.min(Math.floor(loadSelectedGene.stop +
-        (LOAD_BY_GENE_VISIBLE_SIZE_MULTIPLIER * geneBasePairLength)), backboneChromosome.seqLength);
-
-    const selection = detailedBackboneSet.value.backbone.generateBackboneSelection(newInnerStart, newInnerStop,
-        store.state.detailedBasePairToHeightRatio, backboneChromosome);
-
-    const newData = getNewSelectedData(store, loadSelectedGene);
-
-    store.dispatch('setSelectedData', newData.selectedData);
-    store.dispatch('setSelectedGeneIds', newData.rgdIds);
-    store.dispatch('clearBackboneSelection');
-    store.dispatch('setBackboneSelection', selection);
-
-    geneReload = true;
-    return;
   }
 
   const timeDetailedUpdate= Date.now() - detailedUpdateStart;
@@ -896,9 +864,8 @@ const getDetailedPosition = () =>
   const scrollX = window.scrollX;
   if (detailedPanel)
   {
-    const detailedPanelRec = detailedPanel.getBoundingClientRect();
-    const detailedPanelDomPositions = detailedPanelRec;
-    const styleElement = {
+    const detailedPanelDomPositions = detailedPanel.getBoundingClientRect();
+    return {
       position: 'absolute',
       top: String(detailedPanelDomPositions.top + scrollY)+ 'px',
       bottom: String(detailedPanelDomPositions.bottom ) + 'px',
@@ -907,8 +874,6 @@ const getDetailedPosition = () =>
       width: String(detailedPanelDomPositions.width) + 'px',
       height: String(detailedPanelDomPositions.height ) + 'px',
     };
-
-    return styleElement;
   }
 };
 
@@ -916,9 +881,8 @@ const getDetailedPosition = () =>
 const tempReplace = () => {
   const chromosome = store.state.chromosome;
   const backboneSpecies = store.state.species;
-  const backboneRegion = store.state.selectedBackboneRegion;
-  const viewportStart = backboneRegion?.viewportSelection?.basePairStart;
-  const viewportStop = backboneRegion?.viewportSelection?.basePairStop;
+  const viewportStart = store.state.detailedBasePairRange.start;
+  const viewportStop = store.state.detailedBasePairRange.stop;
   if (viewportStart == undefined || viewportStop == undefined) return;
 
   console.log(`Looking at (${viewportStart}, ${viewportStop})`);
@@ -947,12 +911,12 @@ const tempReplace = () => {
     if (isBpRangeVisible(start, stop))
     {
       let newRect = new VCMapSVGEl();
-      const svgLength = PANEL_SVG_STOP - PANEL_SVG_START;
+      const svgHeight = PANEL_SVG_STOP - PANEL_SVG_START;
       const bpVisibleWindowLength = Math.abs(viewportStop - viewportStart);
-      const pixelsToBpRatio = svgLength / bpVisibleWindowLength;
+      const pixelsPerBpRatio = svgHeight / bpVisibleWindowLength;
       // console.debug(`Visible: num pixels (${svgLength}), num bp (${bpVisibleWindowLength}) starting at (${viewportStart})`);
-      newRect.posY1 = (start - viewportStart) * pixelsToBpRatio + PANEL_SVG_START;
-      newRect.posY2 = (stop - viewportStart) * pixelsToBpRatio + PANEL_SVG_START;
+      newRect.posY1 = (start - viewportStart) * pixelsPerBpRatio + PANEL_SVG_START;
+      newRect.posY2 = (stop - viewportStart) * pixelsPerBpRatio + PANEL_SVG_START;
       newRect.start = start;
       newRect.stop = stop;
       newRect.name = gene.symbol;
@@ -1038,6 +1002,8 @@ const tempReplace = () => {
       // }
     });
   });
+
+  // enableProcessingLoadMask.value = false;
 };
 
 /**
@@ -1051,14 +1017,15 @@ const isBpRangeVisible = (start: number, stop: number) => {
   const backboneRegion = store.state.selectedBackboneRegion;
   const viewportStart = backboneRegion?.viewportSelection?.basePairStart ?? -1;
   const viewportStop = backboneRegion?.viewportSelection?.basePairStop ?? -1;
-  if (start >= viewportStart && start <= viewportStop)
-    return true;
-  else if (stop >= viewportStart && stop <= viewportStop)
-    return true;
-  else if (start < viewportStart && stop > viewportStop)
-    return true;
+  // if (start >= viewportStart && start <= viewportStop)
+  //   return true;
+  // else if (stop >= viewportStart && stop <= viewportStop)
+  //   return true;
+  // else if (start < viewportStart && stop > viewportStop)
+  //   return true;
 
-  return false;
+  // Simplified above comparisons to single statement
+  return (start <= viewportStop && stop >= viewportStart);
 };
 
 // TODO: temp ignore here, should remove once this method is actively being used

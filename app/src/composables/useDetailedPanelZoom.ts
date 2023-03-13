@@ -2,7 +2,7 @@ import { onMounted, ref } from "vue";
 import { getMousePosSVG } from '@/utils/SVGHelpers';
 import { Store } from "vuex";
 import { VCMapState } from "@/store";
-import SVGConstants from "@/utils/SVGConstants";
+import SVGConstants, {PANEL_SVG_START, PANEL_SVG_STOP} from "@/utils/SVGConstants";
 import { useLogger } from "vue-logger-plugin";
 
 export default function useDetailedPanelZoom(store: Store<VCMapState>) {
@@ -53,8 +53,7 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
       return;
     }
 
-    const selectedRegion = store.state.selectedBackboneRegion;
-    if (selectedRegion && !selectedRegion.viewportSelection)
+    if (!store.state.detailedBasePairRange)
     {
       $log.warn('Cannot zoom on the detailed panel without a selection in the overview');
       return;
@@ -97,16 +96,19 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
 
     inSelectMode = false;
 
-    const selection = store.state.selectedBackboneRegion;
-    if (startDetailedSelectionY.value != null && stopDetailedSelectionY.value != null && selection && selection.viewportSelection != null)
+    if (startDetailedSelectionY.value != null && stopDetailedSelectionY.value != null && store.state.detailedBasePairRange)
     {
+      const svgHeight = PANEL_SVG_STOP - PANEL_SVG_START;
+      const bpVisibleWindowLength = Math.abs(store.state.detailedBasePairRange.stop - store.state.detailedBasePairRange.start);
+      const pixelsPerBpRatio = svgHeight / bpVisibleWindowLength;
       // Calculate start/stop base pairs based on bp to height ratio in the detailed panel
-      const basePairsFromInnerSelection1 = Math.floor((startDetailedSelectionY.value - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
-      const basePairStart = basePairsFromInnerSelection1 + selection.viewportSelection.basePairStart;
+      const basePairStart = Math.floor((startDetailedSelectionY.value - SVGConstants.panelTitleHeight) / pixelsPerBpRatio)
+          + store.state.detailedBasePairRange.start;
 
-      const basePairsFromInnerSelection2 = Math.floor((stopDetailedSelectionY.value - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
-      const basePairStop = basePairsFromInnerSelection2 + selection.viewportSelection.basePairStart;
+      const basePairStop = Math.floor((stopDetailedSelectionY.value - SVGConstants.panelTitleHeight) / pixelsPerBpRatio)
+          + store.state.detailedBasePairRange.start;
 
+      console.log(`Requesting zoom to (${basePairStart}, ${basePairStop}) from Y:(${startDetailedSelectionY.value}, ${stopDetailedSelectionY.value})`);
       store.dispatch('setDetailedBasePairRequest', { start: basePairStart, stop: basePairStop });
       // store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: basePairStop });
     }

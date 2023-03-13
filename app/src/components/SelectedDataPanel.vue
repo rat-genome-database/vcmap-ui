@@ -136,7 +136,7 @@ import SelectedData from '@/models/SelectedData';
 import Gene from '@/models/Gene';
 import GeneInfo from '@/components/GeneInfo.vue';
 import { Formatter } from '@/utils/Formatter';
-import SVGConstants from '@/utils/SVGConstants';
+import SVGConstants, {PANEL_SVG_START, PANEL_SVG_STOP} from '@/utils/SVGConstants';
 import { ref, watch} from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
@@ -238,8 +238,8 @@ const getSuggestionDisplay = (item: any) => {
 
 const adjustSelectionWindow = () => {
   // const loadedGenes = store.state.loadedGenes;
-  const selectedRegion = store.state.selectedBackboneRegion;
-  const selectionStart = selectedRegion.viewportSelection?.basePairStart || 0;
+  const selectionStart = store.state.detailedBasePairRange.start;
+  const selectionStop = store.state.detailedBasePairRange.stop;
 
   // New start and stop will be +/- some multiple of the gene's length (currently 2x)
   const geneBasePairLength = searchedGene.value.stop - searchedGene.value.start;
@@ -249,7 +249,7 @@ const adjustSelectionWindow = () => {
     - SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), 0);
   // Take min of new stop and selected regions original stop
   const newInnerStop = Math.min(Math.floor(searchedGene.value.stop
-    + SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), selectedRegion.chromosome.seqLength);
+    + SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), store.state.chromosome?.seqLength ?? newInnerStart);
   //get orthologs for backbone gene, and determine the relative highest and lowest positioned genes to reset the window
   const orthologs = searchedGene.value.orthologs;
 
@@ -271,11 +271,16 @@ const adjustSelectionWindow = () => {
     const topOrthologLength = highestOrtholog.gene.stop - highestOrtholog.gene.start;
     const bottomOrthologLength = lowestOrtholog.gene.stop - lowestOrtholog.gene.start;
 
-    const basePairsFromInnerSelection1 = Math.floor((highestOrtholog.posY1- SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
+    const svgHeight = PANEL_SVG_STOP - PANEL_SVG_START;
+    const bpVisibleWindowLength = Math.abs(selectionStop - selectionStart);
+    const pixelsPerBpRatio = svgHeight / bpVisibleWindowLength;
+    const basePairsFromInnerSelection1 = Math.floor((highestOrtholog.posY1- SVGConstants.panelTitleHeight) * pixelsPerBpRatio);
     const basePairStart = Math.max(basePairsFromInnerSelection1 + selectionStart - (topOrthologLength * 5), 0);
 
-    const basePairsFromInnerSelection2 = Math.floor((lowestOrtholog.posY1 - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
-    const basePairStop = Math.min(basePairsFromInnerSelection2 + selectionStart + (bottomOrthologLength * 5), selectedRegion.chromosome.seqLength);
+    const basePairsFromInnerSelection2 = Math.floor((lowestOrtholog.posY1 - SVGConstants.panelTitleHeight) * pixelsPerBpRatio);
+    const basePairStop = Math.min(
+        basePairsFromInnerSelection2 + selectionStart + (bottomOrthologLength * 5),
+        store.state.chromosome?.seqLength ?? basePairStart);
 
 
     // confirm the searched gene is visible in the result and adjust if not
