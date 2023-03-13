@@ -6,13 +6,6 @@
           <b>Selected Data</b>
         </div>
         <div class="panel-header-item">
-          <Button
-            label="Clear Selection"
-            class="p-button-info"
-            @click="clearSelectedGenes"
-          />
-        </div>
-        <div class="panel-header-item">
           <AutoComplete
             v-model="searchedGene"
             :suggestions="geneSuggestions"
@@ -23,18 +16,16 @@
             :minLength="3"
             placeholder="Search loaded genes..."
           />
-          <Button
-            v-tooltip.right="`Only searches genes loaded in the selected overview \
-              region (${Formatter.convertBasePairToLabel(overviewStart)} - \
-              ${Formatter.convertBasePairToLabel(overviewStop)}). \
-              Select a wider region on the backbone in the overview panel to search more genes.`"
-            icon="pi pi-info-circle"
-            class="p-button-link"
-          >
-          </Button>
         </div>
         <div class="panel-header-item">
           {{numberOfResults}} Selected Genes
+          <Button
+              v-tooltip.left="`Clear Selection`"
+              class="p-button-info p-button-sm"
+              icon="pi pi-ban"
+              @click="clearSelectedGenes"
+              rounded
+          />
         </div>
       </div>
     </template>

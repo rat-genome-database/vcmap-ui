@@ -2,13 +2,13 @@
   <div v-if="gene">
     <div class="gene-row">
       <div>
-        Symbol:
         <Button
           class="p-button-link rgd-link"
           @click="selectGene(gene)"
         >
           <b>{{gene.symbol}}</b>
         </Button>
+        <span v-if="gene" data-test="gene-name">({{gene.name ?? 'N/A'}})</span>
       </div>
       <div>
         <Button
@@ -20,12 +20,13 @@
       </div>
     </div>
   </div>
-  <div v-if="gene" data-test="gene-name">Name: {{gene.name ?? 'N/A'}}</div>
-  <div v-if="gene" data-test="species-name">Species: {{gene.speciesName ?? 'N/A'}}</div>
-  <div data-test="chromosome-name">Chromosome: {{chromosome}}</div>
-  <div data-test="start-stop">
-    Region: {{Formatter.addCommasToBasePair(start)}} -
-      {{Formatter.addCommasToBasePair(stop)}}
+
+  <div>
+    <span v-if="gene" data-test="species-name" class="species-label">{{gene.speciesName ?? 'N/A'}} </span>
+    <span data-test="chromosome-name">Chr{{chromosome}}: </span>
+    <span data-test="start-stop">
+      {{Formatter.addCommasToBasePair(start)}} - {{Formatter.addCommasToBasePair(stop)}}
+    </span>
   </div>
   <div v-if="trackOrientation">Orientation: {{trackOrientation}}</div>
   <div v-if="chainLevel"
@@ -85,5 +86,11 @@ const goToRgd = (rgdId: number) => {
 .external-link
 {
   padding-left: 4px;
+}
+
+.species-label
+{
+  font-weight: bold;
+  margin-right: 10px;
 }
 </style>
