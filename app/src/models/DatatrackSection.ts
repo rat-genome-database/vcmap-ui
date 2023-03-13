@@ -64,7 +64,7 @@ export class GeneDatatrack extends DatatrackSection
         posX: 0, 
         posY: (this.posY1 + this.posY2) / 2, 
         text: this.gene.symbol,
-        isVisible: true,
+        isVisible: false,
       },
       this.gene
     );

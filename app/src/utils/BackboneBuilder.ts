@@ -50,26 +50,20 @@ export function backboneDatatrackBuilder(species: Species, genomicData: Gene[], 
     backboneSection.renderType
   );
 
-  genomicData.forEach((genomicElement: Gene) => {
+  // NOTE: Intentionally using a basic for loop here to avoid extra functions on the call stack
+  for (let i = 0, len = genomicData.length; i < len; i++)
+  {
+    const genomicElement = genomicData[i];
     const geneDatatrackSection = factory.createGeneDatatrackSection({
-      gene: genomicElement, 
-      start: genomicElement.start, 
-      stop: genomicElement.stop, 
+      gene: genomicElement,
+      start: genomicElement.start,
+      stop: genomicElement.stop,
       backboneAlignment: { start: genomicElement.start, stop: genomicElement.stop },
     });
     processedGenomicData.datatracks.push(geneDatatrackSection);
-    //
-    // // Map structure is { rgdId: { species: { gene: Gene, drawn: [{ svgY: number, svgX: number }] } } }
-    // masterGeneMap.set(genomicElement.rgdId, {
-    //   backboneOrtholog: geneDatatrackSection,
-    //   genes: {
-    //     [species.name.toLowerCase()]: [],
-    //   }
-    // });
-  });
+  }
 
   return { backboneSection, processedGenomicData };
-  // return { backboneSection, masterGeneMap, processedGenomicData };
 }
 
 export function createBackboneSet(backbone: BackboneSection, genomicData?: ProcessedGenomicData)

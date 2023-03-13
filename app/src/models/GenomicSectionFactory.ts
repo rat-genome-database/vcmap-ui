@@ -71,7 +71,7 @@ export class GenomicSectionFactory
   }
 
   /**
-   * Creates a new VaraintDensity datatrack section
+   * Creates a new VariantDensity datatrack section
    */
   createVariantDensitySection(variantCount: number, maxCount: number, start: number, stop: number, backboneAlignment: BackboneAlignment): VariantDensity
   {
