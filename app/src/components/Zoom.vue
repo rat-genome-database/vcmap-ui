@@ -30,18 +30,18 @@ const store = useStore(key);
 const zoomLevel = ref(1);
 const zoomIntervals = [1.5, 3, 10, 100];
 
-watch(() => store.state.isDetailedPanelUpdating, (isUpdating) => {
-  if (!isUpdating && store.state.selectedBackboneRegion != null)
+watch(() => store.state.detailedBasePairRange, (isUpdating) => {
+  if (!isUpdating)
   {
-    // Update the zoom level shown in the Slider to match what was calculated based on an overview/detailed panel selection
-    zoomLevel.value = store.state.selectedBackboneRegion.zoomLevel;
+    // Update the zoom level shown in the Slider to show the ratio of the
+    // viewport size to the total chromosome.
+    let seqLength = store.state.chromosome?.seqLength ?? 0;
+    zoomLevel.value = seqLength / (store.state.detailedBasePairRange.stop - store.state.detailedBasePairRange.start);
   }
-}, {
-  immediate: true,
-});
+}, { immediate: true, });
 
 const isZoomDisabled = computed(() => {
-  return store.state.isDetailedPanelUpdating || store.state.selectedBackboneRegion?.viewportSelection == null;
+  return store.state.isDetailedPanelUpdating || store.state.chromosome == null;
 });
 
 const onZoomSliderEnd = (event: SliderSlideEndEvent) => {
@@ -53,7 +53,7 @@ const onZoomSliderEnd = (event: SliderSlideEndEvent) => {
   zoom(event.value);
 };
 
-const zoom = (zoomLevel: number) => {
+const zoom = (newZoomLevel: number) => {
   const selectedRegion = store.state.selectedBackboneRegion;
   const backboneChromosome = store.state.chromosome;
 
@@ -61,24 +61,19 @@ const zoom = (zoomLevel: number) => {
   {
     console.error('Cannot zoom if selectedRegion, viewportSelection, or backboneChromosome is null');
   }
-  else if (zoomLevel === 1)
+  else if (newZoomLevel === 1)
   {
     store.dispatch('setDetailedBasePairRequest', { start: 0, stop: backboneChromosome.seqLength });
     // store.dispatch('setDetailedBasePairRange', { start: 0, stop: backboneChromosome.seqLength });
   }
   else
   {
-    let zoomedStart = selectedRegion.viewportSelection.basePairStart;
-    let zoomedStop = selectedRegion.viewportSelection.basePairStop;
+    let zoomedStart = store.state.detailedBasePairRange.start;
+    let zoomedStop = store.state.detailedBasePairRange.stop;
     let currentLength = zoomedStop - zoomedStart;
-    if (selectedRegion.viewportSelection)
-    {
-      zoomedStart = selectedRegion.viewportSelection.basePairStart;
-      zoomedStop = selectedRegion.viewportSelection.basePairStop;
-      currentLength = zoomedStop - zoomedStart;
-    }
+    let currentZoomLevel = backboneChromosome.seqLength / currentLength;
 
-    const newRegionLength = (zoomedStop - zoomedStart) * (selectedRegion.zoomLevel / zoomLevel);
+    const newRegionLength = currentLength * (currentZoomLevel / newZoomLevel);
     const lengthDiff = currentLength - newRegionLength;
 
     if (lengthDiff > 0)

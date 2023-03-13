@@ -50,10 +50,7 @@ export default class BackboneSelection
   //viewport selection is the current viewport selection range
   viewportSelection?: SelectedRegion;
 
-  zoomLevel: number = 1;
 
-
-  private shiftPercent: number = 0.2; // TODO: configurable?
   private bufferZonePercent: number = 0.25; // TODO: configurable?
 
   constructor(baseSelection: SelectedRegion, chromosome: Chromosome, fullBackboneSelection?: SelectedRegion, viewportSelection?: SelectedRegion)
@@ -66,7 +63,6 @@ export default class BackboneSelection
   {
     const originalRegionLength = this.chromosome.seqLength;
     const detailedRegionLength = visibleStop - visibleStart;
-    this.zoomLevel = parseFloat((1 / (detailedRegionLength / originalRegionLength)).toFixed(2));
 
     visibleStart = (visibleStart < 0) ? 0 : Math.floor(visibleStart);
     visibleStop = (visibleStop > this.chromosome.seqLength) ? this.chromosome.seqLength : Math.ceil(visibleStop);
@@ -86,49 +82,6 @@ export default class BackboneSelection
     return this.viewportSelection;
   }
 
-  public moveInnerSelectionUp(overviewBasePairToHeightRatio: number)
-  {
-    if (!this.viewportSelection)
-    {
-      return;
-    }
-
-    const innerSelectionLength = this.viewportSelection.basePairStop - this.viewportSelection.basePairStart;
-
-    let newStart = this.viewportSelection.basePairStart - innerSelectionLength * this.shiftPercent;
-    let newStop = this.viewportSelection.basePairStop - innerSelectionLength * this.shiftPercent;
-    if (newStart < 0)
-    {
-      newStart = 0;
-      newStop = 0 + innerSelectionLength;
-    }
-
-      //TODO: add check for closeness of viewport to bufferzone to determine whether or not to adjust bufferzone
-    this.adjustBufferzoneSelection(overviewBasePairToHeightRatio, 'up');
-    return this.setViewportSelection(newStart, newStop, overviewBasePairToHeightRatio);
-  }
-
-  public moveInnerSelectionDown(overviewBasePairToHeightRatio: number)
-  {
-    if (!this.viewportSelection)
-    {
-      return;
-    }
-
-    const innerSelectionLength = this.viewportSelection.basePairStop - this.viewportSelection.basePairStart;
-
-    let newStart = this.viewportSelection.basePairStart + innerSelectionLength * this.shiftPercent;
-    let newStop = this.viewportSelection.basePairStop + innerSelectionLength * this.shiftPercent;
-    if (newStop > this.chromosome.seqLength)
-    {
-      newStart = this.chromosome.seqLength - innerSelectionLength;
-      newStop = this.chromosome.seqLength;
-    }
-
-    //TODO: add check for closeness of viewport to bufferzone to determine whether or not to adjust bufferzone
-    this.adjustBufferzoneSelection(overviewBasePairToHeightRatio, 'down');
-    return this.setViewportSelection(newStart, newStop, overviewBasePairToHeightRatio);
-  }
 
   public setBufferzoneSelection(overviewBasePairToHeightRatio: number,)
   {
@@ -147,33 +100,5 @@ export default class BackboneSelection
     const bufferZoneSVGHeight = (bufferZoneStop - bufferZoneStart) / overviewBasePairToHeightRatio;
 
     this.bufferZoneSelection = new SelectedRegion(bufferZoneSVGPoint, bufferZoneSVGHeight, bufferZoneStart, bufferZoneStop);
-  }
-
-  public adjustBufferzoneSelection(overviewBasePairToHeightRatio: number, navDirection: string)
-  {
-    if (!this.viewportSelection || !this.bufferZoneSelection)
-    {
-      return;
-    }
-
-    const viewportSelectionLength = this.viewportSelection.basePairStop - this.viewportSelection.basePairStart;
-
-    if (navDirection === 'up')
-    {
-      const bufferZoneStart = Math.max(this.viewportSelection.basePairStart - viewportSelectionLength * this.bufferZonePercent, 0);
-      const bufferZoneSVGPoint = ((bufferZoneStart - 0) / overviewBasePairToHeightRatio) + SVGConstants.overviewTrackYPosition;
-      const bufferZoneSVGHeight = (this.bufferZoneSelection.basePairStop - bufferZoneStart) / overviewBasePairToHeightRatio;
-
-      this.bufferZoneSelection = new SelectedRegion(bufferZoneSVGPoint, bufferZoneSVGHeight, bufferZoneStart, this.bufferZoneSelection.basePairStop);
-    }
-
-    if (navDirection === 'down')
-    {
-      const bufferZoneStop = Math.min(this.viewportSelection.basePairStop + viewportSelectionLength * this.bufferZonePercent, this.chromosome.seqLength);
-      const bufferZoneSVGPoint = ((this.bufferZoneSelection.basePairStart - 0) / overviewBasePairToHeightRatio) + SVGConstants.overviewTrackYPosition;
-      const bufferZoneSVGHeight = (bufferZoneStop - this.bufferZoneSelection.basePairStart) / overviewBasePairToHeightRatio;
-
-      this.bufferZoneSelection = new SelectedRegion(bufferZoneSVGPoint, bufferZoneSVGHeight, this.bufferZoneSelection.basePairStart, bufferZoneStop);
-    }
   }
 }

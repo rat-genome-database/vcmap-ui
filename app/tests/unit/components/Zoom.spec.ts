@@ -35,15 +35,16 @@ describe('Zoom', () => {
     const zoomLevelLabel = wrapper.get('[data-test="zoom-level-label"]');
     expect(zoomLevelLabel.text()).toEqual('1x');
 
-    store.state.isDetailedPanelUpdating = true;
-    await wrapper.vm.$nextTick();
-    if (store.state.selectedBackboneRegion)
-    {
-      store.state.selectedBackboneRegion.zoomLevel = 2;
-    }
-    store.state.isDetailedPanelUpdating = false;
-    await wrapper.vm.$nextTick();
-    expect(zoomLevelLabel.text()).toEqual('2x');
+    // FIXME: We don't use zoomLevel on the backbone any longer (calculated based on viewport)S
+    // store.state.isDetailedPanelUpdating = true;
+    // await wrapper.vm.$nextTick();
+    // if (store.state.selectedBackboneRegion)
+    // {
+    //   store.state.selectedBackboneRegion.zoomLevel = 2;
+    // }
+    // store.state.isDetailedPanelUpdating = false;
+    // await wrapper.vm.$nextTick();
+    // expect(zoomLevelLabel.text()).toEqual('2x');
   });
 
   // TODO... need to trigger moving the zoom slider in the DOM and testing the params of the setDetailedBasePairRange action
