@@ -60,12 +60,12 @@
     </template>
 
 <!--TEMP-->
-    <template v-for="(rectangle, index) in testRects" :key="index">
-      <rect :fill="rectangle.elementColor" fill-opacity="0.8" x="340.0" width="10.0"
-            :height="rectangle.posY2 - rectangle.posY1" :y="rectangle.posY1"
-            :data-name="rectangle.name"
-      />
-    </template>
+<!--    <template v-for="(rectangle, index) in testRects" :key="index">-->
+<!--      <rect :fill="rectangle.elementColor" fill-opacity="0.8" x="340.0" width="10.0"-->
+<!--            :height="rectangle.posY2 - rectangle.posY1" :y="rectangle.posY1"-->
+<!--            :data-name="rectangle.name"-->
+<!--      />-->
+<!--    </template>-->
     <template v-for="(rectangle, index) in testRects2" :key="index">
       <rect :fill="rectangle.elementColor" fill-opacity="0.8" x="460.0" width="10.0"
             :height="rectangle.posY2 - rectangle.posY1" :y="rectangle.posY1"
@@ -194,7 +194,6 @@ import GeneLabelSVG from '@/components/GeneLabelSVG.vue';
 import useDialog from '@/composables/useDialog';
 import Gene from '@/models/Gene';
 import OrthologLine from '@/models/OrthologLine';
-// import { GeneLabel } from '@/models/Label';
 import SelectedData from '@/models/SelectedData';
 import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
 import { key } from '@/store';
@@ -202,11 +201,9 @@ import { backboneDetailedError, backboneOverviewError, missingComparativeSpecies
 import { createSyntenicRegionsAndDatatracks, CreateSyntenicRegionsResult,  } from '@/utils/SectionBuilder';
 import useOverviewPanelSelection from '@/composables/useOverviewPanelSelection';
 import { useLogger } from 'vue-logger-plugin';
-// import SyntenyRegion from '@/models/SyntenyRegion';
 import { createBackboneSection, backboneDatatrackBuilder, createBackboneSet } from '@/utils/BackboneBuilder';
 import BackboneSetSVG from './BackboneSetSVG.vue';
 import SyntenyRegionSet from '@/models/SyntenyRegionSet';
-import GeneApi from '@/api/GeneApi';
 import QtlApi from '@/api/QtlApi';
 import VariantApi from '@/api/VariantApi';
 import BackboneSet from '@/models/BackboneSet';
@@ -473,16 +470,12 @@ const updateDetailsPanel = async () => {
   const backboneChromosome = store.state.chromosome;
   const detailedBasePairRange = store.state.detailedBasePairRange;
 
-  const masterBlockMap = new Map<number, LoadedBlock>();
-
   // Get comparison species Ids for ortholog API call parameter
   const comparativeSpeciesIds: number[] = [];
   store.state.comparativeSpecies.map((gene: { defaultMapKey: number; }) => comparativeSpeciesIds.push(gene.defaultMapKey));
 
   // debug timers
   let timeSyntenyTracks = 0;
-  let timeCreateBackboneTrack = 0;
-  let timeQueryBackboneGenes = 0;
   let timeCreateBackboneDatatracks = 0;
   let timeCreateBackboneSet = 0;
   let timeAdjustVisibleRegion = 0;
@@ -512,92 +505,95 @@ const updateDetailsPanel = async () => {
     detailedSyntenySets.value = [];
     return;
   }
-  // Get the range of the inner section that will be shown in the Detailed panel
-  const zoomedSelection = originalSelectedBackboneRegion.setViewportSelection(detailedBasePairRange.start, detailedBasePairRange.stop, store.state.overviewBasePairToHeightRatio);
 
-  // Update the Detailed panel rez to match that region length
-  store.dispatch('setDetailsResolution', zoomedSelection.basePairStop - zoomedSelection.basePairStart);
+  //
+  // First, create the visible backbone elements
+  const detailedBackbone = createBackboneSection(backboneSpecies, backboneChromosome,
+      store.state.detailedBasePairRange.start, store.state.detailedBasePairRange.stop, 'detailed');
+  const backboneGenes: Gene[] = [];
+  props.geneList.forEach((gene: Gene) => {
+    if (gene.mapKey == backboneSpecies.activeMap.key && isBpRangeVisible(gene.start, gene.stop))
+    {
+      // Only add visible genes
+      backboneGenes.push(gene);
+    }
+  });
+  const backboneDatatracksStart = Date.now();
+  const backboneDatatrackInfo = backboneDatatrackBuilder(backboneSpecies, backboneGenes, detailedBackbone);
+  timeCreateBackboneDatatracks = Date.now() - backboneDatatracksStart;
+  const backboneSetStart = Date.now();
+  detailedBackboneSet.value = createBackboneSet(detailedBackbone, backboneDatatrackInfo.processedGenomicData);
+  detailedBackboneSet.value?.adjustVisibleSet(store.state.detailedBasePairRange.start, store.state.detailedBasePairRange.stop);
+  timeCreateBackboneSet = Date.now() - backboneSetStart;
 
-  //check if our zoomed selection is positioned such that we need to adjust our buffer zone
+  //
+  // Next, the visible Synteny elements
+  // TODO
 
-  //checkAndUpdateForBufferzone(zoomedSelection.basePairStart, zoomedSelection.basePairStop);
-
-  //Check if we have loaded backbone sets, if not, load them (initial)
-  let masterGeneMap: Map<number, LoadedGene> | null = store.state.loadedGenes;
-  if (detailedBackboneSet.value == null)
-  {
-
-    // Create the backbone track for the entire base selection at the updated Detailed panel resolution
-    const backboneTrackStart = Date.now();
-
-    const detailedBackbone = createBackboneSection(backboneSpecies, backboneChromosome, 0,
-        backboneChromosome.seqLength, 'detailed');
-    timeCreateBackboneTrack = Date.now() - backboneTrackStart;
-
-    // Create the backbone data tracks for the entire selection at the updated Detailed panel resolution
-    const queryBackboneboneGenesStart = Date.now();
-    const tempBackboneGenes: Gene[] = await GeneApi.getGenesByRegion(backboneChromosome.chromosome, 0,
-        backboneChromosome.seqLength, backboneSpecies.activeMap.key, backboneSpecies.name, comparativeSpeciesIds);
-
-    timeQueryBackboneGenes = Date.now() - queryBackboneboneGenesStart;
-
-    const backboneDatatracksStart = Date.now();
-    const backboneDatatrackInfo = backboneDatatrackBuilder(backboneSpecies, tempBackboneGenes, detailedBackbone);
-    masterGeneMap = backboneDatatrackInfo.masterGeneMap;
-    timeCreateBackboneDatatracks = Date.now() - backboneDatatracksStart;
-
-    const backboneSetStart = Date.now();
-    detailedBackboneSet.value = createBackboneSet(detailedBackbone, backboneDatatrackInfo.processedGenomicData);
-    timeCreateBackboneSet = Date.now() - backboneSetStart;
-  }
+  // Check if we have loaded backbone sets, if not, load them (initial)
+  // let masterGeneMap: Map<number, LoadedGene> | null = store.state.loadedGenes;
+  // if (detailedBackboneSet.value == null)
+  // {
+  //
+  //   // Create the backbone track for the entire base selection at the updated Detailed panel resolution
+  //   const backboneTrackStart = Date.now();
+  //
+  //   const detailedBackbone = createBackboneSection(backboneSpecies, backboneChromosome, 0,
+  //       backboneChromosome.seqLength, 'detailed');
+  //   timeCreateBackboneTrack = Date.now() - backboneTrackStart;
+  //
+  //   // Create the backbone data tracks for the entire selection at the updated Detailed panel resolution
+  //   const queryBackboneboneGenesStart = Date.now();
+  //   const tempBackboneGenes: Gene[] = await GeneApi.getGenesByRegion(backboneChromosome.chromosome, 0,
+  //       backboneChromosome.seqLength, backboneSpecies.activeMap.key, backboneSpecies.name, comparativeSpeciesIds);
+  //
+  //   timeQueryBackboneGenes = Date.now() - queryBackboneboneGenesStart;
+  //
+  //   const backboneDatatracksStart = Date.now();
+  //   const backboneDatatrackInfo = backboneDatatrackBuilder(backboneSpecies, tempBackboneGenes, detailedBackbone);
+  //   masterGeneMap = backboneDatatrackInfo.masterGeneMap;
+  //   timeCreateBackboneDatatracks = Date.now() - backboneDatatracksStart;
+  //
+  //   const backboneSetStart = Date.now();
+  //   detailedBackboneSet.value = createBackboneSet(detailedBackbone, backboneDatatrackInfo.processedGenomicData);
+  //   timeCreateBackboneSet = Date.now() - backboneSetStart;
+  // }
 
   //no previously processed data, so we need to create the synteny tracks/initial load
-  if (detailedSyntenySets.value.length == 0)
-  {
-    const syntenyTracksStart = Date.now();
-    const detailedSyntenyData = await createSyntenicRegionsAndDatatracks(
-      store.state.comparativeSpecies,
-      backboneChromosome,
-      0,
-      backboneChromosome.seqLength,
-      originalSelectedBackboneRegion.viewportSelection?.basePairStart ?? 0,
-      originalSelectedBackboneRegion.viewportSelection?.basePairStop ?? backboneChromosome.seqLength,
-      store.state.detailsSyntenyThreshold,
-      true,
-      masterBlockMap,
-      masterGeneMap ?? undefined,
-    );
+  // FIXME: Broken by my new processing
+  // if (detailedSyntenySets.value.length == 0)
+  // {
+  //   const syntenyTracksStart = Date.now();
+  //   const detailedSyntenyData = await createSyntenicRegionsAndDatatracks(
+  //     store.state.comparativeSpecies,
+  //     backboneChromosome,
+  //     0,
+  //     backboneChromosome.seqLength,
+  //     originalSelectedBackboneRegion.viewportSelection?.basePairStart ?? 0,
+  //     originalSelectedBackboneRegion.viewportSelection?.basePairStop ?? backboneChromosome.seqLength,
+  //     store.state.detailsSyntenyThreshold,
+  //     true,
+  //     masterBlockMap,
+  //     masterGeneMap ?? undefined,
+  //   );
+  //
+  //   detailedSyntenyData.syntenyRegionSets.push();
+  //
+  //   // NOTE: adding to this reactive ref will update our view
+  //   detailedSyntenySets.value = detailedSyntenyData.syntenyRegionSets;
+  //   timeSyntenyTracks = Date.now() - syntenyTracksStart;
+  // }
 
-    detailedSyntenyData.syntenyRegionSets.push();
-
-    // NOTE: adding to this reactive ref will update our view
-    detailedSyntenySets.value = detailedSyntenyData.syntenyRegionSets;
-    timeSyntenyTracks = Date.now() - syntenyTracksStart;
-
-    const adjustVisibleRegionStart = Date.now();
-    await adjustDetailedVisibleSetsBasedOnZoom(zoomedSelection, false);
-    timeAdjustVisibleRegion = Date.now() - adjustVisibleRegionStart;
-    enableProcessingLoadMask.value = false;
-  }
-  else
-  {
-    const adjustVisibleRegionStart = Date.now();
-    await adjustDetailedVisibleSetsBasedOnZoom(zoomedSelection, true);
-    timeAdjustVisibleRegion = Date.now() - adjustVisibleRegionStart;
-  }
+  enableProcessingLoadMask.value = false;
 
   const timeDetailedUpdate= Date.now() - detailedUpdateStart;
   const timeDetailedUpdateOther = timeDetailedUpdate - (
-    timeCreateBackboneTrack 
-    + timeQueryBackboneGenes 
-    + timeCreateBackboneDatatracks 
+    + timeCreateBackboneDatatracks
     + timeCreateBackboneSet 
     + timeSyntenyTracks 
     + timeAdjustVisibleRegion);
 
   logPerformanceReport('Update Detailed Time', timeDetailedUpdate, {
-    'Create Backbone Track': timeCreateBackboneTrack,
-    'Query Backbone Genes': timeQueryBackboneGenes,
     'Create Backbone Datatracks': timeCreateBackboneDatatracks,
     'Create Backbone Set': timeCreateBackboneSet,
     'Create Synteny Tracks': timeSyntenyTracks,

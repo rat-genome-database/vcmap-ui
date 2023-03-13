@@ -136,7 +136,10 @@ export default class BackboneSet extends GenomicSet
   {
     const allLabels: Label[] = [];
     this.datatrackSets.forEach((set) => {
-      if (set.datatracks[0].type === 'gene')
+      // TODO (SGD): Why the magic number "0" here?
+      //  If the DatatrackSet is intended to have only one type of Datatrack, we should expand that model.
+      //  Otherwise this is a fragile way to do this (datatracks could be empty)
+      if (set.datatracks.length > 0 && set.datatracks[0].type === 'gene')
       {
         set.datatracks.forEach((section) => {
           if (section.label)

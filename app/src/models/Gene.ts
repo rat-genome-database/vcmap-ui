@@ -2,6 +2,7 @@ import Block from "@/models/Block";
 
 interface GeneParams
 {
+  mapKey: number;
   speciesName?: string;
   symbol: string;
   name: string;
@@ -15,6 +16,7 @@ interface GeneParams
 
 export default class Gene
 {
+  mapKey: number;
   speciesName: string;
   symbol: string = '';
   name: string = '';
@@ -28,6 +30,7 @@ export default class Gene
   block: Block | null = null;
   constructor(params: GeneParams)
   {
+    this.mapKey = params.mapKey;
     params.speciesName ? this.speciesName = params.speciesName : this.speciesName = '';
     this.symbol = params.symbol;
     this.name = params.name;

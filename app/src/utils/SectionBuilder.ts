@@ -237,11 +237,11 @@ console.timeEnd("syntenicDataTrackBuilder");
 // console.time("geneDataLabels");
       for (let i = 0; i < processedGeneInfo.genomicData.length; i++)
       {
-        //const geneData = processedGeneInfo.genomicData[i];
-        // if (geneData.label)
-        // {
-        //   allGeneLabels.push(geneData.label);
-        // }
+        const geneData = processedGeneInfo.genomicData[i];
+        if (geneData.label)
+        {
+          allGeneLabels.push(geneData.label);
+        }
       }
 // console.timeEnd("geneDataLabels");
     }

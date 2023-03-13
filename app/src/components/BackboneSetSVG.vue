@@ -240,7 +240,10 @@ const onClick = (event: any, section: GeneDatatrack) => {
 const highlightSelections = (selectedGeneIds: number[]) => {
   // Look through the sections and highlight based on selected genes
   datatrackSets.value.forEach((set) => {
-    if (set.datatracks[0].type === 'gene')
+    // TODO (SGD): Why the magic number "0" here?
+    //  If the DatatrackSet is intended to have only one type of Datatrack, we should expand that model.
+    //  Otherwise this is a fragile way to do this (datatracks could be empty)
+    if (set.datatracks.length > 0 && set.datatracks[0].type === 'gene')
     {
       set.datatracks.forEach((section) => {
         if (section.gene == null)

@@ -10,6 +10,7 @@ describe('GeneInfo', () => {
   it('displays gene name if present', async () => {
 
     const gene = new Gene({
+      mapKey: 1,
       speciesName: 'Test species',
       symbol: 'TEST',
       name: 'Test 123',

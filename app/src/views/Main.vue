@@ -122,7 +122,7 @@ onMounted(async () => {
     },
     comparativeSpecies: store.state.comparativeSpecies,
   });
-  processSynteny(speciesSyntenyDataArray);
+  processSynteny(speciesSyntenyDataArray, 0, store.state.chromosome.seqLength);
 });
 
 /**
@@ -152,14 +152,13 @@ watch(() => store.state.detailedBasePairRequest, async () => {
     });
 
     // Process response
-    processSynteny(speciesSyntenyDataArray);
+    processSynteny(speciesSyntenyDataArray, store.state.detailedBasePairRequest.start, store.state.detailedBasePairRequest.stop);
 
 
     // Data processing done, ready to complete request
     let selection = store.state.selectedBackboneRegion;
     selection?.setViewportSelection(store.state.detailedBasePairRequest.start, store.state.detailedBasePairRequest.stop,
         store.state.overviewBasePairToHeightRatio);
-    console.log('Backbone selection', selection);
     store.dispatch('setBackboneSelection', selection);
     store.dispatch('setDetailedBasePairRequest', null);
   }
@@ -170,7 +169,7 @@ watch(() => store.state.detailedBasePairRequest, async () => {
  * TODO: We might need to control the number of chainLevel >= 2 we add, these are excessive...
  */
 // TODO: Handle orthologs
-function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefined)
+function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefined, backboneStart: number, backboneStop: number)
 {
   // Make sure we have something to do
   if (!speciesSyntenyDataArray)
@@ -198,8 +197,12 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
     // NOTE: If we can afford to do it, might make sense to change our SyntenyApi to build
     //   our block structure, so we can more quickly identify new data and add to our tree.
     speciesResponse.regionData.forEach((blockData) => {
-      //
+      // NOTE: We cannot process everything...
+      //   Skip any blocks with chainLevel > MAX_CHAINLEVEL, and any
+      //   blocks outside the range [backboneStart, backboneStop].
       if (blockData.block.chainLevel > MAX_CHAINLEVEL) return;
+      // TODO: See if we can get Marek to just not even send these!
+      if (blockData.block.backboneStart > backboneStop || blockData.block.backboneStop < backboneStart) return;
 
       let targetBlock: Block | null = null;
 

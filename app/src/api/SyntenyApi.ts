@@ -90,6 +90,7 @@ export interface SpeciesSyntenyData
 function getGeneFromDTO(dto: SyntenyGeneDTO, speciesName: string)
 {
   return new Gene({
+    mapKey: dto.mapKey,
     speciesName: speciesName,
     symbol: dto.geneSymbol,
     name: dto.geneName,

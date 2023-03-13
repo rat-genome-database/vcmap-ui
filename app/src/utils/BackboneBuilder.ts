@@ -2,7 +2,7 @@ import BackboneSection from "@/models/BackboneSection";
 import Chromosome from "@/models/Chromosome";
 import Species from "@/models/Species";
 import Gene from "@/models/Gene";
-import DatatrackSection, { LoadedGene } from "@/models/DatatrackSection";
+import DatatrackSection from "@/models/DatatrackSection";
 import BackboneSet from "@/models/BackboneSet";
 import { RenderType } from "@/models/GenomicSection";
 import { GenomicSectionFactory } from "@/models/GenomicSectionFactory";
@@ -19,7 +19,7 @@ export interface ProcessedGenomicData
 export function createBackboneSection(species: Species, chromosome: Chromosome, startPos: number, stopPos: number,
                                       renderType: RenderType)
 {
-  const backbone = new BackboneSection({
+  return new BackboneSection({
     chromosome: chromosome.chromosome,
     species: species,
     start: startPos,
@@ -31,13 +31,11 @@ export function createBackboneSection(species: Species, chromosome: Chromosome, 
     renderType: renderType,
     createLabels: true,
   });
-
-  return backbone;
 }
 
 export function backboneDatatrackBuilder(species: Species, genomicData: Gene[], backboneSection: BackboneSection)
 {
-  const masterGeneMap = new Map<number, LoadedGene>();
+  // const masterGeneMap = new Map<number, LoadedGene>();
   const processedGenomicData: ProcessedGenomicData = {
     datatracks: [],
     genes: genomicData,
@@ -60,17 +58,18 @@ export function backboneDatatrackBuilder(species: Species, genomicData: Gene[], 
       backboneAlignment: { start: genomicElement.start, stop: genomicElement.stop },
     });
     processedGenomicData.datatracks.push(geneDatatrackSection);
-
-    // Map structure is { rgdId: { species: { gene: Gene, drawn: [{ svgY: number, svgX: number }] } } }
-    masterGeneMap.set(genomicElement.rgdId, {
-      backboneOrtholog: geneDatatrackSection,
-      genes: {
-        [species.name.toLowerCase()]: [],
-      }
-    });
+    //
+    // // Map structure is { rgdId: { species: { gene: Gene, drawn: [{ svgY: number, svgX: number }] } } }
+    // masterGeneMap.set(genomicElement.rgdId, {
+    //   backboneOrtholog: geneDatatrackSection,
+    //   genes: {
+    //     [species.name.toLowerCase()]: [],
+    //   }
+    // });
   });
 
-  return { backboneSection, masterGeneMap, processedGenomicData };
+  return { backboneSection, processedGenomicData };
+  // return { backboneSection, masterGeneMap, processedGenomicData };
 }
 
 export function createBackboneSet(backbone: BackboneSection, genomicData?: ProcessedGenomicData)

@@ -4,7 +4,7 @@ import Species from '@/models/Species';
 import Chromosome from '@/models/Chromosome';
 import Gene from '@/models/Gene';
 import BackboneSelection, { BasePairRange } from '@/models/BackboneSelection';
-import SVGConstants, { PANEL_HEIGHT } from '@/utils/SVGConstants';
+import SVGConstants from '@/utils/SVGConstants';
 import SelectedData from '@/models/SelectedData';
 import { InjectionKey } from 'vue';
 import { createLogger } from 'vuex';
@@ -29,7 +29,6 @@ export interface VCMapState
 
   overviewBasePairToHeightRatio: number;
   overviewSyntenyThreshold: number;
-  detailedBasePairToHeightRatio: number;
   detailsSyntenyThreshold: number;
 
   isDetailedPanelUpdating: boolean;
@@ -76,7 +75,6 @@ export default createStore({
 
     overviewBasePairToHeightRatio: 1000,
     overviewSyntenyThreshold: 30000,
-    detailedBasePairToHeightRatio: 1000,
     detailsSyntenyThreshold: 0,
 
     isDetailedPanelUpdating: false,
@@ -130,9 +128,6 @@ export default createStore({
     overviewSyntenyThreshold(state: VCMapState, threshold: number) {
       state.overviewSyntenyThreshold = threshold;
     },
-    detailedBasePairToHeightRatio(state: VCMapState, ratio: number) {
-      state.detailedBasePairToHeightRatio = ratio;
-    },
     detailsSyntenyThreshold(state: VCMapState, threshold: number) {
       state.detailsSyntenyThreshold = threshold;
     },
@@ -177,8 +172,7 @@ export default createStore({
       context.commit('overviewSyntenyThreshold', (backboneLength > 250000) ? Math.floor((backboneLength) / 8000) : 30000);
     },
     setDetailsResolution(context: ActionContext<VCMapState, VCMapState>, backboneLength: number) {
-      // The tracks in the detailed panel should have no top or bottom margins
-      context.commit('detailedBasePairToHeightRatio', backboneLength / PANEL_HEIGHT);
+
       // Note: Dividing by 8,000 is arbitary when calculating synteny threshold
       context.commit('detailsSyntenyThreshold', (backboneLength > 250000) ? Math.floor((backboneLength) / 8000) : 0);
     },

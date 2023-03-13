@@ -72,7 +72,6 @@ export namespace TestUtils
 
         overviewBasePairToHeightRatio: 1000,
         overviewSyntenyThreshold: 30000,
-        detailedBasePairToHeightRatio: 1000,
         detailsSyntenyThreshold: 0,
 
         configTab: 0,
