@@ -26,6 +26,7 @@ const store = useStore(key);
 interface Props
 {
   label: GeneLabel;
+  geneList: Map<number, Gene>;
 }
 defineProps<Props>();
 
@@ -75,11 +76,10 @@ const onGeneLabelClick = (event: any, label: GeneLabel) => {
   let newSelectedData: SelectedData[] = [];
   sortGeneList(geneList);
   geneList.forEach((gene: Gene) => {
-    const newData = getNewSelectedData(store, gene);
-    const geneAndOrthologs = newData.selectedData;
-    const newGeneIds = newData.rgdIds;
-    newSelectedData.push(...geneAndOrthologs);
-    geneIds.push(...newGeneIds);
+    // FIXME (orthologs): TEMP
+    newSelectedData.push(new SelectedData(gene, 'Gene'));
+    geneIds.push(gene.rgdId);
+    // endTEMP
   });
 
   store.dispatch('setSelectedGeneIds', geneIds || []);

@@ -292,33 +292,37 @@ const highlightSelections = (selectedGeneIds: number[]) => {
 };
 
 const onClick = (event: any, section: GeneDatatrack) => {
-  if (!section.gene?.rgdId) {
-    return;
-  }
+  if (!section.gene?.rgdId) return;
+
   // If clicked section already selected, just reset the selectedGeneId state
-  if (store.state.selectedGeneIds.includes(section.gene?.rgdId || -1)) {
+  if (store.state.selectedGeneIds.includes(section.gene?.rgdId || -1))
+  {
     store.dispatch('setSelectedGeneIds', []);
     store.dispatch('setSelectedData', null);
     return;
   }
 
+  // TODO: This behavior needs to be mimicked in the GeneLabels as well:
   // If shift key is held, we'll just add to the selections, otherwise, reset first
   let geneIds: number[] = event.shiftKey ? [...store.state.selectedGeneIds] : [];
 
   let newSelectedData: SelectedData[] = [];
-  if (section.gene) {
-    const newData = getNewSelectedData(store, section.gene);
-    const geneAndOrthologs = newData.selectedData;
-    const newGeneIds = newData.rgdIds;
-    newSelectedData.push(...geneAndOrthologs);
-    geneIds.push(...newGeneIds);
+  if (section.gene)
+  {
+    // FIXME: Orthologs
+    // FIXME: This code isn't used on the Backbone! Need to correct that inconsistency...
+    newSelectedData.push(new SelectedData(section.gene, 'Gene'));
+    geneIds.push(section.gene?.rgdId);
   }
 
   store.dispatch('setSelectedGeneIds', geneIds || []);
-  if (event.shiftKey) {
+  if (event.shiftKey)
+  {
     const selectedDataArray = [...(store.state.selectedData || []), ...newSelectedData];
     store.dispatch('setSelectedData', selectedDataArray);
-  } else {
+  }
+  else
+  {
     store.dispatch('setSelectedData', newSelectedData);
   }
 };

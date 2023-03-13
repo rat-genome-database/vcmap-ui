@@ -209,6 +209,8 @@ const onClick = (event: any, section: GeneDatatrack) => {
   if (!section.gene?.rgdId || section.type === 'qtl' || section.type === 'variant') {
     return;
   }
+
+  // TODO: This behavior needs to be mimicked in the GeneLabels as well:
   // If clicked section already selected, just reset the selectedGeneId state
   if (store.state.selectedGeneIds.includes(section.gene?.rgdId || -1)) {
     store.dispatch('setSelectedGeneIds', []);
@@ -221,11 +223,8 @@ const onClick = (event: any, section: GeneDatatrack) => {
 
   let newSelectedData: SelectedData[] = [];
   if (section.gene) {
-    const newData = getNewSelectedData(store, section.gene);
-    const geneAndOrthologs = newData.selectedData;
-    const newGeneIds = newData.rgdIds;
-    newSelectedData.push(...geneAndOrthologs);
-    geneIds.push(...newGeneIds);
+    newSelectedData.push(new SelectedData(section.gene, 'Gene'));
+    geneIds.push(section.gene?.rgdId);
   }
 
   store.dispatch('setSelectedGeneIds', geneIds || []);

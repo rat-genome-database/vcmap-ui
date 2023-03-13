@@ -40,7 +40,7 @@
       <template v-if="detailedBackboneSet.datatrackLabels">
         <template v-for="(label, index) in detailedBackboneSet.datatrackLabels" :key="index">
           <template v-if="(label.isVisible)">
-            <GeneLabelSVG :label="label" />
+            <GeneLabelSVG :label="label" :gene-list="geneList"/>
           </template>
         </template>
       </template>
@@ -53,7 +53,7 @@
         </template>
         <template v-for="(label, index) in syntenySet.datatrackLabels" :key="index">
           <template v-if="label.isVisible">
-            <GeneLabelSVG :label="label"/>
+            <GeneLabelSVG :label="label" :gene-list="geneList"/>
           </template>
         </template>
       </template>
