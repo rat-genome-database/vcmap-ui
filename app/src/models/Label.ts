@@ -6,6 +6,7 @@ interface LabelParams
   posY: number;
   text: string;
   isVisible?: boolean;
+  addClass?: string;
 }
 
 export default class Label
@@ -13,15 +14,17 @@ export default class Label
   posX: number = 0;
   posY: number = 0;
   text: string = '';
-  isVisible: boolean;
+  isVisible: boolean = true;
   isHovered: boolean = false;
+  addClass: string = "";
 
   constructor(params: LabelParams)
   {
     this.posX = params.posX;
     this.posY = params.posY;
     this.text = params.text;
-    this.isVisible = params.isVisible ?? true;
+    this.isVisible = params.isVisible ?? this.isVisible;
+    this.addClass = params.addClass ?? this.addClass;
   }
 }
 

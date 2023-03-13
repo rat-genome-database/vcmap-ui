@@ -169,6 +169,7 @@ export default class SyntenyRegionSet extends GenomicSet
       posX: (this.renderType === 'overview') ? getOverviewPanelXPosition(this.order) : getDetailedPanelXPositionForSynteny(this.order),
       posY: SVGConstants.trackMapLabelYPosition,
       text: this.mapName,
+      addClass: 'smaller',
     });
 
     this.titleLabels = [speciesLabel, mapLabel];

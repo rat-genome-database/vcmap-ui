@@ -94,23 +94,23 @@
     <!-- SyntenyRegionSet Title Labels -->
     <template v-for="(syntenySet, index) in overviewSyntenySets" :key="index">
       <template v-for="(label, index) in syntenySet.titleLabels" :key="index">
-        <text class="label small" :x="label.posX" :y="label.posY">{{label.text}}</text>
+        <text :class="`label small ${label.addClass}`" :x="label.posX" :y="label.posY">{{label.text}}</text>
       </template>
     </template>
     <template v-if="overviewBackboneSet">
       <template v-for="(label, index) in overviewBackboneSet.titleLabels" :key="index">
-        <text class="label small" :x="label.posX" :y="label.posY">{{label.text}}</text>
+        <text :class="`label small ${label.addClass}`" :x="label.posX" :y="label.posY">{{label.text}}</text>
       </template>
     </template>
     <template v-if="detailedBackboneSet">
       <template v-for="(label, index) in detailedBackboneSet.titleLabels" :key="index">
-        <text class="label small" :x="label.posX" :y="label.posY">{{label.text}}</text>
+        <text :class="`label small ${label.addClass}`" :x="label.posX" :y="label.posY">{{label.text}}</text>
       </template>
     </template>
     <template v-if="detailedSyntenySets.length">
       <template v-for="(syntenySet, index) in detailedSyntenySets" :key="index">
         <template v-for="(label, index) in syntenySet.titleLabels" :key="index">
-          <text class="label small" :x="label.posX" :y="label.posY">{{label.text}}</text>
+          <text :class="`label small ${label.addClass}`" :x="label.posX" :y="label.posY">{{label.text}}</text>
         </template>
       </template>
     </template>
@@ -957,6 +957,11 @@ function logPerformanceReport(title: string, totalTimeMillis: number, detailedTi
 {
   user-select: none ;
   z-index: -1;
+}
+
+.label.small.smaller
+{
+  font-size: 7px;
 }
 
 rect.panel
