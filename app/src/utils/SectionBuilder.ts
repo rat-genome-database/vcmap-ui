@@ -15,9 +15,71 @@ import {useLogger} from "vue-logger-plugin";
 
 const $log = useLogger();
 
-export interface LoadedBlock
+/**
+ * Create the off-backbone visual elements representing the large level 1 synteny
+ * blocks.
+ * @param syntenyData
+ * @param comparativeSpecies
+ * @param backboneChr
+ */
+export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, Block[]>, comparativeSpecies: Species[],
+    backboneChr: Chromosome): Promise<SyntenyRegionSet[]>
 {
-  [speciesName:string]: { [chromosome: string]: [SyntenySection] }
+  const syntenyRegionSets: SyntenyRegionSet[] = [];
+
+  // TODO: This code is extremely similar to building synteny blocks WITH datatracks, need to reorganize this...
+  let setOrder = 1;
+  syntenyData.forEach((blocks, mapKey) => {
+    const currSpecies = comparativeSpecies.find((compSpecies) => compSpecies.activeMap.key == mapKey);
+    if (!currSpecies) return;
+
+    const processedSyntenicRegions: SyntenyRegion[] = [];
+    const currMapName = currSpecies.activeMap.name ?? '';
+    for (let blockIdx = 0; blockIdx < blocks.length; blockIdx++)
+    {
+      const blockInfo = blocks[blockIdx];
+      const blockGaps = blockInfo.gaps;
+      const blockChrStr = blockInfo.chromosome.chromosome;
+
+
+      // Create a factory for the creation of our "Regions" (Blocks, Gaps, etc)
+      const factory = new GenomicSectionFactory(currSpecies.name, currMapName, blockChrStr,
+        {start: 0, stop: backboneChr.seqLength}, 'overview'
+      );
+
+      // Create the SyntenySection representing the gapless block
+      // Note: It's important to set start/stop based on orientation here as processing
+      //   further down the chain relies on it.
+      // TODO: this code makes me wonder if we cannot revisit the relationship between:
+      //    SyntenyRegion / SyntenySection / GenomicSection
+      const gaplessBlockSection = factory.createSyntenySection({
+        start: (blockInfo.orientation === '-') ? blockInfo.stop : blockInfo.start,
+        stop: (blockInfo.orientation === '-') ? blockInfo.start : blockInfo.stop,
+        backboneAlignment: {start: blockInfo.backboneStart, stop: blockInfo.backboneStop},
+        type: 'block',
+        orientation: blockInfo.orientation,
+        chainLevel: blockInfo.chainLevel,
+        isGapless: true,
+      });
+      // Create the SyntenyRegion that covers the extent of the Block
+      // NOTE: This might extend beyond the visible window, but we will try to only create
+      //   any "gappy" GenomicSection blocks within the visible range to minimize DOM nodes
+      //   that will ultimately be added to the DOM via the SVG.
+      const currSyntenicRegion = new SyntenyRegion({
+        species: currSpecies.name,
+        mapName: currMapName,
+        gaplessBlock: gaplessBlockSection,
+      });
+      // FIXME: Create a single visible block (ignoring gap data)
+      currSyntenicRegion.syntenyBlocks.push(gaplessBlockSection);
+
+      processedSyntenicRegions.push(currSyntenicRegion);
+    }
+    syntenyRegionSets.push(new SyntenyRegionSet(currSpecies.name, currMapName, processedSyntenicRegions, setOrder, 'overview', []));
+    setOrder++;
+  });
+
+  return syntenyRegionSets;
 }
 
 /**
@@ -131,6 +193,8 @@ console.debug(`About to loop over ${speciesSyntenyData.length} Blocks`);
       mapName: currMapName,
       gaplessBlock: gaplessBlockSection,
     });
+    // FIXME: Create a single visible block (ignoring gap data)
+    currSyntenicRegion.syntenyBlocks.push(gaplessBlockSection);
 
     // Step 2: Split the gapless Block into multiple GenomicSections based on gaps.
     //   Only do this for the region of the

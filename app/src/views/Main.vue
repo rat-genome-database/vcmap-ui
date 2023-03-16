@@ -93,6 +93,7 @@ const onInspectPressed = () => {
  */
 onMounted(async () => {
   $log.debug('Creating memory models for our Comparative Map view');
+  store.dispatch('setConfigurationLoaded', false);
 
   // Clear out old structures
   // TODO: Ensure circular references are not going to cause memory leaks
@@ -138,6 +139,9 @@ onMounted(async () => {
     comparativeSpecies: store.state.comparativeSpecies,
   });
   processSynteny(speciesSyntenyDataArray, 0, store.state.chromosome.seqLength);
+
+  // Kick off the OverviewPanel load
+  store.dispatch('setConfigurationLoaded', true);
 });
 
 /**

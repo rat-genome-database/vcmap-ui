@@ -9,7 +9,6 @@ import SelectedData from '@/models/SelectedData';
 import { InjectionKey } from 'vue';
 import { createLogger } from 'vuex';
 import { GeneDatatrack, LoadedGene } from '@/models/DatatrackSection';
-import { LoadedBlock } from '@/utils/SectionBuilder';
 
 export const key: InjectionKey<Store<VCMapState>> = Symbol();
 
@@ -23,6 +22,7 @@ export interface VCMapState
   comparativeSpecies: Species[];
   configTab: number;
 
+  configurationLoaded: boolean | null;
   selectedBackboneRegion: BackboneSelection | null;
   detailedBasePairRequest: BasePairRange | null;
   detailedBasePairRange: BasePairRange;
@@ -39,7 +39,6 @@ export interface VCMapState
 
   /* These data structures have the potential to be pretty large */
   loadedGenes: Map<number, LoadedGene> | null;
-  loadedBlocks: Map<number, LoadedBlock> | null;
 }
 
 const vuexLocal = new VuexPersistence<VCMapState>({
@@ -69,6 +68,7 @@ export default createStore({
     comparativeSpecies: [],
     configTab: 0,
 
+    configurationLoaded: null,
     selectedBackboneRegion: null,
     detailedBasePairRequest: { start: 0, stop: 0 } ?? null,
     detailedBasePairRange: { start: 0, stop: 0 },
@@ -85,7 +85,6 @@ export default createStore({
 
     /* These data structures have the potential to be pretty large */
     loadedGenes: null,
-    loadedBlocks: null,
   }),
 
   mutations: {
@@ -110,8 +109,8 @@ export default createStore({
     loadedGenes (state: VCMapState, loadedGenesMap: Map<number, LoadedGene>) {
       state.loadedGenes = loadedGenesMap;
     },
-    loadedBlocks (state: VCMapState, loadedBlocksMap: Map<number, LoadedBlock>) {
-      state.loadedBlocks = loadedBlocksMap;
+    configurationLoaded(state: VCMapState, configState: boolean | null) {
+      state.configurationLoaded = configState;
     },
     selectedBackboneRegion ( state: VCMapState, selection: BackboneSelection) {
       state.selectedBackboneRegion = selection;
@@ -179,6 +178,9 @@ export default createStore({
     setConfigTab(context: ActionContext<VCMapState, VCMapState>, tab: number) {
       context.commit('configTab', tab);
     },
+    setConfigurationLoaded(context: ActionContext<VCMapState, VCMapState>, configState: boolean | null) {
+      context.commit('configurationLoaded', configState);
+    },
     setSelectedData(context: ActionContext<VCMapState, VCMapState>, selected: SelectedData[]) {
       context.commit('selectedData', selected);
     },
@@ -190,9 +192,6 @@ export default createStore({
     },
     setLoadedGenes(context: ActionContext<VCMapState, VCMapState>, loadedGenes: Gene[]) {
       context.commit('loadedGenes', loadedGenes);
-    },
-    setLoadedBlocks(context: ActionContext<VCMapState, VCMapState>, loadedBlocks: Map<number, LoadedBlock>) {  
-      context.commit('loadedBlocks', loadedBlocks);
     },
     setIsDetailedPanelUpdating(context: ActionContext<VCMapState, VCMapState>, isUpdating: boolean) {
       context.commit('isDetailedPanelUpdating', isUpdating);
@@ -212,6 +211,7 @@ export default createStore({
       context.commit('loadedBlocks', null);
       context.commit('selectedBackboneRegion', null);
       context.commit('detailedBasePairRange', { start: 0, stop: 0 });
+      context.commit('configurationLoaded', null);
     },
     clearBackboneSelection(context: ActionContext<VCMapState, VCMapState>) {
       context.commit('selectedBackboneRegion', null);

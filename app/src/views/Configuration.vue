@@ -465,6 +465,8 @@ async function setGeneChromosomeAndDefaultStartAndStopPositions(gene: Gene | nul
 
 async function prepopulateConfigOptions()
 {
+  store.dispatch('setConfigurationLoaded', null);
+
   activeTab.value = store.state.configTab;
   isLoadingSpecies.value = true;
   const backboneSelection = store.state.selectedBackboneRegion;
@@ -650,6 +652,7 @@ function saveConfigToStoreAndGoToMainScreen()
 
   store.dispatch('setComparativeSpecies', comparativeSpecies);
   store.dispatch('setConfigTab', activeTab.value);
+  store.dispatch('setConfigurationLoaded', null);
 
   router.push('/main');
 }

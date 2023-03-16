@@ -197,7 +197,7 @@ import SyntenyRegionSet from '@/models/SyntenyRegionSet';
 import QtlApi from '@/api/QtlApi';
 import VariantApi from '@/api/VariantApi';
 import BackboneSet from '@/models/BackboneSet';
-import { LoadedBlock } from '@/utils/SectionBuilder';
+import { createOverviewSyntenicRegionSets } from '@/utils/SectionBuilder';
 import OrthologLineSVG from './OrthologLineSVG.vue';
 import LoadingSpinnerMask from './LoadingSpinnerMask.vue';
 import { createQtlDatatracks } from '@/utils/QtlBuilder';
@@ -273,22 +273,31 @@ async function attachToProgressLoader(storeLoadingActionName: string, func: () =
 }
 
 onMounted(async () => {
-  // Clear any prior selections or set as the searched gene
-  const gene = store.state.gene;
-  store.dispatch('setSelectedData', gene ? [new SelectedData(gene.clone(), 'Gene')] : null);
+console.error('HERE');
+  enableProcessingLoadMask.value = true;
 
-  await attachToProgressLoader('setIsOverviewPanelUpdating', updateOverviewPanel);
+  // Clear any prior selections or set as the searched gene
+  // const gene = store.state.gene;
+  // store.dispatch('setSelectedData', gene ? [new SelectedData(gene.clone(), 'Gene')] : null);
+
+  //await attachToProgressLoader('setIsOverviewPanelUpdating', updateOverviewPanel);
 
   // Note: We need to type cast here b/c SyntenyRegionSet contains private fields and type-checking fails
   // See: https://github.com/vuejs/core/issues/2981
-  isMissingSynteny.value = !(checkSyntenyResultsOnComparativeSpecies(overviewSyntenySets.value as SyntenyRegionSet[]));
+  // isMissingSynteny.value = !(checkSyntenyResultsOnComparativeSpecies(overviewSyntenySets.value as SyntenyRegionSet[]));
 
   // Prevent detailed panel processing from happening if there is an issue with off-backbone synteny
   // A dialog will appear to let the user confirm before proceeding...
-  if (!isMissingSynteny.value)
-  {
+  // if (!isMissingSynteny.value)
+  // {
     allowDetailedPanelProcessing.value = true;
-  }
+  // }
+});
+
+watch([() => store.state.configurationLoaded], () => {
+  console.error('mutation on configState', store.state.configurationLoaded);
+  if (store.state.configurationLoaded === true)
+    attachToProgressLoader('setIsOverviewPanelUpdating', updateOverviewPanel);
 });
 
 /**
@@ -338,7 +347,7 @@ const updateOverviewPanel = async () => {
   const backboneStart = store.state.startPos ?? 0;
   const backboneStop = store.state.stopPos ?? backboneChromosome.seqLength;
 
-  //e rror if backbone info is invalid length
+  // error if backbone info is invalid length
   if (backboneStop - backboneStart <= 0)
   {
     onError(noRegionLengthError, noRegionLengthError.message);
@@ -366,11 +375,12 @@ const updateOverviewPanel = async () => {
     return;
   }
 
-  // Set an initial (empty) selection
-  store.dispatch('setBackboneSelection', new BackboneSelection(backboneChromosome));
   // TODO: Use a request here on "load by Gene" / "load by Position" requests?
 
   //build overview synteny sets
+  const overviewSyntenyTrackCreationTime = Date.now();
+  overviewSyntenySets.value = await createOverviewSyntenicRegionSets(props.syntenyTree, store.state.comparativeSpecies, backboneChromosome);
+
   // TODO: Redo this
   // const emptyBlockMap = new Map<number, LoadedBlock>();
   /*const overviewSyntenyData = await createSyntenicRegionsAndDatatracks(
@@ -387,10 +397,14 @@ const updateOverviewPanel = async () => {
 
   overviewSyntenySets.value = overviewSyntenyData.syntenyRegionSets;*/
 
-  const overviewSyntenyTrackCreationTime = Date.now();
 
 
+  // Set an initial (empty) selection
+  store.dispatch('setBackboneSelection', new BackboneSelection(backboneChromosome));
+  store.dispatch('setConfigurationLoaded', true);
   enableProcessingLoadMask.value = false;
+
+  // TODO: double check this logic:
   const overviewCreateBackboneSelectionTime = Date.now();
   logPerformanceReport('Update Overview Time', (overviewCreateBackboneSelectionTime - overviewUpdateStart), {
     'Create Backbone Track': (overviewBackboneCreationTime - overviewUpdateStart),

@@ -66,6 +66,7 @@ export namespace TestUtils
         gene: null,
         comparativeSpecies: [],
 
+        configurationLoaded: null,
         selectedBackboneRegion: null,
         detailedBasePairRequest: null,
         detailedBasePairRange: { start: 0, stop: 0 },
@@ -78,7 +79,6 @@ export namespace TestUtils
 
         selectedData: null,
         loadedGenes: null,
-        loadedBlocks: null,
         selectedGeneIds: [],
 
         isDetailedPanelUpdating: false,
