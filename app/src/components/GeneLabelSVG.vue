@@ -77,7 +77,7 @@ const onGeneLabelClick = (event: any, label: GeneLabel) => {
   sortGeneList(geneList);
   geneList.forEach((gene: Gene) => {
     // FIXME (orthologs): TEMP
-    newSelectedData.push(new SelectedData(gene, 'Gene'));
+    newSelectedData.push(new SelectedData(gene.clone(), 'Gene'));
     geneIds.push(gene.rgdId);
     // endTEMP
   });
@@ -98,9 +98,9 @@ const onMouseEnter = (label: GeneLabel) => {
   // If there are selected genes, don't update the selected data panel
   if (store.state.selectedGeneIds.length === 0) {
     const newSelectedData = label.combinedLabels.map((label) => {
-      return new SelectedData(label.gene, 'Gene');
+      return new SelectedData(label.gene.clone(), 'Gene');
     });
-    newSelectedData.unshift(new SelectedData(label.gene, 'Gene'));
+    newSelectedData.unshift(new SelectedData(label.gene.clone(), 'Gene'));
     store.dispatch('setSelectedData', newSelectedData);
   }
 };

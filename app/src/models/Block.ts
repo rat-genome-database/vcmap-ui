@@ -20,17 +20,20 @@ interface GapParams
   start: number;
   stop: number;
   backboneStart?: number;
+  backboneStop?: number;
 }
 export class Gap
 {
   start: number = -1;
   stop: number = -1;
-  backboneStart;
+  backboneStart: number | null = null;
+  backboneStop: number | null = null;
   constructor(params: GapParams)
   {
     this.start = params.start;
     this.stop = params.stop;
-    this.backboneStart = params.backboneStart ?? null;
+    this.backboneStart = params.backboneStart ?? this.backboneStart;
+    this.backboneStop = params.backboneStop ?? this.backboneStop;
   }
 }
 

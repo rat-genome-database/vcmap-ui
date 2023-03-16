@@ -146,7 +146,7 @@ toRefs(props);
 let selectedRegion = ref<BackboneSelection>();
 if (store.state.chromosome)
 {
-  selectedRegion.value = store.state.selectedBackboneRegion ?? new BackboneSelection(new SelectedRegion(0,0,0,0), store.state.chromosome);
+  selectedRegion.value = store.state.selectedBackboneRegion ?? new BackboneSelection(store.state.chromosome);
 }
 const basePairPositionLabel = ref<string>('');
 
@@ -154,7 +154,7 @@ watch(() => store.state.selectedBackboneRegion, (newVal: BackboneSelection | nul
   // Watch for possible clear out of the selected backbone region
   if (!isDetailed.value && newVal == null && store.state.chromosome != null)
   {
-    selectedRegion.value = new BackboneSelection(new SelectedRegion(0,0,0,0), store.state.chromosome);
+    selectedRegion.value = new BackboneSelection(store.state.chromosome);
   }
   else if (!isDetailed.value && newVal != null)
   {
@@ -223,7 +223,7 @@ const onClick = (event: any, section: GeneDatatrack) => {
 
   let newSelectedData: SelectedData[] = [];
   if (section.gene) {
-    newSelectedData.push(new SelectedData(section.gene, 'Gene'));
+    newSelectedData.push(new SelectedData(section.gene.clone(), 'Gene'));
     geneIds.push(section.gene?.rgdId);
   }
 

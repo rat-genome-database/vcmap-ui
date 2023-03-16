@@ -63,10 +63,25 @@ const geneList = ref(new Map<number, Gene>());
 
 // TODO TEMP
 const onInspectPressed = () => {
-  console.debug(geneList);
-  console.debug(syntenyTree);
+  console.debug('Gene List:', geneList);
+  console.debug('Synteny Tree:', syntenyTree);
   // NOTE: I cannot seem to get this to force child updates when using a shallowRef???
   //triggerRef(geneList);
+
+  console.debug('Selected Data:', store.state.selectedData);
+
+  // Specific analysis (Mcur1): Compare selectedData after commit to data from this.geneList
+  // SelectedData[]
+  // store.state.selectedData?.forEach((selectedData) => {
+  //   let gene = (selectedData.genomicSection as Gene);
+  //   console.log('Gene data (selectedData):', gene.symbol, gene.rgdId, gene.chromosome, gene.block);
+  // });
+  //
+  // // this.geneList
+  // geneList.value.forEach((gene) => {
+  //   if (gene.symbol == 'Mcur1')
+  //     console.log('Gene data (geneList):', gene.symbol, gene.rgdId, gene.chromosome, gene.block);
+  // });
 };
 // TODO endTEMP
 
@@ -287,15 +302,15 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
           {
             // Forward oriented block
             // TODO: Some edge cases might not be handled properly with this simplification
-            gene.backboneStart = targetBlock.backboneStart + (gene.start - targetBlock.start) * blockRatio;
-            gene.backboneStop = targetBlock.backboneStart + (gene.stop - targetBlock.start) * blockRatio;
+            gene.backboneStart = Math.floor(targetBlock.backboneStart + (gene.start - targetBlock.start) * blockRatio);
+            gene.backboneStop = Math.floor(targetBlock.backboneStart + (gene.stop - targetBlock.start) * blockRatio);
           }
           else
           {
             // Reverse oriented block
             // TODO: Some edge cases might not be handled properly with this simplification
-            gene.backboneStart = targetBlock.backboneStart + (targetBlock.stop - gene.stop) * blockRatio;
-            gene.backboneStop = targetBlock.backboneStart + (targetBlock.stop - gene.start) * blockRatio;
+            gene.backboneStart = Math.floor(targetBlock.backboneStart + (targetBlock.stop - gene.stop) * blockRatio);
+            gene.backboneStop = Math.floor(targetBlock.backboneStart + (targetBlock.stop - gene.start) * blockRatio);
           }
 
           // Ensure genes don't extend beyond the range of our block

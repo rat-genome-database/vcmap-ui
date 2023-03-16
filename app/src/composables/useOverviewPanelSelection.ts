@@ -101,12 +101,14 @@ export default function useOverviewPanelSelection(store: Store<VCMapState>) {
       }
 
       const selectedBackboneRegion = store.state.selectedBackboneRegion;
-      if (selectedBackboneRegion)
+      if (selectedBackboneRegion && selectedBackboneRegion.setViewportSelection)
       {
         selectedBackboneRegion.setViewportSelection(basePairStart, basePairStop, store.state.overviewBasePairToHeightRatio);
         //store.dispatch('setBackboneSelection', selectedBackboneRegion);
         store.dispatch('setDetailedBasePairRequest', { start: basePairStart, stop: basePairStop });
       }
+      // TODO (TEMP):
+      else { console.error("FIXME HERE TEMP", selectedBackboneRegion); }
     }
 
     // Clear selection box

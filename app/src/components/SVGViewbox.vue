@@ -1,8 +1,4 @@
 <template>
-  <Button
-      label="DRAW GENES"
-      @click="tempReplace"
-  />
   <svg :viewBox="'0 0 800 ' + SVGConstants.viewboxHeight" xmlns="http://www.w3.org/2000/svg" id="svg-wrapper" width="100%">
 
     <!-- Outside panel -->
@@ -60,12 +56,6 @@
     </template>
 
 <!--TEMP-->
-<!--    <template v-for="(rectangle, index) in testRects" :key="index">-->
-<!--      <rect :fill="rectangle.elementColor" fill-opacity="0.8" x="340.0" width="10.0"-->
-<!--            :height="rectangle.posY2 - rectangle.posY1" :y="rectangle.posY1"-->
-<!--            :data-name="rectangle.name"-->
-<!--      />-->
-<!--    </template>-->
     <template v-for="(rectangle, index) in testRects2" :key="index">
       <rect :fill="rectangle.elementColor" fill-opacity="0.8" x="460.0" width="10.0"
             :height="rectangle.posY2 - rectangle.posY1" :y="rectangle.posY1"
@@ -197,8 +187,8 @@ import OrthologLine from '@/models/OrthologLine';
 import SelectedData from '@/models/SelectedData';
 import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
 import { key } from '@/store';
-import { backboneDetailedError, backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError, selectionError } from '@/utils/VCMapErrors';
-import { createSyntenicRegionsAndDatatracks, CreateSyntenicRegionsResult,  } from '@/utils/SectionBuilder';
+import { backboneDetailedError, backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError } from '@/utils/VCMapErrors';
+import { createSyntenicRegionSets,  } from '@/utils/SectionBuilder';
 import useOverviewPanelSelection from '@/composables/useOverviewPanelSelection';
 import { useLogger } from 'vue-logger-plugin';
 import { createBackboneSection, backboneDatatrackBuilder, createBackboneSet } from '@/utils/BackboneBuilder';
@@ -207,7 +197,6 @@ import SyntenyRegionSet from '@/models/SyntenyRegionSet';
 import QtlApi from '@/api/QtlApi';
 import VariantApi from '@/api/VariantApi';
 import BackboneSet from '@/models/BackboneSet';
-import { LoadedGene } from '@/models/DatatrackSection';
 import { LoadedBlock } from '@/utils/SectionBuilder';
 import OrthologLineSVG from './OrthologLineSVG.vue';
 import LoadingSpinnerMask from './LoadingSpinnerMask.vue';
@@ -286,7 +275,7 @@ async function attachToProgressLoader(storeLoadingActionName: string, func: () =
 onMounted(async () => {
   // Clear any prior selections or set as the searched gene
   const gene = store.state.gene;
-  store.dispatch('setSelectedData', gene ? [new SelectedData(gene, 'Gene')] : null);
+  store.dispatch('setSelectedData', gene ? [new SelectedData(gene.clone(), 'Gene')] : null);
 
   await attachToProgressLoader('setIsOverviewPanelUpdating', updateOverviewPanel);
 
@@ -337,7 +326,7 @@ const updateOverviewPanel = async () => {
   const backboneChromosome = store.state.chromosome;
   const loadType = store.state.configTab;
 
-  //error if backbone is not set
+  // error if backbone is not set
   if (backboneSpecies == null || backboneChromosome == null)
   {
     onError(backboneOverviewError, backboneOverviewError.message);
@@ -349,7 +338,7 @@ const updateOverviewPanel = async () => {
   const backboneStart = store.state.startPos ?? 0;
   const backboneStop = store.state.stopPos ?? backboneChromosome.seqLength;
 
-  //error if backbone info is invalid length
+  //e rror if backbone info is invalid length
   if (backboneStop - backboneStart <= 0)
   {
     onError(noRegionLengthError, noRegionLengthError.message);
@@ -360,15 +349,16 @@ const updateOverviewPanel = async () => {
 
   overviewSyntenySets.value = [];
   // The backbone is the entire chromosome
+  // TODO: Remove this
   store.dispatch('setOverviewResolution', backboneChromosome.seqLength);
 
-  //build backbone set
+  // Build backbone set
   const overviewBackbone = createBackboneSection(backboneSpecies, backboneChromosome, 0, backboneChromosome.seqLength, 'overview');
   overviewBackboneSet.value = createBackboneSet(overviewBackbone);
 
   const overviewBackboneCreationTime = Date.now();
 
-  //error if no comparative species
+  // Error if no comparative species
   if (store.state.comparativeSpecies.length === 0)
   {
     onError(missingComparativeSpeciesError, missingComparativeSpeciesError.message);
@@ -376,11 +366,14 @@ const updateOverviewPanel = async () => {
     return;
   }
 
-  // TODO: Do we need masterGeneMap for the overview?
-  const emptyBlockMap = new Map<number, LoadedBlock>();
+  // Set an initial (empty) selection
+  store.dispatch('setBackboneSelection', new BackboneSelection(backboneChromosome));
+  // TODO: Use a request here on "load by Gene" / "load by Position" requests?
 
   //build overview synteny sets
-  const overviewSyntenyData = await createSyntenicRegionsAndDatatracks(
+  // TODO: Redo this
+  // const emptyBlockMap = new Map<number, LoadedBlock>();
+  /*const overviewSyntenyData = await createSyntenicRegionsAndDatatracks(
     store.state.comparativeSpecies,
     backboneChromosome,
     0,
@@ -392,53 +385,10 @@ const updateOverviewPanel = async () => {
     emptyBlockMap,
   );
 
-  overviewSyntenySets.value = overviewSyntenyData.syntenyRegionSets;
+  overviewSyntenySets.value = overviewSyntenyData.syntenyRegionSets;*/
 
   const overviewSyntenyTrackCreationTime = Date.now();
 
-  // Set the backbone selection to the start and stop positions selected on the config screen if a selection doesn't already exist
-  // (the backbone should have just 1 [0] section)
-
-  //TODO: Change so that we are using the new full chromosome/bufferzone/viewport selection options to check for and rebuild selections
-  const prevBackboneSelection = store.state.selectedBackboneRegion;
-  if (prevBackboneSelection == null)
-  {
-    const selection = new BackboneSelection(
-      new SelectedRegion(SVGConstants.overviewTrackYPosition,
-          ( backboneChromosome.seqLength / store.state.overviewBasePairToHeightRatio ),
-          0, backboneChromosome.seqLength
-      ),
-      backboneChromosome
-    );
-
-    //if initially loading by gene, we need to set and process the full backbone range and syntenic blocks to find ortholog positions to later adjust so all are visible in the detail panel
-    if (loadType === 0)
-    {
-      store.dispatch('setBackboneSelection', selection);
-    }
-    else
-    {
-      selection.setViewportSelection(backboneStart, backboneStop, store.state.overviewBasePairToHeightRatio);
-      store.dispatch('setBackboneSelection', selection);
-    }
-  }
-  else if (prevBackboneSelection)
-  {
-    const recreatedSelection = new BackboneSelection(
-      new SelectedRegion(SVGConstants.overviewTrackYPosition, ( backboneChromosome.seqLength / store.state.overviewBasePairToHeightRatio ), 0, backboneChromosome.seqLength), 
-      backboneChromosome
-    );
-
-    if (prevBackboneSelection.viewportSelection)
-    {
-      recreatedSelection.setViewportSelection(prevBackboneSelection.viewportSelection.basePairStart, prevBackboneSelection.viewportSelection.basePairStop, store.state.overviewBasePairToHeightRatio);
-    }
-    else
-    {
-      recreatedSelection.setViewportSelection(0, backboneChromosome.seqLength, store.state.overviewBasePairToHeightRatio);
-    }
-    store.dispatch('setBackboneSelection', recreatedSelection);
-  }
 
   enableProcessingLoadMask.value = false;
   const overviewCreateBackboneSelectionTime = Date.now();
@@ -449,22 +399,19 @@ const updateOverviewPanel = async () => {
   });
 };
 
+/**
+ * Update the SVG elements on the "detailed" panel of the SVG. This involves removing those
+ * previously viewed elements (by clearing our reactive refs in this class) and then creating
+ * a view of the new viewport that only includes things in our visible range.
+ * NOTE: Some of the elements we remove and recreate might actually have the represented the
+ *   same memory structures and in a future iteration we will try to adjust the position of
+ *   those elements as opposed to removing and recreating them.
+ */
 const updateDetailsPanel = async () => {
   $log.debug(`Updating Detailed Panel`);
 
   const detailedUpdateStart = Date.now();
   enableProcessingLoadMask.value = true;
-
-  tempReplace();
-// eslint-disable-next-line no-constant-condition
-// if (true) return;
-  const originalSelectedBackboneRegion: BackboneSelection | null = store.state.selectedBackboneRegion;
-  if (originalSelectedBackboneRegion == null)
-  {
-    onError(selectionError, selectionError.message);
-    enableProcessingLoadMask.value = false;
-    return;
-  }
 
   const backboneSpecies = store.state.species;
   const backboneChromosome = store.state.chromosome;
@@ -481,10 +428,11 @@ const updateDetailsPanel = async () => {
   let timeCreateBackboneSet = 0;
   let timeAdjustVisibleRegion = 0;
 
-  //error if invalid base pair range
+  // error if invalid base pair range
   if (detailedBasePairRange.stop - detailedBasePairRange.start <= 0)
   {
     // Clear out our detailed synteny sets
+    $log.error(`Invalid detailedBasePairRange?? (${detailedBasePairRange.start}, ${detailedBasePairRange.stop})`);
     detailedSyntenySets.value = [];
     enableProcessingLoadMask.value = false;
     return;
@@ -499,7 +447,7 @@ const updateDetailsPanel = async () => {
     return;
   }
 
-  //error if no comparative species
+  // error if no comparative species
   if (store.state.comparativeSpecies.length === 0)
   {
     onError(missingComparativeSpeciesError, missingComparativeSpeciesError.message);
@@ -531,64 +479,23 @@ const updateDetailsPanel = async () => {
 
   //
   // Next, the visible Synteny elements
-  // TODO
+  // Create the backbone track for the entire base selection at the updated Detailed panel resolution
+  const syntenyTracksStart = Date.now();
+  detailedSyntenySets.value = await createSyntenicRegionSets(
+      props.syntenyTree,
+      store.state.comparativeSpecies,
+      backboneChromosome,
+      detailedBasePairRange.start,
+      detailedBasePairRange.stop,
+  );
+  timeSyntenyTracks = Date.now() - syntenyTracksStart;
 
-  // Check if we have loaded backbone sets, if not, load them (initial)
-  // let masterGeneMap: Map<number, LoadedGene> | null = store.state.loadedGenes;
-  // if (detailedBackboneSet.value == null)
-  // {
   //
-  //   // Create the backbone track for the entire base selection at the updated Detailed panel resolution
-  //   const backboneTrackStart = Date.now();
+  // Done!!
   //
-  //   const detailedBackbone = createBackboneSection(backboneSpecies, backboneChromosome, 0,
-  //       backboneChromosome.seqLength, 'detailed');
-  //   timeCreateBackboneTrack = Date.now() - backboneTrackStart;
-  //
-  //   // Create the backbone data tracks for the entire selection at the updated Detailed panel resolution
-  //   const queryBackboneboneGenesStart = Date.now();
-  //   const tempBackboneGenes: Gene[] = await GeneApi.getGenesByRegion(backboneChromosome.chromosome, 0,
-  //       backboneChromosome.seqLength, backboneSpecies.activeMap.key, backboneSpecies.name, comparativeSpeciesIds);
-  //
-  //   timeQueryBackboneGenes = Date.now() - queryBackboneboneGenesStart;
-  //
-  //   const backboneDatatracksStart = Date.now();
-  //   const backboneDatatrackInfo = backboneDatatrackBuilder(backboneSpecies, tempBackboneGenes, detailedBackbone);
-  //   masterGeneMap = backboneDatatrackInfo.masterGeneMap;
-  //   timeCreateBackboneDatatracks = Date.now() - backboneDatatracksStart;
-  //
-  //   const backboneSetStart = Date.now();
-  //   detailedBackboneSet.value = createBackboneSet(detailedBackbone, backboneDatatrackInfo.processedGenomicData);
-  //   timeCreateBackboneSet = Date.now() - backboneSetStart;
-  // }
-
-  //no previously processed data, so we need to create the synteny tracks/initial load
-  // FIXME: Broken by my new processing
-  // if (detailedSyntenySets.value.length == 0)
-  // {
-  //   const syntenyTracksStart = Date.now();
-  //   const detailedSyntenyData = await createSyntenicRegionsAndDatatracks(
-  //     store.state.comparativeSpecies,
-  //     backboneChromosome,
-  //     0,
-  //     backboneChromosome.seqLength,
-  //     originalSelectedBackboneRegion.viewportSelection?.basePairStart ?? 0,
-  //     originalSelectedBackboneRegion.viewportSelection?.basePairStop ?? backboneChromosome.seqLength,
-  //     store.state.detailsSyntenyThreshold,
-  //     true,
-  //     masterBlockMap,
-  //     masterGeneMap ?? undefined,
-  //   );
-  //
-  //   detailedSyntenyData.syntenyRegionSets.push();
-  //
-  //   // NOTE: adding to this reactive ref will update our view
-  //   detailedSyntenySets.value = detailedSyntenyData.syntenyRegionSets;
-  //   timeSyntenyTracks = Date.now() - syntenyTracksStart;
-  // }
-
   enableProcessingLoadMask.value = false;
 
+  // Report timing data
   const timeDetailedUpdate= Date.now() - detailedUpdateStart;
   const timeDetailedUpdateOther = timeDetailedUpdate - (
     + timeBackboneFilterGenes
@@ -596,7 +503,6 @@ const updateDetailsPanel = async () => {
     + timeCreateBackboneSet
     + timeSyntenyTracks 
     + timeAdjustVisibleRegion);
-
   logPerformanceReport('Update Detailed Time', timeDetailedUpdate, {
     'Filter Backbone Genes': timeBackboneFilterGenes,
     'Create Backbone Datatracks': timeCreateBackboneDatatracks,

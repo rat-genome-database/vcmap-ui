@@ -195,20 +195,26 @@ const onMouseEnter = (section: SyntenySection | GeneDatatrack, type: SelectedDat
   // if ()
     section.isHovered = true;
     
-    // If there are selected genes, don't update the selected data panel
-    if (store.state.selectedGeneIds.length === 0) {
-      const selectedData = new SelectedData(section, type);
+    // Only update the selected data panel if no Genes are already selected
+    if (store.state.selectedGeneIds.length === 0)
+    {
+      let selectedData;
+      if (type === 'Gene')
+      {
+        const geneSection = section as GeneDatatrack;
+        if (geneSection?.gene)
+        {
+          highlightGeneLines(geneSection?.gene.rgdId, 'enter');
+        }
+        selectedData = new SelectedData(geneSection.gene.clone(), 'Gene');
+      }
+      else
+      {
+        selectedData = new SelectedData(section, type);
+      }
       store.dispatch('setSelectedData', [selectedData]);
     }
 
-    if (type === 'Gene') 
-    {
-      const geneSection = section as GeneDatatrack;
-      if (geneSection?.gene)
-      {
-        highlightGeneLines(geneSection?.gene.rgdId, 'enter');
-      }
-    }
 
 };
 
@@ -311,7 +317,7 @@ const onClick = (event: any, section: GeneDatatrack) => {
   {
     // FIXME: Orthologs
     // FIXME: This code isn't used on the Backbone! Need to correct that inconsistency...
-    newSelectedData.push(new SelectedData(section.gene, 'Gene'));
+    newSelectedData.push(new SelectedData(section.gene.clone(), 'Gene'));
     geneIds.push(section.gene?.rgdId);
   }
 

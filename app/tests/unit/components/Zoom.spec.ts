@@ -18,7 +18,7 @@ describe('Zoom', () => {
     };
 
     const test_chromosome = new Chromosome({ 'mapKey': 0, 'chromosome':'T', 'seqLength': 100 });
-    state.selectedBackboneRegion = new BackboneSelection(new SelectedRegion(0, 0, 0, 100), test_chromosome);
+    state.selectedBackboneRegion = new BackboneSelection(test_chromosome);
     state.selectedBackboneRegion.setViewportSelection(0, 100, 1);
     store = TestUtils.initStore(state, actions);
   });

@@ -72,6 +72,7 @@ const onClick = (event: any, line: OrthologLine) => {
 
   let newSelectedData: SelectedData[] = [];
 
+  // FIXME
   const newData = getNewSelectedData(store, line.comparativeGene.gene);
   const geneAndOrthologs = newData.selectedData;
   const newGeneIds = newData.rgdIds;
