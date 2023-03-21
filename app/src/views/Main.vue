@@ -29,6 +29,7 @@ import Chromosome from "@/models/Chromosome";
 import router from "@/router";
 import GeneApi from "@/api/GeneApi";
 import {useLogger} from "vue-logger-plugin";
+import BackboneSelection from "@/models/BackboneSelection";
 
 // TODO: Can we figure out a better way to handle blocks with a high chainlevel?
 const MAX_CHAINLEVEL = 2;
@@ -139,6 +140,9 @@ onMounted(async () => {
     comparativeSpecies: store.state.comparativeSpecies,
   });
   processSynteny(speciesSyntenyDataArray, 0, store.state.chromosome.seqLength);
+
+  // Set a base selection TODO: not necessary
+  store.dispatch('setBackboneSelection', new BackboneSelection(store.state.chromosome));
 
   // Kick off the OverviewPanel load
   store.dispatch('setConfigurationLoaded', true);

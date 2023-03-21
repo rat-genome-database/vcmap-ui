@@ -273,8 +273,8 @@ async function attachToProgressLoader(storeLoadingActionName: string, func: () =
 }
 
 onMounted(async () => {
-console.error('HERE');
   enableProcessingLoadMask.value = true;
+  allowDetailedPanelProcessing.value = false; // TODO: Can we use the configurationLoaded value instead??
 
   // Clear any prior selections or set as the searched gene
   // const gene = store.state.gene;
@@ -290,22 +290,26 @@ console.error('HERE');
   // A dialog will appear to let the user confirm before proceeding...
   // if (!isMissingSynteny.value)
   // {
-    allowDetailedPanelProcessing.value = true;
   // }
 });
 
-watch([() => store.state.configurationLoaded], () => {
+watch(() => store.state.configurationLoaded, () => {
   console.error('mutation on configState', store.state.configurationLoaded);
   if (store.state.configurationLoaded === true)
+  {
+    enableProcessingLoadMask.value = true;
+    allowDetailedPanelProcessing.value = true;
     attachToProgressLoader('setIsOverviewPanelUpdating', updateOverviewPanel);
+  }
 });
 
 /**
  * Have a progress loader for the Details Panel update process.
  */
-watch([() => store.state.detailedBasePairRange, allowDetailedPanelProcessing], () => {
+watch(() => store.state.detailedBasePairRange, () => {
   if (allowDetailedPanelProcessing.value)
   {
+    enableProcessingLoadMask.value = true;
     attachToProgressLoader('setIsDetailedPanelUpdating', updateDetailsPanel);
   }
 });
@@ -317,6 +321,7 @@ watch(() => store.state.detailedBasePairRequest, async () => {
   if (store.state.detailedBasePairRequest) enableProcessingLoadMask.value = true;
 });
 
+// FIXME: check on this (probably needs to be attached to Main props instead):
 const arePanelsLoading = computed(() => {
   return store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating;
 });
@@ -328,12 +333,10 @@ const currentlySelectingRegion = () => {
 const updateOverviewPanel = async () => {
   $log.debug('Updating Overview Panel');
 
-  enableProcessingLoadMask.value = true;
   const overviewUpdateStart = Date.now();
 
   const backboneSpecies = store.state.species;
   const backboneChromosome = store.state.chromosome;
-  const loadType = store.state.configTab;
 
   // error if backbone is not set
   if (backboneSpecies == null || backboneChromosome == null)
@@ -356,12 +359,8 @@ const updateOverviewPanel = async () => {
     return;
   }
 
-  overviewSyntenySets.value = [];
-  // The backbone is the entire chromosome
-  // TODO: Remove this
-  store.dispatch('setOverviewResolution', backboneChromosome.seqLength);
-
   // Build backbone set
+  overviewSyntenySets.value = [];
   const overviewBackbone = createBackboneSection(backboneSpecies, backboneChromosome, 0, backboneChromosome.seqLength, 'overview');
   overviewBackboneSet.value = createBackboneSet(overviewBackbone);
 
@@ -375,34 +374,12 @@ const updateOverviewPanel = async () => {
     return;
   }
 
-  // TODO: Use a request here on "load by Gene" / "load by Position" requests?
-
-  //build overview synteny sets
+  // Build overview synteny sets
   const overviewSyntenyTrackCreationTime = Date.now();
   overviewSyntenySets.value = await createOverviewSyntenicRegionSets(props.syntenyTree, store.state.comparativeSpecies, backboneChromosome);
-
-  // TODO: Redo this
-  // const emptyBlockMap = new Map<number, LoadedBlock>();
-  /*const overviewSyntenyData = await createSyntenicRegionsAndDatatracks(
-    store.state.comparativeSpecies,
-    backboneChromosome,
-    0,
-    backboneChromosome.seqLength,
-    0,
-    backboneChromosome.seqLength,
-    store.state.overviewSyntenyThreshold,
-    false,
-    emptyBlockMap,
-  );
-
-  overviewSyntenySets.value = overviewSyntenyData.syntenyRegionSets;*/
-
-
-
-  // Set an initial (empty) selection
-  store.dispatch('setBackboneSelection', new BackboneSelection(backboneChromosome));
-  store.dispatch('setConfigurationLoaded', true);
   enableProcessingLoadMask.value = false;
+
+  // TODO: request an update to the detailed panel here
 
   // TODO: double check this logic:
   const overviewCreateBackboneSelectionTime = Date.now();

@@ -242,6 +242,7 @@ export default createStore({
   },
 
   getters: {
+    // FIXME: remove this
     masterGeneMapByRGDId: (state: VCMapState) => {
       const loadedGenes = state.loadedGenes;
 
@@ -270,51 +271,6 @@ export default createStore({
       }
 
       return mapByRGDId;
-    },
-
-    masterGeneMapBySymbol: (state: VCMapState) => {
-      const loadedGenes = state.loadedGenes;
-      // Map of RGD Ids keyed by gene symbol
-      const mapBySymbol = new Map<string, number[]>();
-
-      if (loadedGenes == null)
-      {
-        return mapBySymbol;
-      }
-
-     for (const [rgdId, loadedGene] of loadedGenes.entries())
-     {
-        // Collect the backbone ortholog and all comparative species genes with this RGD ID
-        const allGenes: GeneDatatrack[]  = [];
-        for (const speciesName in loadedGene.genes)
-        {
-          const speciesGenes = loadedGene.genes[speciesName];
-          speciesGenes.forEach(gene => allGenes.push(gene));
-        }
-
-        if (loadedGene.backboneOrtholog != null)
-        {
-          allGenes.push(loadedGene.backboneOrtholog);
-        }
-
-        allGenes.forEach(geneDatatrack => {
-          const geneSymbol = geneDatatrack.gene.symbol;
-          if (geneSymbol)
-          {
-            const rgdIds = mapBySymbol.get(geneSymbol);
-            if (rgdIds != null)
-            {
-              mapBySymbol.set(geneSymbol, rgdIds.concat(rgdId));
-            }
-            else
-            {
-              mapBySymbol.set(geneSymbol, [rgdId]);
-            }
-          }
-        });
-      }
-
-      return mapBySymbol;
     },
   },
 
