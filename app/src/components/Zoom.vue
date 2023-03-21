@@ -58,6 +58,8 @@ const zoom = (zoomLevel: number) => {
   const selectedRegion = store.state.selectedBackboneRegion;
   const backboneChromosome = store.state.chromosome;
 
+  console.log('FROM ZOOM: ZOOM LEVEL', zoomLevel);
+
   if (selectedRegion == null || selectedRegion.viewportSelection == null || backboneChromosome == null)
   {
     console.error('Cannot zoom if selectedRegion, viewportSelection, or backboneChromosome is null');
@@ -81,6 +83,8 @@ const zoom = (zoomLevel: number) => {
     const newRegionLength = (zoomedStop - zoomedStart) * (selectedRegion.zoomLevel / zoomLevel);
     const lengthDiff = currentLength - newRegionLength;
 
+    console.log('LENGTH DIFF', {lengthDiff});
+
     if (lengthDiff > 0)
     {
       // Zooming in
@@ -92,6 +96,8 @@ const zoom = (zoomLevel: number) => {
       // Zooming out
       zoomedStart = zoomedStart + (lengthDiff / 2);
       zoomedStop = zoomedStop - (lengthDiff / 2);
+
+      console.log({zoomedStart, zoomedStop});
 
       if (zoomedStart < 0)
       {
@@ -114,18 +120,24 @@ const zoom = (zoomLevel: number) => {
 
 const logZoom = (zoomLevel: number) => {
   const selectedRegion = store.state.selectedBackboneRegion;
-  // const backboneChromosome = store.state.chromosome;
+
   if (selectedRegion == null || selectedRegion.viewportSelection == null) {
     console.error('ERROR WITH SELECTED REGION');
   } else {
-    let minZoom = selectedRegion.viewportSelection.basePairStart;
+    console.log('BEGIN OF LOG ZOOM: ZOOM LEVEL', zoomLevel);
+    let minZoom = selectedRegion.viewportSelection.basePairStart+1;
     let maxZoom = selectedRegion.viewportSelection.basePairStop;
+    console.log({minZoom, maxZoom});
 
-    let logMinZoom = Math.log(minZoom);
-    let logMaxZoom = Math.log(maxZoom);
+    let logMinZoom = Math.log(minZoom) * (1/Math.log(100));
+    let logMaxZoom = Math.log(maxZoom) * (1/Math.log(100));
+
+    console.log({logMinZoom, logMaxZoom});
 
     let logZoom = logMinZoom + (logMaxZoom-logMinZoom)*zoomLevel/(100-1);
     let zoomed = Math.exp(logZoom);
+
+    console.log('END OF LOG ZOOMED: ZOOM LEVEL FOR ZOOM', zoomed);
 
     zoom(zoomed);
   }
