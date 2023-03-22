@@ -246,7 +246,7 @@ const onSectionClick = (section: GenomicSection) => {
   {
     const basePairStart = section.backboneAlignment.start;
     const basePairStop = section.backboneAlignment.stop;
-    selectedBackboneRegion.setViewportSelection(basePairStart, basePairStop, store.state.overviewBasePairToHeightRatio);
+    selectedBackboneRegion.setViewportSelection(basePairStart, basePairStop);
     store.dispatch('setDetailedBasePairRequest', { start: basePairStart, stop: basePairStop });
     // store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: basePairStop });
   }

@@ -27,7 +27,6 @@ export interface VCMapState
   detailedBasePairRequest: BasePairRange | null;
   detailedBasePairRange: BasePairRange;
 
-  overviewBasePairToHeightRatio: number;
   overviewSyntenyThreshold: number;
   detailsSyntenyThreshold: number;
 
@@ -73,7 +72,6 @@ export default createStore({
     detailedBasePairRequest: { start: 0, stop: 0 } ?? null,
     detailedBasePairRange: { start: 0, stop: 0 },
 
-    overviewBasePairToHeightRatio: 1000,
     overviewSyntenyThreshold: 30000,
     detailsSyntenyThreshold: 0,
 
@@ -121,9 +119,6 @@ export default createStore({
     detailedBasePairRange(state: VCMapState, range: BasePairRange) {
       state.detailedBasePairRange = range;
     },
-    overviewBasePairToHeightRatio(state: VCMapState, ratio: number) {
-      state.overviewBasePairToHeightRatio = ratio;
-    },
     overviewSyntenyThreshold(state: VCMapState, threshold: number) {
       state.overviewSyntenyThreshold = threshold;
     },
@@ -162,18 +157,6 @@ export default createStore({
     },
     setGene(context: ActionContext<VCMapState, VCMapState>, gene: Gene) {
       context.commit('gene', gene);
-    },
-    setOverviewResolution(context: ActionContext<VCMapState, VCMapState>, backboneLength: number) {
-      // The height of the tracks in the overview should have a little buffer on the top and bottom margins
-      const overviewTrackHeight = SVGConstants.viewboxHeight - (SVGConstants.overviewTrackYPosition + SVGConstants.navigationButtonHeight + (SVGConstants.overviewTrackYPosition - SVGConstants.panelTitleHeight));
-      context.commit('overviewBasePairToHeightRatio', backboneLength / overviewTrackHeight);
-      // Note: Dividing by 8,000 is arbitary when calculating synteny threshold
-      context.commit('overviewSyntenyThreshold', (backboneLength > 250000) ? Math.floor((backboneLength) / 8000) : 30000);
-    },
-    setDetailsResolution(context: ActionContext<VCMapState, VCMapState>, backboneLength: number) {
-
-      // Note: Dividing by 8,000 is arbitary when calculating synteny threshold
-      context.commit('detailsSyntenyThreshold', (backboneLength > 250000) ? Math.floor((backboneLength) / 8000) : 0);
     },
     setConfigTab(context: ActionContext<VCMapState, VCMapState>, tab: number) {
       context.commit('configTab', tab);
@@ -220,7 +203,7 @@ export default createStore({
     setBackboneSelection(context: ActionContext<VCMapState, VCMapState>, selection: BackboneSelection) {
       if (selection.viewportSelection == null)
       {
-        selection.setViewportSelection(0, selection.chromosome.seqLength, context.state.overviewBasePairToHeightRatio);
+        selection.setViewportSelection(0, selection.chromosome.seqLength);
       }
       context.commit('startPosition', 0);
       context.commit('stopPosition', selection.chromosome.seqLength);

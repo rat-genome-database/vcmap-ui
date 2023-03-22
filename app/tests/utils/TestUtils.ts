@@ -71,7 +71,6 @@ export namespace TestUtils
         detailedBasePairRequest: null,
         detailedBasePairRange: { start: 0, stop: 0 },
 
-        overviewBasePairToHeightRatio: 1000,
         overviewSyntenyThreshold: 30000,
         detailsSyntenyThreshold: 0,
 

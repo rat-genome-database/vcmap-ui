@@ -267,20 +267,23 @@ console.timeEnd("syntenicDataTrackBuilder");
  */
 function syntenicDatatrackBuilder(factory: GenomicSectionFactory, genomicData: Gene[], syntenyRegion: SyntenyRegion)
 {
-  //Step 1: For each gene, convert to backbone equivalents using blockInfo and blockRatio
+  // For each gene, build a GeneDatatrackSection element
   const processedGenomicData: GeneDatatrack[] = [];
 
   genomicData.forEach((genomicElement: Gene) => {
-    //Get backbone equivalents for gene data
-    // FIXME: This is not appropriate (Gene's will extend to the entire "Gapless Block" if they haven't already
-    //   calculated their backbone alignment). Need some better guards on this instead...
+    // Get backbone equivalents for gene data, or skip
+    if (genomicElement.backboneStart === null || genomicElement.backboneStop === null)
+    {
+      console.error(`Genomic Element ${genomicElement.symbol} sent to render without a backbone alignment`);
+      return;
+    }
     const geneBackboneAlignment = {
-      start: genomicElement.backboneStart ?? syntenyRegion.gaplessBlock.backboneAlignment.start,
-      stop: genomicElement.backboneStop ?? syntenyRegion.gaplessBlock.backboneAlignment.stop
+      start: genomicElement.backboneStart,
+      stop: genomicElement.backboneStop
     };
     //convertSyntenicDataToBackboneData(genomicElement, syntenyRegion);
 
-    //Create DatatrackSection for each gene (account for inversion in start/stops)
+    // Create DatatrackSection for each gene (account for inversion in start/stops)
     const geneDatatrackSection = factory.createGeneDatatrackSection({
       gene: genomicElement,
       start: (syntenyRegion.gaplessBlock.isInverted) ? genomicElement.stop : genomicElement.start,
@@ -291,6 +294,7 @@ function syntenicDatatrackBuilder(factory: GenomicSectionFactory, genomicData: G
     processedGenomicData.push(geneDatatrackSection);
   });
 
+  console.log(`for region on ${syntenyRegion.species} ${syntenyRegion.gaplessBlock.chromosome}, gene list:`, processedGenomicData);
   return processedGenomicData;
 }
 

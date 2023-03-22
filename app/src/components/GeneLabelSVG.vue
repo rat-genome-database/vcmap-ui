@@ -48,9 +48,10 @@ const getLabelText = (label: GeneLabel) => {
   }
   else
   {
+    // FIXME: Address these magic numbers, use a BBox measurement (https://stackoverflow.com/questions/3311126/svg-font-metrics)?
     if (numCombinedGenes > 0)
     {
-      const geneSymbolText = numCombinedGenes > 9 ? label.text.substring(0, 4) : label.text.substring(0, 5);
+      const geneSymbolText = numCombinedGenes > 9 ? label.text.substring(0, 7) : label.text.substring(0, 8);
       labelText = `${geneSymbolText}...(${numCombinedGenes})`;
     } else
     {

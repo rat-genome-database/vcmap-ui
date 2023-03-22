@@ -294,7 +294,6 @@ onMounted(async () => {
 });
 
 watch(() => store.state.configurationLoaded, () => {
-  console.error('mutation on configState', store.state.configurationLoaded);
   if (store.state.configurationLoaded === true)
   {
     enableProcessingLoadMask.value = true;

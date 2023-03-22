@@ -180,8 +180,7 @@ watch(() => store.state.detailedBasePairRequest, async () => {
 
     // Data processing done, ready to complete request
     let selection = store.state.selectedBackboneRegion;
-    selection?.setViewportSelection(store.state.detailedBasePairRequest.start, store.state.detailedBasePairRequest.stop,
-        store.state.overviewBasePairToHeightRatio);
+    selection?.setViewportSelection(store.state.detailedBasePairRequest.start, store.state.detailedBasePairRequest.stop);
     store.dispatch('setBackboneSelection', selection);
     store.dispatch('setDetailedBasePairRequest', null);
   }
@@ -260,7 +259,12 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
         let gaps: Gap[] = [];
         for (let i = 0, len = blockData.gaps.length; i < len; i++)
         {
-          gaps.push(new Gap({start: blockData.gaps[i].start, stop: blockData.gaps[i].stop}));
+          gaps.push(new Gap({
+            start: blockData.gaps[i].start,
+            stop: blockData.gaps[i].stop,
+            backboneStart: blockData.gaps[i].backboneStart,
+            backboneStop: blockData.gaps[i].backboneStop,
+          }));
         }
         newBlock.addGaps(gaps);
         console.timeEnd("AddGapsNewBlock");
@@ -303,7 +307,8 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
         //   is a reasonable initial implementation.
         if (gene.block === null && targetBlock)
         {
-          // This gene is new -- assign a Block and calculate backbone positioning
+          // This gene has no parent block -- assign a Block and calculate backbone positioning
+          console.log(`Gene ${gene.symbol} without parent block, assigning to block ${targetBlock.chromosome.chromosome} (${targetBlock.start}, ${targetBlock.stop})`);
           gene.block = targetBlock;
           let blockRatio = Math.abs(targetBlock.backboneStop - targetBlock.backboneStart) / Math.abs(targetBlock.stop - targetBlock.start);
           if (targetBlock.orientation == '+')
@@ -327,15 +332,12 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
           if (gene.backboneStop > targetBlock.backboneStop) gene.backboneStop = targetBlock.backboneStop;
         }
         targetBlock?.genes.push(gene);
-        // TODO: sort OR use addGene() approach here
-      });
 
-      // Add any new genes to our geneList (cross-referencing our Blocks)
-      targetBlock?.genes.forEach((gene) => {
+        // Add any new genes to our geneList (cross-referencing our Blocks)
+        // TODO: sort OR use addGene() approach here
         if (gene && !geneList.value.get(gene.rgdId)) geneList.value.set(gene.rgdId, gene);
       });
     });
-
   });
 }
 </script>

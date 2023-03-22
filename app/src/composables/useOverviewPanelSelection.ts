@@ -3,6 +3,7 @@ import { getMousePosSVG } from '@/utils/SVGHelpers';
 import { Store } from "vuex";
 import { VCMapState } from "@/store";
 import BackboneSection from "@/models/BackboneSection";
+import constants, {PANEL_SVG_START, PANEL_SVG_STOP} from "@/utils/SVGConstants";
 
 export default function useOverviewPanelSelection(store: Store<VCMapState>) {
   let inSelectMode = false;
@@ -77,33 +78,23 @@ export default function useOverviewPanelSelection(store: Store<VCMapState>) {
   };
 
   const completeOverviewSelection = (overviewBackbone?: BackboneSection) => {
-    if (!inSelectMode || !overviewBackbone) return;
+    if (!inSelectMode || !overviewBackbone || !store.state.chromosome) return;
 
     inSelectMode = false;
 
     if (startOverviewSelectionY.value != null && stopOverviewSelectionY.value != null)
     {
-      // Calculate start/stop base pairs based on bp to height ratio in the overview panel
-      const startingBasePairCountFromStartOfBackbone = Math.floor((startOverviewSelectionY.value - overviewBackbone.posY1) * store.state.overviewBasePairToHeightRatio);
-      let basePairStart = startingBasePairCountFromStartOfBackbone + overviewBackbone.windowStart;
-
-      const stoppingBasePairCountFromStartOfBackbone = Math.floor((stopOverviewSelectionY.value - overviewBackbone.posY1) * store.state.overviewBasePairToHeightRatio);
-      let basePairStop = stoppingBasePairCountFromStartOfBackbone + overviewBackbone.windowStart;
-
-      if (basePairStart < overviewBackbone.windowStart)
-      {
-        basePairStart = overviewBackbone.windowStart;
-      }
-
-      if (basePairStop > overviewBackbone.windowStop)
-      {
-        basePairStop = overviewBackbone.windowStop;
-      }
+      const svgHeight = PANEL_SVG_STOP - PANEL_SVG_START - (2 * constants.overviewTrackPadding);
+      const bpVisibleWindowLength = store.state.chromosome.seqLength;
+      const pixelsPerBpRatio = svgHeight / bpVisibleWindowLength;
+      const basePairStart = Math.floor((startOverviewSelectionY.value - PANEL_SVG_START  - constants.overviewTrackPadding) / pixelsPerBpRatio);
+      const basePairStop = Math.floor((stopOverviewSelectionY.value - PANEL_SVG_START  - constants.overviewTrackPadding) / pixelsPerBpRatio);
+console.error(`Overview selection chosen: (${basePairStart}, ${basePairStop})`); // TEMP
 
       const selectedBackboneRegion = store.state.selectedBackboneRegion;
       if (selectedBackboneRegion && selectedBackboneRegion.setViewportSelection)
       {
-        selectedBackboneRegion.setViewportSelection(basePairStart, basePairStop, store.state.overviewBasePairToHeightRatio);
+        selectedBackboneRegion.setViewportSelection(basePairStart, basePairStop);
         //store.dispatch('setBackboneSelection', selectedBackboneRegion);
         store.dispatch('setDetailedBasePairRequest', { start: basePairStart, stop: basePairStop });
       }

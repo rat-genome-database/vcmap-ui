@@ -1,4 +1,4 @@
-import SVGConstants from "@/utils/SVGConstants";
+import SVGConstants, {PANEL_SVG_START, PANEL_SVG_STOP} from "@/utils/SVGConstants";
 import Chromosome from "@/models/Chromosome";
 
 export interface BasePairRange
@@ -40,22 +40,29 @@ export default class BackboneSelection
     this.viewportSelection = viewportSelection;
   }
 
-  public setViewportSelection(visibleStart: number, visibleStop: number, overviewBasePairToHeightRatio: number)
+  /**
+   * Change the position start / stop position of the Detailed panel.
+   * @param visibleStart
+   *   The new start position of the detailed panel (in the Backbone bp coordinate system).
+   * @param visibleStop
+   *   The new stop position of the detailed panel (in the Backbone bp coordinate system).
+   */
+  public setViewportSelection(visibleStart: number, visibleStop: number)
   {
+    // Protect any bad inputs
+    // TODO: log this, so the upstream code can be corrected...
     visibleStart = (visibleStart < 0) ? 0 : Math.floor(visibleStart);
     visibleStop = (visibleStop > this.chromosome.seqLength) ? this.chromosome.seqLength : Math.ceil(visibleStop);
-    const innerSVGHeight = (visibleStop - visibleStart) / overviewBasePairToHeightRatio;
-    let innerSVGYPoint = SVGConstants.overviewTrackYPosition;
-    if (visibleStart > 0)
-    {
-      innerSVGYPoint = (visibleStart / overviewBasePairToHeightRatio) + SVGConstants.overviewTrackYPosition;
-    }
-    else if (visibleStart < 0)
-    {
-      innerSVGYPoint = SVGConstants.overviewTrackYPosition - ((0 - visibleStart) / overviewBasePairToHeightRatio);
-    }
 
-    this.viewportSelection = new SelectedRegion(innerSVGYPoint, innerSVGHeight, visibleStart, visibleStop);
+    const overviewHeight = PANEL_SVG_STOP - PANEL_SVG_START - (SVGConstants.overviewTrackPadding * 2);
+    const bpOverviewLength = this.chromosome.seqLength;
+    const pixelsPerBpRatio = overviewHeight / bpOverviewLength;
+
+    const innerSVGYPoint = (visibleStart * pixelsPerBpRatio) + SVGConstants.overviewTrackYPosition;
+    const svgHeight = (visibleStop - visibleStart) * pixelsPerBpRatio;
+console.error(`setViewportSelection. y: ${innerSVGYPoint}, h: ${svgHeight}`); // TEMP
+
+    this.viewportSelection = new SelectedRegion(innerSVGYPoint, svgHeight, visibleStart, visibleStop);
     return this.viewportSelection;
   }
 }
