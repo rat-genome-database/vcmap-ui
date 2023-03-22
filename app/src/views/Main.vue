@@ -307,9 +307,10 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
         //   is a reasonable initial implementation.
         if (gene.block === null && targetBlock)
         {
-          // This gene has no parent block -- assign a Block and calculate backbone positioning
-          console.log(`Gene ${gene.symbol} without parent block, assigning to block ${targetBlock.chromosome.chromosome} (${targetBlock.start}, ${targetBlock.stop})`);
-          gene.block = targetBlock;
+          // Calculate gene backbone position
+          // FIXME: USE surrounding gap backbone positions for a more accurate positioning!!
+          //   Because the API always sends us the gap backbone coords, we can be much more accurate
+          //   using the surrounding gaps (should be easy to identify because they are in sort order).
           let blockRatio = Math.abs(targetBlock.backboneStop - targetBlock.backboneStart) / Math.abs(targetBlock.stop - targetBlock.start);
           if (targetBlock.orientation == '+')
           {
@@ -330,11 +331,16 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
           // NOTE: This is very important for small block sections near break points
           if (gene.backboneStart < targetBlock.backboneStart) gene.backboneStart = targetBlock.backboneStart;
           if (gene.backboneStop > targetBlock.backboneStop) gene.backboneStop = targetBlock.backboneStop;
+
+          // This gene has no parent block -- assign to target block
+          console.log(`Gene ${gene.symbol} without parent block, assigning to block ${targetBlock.chromosome.chromosome} (${targetBlock.start}, ${targetBlock.stop})`);
+          gene.block = targetBlock;
+          // TODO: sort OR use addGene() approach here?
+          targetBlock.genes.push(gene);
         }
-        targetBlock?.genes.push(gene);
 
         // Add any new genes to our geneList (cross-referencing our Blocks)
-        // TODO: sort OR use addGene() approach here
+        // TODO: sort OR use addGene() approach here?
         if (gene && !geneList.value.get(gene.rgdId)) geneList.value.set(gene.rgdId, gene);
       });
     });
