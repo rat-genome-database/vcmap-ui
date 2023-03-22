@@ -60,7 +60,6 @@ export default class BackboneSelection
 
     const innerSVGYPoint = (visibleStart * pixelsPerBpRatio) + SVGConstants.overviewTrackYPosition;
     const svgHeight = (visibleStop - visibleStart) * pixelsPerBpRatio;
-console.error(`setViewportSelection. y: ${innerSVGYPoint}, h: ${svgHeight}`); // TEMP
 
     this.viewportSelection = new SelectedRegion(innerSVGYPoint, svgHeight, visibleStart, visibleStop);
     return this.viewportSelection;

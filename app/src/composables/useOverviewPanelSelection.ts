@@ -89,7 +89,6 @@ export default function useOverviewPanelSelection(store: Store<VCMapState>) {
       const pixelsPerBpRatio = svgHeight / bpVisibleWindowLength;
       const basePairStart = Math.floor((startOverviewSelectionY.value - PANEL_SVG_START  - constants.overviewTrackPadding) / pixelsPerBpRatio);
       const basePairStop = Math.floor((stopOverviewSelectionY.value - PANEL_SVG_START  - constants.overviewTrackPadding) / pixelsPerBpRatio);
-console.error(`Overview selection chosen: (${basePairStart}, ${basePairStop})`); // TEMP
 
       const selectedBackboneRegion = store.state.selectedBackboneRegion;
       if (selectedBackboneRegion && selectedBackboneRegion.setViewportSelection)
@@ -98,8 +97,6 @@ console.error(`Overview selection chosen: (${basePairStart}, ${basePairStop})`);
         //store.dispatch('setBackboneSelection', selectedBackboneRegion);
         store.dispatch('setDetailedBasePairRequest', { start: basePairStart, stop: basePairStop });
       }
-      // TODO (TEMP):
-      else { console.error("FIXME HERE TEMP", selectedBackboneRegion); }
     }
 
     // Clear selection box

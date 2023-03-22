@@ -83,8 +83,6 @@ export interface SpeciesSyntenyData
   mapName: string;
   mapKey: number;
   regionData: SyntenyRegionData[];
-  allGenes?: Gene[];
-  allGenesMap?: Map<string, any>; // FIXME: Since this is meant to be an intermediate interface that gets converted into data models, this prop might be better off existing somewhere else
 }
 
 function getGeneFromDTO(dto: SyntenyGeneDTO, speciesName: string)

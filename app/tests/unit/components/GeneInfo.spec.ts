@@ -36,8 +36,8 @@ describe('GeneInfo', () => {
     const geneText = wrapper.get('[data-test="gene-name"]');
     const geneSpeciesName = wrapper.get('[data-test="species-name"]');
 
-    expect(geneText.text()).toEqual('Name: Test 123');
-    expect(geneSpeciesName.text()).toEqual('Species: Test species');
+    expect(geneText.text()).toEqual('(Test 123)');
+    expect(geneSpeciesName.text()).toEqual('Test species');
   });
 
   it('displays data about the genomic region', async () => {
@@ -57,7 +57,7 @@ describe('GeneInfo', () => {
     const chromosomeText = wrapper.get('[data-test="chromosome-name"]');
     const startStopText = wrapper.get('[data-test="start-stop"]');
 
-    expect(chromosomeText.text()).toEqual('Chromosome: 1');
-    expect(startStopText.text()).toEqual('Region: 0 - 10,000');
+    expect(chromosomeText.text()).toEqual('Chr1:');
+    expect(startStopText.text()).toEqual('0 - 10,000');
   });
 });
