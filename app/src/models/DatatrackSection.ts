@@ -52,7 +52,7 @@ export class GeneDatatrack extends DatatrackSection
       color: '#00000',
     });
 
-    this.gene = gene;
+    this.gene = gene.clone();
     this.opacity = 0.7;
     this.createGeneLabel();
   }

@@ -1,18 +1,16 @@
 import Species from '@/models/Species';
 import Chromosome from '@/models/Chromosome';
-import SyntenySection from '@/models/SyntenySection';
 import SyntenyRegion from '@/models/SyntenyRegion';
 import { LoadedGene, GeneDatatrack } from '@/models/DatatrackSection';
-import SyntenyApi, { SpeciesSyntenyData, SyntenyRegionData, SyntenyRequestParams, SyntenyComponent } from '@/api/SyntenyApi';
 import Gene from '@/models/Gene';
 import SyntenyRegionSet from '@/models/SyntenyRegionSet';
 import OrthologLine from '@/models/OrthologLine';
 import Label from '@/models/Label';
 import { GenomicSectionFactory } from '@/models/GenomicSectionFactory';
-import { BackboneAlignment } from '@/models/GenomicSection';
 import Block from "@/models/Block";
 import {useLogger} from "vue-logger-plugin";
 
+// FIXME: I don't think we can use the logger here...
 const $log = useLogger();
 
 /**
@@ -156,7 +154,7 @@ function syntenicSectionBuilder(speciesSyntenyData: Block[], species: Species, s
   const currMapName = species.activeMap.name;
   const allGeneLabels: Label[] = [];
 
-console.debug(`About to loop over ${speciesSyntenyData.length} Blocks`);
+console.debug(`About to loop over ${speciesSyntenyData.length} Blocks...`);
   // Step 1: Create syntenic sections for each VISIBLE block
   for (let index = 0; index < speciesSyntenyData.length; index++)
   {
@@ -175,8 +173,9 @@ console.debug(`About to loop over ${speciesSyntenyData.length} Blocks`);
     //   further down the chain relies on it.
     // TODO: this code makes me wonder if we cannot revisit the relationship between:
     //    SyntenyRegion / SyntenySection / GenomicSection
+console.time('createSyntenySectionAndRegion');
     const gaplessBlockSection = factory.createSyntenySection({
-      start: (blockInfo.orientation === '-') ? blockInfo.stop : blockInfo.start, 
+      start: (blockInfo.orientation === '-') ? blockInfo.stop : blockInfo.start,
       stop: (blockInfo.orientation === '-') ? blockInfo.start : blockInfo.stop,
       backboneAlignment: { start: blockInfo.backboneStart, stop: blockInfo.backboneStop },
       type: 'block',
@@ -189,12 +188,13 @@ console.debug(`About to loop over ${speciesSyntenyData.length} Blocks`);
     //   any "gappy" GenomicSection blocks within the visible range to minimize DOM nodes
     //   that will ultimately be added to the DOM via the SVG.
     const currSyntenicRegion = new SyntenyRegion({
-      species: currSpecies, 
+      species: currSpecies,
       mapName: currMapName,
       gaplessBlock: gaplessBlockSection,
     });
     // FIXME: Create a single visible block (ignoring gap data)
     currSyntenicRegion.syntenyBlocks.push(gaplessBlockSection);
+console.timeEnd('createSyntenySectionAndRegion');
 
     // Step 2: Split the gapless Block into multiple GenomicSections based on gaps.
     //   Only do this for the region of the
@@ -209,35 +209,41 @@ console.debug(`About to loop over ${speciesSyntenyData.length} Blocks`);
     {
       // Filter all genes to only those that are visible
       // FIXME: Should also filter on a threshold of size MUST BE greater than .25 pixel
+console.time("  filterVisibleGenes");
       const visibleGenes = blockGenes.filter((gene) => {
         if (!gene.backboneStart || !gene.backboneStop) return false;
 
         return (gene.backboneStart <= viewportStop && gene.backboneStop >= viewportStart);
       });
+console.timeEnd("  filterVisibleGenes");
 
 // console.debug("Step 3: Create Syntenic Sections for each gene")
       // Step 3.1: Pass block data and gene data to gene processing pipeline
       // NOTE: We might want to instead associate block data with gene data, store data in an array, and pass all gene
       //   data at once for processing in order to avoid multiple passes of gene data for initial processing and then finding orthologs
-console.time("syntenicDataTrackBuilder");
+let timerLabel = `  syntenicDataTrackBuilder(${visibleGenes.length})`;
+console.time(timerLabel);
       // const processedGeneInfo = {genomicData: [], orthologLines: [], geneIds: []};
-console.log('Visible Gene list: ', visibleGenes);
+// console.log('Visible Gene list: ', visibleGenes);
       const processedGeneInfo = syntenicDatatrackBuilder(factory, visibleGenes, currSyntenicRegion);
-console.timeEnd("syntenicDataTrackBuilder");
+// FIXME: I have a theory that the "Gene" object used to create the GeneDataTrack may be too heavy and not need references
+//   for things like the Block it is owned by. Would like to explore this next potentially...
+console.timeEnd(timerLabel);
 
       // Get the index for the gene data track set, otherwise default to 0
-// console.time("addDatatrackSections");
+timerLabel = `  addDatatrackSections(${processedGeneInfo.length})`;
+console.time(timerLabel);
       let geneTrackIdx = currSyntenicRegion.datatrackSets.findIndex((set) => set.type === 'gene');
       geneTrackIdx = geneTrackIdx === -1 ? 0 : geneTrackIdx;
       currSyntenicRegion.addDatatrackSections(processedGeneInfo, geneTrackIdx, 'gene');
-// console.timeEnd("addDatatrackSections");
-// console.time("addOrthologLines");
+console.timeEnd(timerLabel);
+// console.time("  addOrthologLines");
       // FIXME: currSyntenicRegion.addOrthologLines(processedGeneInfo.orthologLines);
-// console.timeEnd("addOrthologLines");
+// console.timeEnd("  addOrthologLines");
       // FIXME (Unneeded?): currSyntenicRegion.geneIds = processedGeneInfo.geneIds;
 
       currSyntenicRegion.datatrackLabels = [];
-// console.time("geneDataLabels");
+console.time("  geneDataLabels");
       for (let i = 0; i < processedGeneInfo.length; i++)
       {
         const geneData = processedGeneInfo[i];
@@ -246,14 +252,17 @@ console.timeEnd("syntenicDataTrackBuilder");
           allGeneLabels.push(geneData.label);
         }
       }
-// console.timeEnd("geneDataLabels");
+console.timeEnd("  geneDataLabels");
     }
 
     processedSyntenicRegions.push(currSyntenicRegion);
   }
 
   // Finished creating this Set:
-  return new SyntenyRegionSet(currSpecies, currMapName, processedSyntenicRegions, setOrder, renderType, allGeneLabels);
+console.time("createSyntenyRegionSet");
+  const regionSet = new SyntenyRegionSet(currSpecies, currMapName, processedSyntenicRegions, setOrder, renderType, allGeneLabels);
+console.timeEnd("createSyntenyRegionSet");
+  return regionSet;
 }
 
 
@@ -271,14 +280,18 @@ function syntenicDatatrackBuilder(factory: GenomicSectionFactory, genomicData: G
   // For each gene, build a GeneDatatrackSection element
   const processedGenomicData: GeneDatatrack[] = [];
 
-  genomicData.forEach((genomicElement: Gene) => {
+let createStart = 0, pushStart = 0, createTotal = 0.0, pushTotal = 0.0;
+
+  for (let idx = 0, len = genomicData.length; idx < len; idx++) {
     // Get backbone equivalents for gene data, or skip
+    const genomicElement: Gene = genomicData[idx];
     if (genomicElement.backboneStart === null || genomicElement.backboneStop === null)
     {
-      console.error(`Genomic Element ${genomicElement.symbol} sent to render without a backbone alignment`);
-      return;
+      $log.error(`Genomic Element ${genomicElement.symbol} sent to render without a backbone alignment`);
+      continue;
     }
 
+createStart = performance.now();
     // Create DatatrackSection for each gene (account for inversion in start/stops)
     const geneDatatrackSection = factory.createGeneDatatrackSection({
       gene: genomicElement,
@@ -289,11 +302,15 @@ function syntenicDatatrackBuilder(factory: GenomicSectionFactory, genomicData: G
         stop: genomicElement.backboneStop
       }
     });
+createTotal += (performance.now() - createStart);
 
+pushStart = performance.now();
     processedGenomicData.push(geneDatatrackSection);
-  });
+pushTotal += (performance.now() - pushStart);
+  }
 
-  console.log(`for region on ${syntenyRegion.species} ${syntenyRegion.gaplessBlock.chromosome}, gene list:`, processedGenomicData);
+console.debug(`    Create total: ${createTotal}`);
+console.debug(`    Push total: ${pushTotal}`);
   return processedGenomicData;
 }
 

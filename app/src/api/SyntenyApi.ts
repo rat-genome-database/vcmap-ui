@@ -186,7 +186,8 @@ export default class SyntenyApi
         if (result.status === 'fulfilled')
         {
           const singleSpeciesSyntenyData = getSpeciesSyntenyDataFromDTO(result.value.data, params.comparativeSpecies[index]);
-          console.debug(`[DEBUG] Syntenic regions found: ${singleSpeciesSyntenyData.regionData.length} [mapKey: '${singleSpeciesSyntenyData.mapKey}', threshold: '${params.optional.threshold}']`);
+          console.debug(`[DEBUG] Syntenic regions found: ${singleSpeciesSyntenyData.regionData.length} ` +
+            `[mapKey: '${singleSpeciesSyntenyData.mapKey}', threshold: '${params.optional.threshold}']`);
           speciesSyntenyData.push(singleSpeciesSyntenyData);
         }
         else
@@ -194,7 +195,8 @@ export default class SyntenyApi
           console.error(result.status, result.reason);
         }
       });
-      console.debug(`[DEBUG] Synteny API: ${Date.now() - start} ms`, params.backboneChromosome.chromosome, params.start, params.stop, params.optional.threshold);
+      console.debug(`[DEBUG] Synteny API: ${Date.now() - start} ms`,
+          params.backboneChromosome.chromosome, params.start, params.stop, params.optional.threshold);
       // console.debug(`[DEBUG] Synteny API: ${Date.now() - start} ms`, params);
 
       return speciesSyntenyData;

@@ -1,5 +1,6 @@
 import Chromosome from "@/models/Chromosome";
 import Gene from "@/models/Gene";
+import {SyntenyComponent} from "@/api/SyntenyApi";
 
 interface BlockParams
 {
@@ -80,18 +81,61 @@ export default class Block
   /**
    * Helper function to ensure gaps are added in descending start order.
    * TODO: Adjust downstream gene "backbone" positions based on the increase in block length.
+   // NOTE: insertion sort here would be ideal, instead of this implementation
    */
-  addGaps(newgaps: Gap[]): void
+  addGaps(newgaps: SyntenyComponent[], visibleBackboneStart: number, visibleBackboneStop: number): void
   {
     const origLen = this.gaps.length;
+
+    // TODO TEST: If we sort the list from the API here, could we be more efficient in our insertion?
+
+    //
+    // Find all gaps that are new information
     // NOTE: Avoiding callback based forEach here for performance reasons
-    for (let i = 0, len = newgaps.length; i < len; i++)
+    for (let idx = 0, len = newgaps.length; idx < len; idx++)
     {
+      // TODO TEST: Only add gaps that are going to be visible anyway
+      if (newgaps[idx].backboneStart > visibleBackboneStop || newgaps[idx].backboneStop < visibleBackboneStart)
+        continue;
+      // end TEST
+
       // Unless this gap is already represented, add it (ignoring backbone positioning)
-      if (this.gaps.filter(
-          (g) => { return g.start == newgaps[i].start && g.stop == newgaps[i].stop; }
-      ).length == 0)
-        this.gaps.push(newgaps[i]);
+      // NOTE: sorted gaps allow us to quickly short-circuit this search, assuming the
+      //   API didn't send any duplicates
+      let duplicate = false, added = false;
+      for (let idx2 = 0, len2 = this.gaps.length; idx2 < len2; idx2++)
+      {
+        if (this.gaps[idx2].start === newgaps[idx].start && this.gaps[idx2].stop === newgaps[idx].stop)
+        {
+          // We found a duplicate gap (identical start/stop)
+          duplicate = true;
+          break;
+        }
+        else if (this.gaps[idx2].start > newgaps[idx].start)
+        {
+          // We went past all the gaps upstream of "newgap[idx]" w/o finding a duplicate
+          // So it must be new: add it
+          added = true;
+          this.gaps.push(new Gap({
+            start: newgaps[idx].start,
+            stop: newgaps[idx].stop,
+            backboneStart: newgaps[idx].backboneStart,
+            backboneStop: newgaps[idx].backboneStop,
+          }));
+          break;
+        }
+      }
+
+      // If we didn't find a dup, or add it -- must be a new last gap: add it now
+      if (!duplicate && !added)
+      {
+        this.gaps.push(new Gap({
+          start: newgaps[idx].start,
+          stop: newgaps[idx].stop,
+          backboneStart: newgaps[idx].backboneStart,
+          backboneStop: newgaps[idx].backboneStop,
+        }));
+      }
     }
 
     // Only perform the expensive sort if we added something

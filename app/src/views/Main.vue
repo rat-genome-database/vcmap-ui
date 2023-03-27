@@ -207,18 +207,25 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
 
   let tree:Map<number, Block[]> = syntenyTree.value;
   let backboneChr = store.state.chromosome; // TODO: This is proxied, not sure why? Also not sure it matters...
-  $log.debug(`Processing ${speciesSyntenyDataArray.length} blocks of Synteny Data...`);
+  $log.debug(`Processing ${speciesSyntenyDataArray.length} species of Synteny Data...`);
 
+  //
   // For each off-backbone species in our response, loop the region data
-  speciesSyntenyDataArray.forEach((speciesResponse) => {
+  // NOTE: DO NOT use .forEach() loops in this processing. The size of the speciesSyntenyDataArray
+  //   is significant and should not be subject to code that potentially might clone data or create
+  //   extra structures.
+  for (let speciesIdx = 0; speciesIdx < speciesSyntenyDataArray.length; speciesIdx++) {
     // Check if we need to create a new structure for this mapKey (species)
-    if (!tree.has(speciesResponse.mapKey)) tree.set(speciesResponse.mapKey, []);
-    let knownSpeciesBlocks = tree.get(speciesResponse.mapKey) ?? [];
+    if (!tree.has(speciesSyntenyDataArray[speciesIdx].mapKey)) tree.set(speciesSyntenyDataArray[speciesIdx].mapKey, []);
+    let knownSpeciesBlocks = tree.get(speciesSyntenyDataArray[speciesIdx].mapKey) ?? [];
 
     // For each region (block), compare to *all* our existing structures
     // NOTE: If we can afford to do it, might make sense to change our SyntenyApi to build
     //   our block structure, so we can more quickly identify new data and add to our tree.
-    speciesResponse.regionData.forEach((blockData) => {
+    $log.debug(`  Processing ${speciesSyntenyDataArray[speciesIdx].regionData.length} blocks of Synteny Data...`);
+    for (let blockIdx = 0, len = speciesSyntenyDataArray[speciesIdx].regionData.length; blockIdx < len; blockIdx++) {
+      const blockData = speciesSyntenyDataArray[speciesIdx].regionData[blockIdx];
+      $log.debug(`  Processing block with ${blockData.gaps.length} gaps, and ${blockData.genes.length} genes...`);
       // NOTE: We cannot process everything...
       //   Skip any blocks with chainLevel > MAX_CHAINLEVEL, and any
       //   blocks outside the range [backboneStart, backboneStop].
@@ -241,7 +248,7 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
       if (blockSearch.length == 0)
       {
         // Create a newly discovered block
-        $log.debug(`Found new Synteny block for ${speciesResponse.speciesName} (chr ${blockData.block.chromosome})`);
+        $log.debug(`Found new Synteny block for ${speciesSyntenyDataArray[speciesIdx].speciesName} (chr ${blockData.block.chromosome})`);
         let newBlock = new Block({
           backbone: backboneChr,
           chromosome: new Chromosome({mapKey: blockData.block.mapKey, chromosome: blockData.block.chromosome}),
@@ -255,18 +262,7 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
 
         console.time("AddGapsNewBlock");
         // Gaps (add ALL)
-        // NOTE: Avoiding callback based forEach here for performance reasons
-        let gaps: Gap[] = [];
-        for (let i = 0, len = blockData.gaps.length; i < len; i++)
-        {
-          gaps.push(new Gap({
-            start: blockData.gaps[i].start,
-            stop: blockData.gaps[i].stop,
-            backboneStart: blockData.gaps[i].backboneStart,
-            backboneStop: blockData.gaps[i].backboneStop,
-          }));
-        }
-        newBlock.addGaps(gaps);
+        newBlock.addGaps(blockData.gaps, backboneStart, backboneStop);
         console.timeEnd("AddGapsNewBlock");
 
         knownSpeciesBlocks.push(newBlock);
@@ -278,15 +274,10 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
         // Keep the reference to this block from our tree
         targetBlock = blockSearch[0];
 
-        console.time("AddGapsExistingBlock");
-        // NOTE: Avoiding callback based forEach here for performance reasons
-        let gaps: Gap[] = [];
-        for (let i = 0, len = blockData.gaps.length; i < len; i++)
-        {
-          gaps.push(new Gap({start: blockData.gaps[i].start, stop: blockData.gaps[i].stop}));
-        }
-        targetBlock?.addGaps(gaps);
-        console.timeEnd("AddGapsExistingBlock");
+        const timerLabel = `AddGapsExistingBlock(${targetBlock.gaps.length}, ${blockData.gaps.length})`;
+        console.time(timerLabel);
+        targetBlock?.addGaps(blockData.gaps, backboneStart, backboneStop);
+        console.timeEnd(timerLabel);
       }
       else
       {
@@ -295,8 +286,9 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
       }
 
       // Handle genes (we need to inspect all of them even in the case of a new block)
-      blockData.genes.forEach((geneData) => {
+      for (let geneIdx = 0, numGenes = blockData.genes.length; geneIdx < numGenes; geneIdx++) {
         // Use any existing genes if we have already loaded one
+        const geneData = blockData.genes[geneIdx];
         let gene = geneList.value.get(geneData.rgdId) ?? geneData;
         // NOTE: It is possible for a gene from a new block to exist on another block
         //   This situation comes up often when there are small blocks that a representing
@@ -333,7 +325,7 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
           if (gene.backboneStop > targetBlock.backboneStop) gene.backboneStop = targetBlock.backboneStop;
 
           // This gene has no parent block -- assign to target block
-          console.log(`Gene ${gene.symbol} without parent block, assigning to block ${targetBlock.chromosome.chromosome} (${targetBlock.start}, ${targetBlock.stop})`);
+          // console.log(`Gene ${gene.symbol} without parent block, assigning to block ${targetBlock.chromosome.chromosome} (${targetBlock.start}, ${targetBlock.stop})`);
           gene.block = targetBlock;
           // TODO: sort OR use addGene() approach here?
           targetBlock.genes.push(gene);
@@ -342,8 +334,8 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
         // Add any new genes to our geneList (cross-referencing our Blocks)
         // TODO: sort OR use addGene() approach here?
         if (gene && !geneList.value.get(gene.rgdId)) geneList.value.set(gene.rgdId, gene);
-      });
-    });
-  });
+      }
+    }
+  }
 }
 </script>

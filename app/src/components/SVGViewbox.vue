@@ -166,8 +166,18 @@
   />
   -->
   <h2>Blocks</h2>
-  <template v-for="(mapKey, index) in props.syntenyTree.keys()" :key="index">
-    <p>{{mapKey}}: {{ props.syntenyTree.get(mapKey).length }} </p>
+  <template v-for="[mapKey, blocks] in props.syntenyTree" :key="mapKey">
+    <p>MapKey {{mapKey}}:</p>
+    <template v-for="(block, index) in blocks" :key="index">
+      <ul>
+        <b>{{ index }}</b>
+        <li>Chr{{ block.chromosome.chromosome }}: ({{ block.start }}, {{ block.stop }}) [{{ block.stop - block.start }}]</li>
+        <li>ChainLevel: {{ block.chainLevel }}</li>
+        <li>Backbone: ({{ block.backboneStart }}, {{ block.backboneStop }})</li>
+        <li>Genes: {{ block.genes.length }}</li>
+        <li>Gaps: {{ block.gaps.length }}</li>
+      </ul>
+    </template>
   </template>
   <h2>Genes</h2>
   <p>{{ props.geneList.size }}</p>
@@ -499,7 +509,7 @@ const updateDetailsPanel = async () => {
   logPerformanceReport('Update Detailed Time', timeDetailedUpdate, {
     'Filter Backbone Genes': timeBackboneFilterGenes,
     'Create Backbone Datatracks': timeCreateBackboneDatatracks,
-    'Create Backbone Set': timeCreateBackboneSet,
+    'Create Backbone Set, and AdjustY': timeCreateBackboneSet,
     'Create Synteny Tracks': timeSyntenyTracks,
     'Adjust Visible Region': timeAdjustVisibleRegion,
     'Misc': timeDetailedUpdateOther,
