@@ -205,8 +205,8 @@ export default createStore({
       {
         selection.setViewportSelection(0, selection.chromosome.seqLength);
       }
-      context.commit('startPosition', 0);
-      context.commit('stopPosition', selection.chromosome.seqLength);
+      context.commit('startPosition', selection.viewportSelection?.basePairStart ?? 0);
+      context.commit('stopPosition', selection.viewportSelection?.basePairStop ?? selection.chromosome.seqLength);
       context.commit('selectedBackboneRegion', selection);
       context.commit('detailedBasePairRange', { start: selection.viewportSelection?.basePairStart, stop: selection.viewportSelection?.basePairStop });
       // Note: Committing a change to detailedBasePairRange will trigger an update on the Detailed panel
@@ -258,6 +258,10 @@ export default createStore({
 
     isLoadByGene: (state: VCMapState) => {
       return state.configMode === 'gene';
+    },
+
+    isLoadByPosition: (state: VCMapState) => {
+      return state.configMode === 'position';
     },
   },
 

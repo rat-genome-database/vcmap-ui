@@ -33,6 +33,7 @@ import BackboneSelection from "@/models/BackboneSelection";
 
 // TODO: Can we figure out a better way to handle blocks with a high chainlevel?
 const MAX_CHAINLEVEL = 2;
+const LOAD_BY_GENE_DETAILED_RANGE_MULTIPLIER = 6;
 
 const store = useStore(key);
 const $log = useLogger();
@@ -141,11 +142,34 @@ onMounted(async () => {
   });
   processSynteny(speciesSyntenyDataArray, 0, store.state.chromosome.seqLength);
 
-  // Set a base selection TODO: not necessary
-  store.dispatch('setBackboneSelection', new BackboneSelection(store.state.chromosome));
+  //
+  // Adjust the selected start and stop based on our configuration mode (load by gene vs load by position)
+  let selectionStart = 0;
+  let selectionStop = store.state.chromosome.seqLength;
+  if (store.getters.isLoadByGene && store.state.gene != null)
+  {
+    //
+    // Load By Gene
+    const loadedGene = store.state.gene;
+    const basePairRangeAdjustment = (loadedGene.stop - loadedGene.start) / 2 * LOAD_BY_GENE_DETAILED_RANGE_MULTIPLIER;
+    selectionStart = Math.max(0, loadedGene.start - basePairRangeAdjustment);
+    selectionStop = Math.min(loadedGene.stop + basePairRangeAdjustment, store.state.chromosome.seqLength);
+  }
+  else if (store.getters.isLoadByPosition && store.state.startPos != null && store.state.stopPos != null)
+  {
+    //
+    // Load By Position
+    selectionStart = Math.max(0, store.state.startPos);
+    selectionStop = Math.min(store.state.stopPos, store.state.chromosome.seqLength);
+  }
+
+  // Query synteny at threshold determined by selected base pair range (for detailed panel)
+  await queryAndProcessSyntenyForBasePairRange(store.state.chromosome, selectionStart, selectionStop);
 
   // Kick off the OverviewPanel load
   store.dispatch('setConfigurationLoaded', true);
+  // Kick off DetailedPanel load
+  triggerDetailedPanelProcessing(store.state.chromosome, selectionStart, selectionStop);
 });
 
 /**
@@ -158,30 +182,10 @@ watch(() => store.state.detailedBasePairRequest, async () => {
     $log.debug(`Detailed Base Pair range change request detected (${store.state.detailedBasePairRequest?.start},
        ${store.state.detailedBasePairRequest?.stop}).`);
 
-    let threshold = Math.round(
-        (store.state.detailedBasePairRequest.stop - store.state.detailedBasePairRequest.start) /
-        (PANEL_SVG_STOP - PANEL_SVG_START) / 4
-    );
-    const speciesSyntenyDataArray = await SyntenyApi.getSyntenicRegions({
-      backboneChromosome: store.state.chromosome,
-      start: store.state.detailedBasePairRange.start,
-      stop: store.state.detailedBasePairRange.stop,
-      optional: {
-        includeGenes: true,
-        includeOrthologs: true,
-        threshold: threshold,
-      },
-      comparativeSpecies: store.state.comparativeSpecies,
-    });
+    await queryAndProcessSyntenyForBasePairRange(store.state.chromosome, store.state.detailedBasePairRequest.start, store.state.detailedBasePairRequest.stop);
 
-    // Process response
-    processSynteny(speciesSyntenyDataArray, store.state.detailedBasePairRequest.start, store.state.detailedBasePairRequest.stop);
-
-
+    triggerDetailedPanelProcessing(store.state.chromosome, store.state.detailedBasePairRequest.start, store.state.detailedBasePairRequest.stop);
     // Data processing done, ready to complete request
-    let selection = store.state.selectedBackboneRegion;
-    selection?.setViewportSelection(store.state.detailedBasePairRequest.start, store.state.detailedBasePairRequest.stop);
-    store.dispatch('setBackboneSelection', selection);
     store.dispatch('setDetailedBasePairRequest', null);
   }
 });
@@ -337,5 +341,40 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
       }
     }
   }
+}
+
+async function queryAndProcessSyntenyForBasePairRange(backboneChromosome: Chromosome, start: number, stop: number)
+{
+  let threshold = Math.round(
+    (stop - start) /
+    (PANEL_SVG_STOP - PANEL_SVG_START) / 4
+  );
+  const speciesSyntenyDataArray = await SyntenyApi.getSyntenicRegions({
+    backboneChromosome: backboneChromosome,
+    start: start,
+    stop: stop,
+    optional: {
+      includeGenes: true,
+      includeOrthologs: true,
+      threshold: threshold,
+    },
+    comparativeSpecies: store.state.comparativeSpecies,
+  });
+
+  // Process response
+  processSynteny(speciesSyntenyDataArray, start, stop);
+}
+
+function triggerDetailedPanelProcessing(backboneChromosome: Chromosome, selectionStart: number, selectionStop: number)
+{
+  let selection = store.state.selectedBackboneRegion;
+
+  // This object does not retain its functions if we are getting it off of local storage (e.g. after refreshing the page) due to it being saved as a plain object
+  // We need to recreate the BackboneSelection object so that we can call `setViewportSelection()` on it later...
+  selection = new BackboneSelection(backboneChromosome);
+
+  selection.setViewportSelection(selectionStart, selectionStop);
+  // Trigger the detailed panel to begin its processing
+  store.dispatch('setBackboneSelection', selection);
 }
 </script>

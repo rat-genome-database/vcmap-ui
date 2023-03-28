@@ -284,7 +284,6 @@ async function attachToProgressLoader(storeLoadingActionName: string, func: () =
 
 onMounted(async () => {
   enableProcessingLoadMask.value = true;
-  allowDetailedPanelProcessing.value = false; // TODO: Can we use the configurationLoaded value instead??
 
   // Clear any prior selections or set as the searched gene
   // const gene = store.state.gene;
@@ -307,7 +306,6 @@ watch(() => store.state.configurationLoaded, () => {
   if (store.state.configurationLoaded === true)
   {
     enableProcessingLoadMask.value = true;
-    allowDetailedPanelProcessing.value = true;
     attachToProgressLoader('setIsOverviewPanelUpdating', updateOverviewPanel);
   }
 });
@@ -316,7 +314,7 @@ watch(() => store.state.configurationLoaded, () => {
  * Have a progress loader for the Details Panel update process.
  */
 watch(() => store.state.detailedBasePairRange, () => {
-  if (allowDetailedPanelProcessing.value)
+  if (store.state.configurationLoaded)
   {
     enableProcessingLoadMask.value = true;
     attachToProgressLoader('setIsDetailedPanelUpdating', updateDetailsPanel);
