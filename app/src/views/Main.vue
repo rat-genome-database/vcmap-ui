@@ -6,12 +6,19 @@
   />
   <div class="grid">
     <div class="col-9">
-      <SVGViewbox :geneList="geneList" :synteny-tree="syntenyTree"/>
+      <SVGViewbox :geneList="geneList" :synteny-tree="syntenyTree" :loading="isLoading" />
     </div>
     <div class="col-3">
       <SelectedDataPanel :selected-data="store.state.selectedData" :gene-list="geneList"/>
     </div>
   </div>
+  <VCMapDialog 
+    v-model:show="showDialog" 
+    :header="dialogHeader" 
+    :message="dialogMessage"
+    :theme="dialogTheme"
+    :show-back-button="showDialogBackButton"
+  />
 </template>
 
 <script lang="ts" setup>
@@ -30,6 +37,9 @@ import router from "@/router";
 import GeneApi from "@/api/GeneApi";
 import {useLogger} from "vue-logger-plugin";
 import BackboneSelection from "@/models/BackboneSelection";
+import VCMapDialog from '@/components/VCMapDialog.vue';
+import useDialog from '@/composables/useDialog';
+import { backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError, noSyntenyFoundError } from '@/utils/VCMapErrors';
 
 // TODO: Can we figure out a better way to handle blocks with a high chainlevel?
 const MAX_CHAINLEVEL = 2;
@@ -38,6 +48,9 @@ const LOAD_BY_GENE_DETAILED_RANGE_MULTIPLIER = 6;
 const store = useStore(key);
 const $log = useLogger();
 
+const { showDialog, dialogHeader, dialogMessage, showDialogBackButton, dialogTheme, onError } = useDialog();
+
+const isLoading = ref(false);
 
 // Our synteny tree keyed by MapId
 // TODO: Consider adding a map for mapKey -> Species
@@ -94,6 +107,8 @@ const onInspectPressed = () => {
  * (Lifecycle hook)
  */
 onMounted(async () => {
+  isLoading.value = true;
+
   $log.debug('Creating memory models for our Comparative Map view');
   store.dispatch('setConfigurationLoaded', false);
 
@@ -103,11 +118,16 @@ onMounted(async () => {
   geneList.value = new Map();
 
   // Check for required data
+  if (checkForConfigurationErrors())
+  {
+    isLoading.value = false;
+    return;
+  }
+
   if (!store.state.chromosome || !store.state.species)
   {
-    // FIXME: Improve this UX / notify the user / etc
-    $log.error('Cannot load Main -- no chromosome in state');
-    await router.push('/');
+    // Shouldn't get to this point since these values are checked in `checkForConfigurationErrors()`, just checking for null here to satisfy the type checking
+    isLoading.value = false;
     return;
   }
 
@@ -140,6 +160,20 @@ onMounted(async () => {
     },
     comparativeSpecies: store.state.comparativeSpecies,
   });
+
+  if (speciesSyntenyDataArray == undefined)
+  {
+    $log.error('SpeciesSyntenyDataArray is undefined after querying for syntenic regions');
+    isLoading.value = false;
+    return;
+  }
+
+  if (!checkSyntenyResultsOnComparativeSpecies(speciesSyntenyDataArray))
+  {
+    isLoading.value = false;
+    return;
+  }
+
   processSynteny(speciesSyntenyDataArray, 0, store.state.chromosome.seqLength);
 
   //
@@ -170,12 +204,14 @@ onMounted(async () => {
   store.dispatch('setConfigurationLoaded', true);
   // Kick off DetailedPanel load
   triggerDetailedPanelProcessing(store.state.chromosome, selectionStart, selectionStop);
+  isLoading.value = false;
 });
 
 /**
  * Watch for requested navigation operations (zoom in/out, navigate up/down stream).
  */
 watch(() => store.state.detailedBasePairRequest, async () => {
+  isLoading.value = true;
   // Grab blocks and genes with using a threshold of approximately .25 of a pixel
   if (store.state.detailedBasePairRequest && store.state.chromosome)
   {
@@ -188,6 +224,7 @@ watch(() => store.state.detailedBasePairRequest, async () => {
     // Data processing done, ready to complete request
     store.dispatch('setDetailedBasePairRequest', null);
   }
+  isLoading.value = false;
 });
 
 /**
@@ -376,5 +413,73 @@ function triggerDetailedPanelProcessing(backboneChromosome: Chromosome, selectio
   selection.setViewportSelection(selectionStart, selectionStop);
   // Trigger the detailed panel to begin its processing
   store.dispatch('setBackboneSelection', selection);
+}
+
+/**
+ * Checks for possible configuration errors and shows a dialog if found.
+ * TODO: Make this a bit more robust so that if multiple errors are found, we can show them all
+ * 
+ * @returns {boolean} true if errors are detected
+ */
+function checkForConfigurationErrors()
+{
+  // Error if backbone chromosome or species is not specified
+  if (store.state.chromosome == null || store.state.species == null)
+  {
+    onError(backboneOverviewError, backboneOverviewError.message, false);
+    return true;
+  }
+
+  // Error if backbone info is invalid length while loading by position
+  if (store.getters.isLoadByPosition && (store.state.startPos == null || store.state.stopPos == null || (store.state.stopPos - store.state.startPos) <= 0))
+  {
+    onError(noRegionLengthError, noRegionLengthError.message, false);
+    return true;
+  }
+
+  // Error if no comparative species
+  if (store.state.comparativeSpecies.length === 0)
+  {
+    onError(missingComparativeSpeciesError, missingComparativeSpeciesError.message, false);
+    return true;
+  }
+
+  return false;
+}
+
+function showNoResultsDialog()
+{
+  onError(noSyntenyFoundError, noSyntenyFoundError.message, true, 'No Results');
+}
+
+function showPartialResultsDialog(speciesWithMissingSynteny: SpeciesSyntenyData[])
+{
+  const errMessage = `We did not find syntenic regions for the following species: ${speciesWithMissingSynteny.map(s => `${s.speciesName} (${s.mapName})`).join(', ')}`;
+  onError(new Error(errMessage), errMessage, true, 'Missing Results');
+}
+
+/**
+ * Checks if synteny was found for all off-backbone species/maps
+ * 
+ * @param syntenySets
+ * @returns {boolean} true if results were found for all species/maps, false if not
+ */
+function checkSyntenyResultsOnComparativeSpecies(speciesSyntenyDataArray: SpeciesSyntenyData[])
+{
+  const resultsFound = speciesSyntenyDataArray.some(syntenyData => syntenyData.regionData.length > 0);
+  if (!resultsFound)
+  {
+    showNoResultsDialog();
+    return false;
+  }
+  else if (speciesSyntenyDataArray.some(syntenyData => syntenyData.regionData.length === 0))
+  {
+    // If only some results were found -- notify user about which ones produced no results
+    const speciesWithMissingSyntenyData = speciesSyntenyDataArray.filter(syntenyData => syntenyData.regionData.length === 0);
+    showPartialResultsDialog(speciesWithMissingSyntenyData);
+    return false;
+  }
+
+  return true;
 }
 </script>

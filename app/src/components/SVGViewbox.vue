@@ -145,11 +145,11 @@
   <VCMapDialog 
     v-model:show="showDialog" 
     :header="dialogHeader" 
-    :message="dialogMessage" 
-    :show-back-button="showDialogBackButton" 
-    :on-confirm-callback="(isMissingSynteny) ? () => {allowDetailedPanelProcessing = true} : undefined"
+    :message="dialogMessage"
+    :theme="dialogTheme"
+    :show-back-button="showDialogBackButton"
   />
-  <LoadingSpinnerMask v-if="enableProcessingLoadMask" :style="getDetailedPosition()"></LoadingSpinnerMask>
+  <LoadingSpinnerMask v-if="arePanelsLoading" :style="getDetailedPosition()"></LoadingSpinnerMask>
   <!--
   <Button
     style="margin-right: 20px;"
@@ -184,7 +184,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import SectionSVG from './SectionSVG.vue';
 import SVGConstants, {PANEL_SVG_START, PANEL_SVG_STOP} from '@/utils/SVGConstants';
@@ -224,7 +224,7 @@ const NAV_SHIFT_PERCENT = 0.2;
 const store = useStore(key);
 const $log = useLogger();
 
-const { showDialog, dialogHeader, dialogMessage, showDialogBackButton, onError, checkSyntenyResultsOnComparativeSpecies } = useDialog();
+const { showDialog, dialogHeader, dialogMessage, showDialogBackButton, dialogTheme, onError } = useDialog();
 const { startDetailedSelectionY, stopDetailedSelectionY, updateZoomSelection, detailedSelectionHandler, cancelDetailedSelection, getDetailedSelectionStatus} = useDetailedPanelZoom(store);
 const { startOverviewSelectionY, stopOverviewSelectionY, updateOverviewSelection, overviewSelectionHandler, cancelOverviewSelection, getOverviewSelectionStatus } = useOverviewPanelSelection(store);
 
@@ -232,12 +232,11 @@ interface Props
 {
   geneList: Map<number, Gene>;
   syntenyTree: Map<number, Block[]>;
+  loading: boolean;
 }
 
 const props = defineProps<Props>();
 
-let isMissingSynteny = ref<boolean>(false);
-let allowDetailedPanelProcessing = ref<boolean>(false);
 let detailedSyntenySets = ref<SyntenyRegionSet[]>([]); // The currently displayed SyntenicRegions in the detailed panel
 let overviewBackboneSet = ref<BackboneSet>();
 let detailedBackboneSet = ref<BackboneSet>();
@@ -246,9 +245,6 @@ let testRects = ref<VCMapSVGEl[]>();
 let testRects2 = ref<VCMapSVGEl[]>();
 let testRects3 = ref<VCMapSVGEl[]>();
 let testRects4 = ref<VCMapSVGEl[]>();
-
-let enableProcessingLoadMask = ref<boolean>(false); // Whether or not to show the processing load mask
-
 
 const orthologLines = computed(() => {
   let lines: OrthologLine[] = [];
@@ -274,7 +270,7 @@ async function attachToProgressLoader(storeLoadingActionName: string, func: () =
   }
   catch (err)
   {
-    onError(err, 'An error occurred while updating the overview panel');
+    onError(err, 'An error occurred while updating the overview panel', false);
   }
   finally
   {
@@ -283,29 +279,16 @@ async function attachToProgressLoader(storeLoadingActionName: string, func: () =
 }
 
 onMounted(async () => {
-  enableProcessingLoadMask.value = true;
-
   // Clear any prior selections or set as the searched gene
   // const gene = store.state.gene;
   // store.dispatch('setSelectedData', gene ? [new SelectedData(gene.clone(), 'Gene')] : null);
 
   //await attachToProgressLoader('setIsOverviewPanelUpdating', updateOverviewPanel);
-
-  // Note: We need to type cast here b/c SyntenyRegionSet contains private fields and type-checking fails
-  // See: https://github.com/vuejs/core/issues/2981
-  // isMissingSynteny.value = !(checkSyntenyResultsOnComparativeSpecies(overviewSyntenySets.value as SyntenyRegionSet[]));
-
-  // Prevent detailed panel processing from happening if there is an issue with off-backbone synteny
-  // A dialog will appear to let the user confirm before proceeding...
-  // if (!isMissingSynteny.value)
-  // {
-  // }
 });
 
 watch(() => store.state.configurationLoaded, () => {
   if (store.state.configurationLoaded === true)
   {
-    enableProcessingLoadMask.value = true;
     attachToProgressLoader('setIsOverviewPanelUpdating', updateOverviewPanel);
   }
 });
@@ -316,21 +299,14 @@ watch(() => store.state.configurationLoaded, () => {
 watch(() => store.state.detailedBasePairRange, () => {
   if (store.state.configurationLoaded)
   {
-    enableProcessingLoadMask.value = true;
     attachToProgressLoader('setIsDetailedPanelUpdating', updateDetailsPanel);
   }
 });
 
-/**
- * Ensure the load mask occurs during the Main API calls
- */
-watch(() => store.state.detailedBasePairRequest, async () => {
-  if (store.state.detailedBasePairRequest) enableProcessingLoadMask.value = true;
-});
-
 // FIXME: check on this (probably needs to be attached to Main props instead):
 const arePanelsLoading = computed(() => {
-  return store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating;
+  // Either panel is processing or API is being queried
+  return store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating || props.loading;
 });
 
 const currentlySelectingRegion = () => {
@@ -345,24 +321,10 @@ const updateOverviewPanel = async () => {
   const backboneSpecies = store.state.species;
   const backboneChromosome = store.state.chromosome;
 
-  // error if backbone is not set
   if (backboneSpecies == null || backboneChromosome == null)
   {
-    onError(backboneOverviewError, backboneOverviewError.message);
+    $log.error('Backbone species or chromosome is null during overview panel update');
     overviewSyntenySets.value = [];
-    enableProcessingLoadMask.value = false;
-    return;
-  }
-
-  const backboneStart = store.state.startPos ?? 0;
-  const backboneStop = store.state.stopPos ?? backboneChromosome.seqLength;
-
-  // error if backbone info is invalid length
-  if (backboneStop - backboneStart <= 0)
-  {
-    onError(noRegionLengthError, noRegionLengthError.message);
-    overviewSyntenySets.value = [];
-    enableProcessingLoadMask.value = false;
     return;
   }
 
@@ -373,18 +335,9 @@ const updateOverviewPanel = async () => {
 
   const overviewBackboneCreationTime = Date.now();
 
-  // Error if no comparative species
-  if (store.state.comparativeSpecies.length === 0)
-  {
-    onError(missingComparativeSpeciesError, missingComparativeSpeciesError.message);
-    enableProcessingLoadMask.value = false;
-    return;
-  }
-
   // Build overview synteny sets
   const overviewSyntenyTrackCreationTime = Date.now();
   overviewSyntenySets.value = await createOverviewSyntenicRegionSets(props.syntenyTree, store.state.comparativeSpecies, backboneChromosome);
-  enableProcessingLoadMask.value = false;
 
   // TODO: request an update to the detailed panel here
 
@@ -409,7 +362,6 @@ const updateDetailsPanel = async () => {
   $log.debug(`Updating Detailed Panel`);
 
   const detailedUpdateStart = Date.now();
-  enableProcessingLoadMask.value = true;
 
   const backboneSpecies = store.state.species;
   const backboneChromosome = store.state.chromosome;
@@ -432,23 +384,12 @@ const updateDetailsPanel = async () => {
     // Clear out our detailed synteny sets
     $log.error(`Invalid detailedBasePairRange?? (${detailedBasePairRange.start}, ${detailedBasePairRange.stop})`);
     detailedSyntenySets.value = [];
-    enableProcessingLoadMask.value = false;
     return;
   }
 
   //error if no backbone species or chromosome
   if (backboneSpecies == null || backboneChromosome == null)
   {
-    onError(backboneDetailedError, backboneDetailedError.message);
-    detailedSyntenySets.value = [];
-    enableProcessingLoadMask.value = false;
-    return;
-  }
-
-  // error if no comparative species
-  if (store.state.comparativeSpecies.length === 0)
-  {
-    onError(missingComparativeSpeciesError, missingComparativeSpeciesError.message);
     detailedSyntenySets.value = [];
     return;
   }
@@ -490,11 +431,6 @@ const updateDetailsPanel = async () => {
     set.processGeneLabels();
   });
   timeSyntenyTracks = Date.now() - syntenyTracksStart;
-
-  //
-  // Done!!
-  //
-  enableProcessingLoadMask.value = false;
 
   // Report timing data
   const timeDetailedUpdate= Date.now() - detailedUpdateStart;
@@ -723,8 +659,6 @@ const tempReplace = () => {
       // }
     });
   });
-
-  // enableProcessingLoadMask.value = false;
 };
 
 /**
@@ -805,7 +739,7 @@ const loadBackboneVariants = async () => {
     }
     else
     {
-      onError(null, 'No variants found for the requested region.');
+      onError(null, 'No variants found for the requested region.', false);
     }
   }
 };
