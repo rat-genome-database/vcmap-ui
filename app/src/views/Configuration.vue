@@ -270,6 +270,7 @@ import { VERSION } from '@/version';
 import { Formatter } from '@/utils/Formatter';
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import { key } from '@/store';
+import { ConfigurationMode } from '@/utils/Configuration';
 
 interface ComparativeSpeciesSelection
 {
@@ -282,12 +283,13 @@ const router = useRouter();
 const store = useStore(key);
 const $log = useLogger();
 
-const TABS = {
-  GENE: 0,
-  POSITION: 1
+// Translate from configuration mode to tabs on this page
+const TABS: { [key in ConfigurationMode]: number } = {
+  gene: 0,
+  position: 1
 };
 
-const activeTab = ref(TABS.GENE);
+const activeTab = ref(TABS.gene);
 
 const speciesOptions = ref<Species[]>([]);
 const backboneSpecies = ref<Species | null>(null);
@@ -334,11 +336,11 @@ const isValidConfig = computed(() => {
     return false;
   }
 
-  if (activeTab.value === TABS.POSITION)
+  if (activeTab.value === TABS.position)
   {
     return backboneChromosome.value;
   }
-  else if (activeTab.value === TABS.GENE)
+  else if (activeTab.value === TABS.gene)
   {
     return geneChromosome.value;
   }
@@ -467,7 +469,7 @@ async function prepopulateConfigOptions()
 {
   store.dispatch('setConfigurationLoaded', null);
 
-  activeTab.value = store.state.configTab;
+  activeTab.value = TABS[store.state.configMode];
   isLoadingSpecies.value = true;
   const backboneSelection = store.state.selectedBackboneRegion;
   try
@@ -602,14 +604,14 @@ function saveConfigToStoreAndGoToMainScreen()
   store.dispatch('setSpecies', backboneSpecies.value);
   // Always reset loaded genes before loading VCMap
   store.dispatch('setLoadedGenes', null);
-  if (activeTab.value === TABS.GENE)
+  if (activeTab.value === TABS.gene)
   {
     store.dispatch('setGene', backboneGene.value);
     store.dispatch('setChromosome', geneChromosome.value);
     // If loading by gene, set the selectedGeneIds based on search, and selected data panel
     store.dispatch('setSelectedGeneIds', [backboneGene.value?.rgdId] || []);
   }
-  else if (activeTab.value === TABS.POSITION)
+  else if (activeTab.value === TABS.position)
   {
     store.dispatch('setChromosome', backboneChromosome.value);
     store.dispatch('setStartPosition', startPosition.value ?? 0);
@@ -651,10 +653,23 @@ function saveConfigToStoreAndGoToMainScreen()
   });
 
   store.dispatch('setComparativeSpecies', comparativeSpecies);
-  store.dispatch('setConfigTab', activeTab.value);
+  store.dispatch('setConfigMode', getConfigModeFromActiveTab(activeTab.value));
   store.dispatch('setConfigurationLoaded', null);
 
   router.push('/main');
+}
+
+function getConfigModeFromActiveTab(tabValue: number): ConfigurationMode
+{
+  for (const mode in TABS)
+  {
+    if (TABS[mode as ConfigurationMode] === tabValue)
+    {
+      return mode as ConfigurationMode;
+    }
+  }
+
+  return 'gene';
 }
 
 function clearPriorBackboneSelectionIfNecessary()
@@ -665,7 +680,7 @@ function clearPriorBackboneSelectionIfNecessary()
     return;
   }
 
-  if (activeTab.value === TABS.GENE
+  if (activeTab.value === TABS.gene
     && (store.state.chromosome?.chromosome !== geneChromosome.value?.chromosome
       || store.state.startPos !== geneOptionStartPosition.value
       || store.state.stopPos !== geneOptionStopPosition.value))
@@ -674,7 +689,7 @@ function clearPriorBackboneSelectionIfNecessary()
     return;
   }
   
-  if (activeTab.value === TABS.POSITION 
+  if (activeTab.value === TABS.position 
     && (store.state.chromosome?.chromosome !== backboneChromosome.value?.chromosome
       || store.state.startPos !== startPosition.value
       || store.state.stopPos !== stopPosition.value))
