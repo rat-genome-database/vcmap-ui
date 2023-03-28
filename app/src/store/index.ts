@@ -4,11 +4,11 @@ import Species from '@/models/Species';
 import Chromosome from '@/models/Chromosome';
 import Gene from '@/models/Gene';
 import BackboneSelection, { BasePairRange } from '@/models/BackboneSelection';
-import SVGConstants from '@/utils/SVGConstants';
 import SelectedData from '@/models/SelectedData';
 import { InjectionKey } from 'vue';
 import { createLogger } from 'vuex';
 import { GeneDatatrack, LoadedGene } from '@/models/DatatrackSection';
+import { ConfigurationMode } from '@/utils/Configuration';
 
 export const key: InjectionKey<Store<VCMapState>> = Symbol();
 
@@ -20,7 +20,7 @@ export interface VCMapState
   stopPos: number | null; // backbone stop position
   gene: Gene | null; // backbone gene
   comparativeSpecies: Species[];
-  configTab: number;
+  configMode: ConfigurationMode;
 
   configurationLoaded: boolean | null;
   selectedBackboneRegion: BackboneSelection | null;
@@ -65,7 +65,7 @@ export default createStore({
     stopPos: null,
     gene: null,
     comparativeSpecies: [],
-    configTab: 0,
+    configMode: 'gene',
 
     configurationLoaded: null,
     selectedBackboneRegion: null,
@@ -125,8 +125,8 @@ export default createStore({
     detailsSyntenyThreshold(state: VCMapState, threshold: number) {
       state.detailsSyntenyThreshold = threshold;
     },
-    configTab(state: VCMapState, tab: number) {
-      state.configTab = tab;
+    configMode(state: VCMapState, mode: ConfigurationMode) {
+      state.configMode = mode;
     },
     selectedData(state: VCMapState, selectedData: SelectedData[]) {
       state.selectedData = selectedData;
@@ -158,8 +158,8 @@ export default createStore({
     setGene(context: ActionContext<VCMapState, VCMapState>, gene: Gene) {
       context.commit('gene', gene);
     },
-    setConfigTab(context: ActionContext<VCMapState, VCMapState>, tab: number) {
-      context.commit('configTab', tab);
+    setConfigMode(context: ActionContext<VCMapState, VCMapState>, mode: ConfigurationMode) {
+      context.commit('configMode', mode);
     },
     setConfigurationLoaded(context: ActionContext<VCMapState, VCMapState>, configState: boolean | null) {
       context.commit('configurationLoaded', configState);
@@ -205,8 +205,8 @@ export default createStore({
       {
         selection.setViewportSelection(0, selection.chromosome.seqLength);
       }
-      context.commit('startPosition', 0);
-      context.commit('stopPosition', selection.chromosome.seqLength);
+      context.commit('startPosition', selection.viewportSelection?.basePairStart ?? 0);
+      context.commit('stopPosition', selection.viewportSelection?.basePairStop ?? selection.chromosome.seqLength);
       context.commit('selectedBackboneRegion', selection);
       context.commit('detailedBasePairRange', { start: selection.viewportSelection?.basePairStart, stop: selection.viewportSelection?.basePairStop });
       // Note: Committing a change to detailedBasePairRange will trigger an update on the Detailed panel
@@ -254,6 +254,14 @@ export default createStore({
       }
 
       return mapByRGDId;
+    },
+
+    isLoadByGene: (state: VCMapState) => {
+      return state.configMode === 'gene';
+    },
+
+    isLoadByPosition: (state: VCMapState) => {
+      return state.configMode === 'position';
     },
   },
 

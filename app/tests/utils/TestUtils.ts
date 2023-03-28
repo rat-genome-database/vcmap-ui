@@ -65,6 +65,7 @@ export namespace TestUtils
         stopPos: null,
         gene: null,
         comparativeSpecies: [],
+        configMode: 'gene',
 
         configurationLoaded: null,
         selectedBackboneRegion: null,
@@ -73,8 +74,6 @@ export namespace TestUtils
 
         overviewSyntenyThreshold: 30000,
         detailsSyntenyThreshold: 0,
-
-        configTab: 0,
 
         selectedData: null,
         loadedGenes: null,
