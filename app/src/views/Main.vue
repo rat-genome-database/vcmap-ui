@@ -6,7 +6,7 @@
   />
   <div class="grid">
     <div class="col-9">
-      <SVGViewbox :geneList="geneList" :synteny-tree="syntenyTree"/>
+      <SVGViewbox :geneList="geneList" :synteny-tree="syntenyTree" :loading="isLoading" />
     </div>
     <div class="col-3">
       <SelectedDataPanel :selected-data="store.state.selectedData" :gene-list="geneList"/>
@@ -50,6 +50,7 @@ const $log = useLogger();
 
 const { showDialog, dialogHeader, dialogMessage, showDialogBackButton, dialogTheme, onError } = useDialog();
 
+const isLoading = ref(false);
 
 // Our synteny tree keyed by MapId
 // TODO: Consider adding a map for mapKey -> Species
@@ -106,6 +107,8 @@ const onInspectPressed = () => {
  * (Lifecycle hook)
  */
 onMounted(async () => {
+  isLoading.value = true;
+
   $log.debug('Creating memory models for our Comparative Map view');
   store.dispatch('setConfigurationLoaded', false);
 
@@ -117,12 +120,14 @@ onMounted(async () => {
   // Check for required data
   if (checkForConfigurationErrors())
   {
+    isLoading.value = false;
     return;
   }
 
   if (!store.state.chromosome || !store.state.species)
   {
     // Shouldn't get to this point since these values are checked in `checkForConfigurationErrors()`, just checking for null here to satisfy the type checking
+    isLoading.value = false;
     return;
   }
 
@@ -159,11 +164,13 @@ onMounted(async () => {
   if (speciesSyntenyDataArray == undefined)
   {
     $log.error('SpeciesSyntenyDataArray is undefined after querying for syntenic regions');
+    isLoading.value = false;
     return;
   }
 
   if (!checkSyntenyResultsOnComparativeSpecies(speciesSyntenyDataArray))
   {
+    isLoading.value = false;
     return;
   }
 
@@ -197,12 +204,14 @@ onMounted(async () => {
   store.dispatch('setConfigurationLoaded', true);
   // Kick off DetailedPanel load
   triggerDetailedPanelProcessing(store.state.chromosome, selectionStart, selectionStop);
+  isLoading.value = false;
 });
 
 /**
  * Watch for requested navigation operations (zoom in/out, navigate up/down stream).
  */
 watch(() => store.state.detailedBasePairRequest, async () => {
+  isLoading.value = true;
   // Grab blocks and genes with using a threshold of approximately .25 of a pixel
   if (store.state.detailedBasePairRequest && store.state.chromosome)
   {
@@ -215,6 +224,7 @@ watch(() => store.state.detailedBasePairRequest, async () => {
     // Data processing done, ready to complete request
     store.dispatch('setDetailedBasePairRequest', null);
   }
+  isLoading.value = false;
 });
 
 /**

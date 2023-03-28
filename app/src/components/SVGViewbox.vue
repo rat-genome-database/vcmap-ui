@@ -149,7 +149,7 @@
     :theme="dialogTheme"
     :show-back-button="showDialogBackButton"
   />
-  <LoadingSpinnerMask v-if="enableProcessingLoadMask" :style="getDetailedPosition()"></LoadingSpinnerMask>
+  <LoadingSpinnerMask v-if="arePanelsLoading" :style="getDetailedPosition()"></LoadingSpinnerMask>
   <!--
   <Button
     style="margin-right: 20px;"
@@ -232,6 +232,7 @@ interface Props
 {
   geneList: Map<number, Gene>;
   syntenyTree: Map<number, Block[]>;
+  loading: boolean;
 }
 
 const props = defineProps<Props>();
@@ -244,9 +245,6 @@ let testRects = ref<VCMapSVGEl[]>();
 let testRects2 = ref<VCMapSVGEl[]>();
 let testRects3 = ref<VCMapSVGEl[]>();
 let testRects4 = ref<VCMapSVGEl[]>();
-
-let enableProcessingLoadMask = ref<boolean>(false); // Whether or not to show the processing load mask
-
 
 const orthologLines = computed(() => {
   let lines: OrthologLine[] = [];
@@ -281,8 +279,6 @@ async function attachToProgressLoader(storeLoadingActionName: string, func: () =
 }
 
 onMounted(async () => {
-  enableProcessingLoadMask.value = true;
-
   // Clear any prior selections or set as the searched gene
   // const gene = store.state.gene;
   // store.dispatch('setSelectedData', gene ? [new SelectedData(gene.clone(), 'Gene')] : null);
@@ -293,7 +289,6 @@ onMounted(async () => {
 watch(() => store.state.configurationLoaded, () => {
   if (store.state.configurationLoaded === true)
   {
-    enableProcessingLoadMask.value = true;
     attachToProgressLoader('setIsOverviewPanelUpdating', updateOverviewPanel);
   }
 });
@@ -304,22 +299,14 @@ watch(() => store.state.configurationLoaded, () => {
 watch(() => store.state.detailedBasePairRange, () => {
   if (store.state.configurationLoaded)
   {
-    enableProcessingLoadMask.value = true;
     attachToProgressLoader('setIsDetailedPanelUpdating', updateDetailsPanel);
   }
-});
-
-/**
- * Ensure the load mask occurs during the Main API calls
- */
-watch(() => store.state.detailedBasePairRequest, async () => {
-  if (store.state.detailedBasePairRequest) enableProcessingLoadMask.value = true;
 });
 
 // FIXME: check on this (probably needs to be attached to Main props instead):
 const arePanelsLoading = computed(() => {
   // Either panel is processing or API is being queried
-  return store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating;
+  return store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating || props.loading;
 });
 
 const currentlySelectingRegion = () => {
@@ -338,7 +325,6 @@ const updateOverviewPanel = async () => {
   {
     $log.error('Backbone species or chromosome is null during overview panel update');
     overviewSyntenySets.value = [];
-    enableProcessingLoadMask.value = false;
     return;
   }
 
@@ -352,7 +338,6 @@ const updateOverviewPanel = async () => {
   // Build overview synteny sets
   const overviewSyntenyTrackCreationTime = Date.now();
   overviewSyntenySets.value = await createOverviewSyntenicRegionSets(props.syntenyTree, store.state.comparativeSpecies, backboneChromosome);
-  enableProcessingLoadMask.value = false;
 
   // TODO: request an update to the detailed panel here
 
@@ -377,7 +362,6 @@ const updateDetailsPanel = async () => {
   $log.debug(`Updating Detailed Panel`);
 
   const detailedUpdateStart = Date.now();
-  enableProcessingLoadMask.value = true;
 
   const backboneSpecies = store.state.species;
   const backboneChromosome = store.state.chromosome;
@@ -400,7 +384,6 @@ const updateDetailsPanel = async () => {
     // Clear out our detailed synteny sets
     $log.error(`Invalid detailedBasePairRange?? (${detailedBasePairRange.start}, ${detailedBasePairRange.stop})`);
     detailedSyntenySets.value = [];
-    enableProcessingLoadMask.value = false;
     return;
   }
 
@@ -408,7 +391,6 @@ const updateDetailsPanel = async () => {
   if (backboneSpecies == null || backboneChromosome == null)
   {
     detailedSyntenySets.value = [];
-    enableProcessingLoadMask.value = false;
     return;
   }
 
@@ -449,11 +431,6 @@ const updateDetailsPanel = async () => {
     set.processGeneLabels();
   });
   timeSyntenyTracks = Date.now() - syntenyTracksStart;
-
-  //
-  // Done!!
-  //
-  enableProcessingLoadMask.value = false;
 
   // Report timing data
   const timeDetailedUpdate= Date.now() - detailedUpdateStart;
@@ -682,8 +659,6 @@ const tempReplace = () => {
       // }
     });
   });
-
-  // enableProcessingLoadMask.value = false;
 };
 
 /**
