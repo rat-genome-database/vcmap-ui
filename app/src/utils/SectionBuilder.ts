@@ -209,12 +209,14 @@ console.timeEnd('createSyntenySectionAndRegion');
     if (blockGenes && blockGenes.length > 0 && gaplessBlockSection.chainLevel == 1)
     {
       // Filter all genes to only those that are visible
-      // FIXME: Should also filter on a threshold of size MUST BE greater than .25 pixel
 console.time("  filterVisibleGenes");
       const visibleGenes = blockGenes.filter((gene) => {
         if (!gene.backboneStart || !gene.backboneStop) return false;
 
-        return (gene.backboneStart <= viewportStop && gene.backboneStop >= viewportStart);
+        return (gene.backboneStart <= viewportStop 
+          && gene.backboneStop >= viewportStart
+          // Skip any genes that are deemed too small for rendering
+          && Math.abs(gene.backboneStop - gene.backboneStart) >= getThreshold(viewportStop - viewportStart));
       });
 console.timeEnd("  filterVisibleGenes");
 
@@ -283,20 +285,12 @@ function syntenicDatatrackBuilder(factory: GenomicSectionFactory, genomicData: G
 
 let createStart = 0, pushStart = 0, createTotal = 0.0, pushTotal = 0.0;
 
-  let filteredGeneCount = 0;
   for (let idx = 0, len = genomicData.length; idx < len; idx++) {
     // Get backbone equivalents for gene data, or skip
     const genomicElement: Gene = genomicData[idx];
     if (genomicElement.backboneStart === null || genomicElement.backboneStop === null)
     {
       $log.error(`Genomic Element ${genomicElement.symbol} sent to render without a backbone alignment`);
-      continue;
-    }
-
-    // Skip any genes that are deemed too small for rendering
-    if (Math.abs(genomicElement.stop - genomicElement.start) < getThreshold(syntenyRegion.gaplessBlock.windowBasePairRange.stop - syntenyRegion.gaplessBlock.windowBasePairRange.start))
-    {
-      filteredGeneCount++;
       continue;
     }
 
@@ -320,7 +314,6 @@ pushTotal += (performance.now() - pushStart);
 
 console.debug(`    Create total: ${createTotal}`);
 console.debug(`    Push total: ${pushTotal}`);
-console.debug(`Filtered out gene count for region: ${filteredGeneCount}`);
 
   // TODO: We might need to save all genes on the SyntenyRegion so that they can later be used when processing gene labels...
   //       (see how backbone gene labels are processed)
