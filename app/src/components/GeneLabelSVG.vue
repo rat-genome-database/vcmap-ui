@@ -31,15 +31,17 @@ interface Props
 defineProps<Props>();
 
 const getLabelText = (label: GeneLabel) => {
-  const numCombinedGenes = label.combinedLabels.length;
+  const numCombinedGenes = label.genes.length;
   const selectedGeneIds = store.state.selectedGeneIds;
-  const combinedLabelGeneIds = label.combinedLabels.map((label) => label.gene.rgdId);
   let labelText = label.text;
-  if (!selectedGeneIds.includes(label.gene.rgdId) && selectedGeneIds.some((id) => combinedLabelGeneIds.includes(id)))
+  // FIXME: Probably shouldn't arbitrarily rely on the first gene in label being the one that it represents...
+  if (!selectedGeneIds.includes(label.genes[0].rgdId) && selectedGeneIds.some((id) => label.rgdIds.includes(id)))
   {
-    const altLabelOptions = label.combinedLabels.filter((label) => selectedGeneIds.includes(label.gene.rgdId));
-    for (let i = 0; i < altLabelOptions.length; i++) {
-      labelText = altLabelOptions[i].text;
+    const altGenesForLabel = label.genes.filter((gene) => selectedGeneIds.includes(gene.rgdId));
+    for (let i = 0; i < altGenesForLabel.length; i++) {
+      // TODO: Feels a bit like a code smell to be changing the label text here from what the model says it should be. 
+      // Not sure if we really need to address it though. Could be confusing to debug.
+      labelText = altGenesForLabel[i].symbol;
       if (!labelText.startsWith('LOC'))
       {
         break;
@@ -65,15 +67,15 @@ const getLabelText = (label: GeneLabel) => {
 };
 
 const onGeneLabelClick = (event: any, label: GeneLabel) => {
-  if (store.state.selectedGeneIds.includes(label.gene.rgdId))
+  // FIXME: Probably shouldn't arbitrarily rely on the first gene in label being the one that it represents...
+  if (store.state.selectedGeneIds.includes(label.genes[0].rgdId))
   {
     store.dispatch('setSelectedGeneIds', []);
     store.dispatch('setSelectedData', null);
   }
   const geneIds: number[] = event.shiftKey ? [...store.state.selectedGeneIds] : [];
 
-  const combinedGenes = label.combinedLabels.map((label) => label.gene);
-  const geneList = [label.gene, ...combinedGenes];
+  const geneList = label.genes;
   let newSelectedData: SelectedData[] = [];
   sortGeneList(geneList);
   geneList.forEach((gene: Gene) => {
@@ -98,10 +100,9 @@ const onMouseEnter = (label: GeneLabel) => {
 
   // If there are selected genes, don't update the selected data panel
   if (store.state.selectedGeneIds.length === 0) {
-    const newSelectedData = label.combinedLabels.map((label) => {
-      return new SelectedData(label.gene.clone(), 'Gene');
+    const newSelectedData = label.genes.map((gene) => {
+      return new SelectedData(gene.clone(), 'Gene');
     });
-    newSelectedData.unshift(new SelectedData(label.gene.clone(), 'Gene'));
     store.dispatch('setSelectedData', newSelectedData);
   }
 };
@@ -117,8 +118,8 @@ const onMouseLeave = (label: GeneLabel) => {
 
 const isLabelSelected = (label: GeneLabel) => {
   const selectedGeneIds = store.state.selectedGeneIds;
-  const combinedLabelGeneIds = label.combinedLabels.map((label) => label.gene.rgdId);
-  return (selectedGeneIds.includes(label.gene.rgdId) || selectedGeneIds.some((id) => combinedLabelGeneIds.includes(id)) || label.isHovered);
+  const combinedLabelGeneIds = label.rgdIds;
+  return (selectedGeneIds.some((id) => combinedLabelGeneIds.includes(id)) || label.isHovered);
 };
 </script>
 

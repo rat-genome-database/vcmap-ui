@@ -76,4 +76,12 @@ export default class Gene
     if (this.orthologs.length > 0) clone.orthologs = this.orthologs;
     return clone;
   }
+
+  /**
+   * Returns the size of the Gene in basepairs
+   */
+  public get size()
+  {
+    return Math.abs(this.stop - this.start);
+  }
 }

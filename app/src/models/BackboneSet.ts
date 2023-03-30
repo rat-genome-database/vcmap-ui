@@ -36,6 +36,19 @@ export default class BackboneSet extends GenomicSet
     this.setBackboneXPositions();
     this.createTitleLabels();
     this.setDatatrackXPositions();
+
+    console.time(`Backbone Gene Label Processing`);
+    this.processGeneLabels();
+    console.timeEnd(`Backbone Gene Label Processing`);
+  }
+
+  /**
+   * TODO: We might not need this at all anymore if we are re-creating the BackboneSet on each nav or zoom 
+   * instead of just adjusting Y positions
+   */
+  public adjustVisibleSet(visibleBackboneStart: number, visibleBackboneStop: number)
+  {
+    // TODO: No-op for now
   }
 
   /**
@@ -45,38 +58,38 @@ export default class BackboneSet extends GenomicSet
    * @param visibleBackboneStop backbone stop bp in visible selection
    * @returns an object containing timing info so we can log it if we choose
    */
-  public adjustVisibleSet(visibleBackboneStart: number, visibleBackboneStop: number)
-  {
-    const startTime = Date.now();
+  // public adjustVisibleSet(visibleBackboneStart: number, visibleBackboneStop: number)
+  // {
+  //   const visibleStartStopString = `[${visibleBackboneStart}, ${visibleBackboneStop}]`;
 
-    // Change visible backbone section
-    this.backbone.adjustYPositionsBasedOnVisibleStartAndStop({
-      start: visibleBackboneStart,
-      stop: visibleBackboneStop,
-    });
-    this.backbone.recalculateLabelYPositions();
-    const backboneEndTime = Date.now();
+  //   // Change visible backbone section
+  //   console.time(`Backbone Y position adjustment ${visibleStartStopString}`);
+  //   this.backbone.adjustYPositionsBasedOnVisibleStartAndStop({
+  //     start: visibleBackboneStart,
+  //     stop: visibleBackboneStop,
+  //   });
+  //   this.backbone.recalculateLabelYPositions();
+  //   console.timeEnd(`Backbone Y position adjustment ${visibleStartStopString}`);
 
-    this.datatrackSets.forEach(set => {
-      set.datatracks.forEach(datatrack => {
-        datatrack.adjustYPositionsBasedOnVisibleStartAndStop({
-          start: visibleBackboneStart,
-          stop: visibleBackboneStop
-        });
-        datatrack.recalculateLabelYPositions();
-      });
-    });
-    const datatracksEndTime = Date.now();
+  //   console.time(`Backbone Datatrack Y position adjustments ${visibleStartStopString}`);
+  //   for (let i = 0; i < this.datatrackSets.length; i++)
+  //   {
+  //     const set = this.datatrackSets[i];
+  //     for (let j = 0; j < set.datatracks.length; j++)
+  //     {
+  //       set.datatracks[j].adjustYPositionsBasedOnVisibleStartAndStop({
+  //         start: visibleBackboneStart,
+  //         stop: visibleBackboneStop
+  //       });
+  //       set.datatracks[j].recalculateLabelYPositions();
+  //     }
+  //   }
+  //   console.timeEnd(`Backbone Datatrack Y position adjustments ${visibleStartStopString}`);
 
-    this.processGeneLabels();
-    const geneLabelsEndTime = Date.now();
-
-    return {
-      'Backbone adjustment time': backboneEndTime - startTime,
-      'Backbone datatracks adjustment time': datatracksEndTime - backboneEndTime,
-      'Backbone gene labels processing time': geneLabelsEndTime - datatracksEndTime,
-    };
-  }
+  //   console.time(`Backbone Gene Label Processing ${visibleStartStopString}`);
+  //   this.processGeneLabels();
+  //   console.timeEnd(`Backbone Gene Label Processing ${visibleStartStopString}`);
+  // }
 
   public updateBackboneGenes(genes: Gene[])
   {
@@ -152,7 +165,10 @@ export default class BackboneSet extends GenomicSet
     });
     this.datatrackLabels = allLabels;
 
-    mergeGeneLabels(this.datatrackLabels as GeneLabel[]);
+    // TODO: Seems a bit precarious to cast a type of Label[] as GeneLabel[] here... could maybe be addressed at the same time
+    // as the TODO above this one
+    //mergeGeneLabels(this.datatrackLabels as GeneLabel[], this.backbone.backboneGenes ?? []);
+    mergeGeneLabels(this.datatrackLabels as GeneLabel[], this.backbone.backboneGenes ?? []);
   }
 
   public addNewDatatrackSetToEnd(datatrackSections: DatatrackSection[], type: DatatrackSectionType)

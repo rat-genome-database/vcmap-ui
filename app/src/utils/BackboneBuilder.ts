@@ -6,6 +6,7 @@ import DatatrackSection from "@/models/DatatrackSection";
 import BackboneSet from "@/models/BackboneSet";
 import { RenderType } from "@/models/GenomicSection";
 import { GenomicSectionFactory } from "@/models/GenomicSectionFactory";
+import { getThreshold } from "./Threshold";
 
 export interface ProcessedGenomicData
 {
@@ -50,10 +51,20 @@ export function backboneDatatrackBuilder(species: Species, genomicData: Gene[], 
     backboneSection.renderType
   );
 
+  const visibleBPRange = backboneSection.windowBasePairRange.stop - backboneSection.windowBasePairRange.start;
+  let filteredGeneCount = 0;
   // NOTE: Intentionally using a basic for loop here to avoid extra functions on the call stack
   for (let i = 0, len = genomicData.length; i < len; i++)
   {
     const genomicElement = genomicData[i];
+
+    // Skip any genes that are deemed too small for rendering
+    if (Math.abs(genomicElement.stop - genomicElement.start) < getThreshold(visibleBPRange))
+    {
+      filteredGeneCount++;
+      continue;
+    }
+
     const geneDatatrackSection = factory.createGeneDatatrackSection({
       gene: genomicElement,
       start: genomicElement.start,
@@ -63,6 +74,7 @@ export function backboneDatatrackBuilder(species: Species, genomicData: Gene[], 
     processedGenomicData.datatracks.push(geneDatatrackSection);
   }
 
+  console.debug(`Filtered out gene count for backbone: ${filteredGeneCount}`);
   return { backboneSection, processedGenomicData };
 }
 

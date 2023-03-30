@@ -1,3 +1,4 @@
+import DatatrackSection, { GeneDatatrack } from './DatatrackSection';
 import Gene from './Gene';
 
 interface LabelParams
@@ -30,12 +31,34 @@ export default class Label
 
 export class GeneLabel extends Label
 {
-  gene: Gene;
-  combinedLabels: GeneLabel[] = [];
+  genes: Gene[];
+  rgdIds: number[];
+  bpRange: { start: number, stop: number };
+  //combinedLabels: GeneLabel[] = [];
 
-  constructor(params: LabelParams, gene: Gene)
+  constructor(params: LabelParams, genes: Gene[])
   {
     super(params);
-    this.gene = gene;
+    this.genes = genes;
+    this.rgdIds = genes.map(g => g.rgdId);
+    this.bpRange = {
+      start: Math.min(...genes.map(g => g.start)),
+      stop: Math.max(...genes.map(g => g.stop)),
+    };
+  }
+
+  addGenes(...genes: Gene[])
+  {
+    this.genes.push(...genes);
+    this.rgdIds.push(...genes.map(g => g.rgdId));
+    this.bpRange = {
+      start: Math.min(...genes.map(g => g.start)),
+      stop: Math.max(...genes.map(g => g.stop)),
+    };
+  }
+
+  hasGene(gene: Gene)
+  {
+    return this.rgdIds.includes(gene.rgdId);
   }
 }

@@ -9,6 +9,7 @@ import Label from '@/models/Label';
 import { GenomicSectionFactory } from '@/models/GenomicSectionFactory';
 import Block from "@/models/Block";
 import {useLogger} from "vue-logger-plugin";
+import { getThreshold } from './Threshold';
 
 // FIXME: I don't think we can use the logger here...
 const $log = useLogger();
@@ -282,12 +283,20 @@ function syntenicDatatrackBuilder(factory: GenomicSectionFactory, genomicData: G
 
 let createStart = 0, pushStart = 0, createTotal = 0.0, pushTotal = 0.0;
 
+  let filteredGeneCount = 0;
   for (let idx = 0, len = genomicData.length; idx < len; idx++) {
     // Get backbone equivalents for gene data, or skip
     const genomicElement: Gene = genomicData[idx];
     if (genomicElement.backboneStart === null || genomicElement.backboneStop === null)
     {
       $log.error(`Genomic Element ${genomicElement.symbol} sent to render without a backbone alignment`);
+      continue;
+    }
+
+    // Skip any genes that are deemed too small for rendering
+    if (Math.abs(genomicElement.stop - genomicElement.start) < getThreshold(syntenyRegion.gaplessBlock.windowBasePairRange.stop - syntenyRegion.gaplessBlock.windowBasePairRange.start))
+    {
+      filteredGeneCount++;
       continue;
     }
 
@@ -311,6 +320,11 @@ pushTotal += (performance.now() - pushStart);
 
 console.debug(`    Create total: ${createTotal}`);
 console.debug(`    Push total: ${pushTotal}`);
+console.debug(`Filtered out gene count for region: ${filteredGeneCount}`);
+
+  // TODO: We might need to save all genes on the SyntenyRegion so that they can later be used when processing gene labels...
+  //       (see how backbone gene labels are processed)
+
   return processedGenomicData;
 }
 
