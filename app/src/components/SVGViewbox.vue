@@ -369,7 +369,7 @@ const updateDetailsPanel = async () => {
 
   // Get comparison species Ids for ortholog API call parameter
   const comparativeSpeciesIds: number[] = [];
-  store.state.comparativeSpecies.map((gene: { defaultMapKey: number; }) => comparativeSpeciesIds.push(gene.defaultMapKey));
+  store.state.comparativeSpecies.map(species => comparativeSpeciesIds.push(species.defaultMapKey));
 
   // debug timers
   let timeSyntenyTracks = 0;

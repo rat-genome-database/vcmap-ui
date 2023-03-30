@@ -47,35 +47,35 @@ export default class BackboneSet extends GenomicSet
    */
   public adjustVisibleSet(visibleBackboneStart: number, visibleBackboneStop: number)
   {
-    const startTime = Date.now();
+    const visibleStartStopString = `[${visibleBackboneStart}, ${visibleBackboneStop}]`;
 
     // Change visible backbone section
+    console.time(`Backbone Y position adjustment ${visibleStartStopString}`);
     this.backbone.adjustYPositionsBasedOnVisibleStartAndStop({
       start: visibleBackboneStart,
       stop: visibleBackboneStop,
     });
     this.backbone.recalculateLabelYPositions();
-    const backboneEndTime = Date.now();
+    console.timeEnd(`Backbone Y position adjustment ${visibleStartStopString}`);
 
-    this.datatrackSets.forEach(set => {
-      set.datatracks.forEach(datatrack => {
-        datatrack.adjustYPositionsBasedOnVisibleStartAndStop({
+    console.time(`Backbone Datatrack Y position adjustments ${visibleStartStopString}`);
+    for (let i = 0; i < this.datatrackSets.length; i++)
+    {
+      const set = this.datatrackSets[i];
+      for (let j = 0; j < set.datatracks.length; j++)
+      {
+        set.datatracks[j].adjustYPositionsBasedOnVisibleStartAndStop({
           start: visibleBackboneStart,
           stop: visibleBackboneStop
         });
-        datatrack.recalculateLabelYPositions();
-      });
-    });
-    const datatracksEndTime = Date.now();
+        set.datatracks[j].recalculateLabelYPositions();
+      }
+    }
+    console.timeEnd(`Backbone Datatrack Y position adjustments ${visibleStartStopString}`);
 
+    console.time(`Backbone Gene Label Processing ${visibleStartStopString}`);
     this.processGeneLabels();
-    const geneLabelsEndTime = Date.now();
-
-    return {
-      'Backbone adjustment time': backboneEndTime - startTime,
-      'Backbone datatracks adjustment time': datatracksEndTime - backboneEndTime,
-      'Backbone gene labels processing time': geneLabelsEndTime - datatracksEndTime,
-    };
+    console.timeEnd(`Backbone Gene Label Processing ${visibleStartStopString}`);
   }
 
   public updateBackboneGenes(genes: Gene[])

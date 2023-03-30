@@ -133,7 +133,7 @@ onMounted(async () => {
 
   // Query the Genes API
   let comparativeSpeciesIds: number[] = [];
-  store.state.comparativeSpecies.map((species: { defaultMapKey: number; }) => comparativeSpeciesIds.push(species.defaultMapKey));
+  store.state.comparativeSpecies.map(species => comparativeSpeciesIds.push(species.defaultMapKey));
   const backboneGenes: Gene[] = await GeneApi.getGenesByRegion(
       store.state.chromosome.chromosome,
       0, store.state.chromosome.seqLength,
@@ -246,7 +246,7 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
     return;
   }
 
-  let tree:Map<number, Block[]> = syntenyTree.value;
+  let tree: Map<number, Block[]> = syntenyTree.value;
   let backboneChr = store.state.chromosome; // TODO: This is proxied, not sure why? Also not sure it matters...
   $log.debug(`Processing ${speciesSyntenyDataArray.length} species of Synteny Data...`);
 
