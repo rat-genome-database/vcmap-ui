@@ -40,6 +40,7 @@ import BackboneSelection from "@/models/BackboneSelection";
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import useDialog from '@/composables/useDialog';
 import { backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError, noSyntenyFoundError } from '@/utils/VCMapErrors';
+import { getThreshold } from '@/utils/Threshold';
 
 // TODO: Can we figure out a better way to handle blocks with a high chainlevel?
 const MAX_CHAINLEVEL = 2;
@@ -147,8 +148,7 @@ onMounted(async () => {
   });
 
   // Preload off-backbone large blocks and genes
-  let threshold = Math.round((store.state.chromosome.seqLength) / (PANEL_SVG_STOP - PANEL_SVG_START) / 4
-  );
+  let threshold = getThreshold(store.state.chromosome.seqLength);
   const speciesSyntenyDataArray = await SyntenyApi.getSyntenicRegions({
     backboneChromosome: store.state.chromosome,
     start: 0,

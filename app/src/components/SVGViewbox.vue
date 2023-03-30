@@ -413,12 +413,14 @@ const updateDetailsPanel = async () => {
   timeCreateBackboneDatatracks = Date.now() - backboneDatatracksStart;
   const backboneSetStart = Date.now();
   detailedBackboneSet.value = createBackboneSet(detailedBackbone, backboneDatatrackInfo.processedGenomicData);
-  detailedBackboneSet.value?.adjustVisibleSet(store.state.detailedBasePairRange.start, store.state.detailedBasePairRange.stop);
+  // TODO: Do we need to call .adjustVisibleSet anymore? Since we re-create the whole backbone set on each nav up/down and zoom,
+  // the positions should already be set. We'd just need to move the gene label processing into the constructor of the BackboneSet
+  // model.
+  //detailedBackboneSet.value?.adjustVisibleSet(store.state.detailedBasePairRange.start, store.state.detailedBasePairRange.stop);
   timeCreateBackboneSet = Date.now() - backboneSetStart;
 
   //
   // Next, the visible Synteny elements
-  // Create the backbone track for the entire base selection at the updated Detailed panel resolution
   const syntenyTracksStart = Date.now();
   detailedSyntenySets.value = await createSyntenicRegionSets(
       props.syntenyTree,

@@ -328,7 +328,8 @@ export default class SyntenyRegionSet extends GenomicSet
       });
     });
     this.datatrackLabels = allLabels;
-    mergeGeneLabels(this.datatrackLabels as GeneLabel[]);
+    // TODO: Add all genes in a region as the second argument here
+    mergeGeneLabels(this.datatrackLabels as GeneLabel[], []);
   }
 
   private regionIsVisible(region: SyntenyRegion, start: number, stop: number): boolean

@@ -66,7 +66,7 @@ export class GeneDatatrack extends DatatrackSection
         text: this.gene.symbol,
         isVisible: false,
       },
-      this.gene
+      [this.gene]
     );
   }
 }
