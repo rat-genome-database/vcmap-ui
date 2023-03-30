@@ -52,6 +52,7 @@ export function backboneDatatrackBuilder(species: Species, genomicData: Gene[], 
   );
 
   const visibleBPRange = backboneSection.windowBasePairRange.stop - backboneSection.windowBasePairRange.start;
+  let filteredGeneCount = 0;
   // NOTE: Intentionally using a basic for loop here to avoid extra functions on the call stack
   for (let i = 0, len = genomicData.length; i < len; i++)
   {
@@ -60,6 +61,7 @@ export function backboneDatatrackBuilder(species: Species, genomicData: Gene[], 
     // Skip any genes that are deemed too small for rendering
     if (Math.abs(genomicElement.stop - genomicElement.start) < getThreshold(visibleBPRange))
     {
+      filteredGeneCount++;
       continue;
     }
 
@@ -72,6 +74,7 @@ export function backboneDatatrackBuilder(species: Species, genomicData: Gene[], 
     processedGenomicData.datatracks.push(geneDatatrackSection);
   }
 
+  console.debug(`Filtered out gene count for backbone: ${filteredGeneCount}`);
   return { backboneSection, processedGenomicData };
 }
 
