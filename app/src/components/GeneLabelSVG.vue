@@ -34,14 +34,18 @@ const getLabelText = (label: GeneLabel) => {
   const numCombinedGenes = label.genes.length;
   const selectedGeneIds = store.state.selectedGeneIds;
   let labelText = label.text;
-  // FIXME: Probably shouldn't arbitrarily rely on the first gene in label being the one that it represents...
-  if (!selectedGeneIds.includes(label.genes[0].rgdId) && selectedGeneIds.some((id) => label.rgdIds.includes(id)))
+
+  //
+  // If selected gene Ids are found within this GeneLabel but it isn't the gene in the label text, switch the label
+  // text to the name of the selected gene as long as it isn't an LOC gene. I believe the main reason for this logic
+  // is if a user selects a gene and it has an orthologc
+  if (!selectedGeneIds.includes(label.mainGene.rgdId) && selectedGeneIds.some((id) => label.rgdIds.includes(id)))
   {
     const altGenesForLabel = label.genes.filter((gene) => selectedGeneIds.includes(gene.rgdId));
     for (let i = 0; i < altGenesForLabel.length; i++) {
       // TODO: Feels a bit like a code smell to be changing the label text here from what the model says it should be. 
       // Not sure if we really need to address it though. Could be confusing to debug.
-      labelText = altGenesForLabel[i].symbol;
+      labelText = formatTextForMultiGeneLabel(altGenesForLabel[i].symbol, numCombinedGenes);
       if (!labelText.startsWith('LOC'))
       {
         break;
@@ -53,9 +57,9 @@ const getLabelText = (label: GeneLabel) => {
     // FIXME: Address these magic numbers, use a BBox measurement (https://stackoverflow.com/questions/3311126/svg-font-metrics)?
     if (numCombinedGenes > 0)
     {
-      const geneSymbolText = numCombinedGenes > 9 ? label.text.substring(0, 7) : label.text.substring(0, 8);
-      labelText = `${geneSymbolText}...(${numCombinedGenes})`;
-    } else
+      labelText = formatTextForMultiGeneLabel(label.text, numCombinedGenes);
+    }
+    else
     {
       if (labelText.length > 9)
       {
@@ -67,8 +71,7 @@ const getLabelText = (label: GeneLabel) => {
 };
 
 const onGeneLabelClick = (event: any, label: GeneLabel) => {
-  // FIXME: Probably shouldn't arbitrarily rely on the first gene in label being the one that it represents...
-  if (store.state.selectedGeneIds.includes(label.genes[0].rgdId))
+  if (store.state.selectedGeneIds.includes(label.mainGene.rgdId))
   {
     store.dispatch('setSelectedGeneIds', []);
     store.dispatch('setSelectedData', null);
@@ -120,6 +123,11 @@ const isLabelSelected = (label: GeneLabel) => {
   const selectedGeneIds = store.state.selectedGeneIds;
   const combinedLabelGeneIds = label.rgdIds;
   return (selectedGeneIds.some((id) => combinedLabelGeneIds.includes(id)) || label.isHovered);
+};
+
+const formatTextForMultiGeneLabel = (symbol: string, numGenes: number) => {
+  const geneSymbolText = numGenes > 9 ? symbol.substring(0, 7) : symbol.substring(0, 8);
+  return `${geneSymbolText}...(${numGenes})`;
 };
 </script>
 

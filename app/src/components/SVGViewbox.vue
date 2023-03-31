@@ -429,9 +429,10 @@ const updateDetailsPanel = async () => {
       detailedBasePairRange.start,
       detailedBasePairRange.stop,
   );
-  detailedSyntenySets.value.forEach(set => {
-    set.processGeneLabels();
-  });
+  // TODO: Remove if able, processGeneLabels() now called from SyntenyRegionSet contstructor
+  // detailedSyntenySets.value.forEach(set => {
+  //   set.processGeneLabels();
+  // });
   timeSyntenyTracks = Date.now() - syntenyTracksStart;
 
   // Report timing data
