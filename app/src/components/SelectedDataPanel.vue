@@ -133,6 +133,11 @@ import { useStore } from 'vuex';
 import { key } from '@/store';
 import { getNewSelectedData, sortGeneList } from '@/utils/DataPanelHelpers';
 
+/**
+ * FIXME: This whole component needs to be looked over. There are references to properties on objects that don't exist.
+ * The template is full of v-ifs and it can be pretty confusing to wrap your head around what's going on.
+ */
+
 const store = useStore(key);
 
 interface Props

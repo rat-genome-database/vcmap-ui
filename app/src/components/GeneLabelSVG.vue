@@ -78,10 +78,12 @@ const onGeneLabelClick = (event: any, label: GeneLabel) => {
   }
   const geneIds: number[] = event.shiftKey ? [...store.state.selectedGeneIds] : [];
 
-  const geneList = label.genes;
+  // Keep the main gene of the label at the top of the list
+  const mainGene = label.mainGene;
+  const geneList = label.genes.filter(g => g.rgdId !== label.mainGene.rgdId);
   let newSelectedData: SelectedData[] = [];
   sortGeneList(geneList);
-  geneList.forEach((gene: Gene) => {
+  [mainGene, ...geneList].forEach((gene: Gene) => {
     // FIXME (orthologs): TEMP
     newSelectedData.push(new SelectedData(gene.clone(), 'Gene'));
     geneIds.push(gene.rgdId);
