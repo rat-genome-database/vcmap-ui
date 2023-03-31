@@ -134,7 +134,7 @@ import { computed, toRefs } from '@vue/reactivity';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import { Formatter } from '@/utils/Formatter';
-import { getNewSelectedData } from '@/utils/DataPanelHelpers';
+import { getNewSelectedData, sortGeneList } from '@/utils/DataPanelHelpers';
 import { VCMapSVGElement } from '@/models/VCMapSVGElement';
 import ChromosomeLabelSVG from './ChromosomeLabelSVG.vue';
 import SyntenyLinesSVG from './SyntenyLinesSVG.vue';
@@ -144,6 +144,8 @@ import OverviewSyntenyLabelsSVG from './OverviewSyntenyLabelsSVG.vue';
 import { PANEL_SVG_START, PANEL_SVG_STOP } from '@/utils/SVGConstants';
 import useMouseBasePairPos from '@/composables/useMouseBasePairPos';
 import GenomicSection from '@/models/GenomicSection';
+import { GeneLabel } from '@/models/Label';
+import Gene from '@/models/Gene';
 
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
 const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
@@ -313,12 +315,21 @@ const onClick = (event: any, section: GeneDatatrack) => {
   let geneIds: number[] = event.shiftKey ? [...store.state.selectedGeneIds] : [];
 
   let newSelectedData: SelectedData[] = [];
+
+  // TODO: Duplicate logic in GeneLabelSVG.vue, should refactor at some point
   if (section.gene)
   {
-    // FIXME: Orthologs
-    // FIXME: This code isn't used on the Backbone! Need to correct that inconsistency...
-    newSelectedData.push(new SelectedData(section.gene.clone(), 'Gene'));
-    geneIds.push(section.gene?.rgdId);
+    // Keep the main gene of the label at the top of the list
+    const geneLabel = section.label ? section.label as GeneLabel : undefined;
+    const mainGene = geneLabel ? geneLabel.mainGene : section.gene;
+    const geneList = geneLabel ? geneLabel.genes.filter(g => g.rgdId !== geneLabel.mainGene.rgdId) : [];
+    sortGeneList(geneList);
+    [mainGene, ...geneList].forEach((gene: Gene) => {
+      // FIXME (orthologs): TEMP
+      newSelectedData.push(new SelectedData(gene.clone(), 'Gene'));
+      geneIds.push(gene.rgdId);
+      // endTEMP
+    });
   }
 
   store.dispatch('setSelectedGeneIds', geneIds || []);
