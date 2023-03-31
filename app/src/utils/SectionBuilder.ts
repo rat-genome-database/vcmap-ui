@@ -192,6 +192,7 @@ console.time('createSyntenySectionAndRegion');
       species: currSpecies,
       mapName: currMapName,
       gaplessBlock: gaplessBlockSection,
+      genes: blockGenes,
     });
     // FIXME: Create a single visible block (ignoring gap data)
     currSyntenicRegion.syntenyBlocks.push(gaplessBlockSection);

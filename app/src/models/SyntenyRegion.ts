@@ -7,12 +7,14 @@ import OrthologLine from './OrthologLine';
 import GenomicSection from './GenomicSection';
 import { GenomicSectionFactory } from './GenomicSectionFactory';
 import { Gap } from "@/models/Block";
+import Gene from './Gene';
 
 interface SyntenyRegionParams
 {
   species: string;
   mapName: string;
   gaplessBlock: SyntenySection;
+  genes?: Gene[];
 }
 
 //This model is used to store data for a syntenic region off-backbone
@@ -27,12 +29,14 @@ export default class SyntenyRegion
   mapName: string = '';
   // NOTE: We should evaluate if we want this, if its just a copy of the references to the labels in SyntenyRegion.datatrackSections
   datatrackLabels: Label[] = [];                               // array of Label objects associated with the datatrackSections
-
+  genes: Gene[] = []; // All genes associated with this SyntenyRegion (the block that this region represents) -- note: will be empty for overview SyntenyRegions since genes aren't needed
+  
   constructor(params: SyntenyRegionParams)
   {
     this.species = params.species;
     this.mapName = params.mapName;
     this.gaplessBlock = params.gaplessBlock;
+    this.genes = params.genes ?? [];
   }
 
   public adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart: number, visibleBackboneStop: number)

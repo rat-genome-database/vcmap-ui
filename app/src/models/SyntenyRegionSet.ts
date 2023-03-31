@@ -50,6 +50,12 @@ export default class SyntenyRegionSet extends GenomicSet
     this.setRegionXPositionsBasedOnOrder();
     this.createTitleLabels();
     this.sortBasePairLabels();
+    if (renderType === 'detailed')
+    {
+      console.time(`Processing gene labels for SyntenyRegionSet [order: ${this.order}]`);
+      this.processGeneLabels();
+      console.timeEnd(`Processing gene labels for SyntenyRegionSet [order: ${this.order}]`);
+    }
   }
 
   /**
@@ -328,8 +334,7 @@ export default class SyntenyRegionSet extends GenomicSet
       });
     });
     this.datatrackLabels = allLabels;
-    // TODO: Add all genes in a region as the second argument here
-    mergeGeneLabels(this.datatrackLabels as GeneLabel[], []);
+    mergeGeneLabels(this.datatrackLabels as GeneLabel[], this.regions.map(r => r.genes).flat());
   }
 
   private regionIsVisible(region: SyntenyRegion, start: number, stop: number): boolean
