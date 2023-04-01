@@ -6,7 +6,7 @@
   />
   <div class="grid">
     <div class="col-9">
-      <SVGViewbox :geneList="geneList" :synteny-tree="syntenyTree" :loading="isLoading" />
+      <SVGViewbox :gene-list="geneList" :synteny-tree="syntenyTree" :loading="isLoading" />
     </div>
     <div class="col-3">
       <SelectedDataPanel :selected-data="store.state.selectedData" :gene-list="geneList"/>
@@ -44,6 +44,7 @@ import { getThreshold } from '@/utils/Threshold';
 
 // TODO: Can we figure out a better way to handle blocks with a high chainlevel?
 const MAX_CHAINLEVEL = 2;
+const MAX_CHAINLEVEL_GENES = 1;
 const LOAD_BY_GENE_DETAILED_RANGE_MULTIPLIER = 6;
 
 const store = useStore(key);
@@ -324,6 +325,13 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
       {
         // Shouldn't ever happen (TODO: warn the user)
         $log.error('OH NO! Discovered duplicate blocks in our tree!');
+      }
+
+      if (blockData.block.chainLevel > MAX_CHAINLEVEL_GENES)
+      {
+        // Skip saving any genes that are above our defined max chainlevel for genes
+        console.log(`Skipping ${blockData.genes.length} genes due to chain level filter`);
+        continue;
       }
 
       // Handle genes (we need to inspect all of them even in the case of a new block)

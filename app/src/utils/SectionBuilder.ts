@@ -124,7 +124,7 @@ export async function createSyntenicRegionSets(syntenyData: Map<number, Block[]>
       const syntenyRegionSet = syntenicSectionBuilder(speciesSyntenyData, species, pos,
           backboneChr, backboneStart, backboneStop, 'detailed');
 
-      console.log(`Completed build of Synteny for ${syntenyRegionSet.mapName}, with ${syntenyRegionSet.regions.length} regions`);
+      console.log(`Completed build of Synteny for ${syntenyRegionSet?.mapName}, with ${syntenyRegionSet?.regions.length} regions`);
 
       // Add this to our final Array
       if (syntenyRegionSet) syntenyRegionSets.push(syntenyRegionSet);
@@ -148,12 +148,11 @@ export async function createSyntenicRegionSets(syntenyData: Map<number, Block[]>
 function syntenicSectionBuilder(speciesSyntenyData: Block[], species: Species, setOrder: number,
     backboneChr: Chromosome, viewportStart: number,  viewportStop: number, renderType: 'overview' | 'detailed')
 {
-  //Step 1: For each species synteny data, create syntenic sections for each block
   const processedSyntenicRegions: SyntenyRegion[] = [];
 
   const currSpecies = species.name;
   const currMapName = species.activeMap.name;
-  const allGeneLabels: Label[] = [];
+  // const allGeneLabels: Label[] = [];
 
 console.debug(`About to loop over ${speciesSyntenyData.length} Blocks...`);
   // Step 1: Create syntenic sections for each VISIBLE block
@@ -207,7 +206,7 @@ console.timeEnd('createSyntenySectionAndRegion');
 
 
     // Step 3: For each (now processed) block, create a SyntenySection for each gene
-    if (blockGenes && blockGenes.length > 0 && gaplessBlockSection.chainLevel == 1)
+    if (blockGenes && blockGenes.length > 0)
     {
       // Filter all genes to only those that are visible
 console.time("  filterVisibleGenes");
@@ -237,34 +236,37 @@ console.timeEnd(timerLabel);
       // Get the index for the gene data track set, otherwise default to 0
 timerLabel = `  addDatatrackSections(${processedGeneInfo.length})`;
 console.time(timerLabel);
-      let geneTrackIdx = currSyntenicRegion.datatrackSets.findIndex((set) => set.type === 'gene');
-      geneTrackIdx = geneTrackIdx === -1 ? 0 : geneTrackIdx;
-      currSyntenicRegion.addDatatrackSections(processedGeneInfo, geneTrackIdx, 'gene');
+      // let geneTrackIdx = currSyntenicRegion.datatrackSets.findIndex((set) => set.type === 'gene');
+      // geneTrackIdx = geneTrackIdx === -1 ? 0 : geneTrackIdx;
+      // currSyntenicRegion.addDatatrackSections(processedGeneInfo, geneTrackIdx, 'gene');
+
+      // Add gene datatrack sections (this will always be the first datatrack set)
+      currSyntenicRegion.addDatatrackSections(processedGeneInfo, 0, 'gene');
 console.timeEnd(timerLabel);
 // console.time("  addOrthologLines");
       // FIXME: currSyntenicRegion.addOrthologLines(processedGeneInfo.orthologLines);
 // console.timeEnd("  addOrthologLines");
       // FIXME (Unneeded?): currSyntenicRegion.geneIds = processedGeneInfo.geneIds;
 
-      currSyntenicRegion.datatrackLabels = [];
-console.time("  geneDataLabels");
-      for (let i = 0; i < processedGeneInfo.length; i++)
-      {
-        const geneData = processedGeneInfo[i];
-        if (geneData.label)
-        {
-          allGeneLabels.push(geneData.label);
-        }
-      }
-console.timeEnd("  geneDataLabels");
-    }
+//       currSyntenicRegion.datatrackLabels = [];
+// console.time("  geneDataLabels");
+//       for (let i = 0; i < processedGeneInfo.length; i++)
+//       {
+//         const geneData = processedGeneInfo[i];
+//         if (geneData.label)
+//         {
+//           allGeneLabels.push(geneData.label);
+//         }
+//       }
+// console.timeEnd("  geneDataLabels");
+     }
 
     processedSyntenicRegions.push(currSyntenicRegion);
   }
 
   // Finished creating this Set:
 console.time("createSyntenyRegionSet");
-  const regionSet = new SyntenyRegionSet(currSpecies, currMapName, processedSyntenicRegions, setOrder, renderType, allGeneLabels);
+  const regionSet = new SyntenyRegionSet(currSpecies, currMapName, processedSyntenicRegions, setOrder, renderType);
 console.timeEnd("createSyntenyRegionSet");
   return regionSet;
 }

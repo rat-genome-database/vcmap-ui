@@ -39,7 +39,6 @@ export class GeneLabel extends Label
     super(params);
     this.genes = genes;
     this.rgdIds = genes.map(g => g.rgdId);
-
   }
 
   addGenes(...genes: Gene[])

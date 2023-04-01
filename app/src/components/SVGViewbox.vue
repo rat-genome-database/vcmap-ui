@@ -22,7 +22,7 @@
     <!-- Overview panel SVGs ------------------------------------------->
     <template v-for="(syntenySet, index) in overviewSyntenySets" :key="index">
       <template v-for="(region, index) in syntenySet.regions" :key="index">
-        <SectionSVG show-chromosome show-synteny-on-hover show-start-stop select-on-click :region="region" />
+        <SectionSVG show-chromosome show-synteny-on-hover show-start-stop select-on-click :region="region as SyntenyRegion" />
       </template>
     </template>
 
@@ -36,7 +36,7 @@
       <template v-if="detailedBackboneSet.datatrackLabels">
         <template v-for="(label, index) in detailedBackboneSet.datatrackLabels" :key="index">
           <template v-if="(label.isVisible)">
-            <GeneLabelSVG :label="label" :gene-list="geneList"/>
+            <GeneLabelSVG :label="label as GeneLabel" :gene-list="geneList"/>
           </template>
         </template>
       </template>
@@ -45,9 +45,9 @@
     <template v-if="detailedSyntenySets.length">
       <template v-for="(syntenySet, index) in detailedSyntenySets" :key="index">
         <template v-for="(syntenicRegion, index) in syntenySet.regions" :key="index">
-          <SectionSVG show-chromosome :region="syntenicRegion" />
+          <SectionSVG show-chromosome :region="syntenicRegion as SyntenyRegion" />
         </template>
-        <template v-for="(label, index) in syntenySet.datatrackLabels" :key="index">
+        <template v-for="(label, index) in syntenySet.geneLabels" :key="index">
           <template v-if="label.isVisible">
             <GeneLabelSVG :label="label" :gene-list="geneList"/>
           </template>
@@ -218,6 +218,8 @@ import Block from "@/models/Block";
 
 // TODO: Unneeded? (Need to rework how to "Load by Gene")
 import { getNewSelectedData } from '@/utils/DataPanelHelpers';
+import { GeneLabel } from '@/models/Label';
+import SyntenyRegion from '@/models/SyntenyRegion';
 const LOAD_BY_GENE_VISIBLE_SIZE_MULTIPLIER = 6;
 const NAV_SHIFT_PERCENT = 0.2;
 

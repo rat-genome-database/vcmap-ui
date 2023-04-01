@@ -2,12 +2,13 @@ import BackboneSection from '@/models/BackboneSection';
 import SyntenySection from './SyntenySection';
 import DatatrackSection, { DatatrackSectionType } from './DatatrackSection';
 import DatatrackSet from './DatatrackSet';
-import Label from './Label';
+import Label, { GeneLabel } from './Label';
 import OrthologLine from './OrthologLine';
 import GenomicSection from './GenomicSection';
 import { GenomicSectionFactory } from './GenomicSectionFactory';
 import { Gap } from "@/models/Block";
 import Gene from './Gene';
+import { mergeGeneLabels } from '@/utils/GeneLabelMerger';
 
 interface SyntenyRegionParams
 {
@@ -28,7 +29,7 @@ export default class SyntenyRegion
   species: string = '';                                       // species that this region is from
   mapName: string = '';
   // NOTE: We should evaluate if we want this, if its just a copy of the references to the labels in SyntenyRegion.datatrackSections
-  datatrackLabels: Label[] = [];                               // array of Label objects associated with the datatrackSections
+  geneDatatrackLabels: GeneLabel[] = [];                               // array of Label objects associated with the datatrackSections
   genes: Gene[] = []; // All genes associated with this SyntenyRegion (the block that this region represents) -- note: will be empty for overview SyntenyRegions since genes aren't needed
   
   constructor(params: SyntenyRegionParams)
@@ -62,10 +63,32 @@ export default class SyntenyRegion
     this.syntenyBlocks.sort((a, b) => a.posY1 - b.posY1);
   }
 
+  /**
+   * Add datatrack sections to this region. If the datatrack sections are genes, the gene labels will be re-processed.
+   */
   public addDatatrackSections(datatrackSection: DatatrackSection[], datatrackSetIdx: number, type: DatatrackSectionType)
   {
     this.datatrackSets[datatrackSetIdx] && this.datatrackSets[datatrackSetIdx].datatracks.length > 0 ?
       this.datatrackSets[datatrackSetIdx].addDatatrackSections(datatrackSection) : this.datatrackSets[datatrackSetIdx] = new DatatrackSet(datatrackSection, type);
+    
+    if (type === 'gene')
+    {
+      // Update datatrack labels
+      for (let i = 0; i < datatrackSection.length; i++)
+      {
+        if (datatrackSection[i].label)
+        {
+          // TODO: Not sure if there is a better way to handle this in Typescript. We "know" that the label
+          // of a GeneDatatrack object will be of type GeneLabel, but the type-checking can't know that for sure.
+          // It just sees an instance of Label that every GenomicSection object has. Maybe our classes need to be
+          // structured differently? For now, using "as" to tell the type-checker that this is a GeneLabel but nothing
+          // is guaranteeing that.
+          this.geneDatatrackLabels.push(datatrackSection[i].label as GeneLabel);
+        }
+      }
+
+      mergeGeneLabels(this.geneDatatrackLabels, this.genes);
+    }
   }
 
   public addOrthologLines(orthologLine: OrthologLine[])
