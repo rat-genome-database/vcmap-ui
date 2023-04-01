@@ -55,7 +55,7 @@ const getLabelText = (label: GeneLabel) => {
   else
   {
     // FIXME: Address these magic numbers, use a BBox measurement (https://stackoverflow.com/questions/3311126/svg-font-metrics)?
-    if (numCombinedGenes > 0)
+    if (numCombinedGenes > 1)
     {
       labelText = formatTextForMultiGeneLabel(label.text, numCombinedGenes);
     }
