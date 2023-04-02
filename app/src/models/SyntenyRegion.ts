@@ -21,16 +21,17 @@ interface SyntenyRegionParams
 //This model is used to store data for a syntenic region off-backbone
 export default class SyntenyRegion
 {
-  gaplessBlock: SyntenySection;
-  syntenyGaps: SyntenySection[] = [];                         // synteny gaps occupying this region
-  syntenyBlocks: SyntenySection[] = [];                       // synteny blocks occupying this region
-  datatrackSets: DatatrackSet[] = [];                         // Set of DatatrackSections belonging to this SytenyRegion
-  orthologLines: OrthologLine[] = [];                         // OrthologLines belonging to this SyntenyRegion
-  species: string = '';                                       // species that this region is from
+  // TODO: Can this instead be a reference to our Block model from the synteny tree?
+  gaplessBlock: SyntenySection;             // The full block representing this region (no gaps)
+  syntenyGaps: SyntenySection[] = [];       // synteny gaps occupying this region
+  syntenyBlocks: SyntenySection[] = [];     // synteny blocks occupying this region
+  datatrackSets: DatatrackSet[] = [];       // Set of DatatrackSections belonging to this SytenyRegion
+  orthologLines: OrthologLine[] = [];       // OrthologLines belonging to this SyntenyRegion
+  species: string = '';                     // species that this region is from
   mapName: string = '';
-  // NOTE: We should evaluate if we want this, if its just a copy of the references to the labels in SyntenyRegion.datatrackSections
-  geneDatatrackLabels: GeneLabel[] = [];                               // array of Label objects associated with the datatrackSections
-  genes: Gene[] = []; // All genes associated with this SyntenyRegion (the block that this region represents) -- note: will be empty for overview SyntenyRegions since genes aren't needed
+  // TODO: We should evaluate if we want this here... its just a copy of the references to the labels in SyntenyRegion.datatrackSections
+  geneDatatrackLabels: GeneLabel[] = [];    // array of Label objects associated with the datatrackSections
+  genes: Gene[] = [];                       // All genes associated with this SyntenyRegion (the block that this region represents) -- note: will be empty for overview SyntenyRegions since genes aren't needed
   
   constructor(params: SyntenyRegionParams)
   {
@@ -40,16 +41,17 @@ export default class SyntenyRegion
     this.genes = params.genes ?? [];
   }
 
-  public adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart: number, visibleBackboneStop: number)
-  {
-    this.genomicSections.forEach(section => {
-      section.adjustYPositionsBasedOnVisibleStartAndStop({ start: visibleBackboneStart, stop: visibleBackboneStop});
-      section.recalculateLabelYPositions();
-    });
-    this.orthologLines.forEach(line => {
-      line.setSVGPositions();
-    });
-  }
+  // TODO: Can remove if we are going to re-generate our models used for rendering on each nav/zoom
+  // public adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart: number, visibleBackboneStop: number)
+  // {
+  //   this.genomicSections.forEach(section => {
+  //     section.adjustYPositionsBasedOnVisibleStartAndStop({ start: visibleBackboneStart, stop: visibleBackboneStop});
+  //     section.recalculateLabelYPositions();
+  //   });
+  //   this.orthologLines.forEach(line => {
+  //     line.setSVGPositions();
+  //   });
+  // }
 
   public addSyntenyGaps(syntenyGap: SyntenySection[])
   {
@@ -96,6 +98,8 @@ export default class SyntenyRegion
     this.orthologLines.length > 0 ? this.orthologLines = this.orthologLines.concat(orthologLine) : this.orthologLines = orthologLine;
   }
 
+  // TODO: Wonder if we should move this method back out of this class to a utils file? It might help make each of these
+  // SyntenyRegion objects a bit lighter...
   public splitBlockWithGaps(factory: GenomicSectionFactory, gaps: Gap[]) // TODO (safe to remove)?:, threshold: number)
   {
     // Clear old blocks and gaps in this region without losing reactivity
@@ -222,24 +226,26 @@ export default class SyntenyRegion
     // }
   }
 
-  public get sortedSyntenicBlocksAndGaps()
-  {
-    let blocksAndGaps: SyntenySection[] = this.syntenyBlocks;
-    blocksAndGaps = blocksAndGaps.concat(this.syntenyGaps);
-    blocksAndGaps.sort((a, b) => {
-      // If inverted, sections with largest speciesStart should be at the front of the array
-      return (this.gaplessBlock.isInverted) ? (a.speciesStart - b.speciesStart) * -1 : (a.speciesStart - b.speciesStart);
-    });
+  // TODO: Is only being used in currently commented out code. Can remove if other code is deleted.
+  // public get sortedSyntenicBlocksAndGaps()
+  // {
+  //   let blocksAndGaps: SyntenySection[] = this.syntenyBlocks;
+  //   blocksAndGaps = blocksAndGaps.concat(this.syntenyGaps);
+  //   blocksAndGaps.sort((a, b) => {
+  //     // If inverted, sections with largest speciesStart should be at the front of the array
+  //     return (this.gaplessBlock.isInverted) ? (a.speciesStart - b.speciesStart) * -1 : (a.speciesStart - b.speciesStart);
+  //   });
 
-    return blocksAndGaps;
-  }
+  //   return blocksAndGaps;
+  // }
 
-  private get genomicSections()
-  {
-    let genomicSections: GenomicSection[] = [this.gaplessBlock];
-    const allDatatracks = this.datatrackSets.flatMap((set) => set.datatracks);
-    // TODO: need to make sure that this properly gives the correct information
-    genomicSections = genomicSections.concat(this.syntenyBlocks).concat(this.syntenyGaps).concat(allDatatracks);
-    return genomicSections;
-  }
+  // TODO: Is only being used in currently commented out code. Can remove if other code is deleted.
+  // private get genomicSections()
+  // {
+  //   let genomicSections: GenomicSection[] = [this.gaplessBlock];
+  //   const allDatatracks = this.datatrackSets.flatMap((set) => set.datatracks);
+  //   // TODO: need to make sure that this properly gives the correct information
+  //   genomicSections = genomicSections.concat(this.syntenyBlocks).concat(this.syntenyGaps).concat(allDatatracks);
+  //   return genomicSections;
+  // }
 }

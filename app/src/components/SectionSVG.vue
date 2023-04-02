@@ -10,7 +10,7 @@
       @mouseenter="onMouseEnter(blockSection, 'trackSection')"
       @mouseleave="onMouseLeave(blockSection, 'trackSection')"
       @mousemove="updatePositionLabel($event, blockSection)"
-      @click="selectOnClick ? onSectionClick(blockSection) : () => {}"
+      @click="selectOnClick ? onSyntenyBlockClick(blockSection) : () => {}"
       :y="blockSection.posY1"
       :x="blockSection.posX1"
       :width="blockSection.width"
@@ -110,7 +110,7 @@
         class="block-section"
         @mouseenter="onMouseEnter(datatrack, 'Gene')"
         @mouseleave="onMouseLeave(datatrack, 'Gene')"
-        @click="onClick($event, datatrack)"
+        @click="onDatatrackSectionClick($event, datatrack)"
         :y="datatrack.posY1"
         :x="datatrack.posX1"
         :width="datatrack.width"
@@ -241,7 +241,7 @@ const onMouseLeave = (section: VCMapSVGElement, type: SelectedDataType) => {
   }
 };
 
-const onSectionClick = (section: GenomicSection) => {
+const onSyntenyBlockClick = (section: GenomicSection) => {
   const selectedBackboneRegion = store.state.selectedBackboneRegion as BackboneSelection;
   const backboneChromosome = store.state.chromosome;
   if (backboneChromosome && section.backboneAlignment)
@@ -265,7 +265,11 @@ const highlightSelections = (selectedGeneIds: number[]) => {
   datatrackSets.value.forEach((set) => {
     if (set.datatracks && set.datatracks.length > 0 && set.datatracks[0].type === 'gene')
     {
-      set.datatracks.forEach((section) => {
+      // TODO: Feels a bit fragile to tell the type-checker to treat this as GeneDatatrack[]. Maybe there
+      // is a better way to organize our different types of DatatrackSection models to allow Typescript to
+      // "know" that this is a GeneDatatrack[] type. We should be aware that "as" will not throw an error if
+      // set.datatracks is not of type GeneDatatrack[].
+      (set.datatracks as GeneDatatrack[]).forEach(section => {
         if (section.gene == null)
         {
           return;
@@ -299,7 +303,7 @@ const highlightSelections = (selectedGeneIds: number[]) => {
   });
 };
 
-const onClick = (event: any, section: GeneDatatrack) => {
+const onDatatrackSectionClick = (event: any, section: GeneDatatrack) => {
   if (!section.gene?.rgdId) return;
 
   // If clicked section already selected, just reset the selectedGeneId state
