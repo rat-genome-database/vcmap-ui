@@ -40,7 +40,7 @@
         class="section clickable"
         @mouseenter="() => onMouseEnter(datatrack, 'Gene')"
         @mouseleave="() => onMouseLeave(datatrack)"
-        @click="onClick($event, datatrack)"
+        @click="onDatatrackSectionClick($event, datatrack)"
 
         :y="datatrack.posY1"
         :x="datatrack.posX1"
@@ -204,7 +204,7 @@ const getSectionFill = (section: VCMapSVGElement) => {
   return section.elementColor;
 };
 
-const onClick = (event: any, section: GeneDatatrack) => {
+const onDatatrackSectionClick = (event: any, section: GeneDatatrack) => {
   // NOTE: disable selected data for qtls for now
   if (!section.gene?.rgdId || section.type === 'qtl' || section.type === 'variant') {
     return;
@@ -244,7 +244,11 @@ const highlightSelections = (selectedGeneIds: number[]) => {
     //  Otherwise this is a fragile way to do this (datatracks could be empty)
     if (set.datatracks.length > 0 && set.datatracks[0].type === 'gene')
     {
-      set.datatracks.forEach((section) => {
+      // TODO: Feels a bit fragile to tell the type-checker to treat this as GeneDatatrack[]. Maybe there
+      // is a better way to organize our different types of DatatrackSection models to allow Typescript to
+      // "know" that this is a GeneDatatrack[] type. We should be aware that "as" will not throw an error if
+      // set.datatracks is not of type GeneDatatrack[].
+      (set.datatracks as GeneDatatrack[]).forEach((section) => {
         if (section.gene == null)
         {
           return;
