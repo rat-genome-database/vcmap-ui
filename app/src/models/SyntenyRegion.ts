@@ -38,7 +38,7 @@ export default class SyntenyRegion
     this.species = params.species;
     this.mapName = params.mapName;
     this.gaplessBlock = params.gaplessBlock;
-    this.genes = params.genes ?? [];
+    this.genes = params.genes ? params.genes.map(g => g.clone()) : [];
   }
 
   // TODO: Can remove if we are going to re-generate our models used for rendering on each nav/zoom

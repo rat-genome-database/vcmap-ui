@@ -53,7 +53,7 @@ export default class BackboneSection extends GenomicSection
 
   public setBackboneGenes(backboneGenes: Gene[])
   {
-    this.backboneGenes = backboneGenes;
+    this.backboneGenes = backboneGenes.map(g => g.clone());
   }
 
   public addBackboneGenes(backboneGenes: Gene[])
