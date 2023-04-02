@@ -9,7 +9,7 @@ export function getNewSelectedData(store: Store<VCMapState>, gene: Gene): { rgdI
   const comparativeSpecies = store.state.comparativeSpecies;
   const compSpeciesNameMap = new Map<Number, string>();
 
-  comparativeSpecies.forEach((species: any) => compSpeciesNameMap.set(species.activeMap.key, species.name));
+  comparativeSpecies.forEach(species => compSpeciesNameMap.set(species.activeMap.key, species.name));
  
   const allOrthologInfo = getGeneOrthologData(store, gene);
   return {rgdIds: allOrthologInfo.rgdIds, selectedData: allOrthologInfo.selectedData};
@@ -38,6 +38,7 @@ export function sortGeneList(geneList: Gene[]) {
   });
 }
 
+// FIXME: This method will need to be reworked once we decide how to grab orthologs for a specific gene 
 function getGeneOrthologData(store: Store<VCMapState>, gene: Gene) 
 {
   const masterGeneMapByRGDId = store.getters.masterGeneMapByRGDId as Map<number, GeneDatatrack[]>;

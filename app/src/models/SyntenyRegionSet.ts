@@ -5,7 +5,6 @@ import Label, { GeneLabel } from "./Label";
 import OrthologLine from "./OrthologLine";
 import SyntenyRegion from "./SyntenyRegion";
 import SyntenySection from "./SyntenySection";
-import { mergeGeneLabels } from "@/utils/GeneLabelMerger";
 import { SelectedRegion } from "./BackboneSelection";
 import { GenomicSectionFactory } from "./GenomicSectionFactory";
 import DatatrackSet from "./DatatrackSet";

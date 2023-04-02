@@ -30,6 +30,26 @@ interface Props
 }
 defineProps<Props>();
 
+/**
+ * TODO: Documenting a situation that results in some slightly confusing UX that we should
+ * consider improving.
+ * 
+ * This isn't in Redmine but probably should be once we merge the performance-fixes branch in.
+ * 
+ * Scenario:
+ * + The label for 2 datatrack sections overlap
+ * + Our gene label merge logic makes one of their labels visible and adds both genes to the gene list of that label
+ * + Clicking on the label results in both genes showing in the SelectedDataPanel and the label text becoming bold (good!)
+ * + Clicking on either one of the individual datatrack sections results in only that gene showing in the SelectedDataPanel (also good!),
+ *    BUT, the label text is bold and it still shows "(2)" next to it. As a user, this makes me think there should be 2 genes showing
+ *    in the SelectedDataPanel (slightly confusing)
+ * 
+ * I wasn't quite sure where to document this at. I'm putting this here since there is some logic in this component that directly
+ * affects the text of the GeneLabel depending on what genes are selected. Maybe we adjust the label text to only say the name of the 
+ * selected datatrack gene, or maybe we don't make the label text bold in this scenario... either way, documenting this use-case so that
+ * we can improve this in the future.
+ */
+
 const getLabelText = (label: GeneLabel) => {
   const numCombinedGenes = label.genes.length;
   const selectedGeneIds = store.state.selectedGeneIds;

@@ -55,10 +55,10 @@ const OVERLAP_SIZE = 8;
 // }
 
 /**
- * Merge overlapping gene labels into a single GeneLabel, add non-visible genes to any labels that overlap them
+ * Merge overlapping gene labels into a single GeneLabel, add non-visible genes to any labels that overlap with them
  * 
- * @param labels GeneLabels from visible DatatrackSections
- * @param genes all genes that belong to the region whether they are visible or not
+ * @param labels GeneLabels from visible DatatrackSections belonging to a particular region
+ * @param genes Genes (visible and non-visible) belonging to a particular region
  */
 export function mergeGeneLabels(labels: GeneLabel[], genes: Gene[])
 {

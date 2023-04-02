@@ -10,7 +10,7 @@
         </Button>
         <span v-if="gene" data-test="gene-name">({{gene.name ?? 'N/A'}})</span>
       </div>
-      <div>
+      <div v-if="gene != null">
         <Button
           class="p-button-link rgd-link"
           @click="goToRgd(gene.rgdId)"
@@ -41,7 +41,9 @@ import { Formatter } from '@/utils/Formatter';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import { getNewSelectedData } from '@/utils/DataPanelHelpers';
+import { useLogger } from 'vue-logger-plugin';
 
+const $log = useLogger();
 const store = useStore(key);
 
 interface Props
@@ -56,8 +58,14 @@ interface Props
 
 defineProps<Props>();
 
-const selectGene = (gene: Gene) => {
+const selectGene = (gene: Gene | null) => {
+  if (gene == null)
+  {
+    return;
+  }
+
   const newData = getNewSelectedData(store, gene);
+  $log.debug(`Get Selected Data`, newData);
   store.dispatch('setSelectedGeneIds', newData.rgdIds || []);
   store.dispatch('setSelectedData', newData.selectedData);
 };
