@@ -13,6 +13,7 @@
       <div>
         <Button
           class="p-button-link rgd-link"
+          v-tooltip.left="`View in RGD`"
           @click="goToRgd(gene.rgdId)"
         >
           <i class="pi pi-external-link external-link"></i>
@@ -43,6 +44,7 @@ import { key } from '@/store';
 import { getNewSelectedData } from '@/utils/DataPanelHelpers';
 
 const store = useStore(key);
+const SEARCHED_GENE_WINDOW_FACTOR = 3;
 
 interface Props
 {
@@ -57,9 +59,17 @@ interface Props
 defineProps<Props>();
 
 const selectGene = (gene: Gene) => {
-  const newData = getNewSelectedData(store, gene);
-  store.dispatch('setSelectedGeneIds', newData.rgdIds || []);
-  store.dispatch('setSelectedData', newData.selectedData);
+  const geneLength = gene.stop - gene.start;
+  if (!gene.backboneStart || !gene.backboneStop) {
+    return;
+  }
+
+  //const newData = getNewSelectedData(store, gene);
+  store.dispatch('setSelectedGeneIds', []);
+  store.dispatch('setSelectedGeneIds', [gene.rgdId]);
+  store.dispatch('setSelectedData', [gene]);
+
+  store.dispatch('setDetailedBasePairRequest', { start: Math.max(gene.backboneStart - (geneLength * SEARCHED_GENE_WINDOW_FACTOR), 0), stop: Math.min(gene.backboneStop + (geneLength * SEARCHED_GENE_WINDOW_FACTOR), store.state.chromosome.seqLength) });
 };
 
 const goToRgd = (rgdId: number) => {
