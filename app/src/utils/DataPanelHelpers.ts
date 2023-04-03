@@ -4,15 +4,14 @@ import { Store } from "vuex";
 import { VCMapState } from "@/store";
 import { GeneDatatrack } from '@/models/DatatrackSection';
 
-
 export function getNewSelectedData(store: Store<VCMapState>, gene: Gene): { rgdIds: number[], selectedData: SelectedData[] } {
   const comparativeSpecies = store.state.comparativeSpecies;
   const compSpeciesNameMap = new Map<Number, string>();
 
   comparativeSpecies.forEach((species: any) => compSpeciesNameMap.set(species.activeMap.key, species.name));
  
-  const allOrthologInfo = getGeneOrthologData(store, gene);
-  return {rgdIds: allOrthologInfo.rgdIds, selectedData: allOrthologInfo.selectedData};
+  //const allOrthologInfo = getGeneOrthologData(store, gene);
+  return {rgdIds: [gene.rgdId], selectedData: []};
 }
 
 export function sortGeneList(geneList: Gene[]) {
@@ -111,4 +110,22 @@ function getGeneOrthologData(store: Store<VCMapState>, gene: Gene)
     rgdIds: rgdIds, 
     selectedData: selectedDataList
   };
+}
+
+export function sortGeneMatches(searchKey: any, partialMatches: Gene[])
+{ 
+
+
+  const matchedKeys = [];
+  const notMatchedKeys = [];
+  searchKey = searchKey.value.toLowerCase();
+  return partialMatches;
+}
+
+function compareSymbols(a: Gene, b: Gene, searchKey: string) 
+{
+  const aSymbol = a.symbol.toLowerCase();
+  const bSymbol = b.symbol.toLowerCase();
+
+  //let levDistanceA = new Levenshtein(aSymbol, searchKey).distance;
 }
