@@ -2,6 +2,7 @@ import { App, Component, Directive } from "@vue/runtime-core";
 
 // Import any components/directives that you want to globally register
 import PrimeVue from 'primevue/config';
+import ToastService from 'primevue/toastservice';
 import Button from 'primevue/button';
 import Dropdown from 'primevue/dropdown';
 import InputNumber from 'primevue/inputnumber';
@@ -25,7 +26,8 @@ import Toast from 'primevue/toast';
  * Add any plugins/configs that you want to be globally registered:
  */
 const PLUGINS = [
-  PrimeVue
+  PrimeVue, 
+  ToastService,
 ];
 
 /**
