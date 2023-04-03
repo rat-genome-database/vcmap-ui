@@ -31,16 +31,7 @@ interface Props
 defineProps<Props>();
 
 const getLabelText = (label: GeneLabel) => {
-  let numCombinedGenes = 0;
-  if (label.genes.length > 0)
-  {
-    numCombinedGenes = label.genes.length + 1;
-  }
-  else
-  {
-    numCombinedGenes = label.genes.length;
-  }
-
+  const numCombinedGenes = label.genes.length;
   const selectedGeneIds = store.state.selectedGeneIds;
   let labelText = label.text;
   // FIXME: Probably shouldn't arbitrarily rely on the first gene in label being the one that it represents...
@@ -60,11 +51,12 @@ const getLabelText = (label: GeneLabel) => {
   else
   {
     // FIXME: Address these magic numbers, use a BBox measurement (https://stackoverflow.com/questions/3311126/svg-font-metrics)?
-    if (numCombinedGenes > 0)
+    if (numCombinedGenes > 1)
     {
       const geneSymbolText = numCombinedGenes > 9 ? label.text.substring(0, 7) : label.text.substring(0, 8);
       labelText = `${geneSymbolText}...(${numCombinedGenes})`;
-    } else
+    } 
+    else
     {
       if (labelText.length > 9)
       {
