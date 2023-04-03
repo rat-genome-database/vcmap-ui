@@ -8,7 +8,6 @@ import GenomicSection from './GenomicSection';
 import { GenomicSectionFactory } from './GenomicSectionFactory';
 import { Gap } from "@/models/Block";
 import Gene from './Gene';
-import { mergeGeneLabels } from '@/utils/GeneLabelMerger';
 
 interface SyntenyRegionParams
 {
@@ -88,8 +87,6 @@ export default class SyntenyRegion
           this.geneDatatrackLabels.push(datatrackSection[i].label as GeneLabel);
         }
       }
-
-      mergeGeneLabels(this.geneDatatrackLabels, this.genes);
     }
   }
 

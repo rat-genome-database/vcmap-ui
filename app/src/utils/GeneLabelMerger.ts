@@ -57,8 +57,8 @@ const OVERLAP_SIZE = 8;
 /**
  * Merge overlapping gene labels into a single GeneLabel, add non-visible genes to any labels that overlap with them
  * 
- * @param labels GeneLabels from visible DatatrackSections belonging to a particular region
- * @param genes Genes (visible and non-visible) belonging to a particular region
+ * @param labels GeneLabels from visible DatatrackSections belonging to a particular SyntenyRegionSet
+ * @param genes Genes (visible and non-visible) belonging to a particular SyntenyRegionSet
  */
 export function mergeGeneLabels(labels: GeneLabel[], genes: Gene[])
 {
@@ -80,7 +80,7 @@ export function mergeGeneLabels(labels: GeneLabel[], genes: Gene[])
     // Check if this label has been combined or not
     if (combinedGeneRGDIds.includes(geneLabel.mainGene.rgdId) || geneLabel.posY > PANEL_SVG_STOP || geneLabel.posY < PANEL_SVG_START)
     {
-      console.log(`GeneLabel: ${geneLabel.mainGene.symbol} has already been combined with another`);
+      console.debug(`GeneLabel: ${geneLabel.mainGene.symbol} has already been combined with another`);
       geneLabel.isVisible = false;
       continue;
     }
@@ -89,8 +89,8 @@ export function mergeGeneLabels(labels: GeneLabel[], genes: Gene[])
       return (Math.abs(geneLabel.posY - label.posY) < OVERLAP_SIZE && label != geneLabel);
     });
 
-    console.log(`GeneLabel: ${geneLabel.mainGene.symbol} has ${overlappedLabels.length} overlapping labels`);
-    overlappedLabels.forEach(l => console.log(` overlap: ${l.mainGene.symbol}`));
+    console.debug(`GeneLabel: ${geneLabel.mainGene.symbol} has ${overlappedLabels.length} overlapping labels`);
+    overlappedLabels.forEach(l => console.debug(` overlap: ${l.mainGene.symbol}`));
 
     //
     // If no overlapping labels, set label is visible and continue processing next label
@@ -105,12 +105,16 @@ export function mergeGeneLabels(labels: GeneLabel[], genes: Gene[])
     {
       const overlappedLabel = overlappedLabels[overlapIdx];
 
+      // If the overlapped label has already been "combined" into another label, remove visibility
       if (combinedGeneRGDIds.includes(overlappedLabel.mainGene.rgdId))
       {
         overlappedLabel.isVisible = false;
         geneLabel.isVisible = true;
         continue;
       }
+      
+      // If the main gene label represents an LOC gene, combine it with the "overlapped" gene and
+      // make the main gene label non-visible (we are prioritizing showing non-LOC genes)
       if (geneLabel.mainGene.symbol.toLowerCase().startsWith('loc'))
       {
         overlappedLabel.addGenes(...geneLabel.genes);
@@ -118,12 +122,11 @@ export function mergeGeneLabels(labels: GeneLabel[], genes: Gene[])
         geneLabel.isVisible = false;
         continue;
       }
-      else
-      {
-        geneLabel.addGenes(...overlappedLabel.genes);
-        combinedGeneRGDIds.push(overlappedLabel.mainGene.rgdId);
-        geneLabel.isVisible = true;
-      }
+
+      // Otherwise, combine the overlapped label with the main gene label
+      geneLabel.addGenes(...overlappedLabel.genes);
+      combinedGeneRGDIds.push(overlappedLabel.mainGene.rgdId);
+      geneLabel.isVisible = true;
     }
   }
 
@@ -131,24 +134,24 @@ export function mergeGeneLabels(labels: GeneLabel[], genes: Gene[])
   // Next, add any non-visible genes to visible GeneLabels if they overlap with them
   const visibleLabels = labels.filter(l => l.isVisible);
   const visibleLabelMainGeneIds = visibleLabels.map(l => l.mainGene.rgdId);
-  for (let i = 0; i < genes.length; i++)
+  const hiddenGenesWithoutALabel = genes.filter(g => !visibleLabelMainGeneIds.includes(g.rgdId));
+  for (let i = 0; i < visibleLabels.length; i++)
   {
-    const gene = genes[i];
-    for (let j = 0; j < visibleLabels.length; j++)
+    const label = visibleLabels[i];
+
+    // Filter genes that could only belong to this Label (based on the label's "main gene") and have not already been added to another label
+    const potentialGenes = hiddenGenesWithoutALabel.filter(g => g.chromosome === label.mainGene.chromosome && !combinedGeneRGDIds.includes(g.rgdId));
+    for (let j = 0; j < potentialGenes.length; j++)
     {
-      const label = visibleLabels[j];
+      const gene = potentialGenes[j];
       // If:
-      //  + gene has not already been combined with another label
-      //  + gene is not the "main" gene of an already visible label
-      //  + label does not already contain the gene (this might be redundant with the first check TODO)
       //  + gene overlaps the "main" gene of the label
       // Then:
       //  + Add the gene to the GeneLabel
       //  + Add the gene RGD ID to the list of already "combined" (merged) genes
-      if (!combinedGeneRGDIds.includes(gene.rgdId) && !visibleLabelMainGeneIds.includes(gene.rgdId) 
-        && !label.hasGene(gene) && isOverlappingGeneLabel(gene, label))
+      if (isOverlappingGeneLabel(gene, label))
       {
-        console.log(` Label ${label.mainGene.symbol} overlaps with gene ${gene.symbol}`);
+        console.debug(` Label ${label.mainGene.symbol} overlaps with gene ${gene.symbol}`);
         label.addGenes(gene);
         combinedGeneRGDIds.push(gene.rgdId);
       }
