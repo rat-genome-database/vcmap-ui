@@ -169,8 +169,12 @@ const zoomIn = (zoomInterval: number) => {
 }
 .zoom-in-label{
   margin-right: 0.5rem;
+  padding-left: .5em;
+  font-size: .85em;
 }
 .zoom-out-label{
   margin-left: 0.5rem;
+  padding-right: .5em;
+  font-size: .85em;
 }
 </style>

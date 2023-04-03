@@ -10,7 +10,9 @@
         </template>
         <template #icons>
           <div class="icon-container">
-            <a  href="https://rgd.mcw.edu/" target="_blank"><img class="rgd-logo" src="../assets/images/rgd_logo.png" alt="RGD logo"></a>
+            <a  href="https://rgd.mcw.edu/" target="_blank"><img class="rgd-logo" src="../assets/images/rgd_logo.png" alt="RGD logo"
+              v-tooltip.bottom="`Go to RGD Home Page`"
+            ></a>
             <Button 
               label="New Configuration" 
               class="p-button-info header-btn"

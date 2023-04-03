@@ -6,7 +6,8 @@
   />
   <div class="grid">
     <div class="col-9">
-      <SVGViewbox :gene-list="geneList" :synteny-tree="syntenyTree" :loading="isLoading" />
+      <SVGViewbox :geneList="geneList" :synteny-tree="syntenyTree" :loading="isLoading" />
+      <Toast />
     </div>
     <div class="col-3">
       <SelectedDataPanel :selected-data="store.state.selectedData" :gene-list="geneList"/>
@@ -28,6 +29,8 @@ import SelectedDataPanel from '@/components/SelectedDataPanel.vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import {onMounted, ref, shallowRef, triggerRef, watch} from 'vue';
+import Toast from 'primevue/toast';
+import { useToast } from 'primevue/usetoast';
 import Gene from "@/models/Gene";
 import Block, {Gap} from "@/models/Block";
 import SyntenyApi, {SpeciesSyntenyData} from "@/api/SyntenyApi";
@@ -49,6 +52,7 @@ const LOAD_BY_GENE_DETAILED_RANGE_MULTIPLIER = 6;
 
 const store = useStore(key);
 const $log = useLogger();
+const toast = useToast();
 
 const { showDialog, dialogHeader, dialogMessage, showDialogBackButton, dialogTheme, onError } = useDialog();
 
@@ -134,6 +138,11 @@ onMounted(async () => {
   }
 
   // Query the Genes API
+
+  const slowAPI = setTimeout(() => {
+    showToast('warn', 'Loading Impact', 'API is taking a while to respond, please be patient', 3000);
+  }, 15000);
+
   let comparativeSpeciesIds: number[] = [];
   store.state.comparativeSpecies.map(species => comparativeSpeciesIds.push(species.defaultMapKey));
   const backboneGenes: Gene[] = await GeneApi.getGenesByRegion(
@@ -174,6 +183,18 @@ onMounted(async () => {
     isLoading.value = false;
     return;
   }
+  clearTimeout(slowAPI);
+
+  //TODO: Add message for variant impact on processing time
+  const slowProcessing = setTimeout(() => {
+    let message = '';
+    if (store.state.comparativeSpecies.length > 2)
+      message = 'Currently processing data, please be patient. Longer times may be due to the large number of species in the selected region';
+    else
+      message = 'Currently processing data, please be patient. Longer times may be due due to the large number of genes in the selected region';
+
+    showToast('warn', 'Loading Impact', message, 5000);
+  }, 3000);
 
   processSynteny(speciesSyntenyDataArray, 0, store.state.chromosome.seqLength);
 
@@ -205,6 +226,8 @@ onMounted(async () => {
   store.dispatch('setConfigurationLoaded', true);
   // Kick off DetailedPanel load
   triggerDetailedPanelProcessing(store.state.chromosome, selectionStart, selectionStop);
+
+  clearTimeout(slowProcessing);
   isLoading.value = false;
 });
 
@@ -390,6 +413,11 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
 
 async function queryAndProcessSyntenyForBasePairRange(backboneChromosome: Chromosome, start: number, stop: number)
 {
+  const slowAPI = setTimeout(() => {
+    console.log('API is taking longer than usual to respond...')
+    showToast('warn', 'Loading Impact', 'API is taking a while to respond, please be patient', 3000);
+  }, 15000);
+
   let threshold = Math.round(
     (stop - start) /
     (PANEL_SVG_STOP - PANEL_SVG_START) / 4
@@ -405,6 +433,8 @@ async function queryAndProcessSyntenyForBasePairRange(backboneChromosome: Chromo
     },
     comparativeSpecies: store.state.comparativeSpecies,
   });
+  
+  clearTimeout(slowAPI);
 
   // Process response
   processSynteny(speciesSyntenyDataArray, start, stop);
@@ -489,5 +519,10 @@ function checkSyntenyResultsOnComparativeSpecies(speciesSyntenyDataArray: Specie
   }
 
   return true;
+}
+
+function showToast(severity: string, title: string, details: string, duration: number)
+{
+  toast.add({severity: severity, summary: title, detail: details, life: duration });
 }
 </script>

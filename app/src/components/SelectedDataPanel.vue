@@ -18,19 +18,29 @@
           />
         </div>
         <div class="panel-header-item">
-          {{numberOfResults}} Selected Genes
-          <Button
-              v-tooltip.left="`Clear Selection`"
-              class="p-button-info p-button-sm"
-              icon="pi pi-ban"
-              @click="clearSelectedGenes"
-              rounded
-          />
+          <div v-if="numberOfResults > 0">
+            {{numberOfResults}} Selected Genes
+          </div>
+          <div class="clear-selection-btn">
+            <Button
+                v-tooltip.right="`Clear Selection`"
+                class="p-button-info p-button-sm"
+                icon="pi pi-ban"
+                @click="clearSelectedGenes"
+                rounded
+            />
+          </div>
         </div>
       </div>
     </template>
     
     <div class="gene-data">
+      <template v-if="!props.selectedData || props.selectedData.length === 0">
+        <div class="no-data">
+          <p class="placeholder-msg">No data selected</p>
+          <p class="placeholder-msg-txt">Select data by clicking or hovering drawn elements, or searching by gene symbol above</p>
+        </div>
+      </template>
       <template v-for="dataObject in props.selectedData" :key="dataObject">
         <template v-if="dataObject?.type === 'Gene'">
           <GeneInfo
@@ -131,7 +141,7 @@ import SVGConstants, {PANEL_SVG_START, PANEL_SVG_STOP} from '@/utils/SVGConstant
 import { ref, watch} from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
-import { getNewSelectedData, sortGeneList } from '@/utils/DataPanelHelpers';
+import { getNewSelectedData, sortGeneList, sortGeneMatches } from '@/utils/DataPanelHelpers';
 
 /**
  * FIXME: This whole component needs to be looked over. There are references to properties on objects that don't exist.
@@ -200,6 +210,8 @@ const searchGene = (event: {query: string}) => {
       // TODO: we may need to push a clone of the Gene here to break other relationships
       matches.push(gene);
   });
+
+  matches = sortGeneMatches(searchedGene, matches);
   geneSuggestions.value = matches;
 };
 
@@ -282,20 +294,20 @@ const adjustSelectionWindow = () => {
     // confirm the searched gene is visible in the result and adjust if not
     if (newInnerStart > basePairStart && newInnerStop < basePairStop)
     {
-      store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: basePairStop});
+      store.dispatch('setDetailedBasePairRequest', { start: basePairStart, stop: basePairStop});
     }
     else if (newInnerStart < basePairStart)
     {
-      newInnerStop > basePairStop ? store.dispatch('setDetailedBasePairRange', { start: newInnerStart, stop: newInnerStop }) : store.dispatch('setDetailedBasePairRange', { start: newInnerStart, stop: basePairStop });
+      newInnerStop > basePairStop ? store.dispatch('setDetailedBasePairRequest', { start: newInnerStart, stop: newInnerStop }) : store.dispatch('setDetailedBasePairRequest', { start: newInnerStart, stop: basePairStop });
     }
     else if (newInnerStop > basePairStop)
     {
-      newInnerStart < basePairStart ? store.dispatch('setDetailedBasePairRange', { start: newInnerStart, stop: newInnerStop}) : store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: newInnerStop});
+      newInnerStart < basePairStart ? store.dispatch('setDetailedBasePairRequest', { start: newInnerStart, stop: newInnerStop}) : store.dispatch('setDetailedBasePairRequest', { start: basePairStart, stop: newInnerStop});
     }
   }
   else
   {
-    store.dispatch('setDetailedBasePairRange', { start: newInnerStart, stop: newInnerStop});
+    store.dispatch('setDetailedBasePairRequest', { start: newInnerStart, stop: newInnerStop});
   }
   
 };
@@ -316,5 +328,27 @@ const adjustSelectionWindow = () => {
 .panel-header-item
 {
   padding-bottom: 10px;
+}
+
+.clear-selection-btn
+{
+  margin-top: .5em;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.placeholder-msg
+{
+  font-size: 1.1rem;
+  padding-right: 3rem;
+  margin-top: 0rem;
+  margin-bottom: 0;
+}
+
+.placeholder-msg-txt
+{
+  font-size: .9rem;
+  font-style: italic;
+  margin-top: .5em;
 }
 </style>
