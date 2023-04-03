@@ -19,6 +19,7 @@ import Message from 'primevue/message';
 import InlineMessage from 'primevue/inlinemessage';
 import Dialog from 'primevue/dialog';
 import Slider from 'primevue/slider';
+import Toast from 'primevue/toast';
 
 /**
  * Add any plugins/configs that you want to be globally registered:
@@ -47,6 +48,7 @@ const COMPONENTS: {[key: string]: Component} = {
   'InlineMessage': InlineMessage,
   'Dialog': Dialog,
   'Slider': Slider,
+  'Toast': Toast
 };
 
 /**

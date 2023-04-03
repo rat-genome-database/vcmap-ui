@@ -31,7 +31,16 @@ interface Props
 defineProps<Props>();
 
 const getLabelText = (label: GeneLabel) => {
-  const numCombinedGenes = label.genes.length;
+  let numCombinedGenes = 0;
+  if (label.genes.length > 0)
+  {
+    numCombinedGenes = label.genes.length + 1;
+  }
+  else
+  {
+    numCombinedGenes = label.genes.length;
+  }
+
   const selectedGeneIds = store.state.selectedGeneIds;
   let labelText = label.text;
   // FIXME: Probably shouldn't arbitrarily rely on the first gene in label being the one that it represents...

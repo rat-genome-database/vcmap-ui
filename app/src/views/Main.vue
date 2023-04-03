@@ -7,6 +7,7 @@
   <div class="grid">
     <div class="col-9">
       <SVGViewbox :geneList="geneList" :synteny-tree="syntenyTree" :loading="isLoading" />
+      <Toast />
     </div>
     <div class="col-3">
       <SelectedDataPanel :selected-data="store.state.selectedData" :gene-list="geneList"/>
@@ -28,6 +29,8 @@ import SelectedDataPanel from '@/components/SelectedDataPanel.vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import {onMounted, ref, shallowRef, triggerRef, watch} from 'vue';
+import Toast from 'primevue/toast';
+import { useToast } from 'primevue/toastservice';
 import Gene from "@/models/Gene";
 import Block, {Gap} from "@/models/Block";
 import SyntenyApi, {SpeciesSyntenyData} from "@/api/SyntenyApi";
@@ -52,6 +55,7 @@ const $log = useLogger();
 const { showDialog, dialogHeader, dialogMessage, showDialogBackButton, dialogTheme, onError } = useDialog();
 
 const isLoading = ref(false);
+const toast = useToast();
 
 // Our synteny tree keyed by MapId
 // TODO: Consider adding a map for mapKey -> Species
@@ -149,6 +153,9 @@ onMounted(async () => {
 
   // Preload off-backbone large blocks and genes
   let threshold = getThreshold(store.state.chromosome.seqLength);
+  const slowAPI = setTimeout(() => {
+    console.log('API is taking longer than usual to respond...')
+  }, 10000);
   const speciesSyntenyDataArray = await SyntenyApi.getSyntenicRegions({
     backboneChromosome: store.state.chromosome,
     start: 0,
@@ -174,6 +181,7 @@ onMounted(async () => {
     return;
   }
 
+  clearTimeout(slowAPI);
   processSynteny(speciesSyntenyDataArray, 0, store.state.chromosome.seqLength);
 
   //
@@ -481,5 +489,9 @@ function checkSyntenyResultsOnComparativeSpecies(speciesSyntenyDataArray: Specie
   }
 
   return true;
+}
+
+const showToast = () => {
+  toast.add({severity: 'info', summary: 'Synteny Data', detail: 'No synteny data available for this species'});
 }
 </script>

@@ -1,19 +1,19 @@
 <template>
+  <Toast />
   <svg :viewBox="'0 0 800 ' + SVGConstants.viewboxHeight" xmlns="http://www.w3.org/2000/svg" id="svg-wrapper" width="100%">
 
     <!-- Outside panel -->
     <rect class="panel" x="0" width="800" :height="SVGConstants.viewboxHeight" />
     <!-- Inner panels -->
-    <rect class="panel selectable" :class="{'is-loading': arePanelsLoading}" x="0" @click.left="(event) => overviewSelectionHandler(event, overviewBackboneSet?.backbone)" 
+    <rect class="panel selectable" :class="{'is-loading': arePanelsLoading}" x="0" @click.left="(event) => { overviewSelectionHandler(event, overviewBackboneSet?.backbone); showToast('info', 'Selection Initiated:', 'Drag and click again to complete the selection or right click to cancel.', 5000)}" 
       @mousemove.stop="(event) => updateOverviewSelection(event)" @contextmenu.prevent @click.right="cancelOverviewSelection"
       :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.viewboxHeight" />
 
-    <rect id="detailed" class="panel selectable" :class="{'is-loading': arePanelsLoading}" @click.left="(event) => detailedSelectionHandler(event)"
+    <rect id="detailed" class="panel selectable" :class="{'is-loading': arePanelsLoading}" @click.left="(event) => { detailedSelectionHandler(event); showToast('info', 'Selection Initiated:', 'Drag and click again to complete the selection or right click to cancel.', 5000)}"
       @mousemove="updateZoomSelection" @contextmenu.prevent @click.right="cancelDetailedSelection" 
       :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.viewboxHeight" />
 
     
-
     <!-- Ortholog Lines -->
     <template v-for="(line, index) in orthologLines" :key="index">
       <OrthologLineSVG :line="line" />
@@ -186,6 +186,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { useStore } from 'vuex';
+import { useRouter } from 'vue-router';
 import SectionSVG from './SectionSVG.vue';
 import SVGConstants, {PANEL_SVG_START, PANEL_SVG_STOP} from '@/utils/SVGConstants';
 import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
@@ -201,6 +202,8 @@ import { backboneDetailedError, backboneOverviewError, missingComparativeSpecies
 import { createSyntenicRegionSets,  } from '@/utils/SectionBuilder';
 import useOverviewPanelSelection from '@/composables/useOverviewPanelSelection';
 import { useLogger } from 'vue-logger-plugin';
+import Toast from 'primevue/toast';
+import { useToast } from 'primevue/usetoast';
 import { createBackboneSection, backboneDatatrackBuilder, createBackboneSet } from '@/utils/BackboneBuilder';
 import BackboneSetSVG from './BackboneSetSVG.vue';
 import SyntenyRegionSet from '@/models/SyntenyRegionSet';
@@ -223,6 +226,8 @@ const NAV_SHIFT_PERCENT = 0.2;
 
 const store = useStore(key);
 const $log = useLogger();
+const router = useRouter();
+const toast = useToast();
 
 const { showDialog, dialogHeader, dialogMessage, showDialogBackButton, dialogTheme, onError } = useDialog();
 const { startDetailedSelectionY, stopDetailedSelectionY, updateZoomSelection, detailedSelectionHandler, cancelDetailedSelection, getDetailedSelectionStatus} = useDetailedPanelZoom(store);
@@ -769,6 +774,26 @@ const handleBackboneVariantClick = () => {
 
 document.addEventListener('scroll' , getDetailedPosition);
 
+//Back button handling from svg page.  User must confirm they want to leave the page.
+router.beforeEach((to, from, next) => {
+  if (window && window.event && window.event.type == 'popstate')
+  {  
+    const response = confirm('Are you sure you want to leave this page? You may progress');
+    if (response == true)
+    {
+      next();
+    }
+    else
+    {
+      next(false);
+    }
+  }
+  else
+  {
+    next();
+  }
+});
+
 // listen for escape press, cancel overview/detailed panel selection if active.
 window.addEventListener('keyup', function(event) {
     // If  ESC key was pressed...
@@ -777,6 +802,10 @@ window.addEventListener('keyup', function(event) {
       cancelDetailedSelection();
     }
 });
+
+const showToast = (severity: string, title: string, details: string, duration: number) => {
+  toast.add({severity: severity, summary: title, detail: details, life: duration });
+}
 
 function logPerformanceReport(title: string, totalTimeMillis: number, detailedTimeReportObject: { [key:string]: number} )
 {
