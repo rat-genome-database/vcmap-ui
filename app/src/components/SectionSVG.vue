@@ -169,11 +169,11 @@ const props = defineProps<Props>();
 toRefs(props);
 const basePairPositionLabel = ref<string>('');
 
-watch(() => store.state.selectedGeneIds, () => {
+onMounted(() => {
   highlightSelections(store.state.selectedGeneIds);
 });
 
-onMounted(() => {
+watch([() => store.state.selectedGeneIds, () => props.region], () => {
   highlightSelections(store.state.selectedGeneIds);
 });
 
@@ -194,30 +194,27 @@ const datatrackSets = computed(() => {
 });
 
 const onMouseEnter = (section: SyntenySection | GeneDatatrack, type: SelectedDataType) => {
-  // if ()
-    section.isHovered = true;
-    
-    // Only update the selected data panel if no Genes are already selected
-    if (store.state.selectedGeneIds.length === 0)
+  section.isHovered = true;
+  
+  // Only update the selected data panel if no Genes are already selected
+  if (store.state.selectedGeneIds.length === 0)
+  {
+    let selectedData;
+    if (type === 'Gene')
     {
-      let selectedData;
-      if (type === 'Gene')
+      const geneSection = section as GeneDatatrack;
+      if (geneSection?.gene)
       {
-        const geneSection = section as GeneDatatrack;
-        if (geneSection?.gene)
-        {
-          highlightGeneLines(geneSection?.gene.rgdId, 'enter');
-        }
-        selectedData = new SelectedData(geneSection.gene.clone(), 'Gene');
+        highlightGeneLines(geneSection?.gene.rgdId, 'enter');
       }
-      else
-      {
-        selectedData = new SelectedData(section, type);
-      }
-      store.dispatch('setSelectedData', [selectedData]);
+      selectedData = new SelectedData(geneSection.gene.clone(), 'Gene');
     }
-
-
+    else
+    {
+      selectedData = new SelectedData(section, type);
+    }
+    store.dispatch('setSelectedData', [selectedData]);
+  }
 };
 
 const onMouseLeave = (section: VCMapSVGElement, type: SelectedDataType) => {
