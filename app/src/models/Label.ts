@@ -47,11 +47,6 @@ export class GeneLabel extends Label
     this.rgdIds.push(...genes.map(g => g.rgdId));
   }
 
-  hasGene(gene: Gene)
-  {
-    return this.rgdIds.includes(gene.rgdId);
-  }
-
   /**
    * Returns the "main" gene that belongs to this GeneLabel
    */

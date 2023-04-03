@@ -8,6 +8,8 @@ import SyntenySection from "./SyntenySection";
 import { SelectedRegion } from "./BackboneSelection";
 import { GenomicSectionFactory } from "./GenomicSectionFactory";
 import DatatrackSet from "./DatatrackSet";
+import { mergeGeneLabels } from "@/utils/GeneLabelMerger";
+import Gene from "./Gene";
 
 const LEVEL_2_WIDTH_MULTIPLIER = 0.75;
 
@@ -49,6 +51,23 @@ export default class SyntenyRegionSet extends GenomicSet
     this.setRegionXPositionsBasedOnOrder();
     this.createTitleLabels();
     this.sortBasePairLabels();
+    
+    console.time(`Process Gene Labels`);
+    this.processGeneLabelsInAllRegions();
+    console.timeEnd(`Process Gene Labels`);
+  }
+
+  public processGeneLabelsInAllRegions()
+  {
+    // Gather all gene labels across the gene datatracks belonging to this SyntenyRegionSet
+    const geneLabels: GeneLabel[] = [];
+    const genes: Gene[] = [];
+    this.regions.forEach(r => {
+      geneLabels.push(...r.geneDatatrackLabels);
+      genes.push(...r.genes);
+    });
+
+    mergeGeneLabels(geneLabels, genes);
   }
 
   /**
