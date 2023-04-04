@@ -95,6 +95,7 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
     if (!inSelectMode) return;
 
     inSelectMode = false;
+    const toastCount = store.state.selectionToastCount;
 
     if (startDetailedSelectionY.value != null && stopDetailedSelectionY.value != null && store.state.detailedBasePairRange)
     {
@@ -109,6 +110,7 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
           + store.state.detailedBasePairRange.start;
 
       console.log(`Requesting zoom to (${basePairStart}, ${basePairStop}) from Y:(${startDetailedSelectionY.value}, ${stopDetailedSelectionY.value})`);
+      store.dispatch('setSelectionToastCount', toastCount + 1);
       store.dispatch('setDetailedBasePairRequest', { start: basePairStart, stop: basePairStop });
       // store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: basePairStop });
     }
