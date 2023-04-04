@@ -432,7 +432,6 @@ const updateDetailsPanel = async () => {
   detailedSyntenySets.value = await createSyntenicRegionSets(
       props.syntenyTree,
       store.state.comparativeSpecies,
-      backboneChromosome,
       detailedBasePairRange.start,
       detailedBasePairRange.stop,
   );
