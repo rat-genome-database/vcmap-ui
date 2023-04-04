@@ -219,8 +219,12 @@ onMounted(async () => {
     selectionStop = Math.min(store.state.stopPos, store.state.chromosome.seqLength);
   }
 
-  // Query synteny at threshold determined by selected base pair range (for detailed panel)
-  await queryAndProcessSyntenyForBasePairRange(store.state.chromosome, selectionStart, selectionStop);
+  // If the selection range is different than the entire chromosome, re-query for the detailed panel
+  if (selectionStart !== 0 || selectionStop !== store.state.chromosome.seqLength)
+  {
+    // Query synteny at threshold determined by selected base pair range (for detailed panel)
+    await queryAndProcessSyntenyForBasePairRange(store.state.chromosome, selectionStart, selectionStop);
+  }
 
   // Kick off the OverviewPanel load
   store.dispatch('setConfigurationLoaded', true);
@@ -413,6 +417,7 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
 
 async function queryAndProcessSyntenyForBasePairRange(backboneChromosome: Chromosome, start: number, stop: number)
 {
+  $log.debug(`Querying for specific base pair range: ${start} - ${stop}`);
   const slowAPI = setTimeout(() => {
     console.log('API is taking longer than usual to respond...')
     showToast('warn', 'Loading Impact', 'API is taking a while to respond, please be patient', 3000);
