@@ -10,6 +10,8 @@ import { GenomicSectionFactory } from '@/models/GenomicSectionFactory';
 import Block from "@/models/Block";
 import {useLogger} from "vue-logger-plugin";
 import { getThreshold } from './Threshold';
+import { RenderType } from '@/models/GenomicSection';
+import { Orientation } from '@/models/SyntenySection';
 
 // FIXME: I don't think we can use the logger here...
 const $log = useLogger();
@@ -17,9 +19,17 @@ const $log = useLogger();
 /**
  * Create the off-backbone visual elements representing the large level 1 synteny
  * blocks.
+ * 
  * @param syntenyData
+ *   The reactive ref to the Main prop that stores our comparative genomic data
+ *     we will use to build the off-backbone representations.
  * @param comparativeSpecies
+ *   List of the comparative species, in the order we want the Datatracks created.
  * @param backboneChr
+ *   The backbone chromosome.
+ * 
+ * @returns
+ *   SyntenyRegionSets representing the off-backbone synteny data in the overview panel
  */
 export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, Block[]>, comparativeSpecies: Species[],
     backboneChr: Chromosome): Promise<SyntenyRegionSet[]>
@@ -37,7 +47,7 @@ export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, 
     for (let blockIdx = 0; blockIdx < blocks.length; blockIdx++)
     {
       const blockInfo = blocks[blockIdx];
-      const blockGaps = blockInfo.gaps;
+      //const blockGaps = blockInfo.gaps;
       const blockChrStr = blockInfo.chromosome.chromosome;
 
 
@@ -74,7 +84,7 @@ export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, 
 
       processedSyntenicRegions.push(currSyntenicRegion);
     }
-    syntenyRegionSets.push(new SyntenyRegionSet(currSpecies.name, currMapName, processedSyntenicRegions, setOrder, 'overview', []));
+    syntenyRegionSets.push(new SyntenyRegionSet(currSpecies.name, currMapName, processedSyntenicRegions, setOrder, 'overview'));
     setOrder++;
   });
 
@@ -91,8 +101,6 @@ export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, 
  *     we will use to build the off-backbone representations.
  * @param comparativeSpecies
  *     List of the comparative species, in the order we want the Datatracks created.
- * @param backboneChr
- *     The backbone chromosome.
  * @param backboneStart
  *     The start of the visible range (in the backbone basepair coordinate scale).
  * @param backboneStop
@@ -102,7 +110,7 @@ export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, 
  *     The processed SyntenicRegionSets for each species.
  */
 export async function createSyntenicRegionSets(syntenyData: Map<number, Block[]>, comparativeSpecies: Species[],
-    backboneChr: Chromosome, backboneStart: number, backboneStop: number): Promise<SyntenyRegionSet[]>
+  backboneStart: number, backboneStop: number): Promise<SyntenyRegionSet[]>
 {
   const syntenyRegionSets: SyntenyRegionSet[] = [];
 
@@ -122,7 +130,7 @@ export async function createSyntenicRegionSets(syntenyData: Map<number, Block[]>
       }
 
       const syntenyRegionSet = syntenicSectionBuilder(speciesSyntenyData, species, pos,
-          backboneChr, backboneStart, backboneStop, 'detailed');
+          backboneStart, backboneStop, 'detailed');
 
       console.log(`Completed build of Synteny for ${syntenyRegionSet?.mapName}, with ${syntenyRegionSet?.regions.length} regions`);
 
@@ -137,16 +145,25 @@ export async function createSyntenicRegionSets(syntenyData: Map<number, Block[]>
 
 
 /**
- * Builds SyntenySections for blocks and gaps, and initiates processing for genes per block/section
+ * Builds SyntenyRegions made up of SyntenySections (blocks/gaps) and DatatrackSections (genes, etc)
  * 
- * TODO DOCUMENTATION
+ * @param speciesSyntenyData
+ *   An array of synteny Blocks belonging to a particular species
+ * @param species
+ *   The comparative Species model
+ * @param setOrder
+ *   The position that this list of SyntenyRegions will hold in the panel (1 is first SyntenyRegionSet, 2 is the 2nd, etc)
+ * @param viewportStart
+ *   The backbone start position of the viewport (otherwise known as the overview or detailed panel)
+ * @param viewportStop
+ *   The backbone stop position of the viewport (otherwise known as the overview or detailed panel)
  * @param renderType
  *   The type of RegionSet to create (overview or detailed).
  * @returns
- *   A RegionSet that displays this Species data for the specified backbone window.
+ *   The renderable version of speciesSyntenyData represented as an array of type SyntenyRegion[]
  */
 function syntenicSectionBuilder(speciesSyntenyData: Block[], species: Species, setOrder: number,
-    backboneChr: Chromosome, viewportStart: number,  viewportStop: number, renderType: 'overview' | 'detailed')
+    viewportStart: number,  viewportStop: number, renderType: RenderType)
 {
   const processedSyntenicRegions: SyntenyRegion[] = [];
 
@@ -198,11 +215,10 @@ console.time('createSyntenySectionAndRegion');
 console.timeEnd('createSyntenySectionAndRegion');
 
     // Step 2: Split the gapless Block into multiple GenomicSections based on gaps.
-    //   Only do this for the region of the
-// console.time("splitBlockWithGaps");
-    // FIXME: Handle Gaps w/o precalculated backbone coordinates
-    //currSyntenicRegion.splitBlockWithGaps(factory, blockGaps);
-// console.timeEnd("splitBlockWithGaps");
+console.time("splitBlockWithGaps");
+    console.log(`Splitting block w/ ${blockGaps.length} gaps`);
+    currSyntenicRegion.splitBlockWithGaps(factory, blockGaps);
+console.timeEnd("splitBlockWithGaps");
 
 
     // Step 3: For each (now processed) block, create a SyntenySection for each gene
@@ -228,7 +244,7 @@ let timerLabel = `  syntenicDataTrackBuilder(${visibleGenes.length})`;
 console.time(timerLabel);
       // const processedGeneInfo = {genomicData: [], orthologLines: [], geneIds: []};
 // console.log('Visible Gene list: ', visibleGenes);
-      const processedGeneInfo = syntenicDatatrackBuilder(factory, visibleGenes, currSyntenicRegion);
+      const processedGeneInfo = syntenicDatatrackBuilder(factory, visibleGenes, blockInfo.orientation);
 // FIXME: I have a theory that the "Gene" object used to create the GeneDataTrack may be too heavy and not need references
 //   for things like the Block it is owned by. Would like to explore this next potentially...
 console.timeEnd(timerLabel);
@@ -272,16 +288,21 @@ console.timeEnd("createSyntenyRegionSet");
 }
 
 
-//NOTE: Generalize away from genes and make more generic
+// TODO: Generalize away from genes and make more generic (can we build sections for both genes and variants using this method?)
 /**
  * Builds DatatrackSections for genomic data passed (such as genes) for a given block.
  *
- * TODO: DOCUMENTATION
+ * @param factory
+ *   GenomicSectionFactory to be used for generating the DatatrackSections
+ * @param genomicData
+ *   Array of Genes that will be converted to DatatrackSections
+ * @param orientation
+ *   Orientation of the block that the gene belongs to
  *
  * @returns
  *   List of DatatrackSections mapped for the given block.
  */
-function syntenicDatatrackBuilder(factory: GenomicSectionFactory, genomicData: Gene[], syntenyRegion: SyntenyRegion)
+function syntenicDatatrackBuilder(factory: GenomicSectionFactory, genomicData: Gene[], orientation: Orientation)
 {
   // For each gene, build a GeneDatatrackSection element
   const processedGenomicData: GeneDatatrack[] = [];
@@ -301,8 +322,8 @@ createStart = performance.now();
     // Create DatatrackSection for each gene (account for inversion in start/stops)
     const geneDatatrackSection = factory.createGeneDatatrackSection({
       gene: genomicElement,
-      start: (syntenyRegion.gaplessBlock.isInverted) ? genomicElement.stop : genomicElement.start,
-      stop: (syntenyRegion.gaplessBlock.isInverted) ? genomicElement.start : genomicElement.stop,
+      start: (orientation === '-') ? genomicElement.stop : genomicElement.start,
+      stop: (orientation === '-') ? genomicElement.start : genomicElement.stop,
       backboneAlignment: {
         start: genomicElement.backboneStart,
         stop: genomicElement.backboneStop
@@ -317,9 +338,6 @@ pushTotal += (performance.now() - pushStart);
 
 console.debug(`    Create total: ${createTotal}`);
 console.debug(`    Push total: ${pushTotal}`);
-
-  // TODO: We might need to save all genes on the SyntenyRegion so that they can later be used when processing gene labels...
-  //       (see how backbone gene labels are processed)
 
   return processedGenomicData;
 }

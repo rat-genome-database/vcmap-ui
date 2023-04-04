@@ -39,7 +39,7 @@ export default class SyntenyRegionSet extends GenomicSet
   //speciesSyntenyData: SpeciesSyntenyData; // Raw synteny data for the species represented by this SyntenyRegionSet
   //datatrackLabels: Label[] = []; // array of Label objects associated with the datatrackSections in every SyntenyRegion
 
-  constructor(speciesName: string, mapName: string, regions: SyntenyRegion[], order: number, renderType: 'overview' | 'detailed', geneLabels?: Label[])
+  constructor(speciesName: string, mapName: string, regions: SyntenyRegion[], order: number, renderType: 'overview' | 'detailed')
   {
     super(speciesName, mapName);
     this.regions = regions;
