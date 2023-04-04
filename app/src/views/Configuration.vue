@@ -271,6 +271,7 @@ import { Formatter } from '@/utils/Formatter';
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import { key } from '@/store';
 import { ConfigurationMode } from '@/utils/Configuration';
+import { sortGeneMatches } from '@/utils/DataPanelHelpers';
 
 interface ComparativeSpeciesSelection
 {
@@ -362,8 +363,12 @@ async function searchGene(event: {query: string})
   isLoadingGene.value = true;
   try
   {
-    const matches = await GeneApi.getGenesBySymbol(backboneSpecies.value.activeMap.key, backboneSpecies.value.name, event.query);
-    geneSuggestions.value = matches;
+    const searchKey = event.query;
+    const matches = await GeneApi.getGenesBySymbol(backboneSpecies.value.activeMap.key, backboneSpecies.value.name, searchKey);
+    if (matches.length > 0)
+    {
+      geneSuggestions.value = sortGeneMatches(searchKey, matches);
+    }
   }
   catch (err: any)
   {
