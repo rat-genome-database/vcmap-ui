@@ -806,7 +806,12 @@ window.addEventListener('keyup', function(event) {
 });
 
 const showToast = (severity: string, title: string, details: string, duration: number) => {
-  toast.add({severity: severity, summary: title, detail: details, life: duration });
+  const toastCount = store.state.selectionToastCount;
+  
+  if (toastCount % 10 == 0)
+  {
+    toast.add({severity: severity, summary: title, detail: details, life: duration });
+  }
 }
 
 function logPerformanceReport(title: string, totalTimeMillis: number, detailedTimeReportObject: { [key:string]: number} )

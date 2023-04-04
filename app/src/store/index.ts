@@ -38,6 +38,8 @@ export interface VCMapState
 
   /* These data structures have the potential to be pretty large */
   loadedGenes: Map<number, LoadedGene> | null;
+
+  selectionToastCount: number;
 }
 
 const vuexLocal = new VuexPersistence<VCMapState>({
@@ -83,6 +85,7 @@ export default createStore({
 
     /* These data structures have the potential to be pretty large */
     loadedGenes: null,
+    selectionToastCount: 0,
   }),
 
   mutations: {
@@ -140,6 +143,9 @@ export default createStore({
     isOverviewPanelUpdating(state: VCMapState, isUpdating: boolean) {
       state.isOverviewPanelUpdating = isUpdating;
     },
+    selectionToastCount(state: VCMapState, count: number) {
+      state.selectionToastCount = count;
+    }
   },
 
   actions: {
@@ -195,6 +201,7 @@ export default createStore({
       context.commit('selectedBackboneRegion', null);
       context.commit('detailedBasePairRange', { start: 0, stop: 0 });
       context.commit('configurationLoaded', null);
+      context.commit('selectionToastCount', 0);
     },
     clearBackboneSelection(context: ActionContext<VCMapState, VCMapState>) {
       context.commit('selectedBackboneRegion', null);
@@ -222,6 +229,9 @@ export default createStore({
     setBackboneOrthologData(context: ActionContext<VCMapState, VCMapState>, orthologs: any) {
       context.commit('backboneOrthologs', orthologs);
     },
+    setSelectionToastCount(context: ActionContext<VCMapState, VCMapState>, count: number) {
+      context.commit('selectionToastCount', count);
+    }
   },
 
   getters: {
