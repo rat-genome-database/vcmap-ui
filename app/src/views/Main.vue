@@ -19,6 +19,7 @@
     :message="dialogMessage"
     :theme="dialogTheme"
     :show-back-button="showDialogBackButton"
+    :on-confirm-callback="onProceedWithErrors"
   />
 </template>
 
@@ -32,11 +33,10 @@ import {onMounted, ref, shallowRef, triggerRef, watch} from 'vue';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 import Gene from "@/models/Gene";
-import Block, {Gap} from "@/models/Block";
+import Block from "@/models/Block";
 import SyntenyApi, {SpeciesSyntenyData} from "@/api/SyntenyApi";
 import { PANEL_SVG_START, PANEL_SVG_STOP} from '@/utils/SVGConstants';
 import Chromosome from "@/models/Chromosome";
-import router from "@/router";
 import GeneApi from "@/api/GeneApi";
 import {useLogger} from "vue-logger-plugin";
 import BackboneSelection from "@/models/BackboneSelection";
@@ -57,6 +57,7 @@ const toast = useToast();
 const { showDialog, dialogHeader, dialogMessage, showDialogBackButton, dialogTheme, onError } = useDialog();
 
 const isLoading = ref(false);
+const proceedAfterError = ref(false);
 
 // Our synteny tree keyed by MapId
 // TODO: Consider adding a map for mapKey -> Species
@@ -112,7 +113,38 @@ const onInspectPressed = () => {
  * mounted, it is safe to clear out our old data structures
  * (Lifecycle hook)
  */
-onMounted(async () => {
+onMounted(initVCMapProcessing);
+
+/**
+ * Watch for requested navigation operations (zoom in/out, navigate up/down stream).
+ */
+watch(() => store.state.detailedBasePairRequest, async () => {
+  isLoading.value = true;
+  // Grab blocks and genes with using a threshold of approximately .25 of a pixel
+  if (store.state.detailedBasePairRequest && store.state.chromosome)
+  {
+    $log.debug(`Detailed Base Pair range change request detected (${store.state.detailedBasePairRequest?.start},
+       ${store.state.detailedBasePairRequest?.stop}).`);
+
+    await queryAndProcessSyntenyForBasePairRange(store.state.chromosome, store.state.detailedBasePairRequest.start, store.state.detailedBasePairRequest.stop);
+
+    triggerDetailedPanelProcessing(store.state.chromosome, store.state.detailedBasePairRequest.start, store.state.detailedBasePairRequest.stop);
+    // Data processing done, ready to complete request
+    store.dispatch('setDetailedBasePairRequest', null);
+  }
+  isLoading.value = false;
+});
+
+/**
+ * Start all processing based on the user's configuration.
+ * 
+ * + Query for synteny and genes
+ * + Create memory models for our comparative maps
+ * + Handle any errors that may come up
+ * + Trigger the conversion of our memory models into their renderable representations (handled by SVGViewbox.vue)
+ */
+async function initVCMapProcessing()
+{
   isLoading.value = true;
 
   $log.debug('Creating memory models for our Comparative Map view');
@@ -175,16 +207,19 @@ onMounted(async () => {
   {
     $log.error('SpeciesSyntenyDataArray is undefined after querying for syntenic regions');
     isLoading.value = false;
+    clearTimeout(slowAPI);
     return;
   }
 
-  if (!checkSyntenyResultsOnComparativeSpecies(speciesSyntenyDataArray))
+  if (!proceedAfterError.value && someSyntenyResultsAreMissing(speciesSyntenyDataArray))
   {
     isLoading.value = false;
+    clearTimeout(slowAPI);
     return;
   }
-  clearTimeout(slowAPI);
 
+  clearTimeout(slowAPI);
+  
   //TODO: Add message for variant impact on processing time
   const slowProcessing = setTimeout(() => {
     let message = '';
@@ -233,27 +268,7 @@ onMounted(async () => {
 
   clearTimeout(slowProcessing);
   isLoading.value = false;
-});
-
-/**
- * Watch for requested navigation operations (zoom in/out, navigate up/down stream).
- */
-watch(() => store.state.detailedBasePairRequest, async () => {
-  isLoading.value = true;
-  // Grab blocks and genes with using a threshold of approximately .25 of a pixel
-  if (store.state.detailedBasePairRequest && store.state.chromosome)
-  {
-    $log.debug(`Detailed Base Pair range change request detected (${store.state.detailedBasePairRequest?.start},
-       ${store.state.detailedBasePairRequest?.stop}).`);
-
-    await queryAndProcessSyntenyForBasePairRange(store.state.chromosome, store.state.detailedBasePairRequest.start, store.state.detailedBasePairRequest.stop);
-
-    triggerDetailedPanelProcessing(store.state.chromosome, store.state.detailedBasePairRequest.start, store.state.detailedBasePairRequest.stop);
-    // Data processing done, ready to complete request
-    store.dispatch('setDetailedBasePairRequest', null);
-  }
-  isLoading.value = false;
-});
+}
 
 /**
  * Process a synteny block response (with genes, gaps, and orthologs) from the API.
@@ -504,26 +519,35 @@ function showPartialResultsDialog(speciesWithMissingSynteny: SpeciesSyntenyData[
 /**
  * Checks if synteny was found for all off-backbone species/maps
  * 
- * @param syntenySets
- * @returns {boolean} true if results were found for all species/maps, false if not
+ * @param speciesSyntenyDataArray
+ *   Data returned from Synteny API call
+ *   
+ * @returns
+ *   true if some synteny results are missing (error), false if synteny was returned for all species
  */
-function checkSyntenyResultsOnComparativeSpecies(speciesSyntenyDataArray: SpeciesSyntenyData[])
+function someSyntenyResultsAreMissing(speciesSyntenyDataArray: SpeciesSyntenyData[]): boolean
 {
   const resultsFound = speciesSyntenyDataArray.some(syntenyData => syntenyData.regionData.length > 0);
   if (!resultsFound)
   {
     showNoResultsDialog();
-    return false;
+    return true;
   }
   else if (speciesSyntenyDataArray.some(syntenyData => syntenyData.regionData.length === 0))
   {
     // If only some results were found -- notify user about which ones produced no results
     const speciesWithMissingSyntenyData = speciesSyntenyDataArray.filter(syntenyData => syntenyData.regionData.length === 0);
     showPartialResultsDialog(speciesWithMissingSyntenyData);
-    return false;
+    return true;
   }
 
-  return true;
+  return false;
+}
+
+function onProceedWithErrors()
+{
+  proceedAfterError.value = true;
+  initVCMapProcessing();
 }
 
 function showToast(severity: string, title: string, details: string, duration: number)
