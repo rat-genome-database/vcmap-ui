@@ -211,7 +211,8 @@ const searchGene = (event: {query: string}) => {
       matches.push(gene);
   });
 
-  matches = sortGeneMatches(searchedGene, matches);
+  const searchKey = searchedGene.value;
+  matches = sortGeneMatches(searchKey, matches);
   geneSuggestions.value = matches;
 };
 
