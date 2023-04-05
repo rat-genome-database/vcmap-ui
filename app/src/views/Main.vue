@@ -396,7 +396,7 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
           // New gene
           // TODO: Not the best conditional here. A very large targetBlock that is just barely inside
           //  the viewport will return "true" and cause us to do some more intensive processing on gene
-          //  positions. See if we can get a bit more precise here...
+          //  positions than perhaps we should. See if we can get a bit more precise here...
           isGenomicDataInViewport(targetBlock, backboneStart, backboneStop)
             ? processAlignmentsOfGeneInsideOfViewport(gene, targetBlock)
             : processAlignmentsOfGeneOutsideOfViewport(gene, targetBlock);
@@ -466,12 +466,12 @@ function processAlignmentsOfGeneOutsideOfViewport(gene: Gene, targetBlock: Block
 function processAlignmentsOfGeneInsideOfViewport(gene: Gene, targetBlock: Block)
 {
   // TODO Test logs for specific gene
-  const testGene = 'Prkcq';
-  if (gene.symbol === testGene)
-  {
-    console.log(`${testGene}`, gene, targetBlock.gaps.length);
-    console.log(targetBlock.gaps.map(g => ({ start: g.start, backboneStart: g.backboneStart })));
-  }
+  // const testGene = 'Prkcq';
+  // if (gene.symbol === testGene)
+  // {
+  //   console.log(`${testGene}`, gene, targetBlock.gaps.length);
+  //   console.log(targetBlock.gaps.map(g => ({ start: g.start, backboneStart: g.backboneStart })));
+  // }
   //
   if (targetBlock.gaps.length === 0)
   {
@@ -489,8 +489,8 @@ function processAlignmentsOfGeneInsideOfViewport(gene: Gene, targetBlock: Block)
   { 
     const gap = targetBlock.gaps[i];
     // TODO TEST
-    if (gene.symbol === testGene)
-      console.log(` Checking gap`, gap);
+    // if (gene.symbol === testGene)
+    //   console.log(` Checking gap`, gap);
     //
     if (!startingSection)
     {
@@ -519,8 +519,8 @@ function processAlignmentsOfGeneInsideOfViewport(gene: Gene, targetBlock: Block)
       }
 
       // TODO TEST
-      if (gene.symbol === testGene && startingSection)
-        console.log(` StartingSection FOUND`, startingSection);
+      // if (gene.symbol === testGene && startingSection)
+      //   console.log(` StartingSection FOUND`, startingSection);
       //
     }
     
@@ -553,8 +553,8 @@ function processAlignmentsOfGeneInsideOfViewport(gene: Gene, targetBlock: Block)
       }
 
       // TODO TEST
-      if (gene.symbol === testGene && endingSection)
-        console.log(` EndingSection FOUND`, endingSection);
+      // if (gene.symbol === testGene && endingSection)
+      //   console.log(` EndingSection FOUND`, endingSection);
       //
     }
 
@@ -570,8 +570,8 @@ function processAlignmentsOfGeneInsideOfViewport(gene: Gene, targetBlock: Block)
       };
 
       // TODO TEST
-      if (gene.symbol === testGene)
-        console.log(` Using LastSection`, lastSection);
+      // if (gene.symbol === testGene)
+      //   console.log(` Using LastSection`, lastSection);
       //
 
       if (!startingSection) startingSection = lastSection;
@@ -583,8 +583,8 @@ function processAlignmentsOfGeneInsideOfViewport(gene: Gene, targetBlock: Block)
     if (startingSection && endingSection)
     {
       // TODO TEST
-      if (gene.symbol === testGene)
-        console.log(` DONE finding sections for ${testGene}`);
+      // if (gene.symbol === testGene)
+      //   console.log(` DONE finding sections for ${testGene}`);
       //
       break;
     }
@@ -604,8 +604,8 @@ function processAlignmentsOfGeneInsideOfViewport(gene: Gene, targetBlock: Block)
   const startingSectionRatio = Math.abs(startingSection.backboneStop - startingSection.backboneStart) / Math.abs(startingSection.stop - startingSection.start);
   const endingSectionRatio = Math.abs(endingSection.backboneStop - endingSection.backboneStart) / Math.abs(endingSection.stop - endingSection.start);
   // TODO:
-  if (gene.symbol === testGene)
-    console.log(`Ratios`, startingSectionRatio, endingSectionRatio);
+  // if (gene.symbol === testGene)
+  //   console.log(`Ratios`, startingSectionRatio, endingSectionRatio);
   //
   if (targetBlock.orientation === '+')
   {
@@ -619,11 +619,11 @@ function processAlignmentsOfGeneInsideOfViewport(gene: Gene, targetBlock: Block)
     // Reverse oriented block
     // TODO: Some edge cases might not be handled properly with this simplification
     // TODO:
-    if (gene.symbol === testGene)
-    {
-      console.log(` Calculation backboneStart`, endingSection.backboneStart, endingSection.stop, gene.stop);
-      console.log(` Calculation backboneStop`, startingSection.backboneStart, startingSection.stop, gene.start);
-    }
+    // if (gene.symbol === testGene)
+    // {
+    //   console.log(` Calculation backboneStart`, endingSection.backboneStart, endingSection.stop, gene.stop);
+    //   console.log(` Calculation backboneStop`, startingSection.backboneStart, startingSection.stop, gene.start);
+    // }
     //
     gene.backboneStart = Math.floor(endingSection.backboneStart + (endingSection.stop - gene.stop) * endingSectionRatio);
     gene.backboneStop = Math.floor(startingSection.backboneStart + (startingSection.stop - gene.start) * startingSectionRatio);
