@@ -315,6 +315,7 @@ async function attachToProgressLoader(storeLoadingActionName: string, func: () =
 }
 
 onMounted(async () => {
+  // TODO: Clear out selected data on mount?
   // Clear any prior selections or set as the searched gene
   // const gene = store.state.gene;
   // store.dispatch('setSelectedData', gene ? [new SelectedData(gene.clone(), 'Gene')] : null);
