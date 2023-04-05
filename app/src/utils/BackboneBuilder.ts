@@ -6,7 +6,7 @@ import DatatrackSection from "@/models/DatatrackSection";
 import BackboneSet from "@/models/BackboneSet";
 import { RenderType } from "@/models/GenomicSection";
 import { GenomicSectionFactory } from "@/models/GenomicSectionFactory";
-import { getThreshold } from "./Threshold";
+import { getThreshold } from "./Shared";
 
 export interface ProcessedGenomicData
 {

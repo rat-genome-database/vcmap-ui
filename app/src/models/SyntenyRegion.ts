@@ -8,6 +8,7 @@ import GenomicSection from './GenomicSection';
 import { GenomicSectionFactory } from './GenomicSectionFactory';
 import { Gap } from "@/models/Block";
 import Gene from './Gene';
+import { isGenomicDataInViewport } from '@/utils/Shared';
 
 interface SyntenyRegionParams
 {
@@ -99,14 +100,18 @@ export default class SyntenyRegion
   // SyntenyRegion objects a bit lighter...
   public splitBlockWithGaps(factory: GenomicSectionFactory, gaps: Gap[]) // TODO (safe to remove)?:, threshold: number)
   {
-    // Go through gaps in order of backbone position
+    // Filter out any gaps that are not in the viewport (detailed panel) and sort gaps in order of backbone position
     // NOTE: This is really important for inverted blocks. The code below is
     //  is written in a way that expects the gaps to go in order of how they 
     //  align against the backbone
     console.time(`Sort gaps for splitBlockWithGaps`);
-    const sortedGaps = [...gaps].sort((a, b) => a.backboneStart - b.backboneStart);
+    const sortedGaps = [...gaps]
+      .filter(g => isGenomicDataInViewport(g, this.gaplessBlock.windowBasePairRange.start, this.gaplessBlock.windowBasePairRange.stop))
+      .sort((a, b) => a.backboneStart - b.backboneStart);
     console.timeEnd(`Sort gaps for splitBlockWithGaps`);
-    
+
+    console.log(` splitBlockWithGaps: filtered ${gaps.length} down gaps to ${sortedGaps.length}`);
+
     // Clear old blocks and gaps in this region without losing reactivity
     //this.syntenyBlocks.splice(0, this.syntenyBlocks.length);
     //this.syntenyGaps.splice(0, this.syntenyGaps.length);
