@@ -410,7 +410,6 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
         else if (gene.block && targetBlock && existingBlockGapCountChanged 
           && isGenomicDataInViewport(targetBlock, backboneStart, backboneStop)) // TODO: See above TODO referring to this conditional
         {
-          console.log(` Gap count changed! ${gene.symbol}`);
           // Existing gene that is in view and the gap count changed
           processAlignmentsOfGeneInsideOfViewport(gene, targetBlock);
         }
@@ -616,8 +615,6 @@ function processAlignmentsOfGeneInsideOfViewport(gene: Gene, targetBlock: Block)
   }
   else
   {
-    // Reverse oriented block
-    // TODO: Some edge cases might not be handled properly with this simplification
     // TODO:
     // if (gene.symbol === testGene)
     // {
@@ -625,6 +622,9 @@ function processAlignmentsOfGeneInsideOfViewport(gene: Gene, targetBlock: Block)
     //   console.log(` Calculation backboneStop`, startingSection.backboneStart, startingSection.stop, gene.start);
     // }
     //
+
+    // Reverse oriented block
+    // TODO: Some edge cases might not be handled properly with this simplification
     gene.backboneStart = Math.floor(endingSection.backboneStart + (endingSection.stop - gene.stop) * endingSectionRatio);
     gene.backboneStop = Math.floor(startingSection.backboneStart + (startingSection.stop - gene.start) * startingSectionRatio);
   }

@@ -252,6 +252,7 @@ import Block from "@/models/Block";
 import { getNewSelectedData } from '@/utils/DataPanelHelpers';
 import { GeneLabel } from '@/models/Label';
 import SyntenyRegion from '@/models/SyntenyRegion';
+import { createOrthologLines } from '@/utils/OrthologHandler';
 const LOAD_BY_GENE_VISIBLE_SIZE_MULTIPLIER = 6;
 const NAV_SHIFT_PERCENT = 0.2;
 
@@ -465,11 +466,13 @@ const updateDetailsPanel = async () => {
       detailedBasePairRange.start,
       detailedBasePairRange.stop,
   );
-  // TODO: Remove if able, processGeneLabels() now called from SyntenyRegionSet contstructor
-  // detailedSyntenySets.value.forEach(set => {
-  //   set.processGeneLabels();
-  // });
   timeSyntenyTracks = Date.now() - syntenyTracksStart;
+
+  //
+  // Create ortholog lines
+  // NOTE: Casting the type here since .value can't "unpack" the private methods on the object and thus,
+  //  doesn't see it as equaling the SyntenyRegionSet type
+  createOrthologLines(props.geneList, backboneSpecies.activeMap.key, detailedBackboneSet.value, (detailedSyntenySets.value as SyntenyRegionSet[]));
 
   // Report timing data
   const timeDetailedUpdate= Date.now() - detailedUpdateStart;
