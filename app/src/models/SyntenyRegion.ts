@@ -8,6 +8,7 @@ import GenomicSection from './GenomicSection';
 import { GenomicSectionFactory } from './GenomicSectionFactory';
 import { Gap } from "@/models/Block";
 import Gene from './Gene';
+import { isGenomicDataInViewport } from '@/utils/Shared';
 
 interface SyntenyRegionParams
 {
@@ -99,12 +100,27 @@ export default class SyntenyRegion
   // SyntenyRegion objects a bit lighter...
   public splitBlockWithGaps(factory: GenomicSectionFactory, gaps: Gap[]) // TODO (safe to remove)?:, threshold: number)
   {
+    // Filter out any gaps that are not in the viewport (detailed panel) and sort gaps in order of backbone position
+    // NOTE: This is really important for inverted blocks. The code below is
+    //  is written in a way that expects the gaps to go in order of how they 
+    //  align against the backbone
+    console.time(`Sort gaps for splitBlockWithGaps`);
+    const sortedGaps = [...gaps]
+      .filter(g => isGenomicDataInViewport(g, this.gaplessBlock.windowBasePairRange.start, this.gaplessBlock.windowBasePairRange.stop))
+      .sort((a, b) => a.backboneStart - b.backboneStart);
+    console.timeEnd(`Sort gaps for splitBlockWithGaps`);
+
+    console.log(` splitBlockWithGaps: filtered ${gaps.length} down gaps to ${sortedGaps.length}`);
+
     // Clear old blocks and gaps in this region without losing reactivity
-    this.syntenyBlocks.splice(0, this.syntenyBlocks.length);
-    this.syntenyGaps.splice(0, this.syntenyGaps.length);
+    //this.syntenyBlocks.splice(0, this.syntenyBlocks.length);
+    //this.syntenyGaps.splice(0, this.syntenyGaps.length);
+    this.syntenyBlocks = [];
+    this.syntenyGaps = [];
 
     const block = this.gaplessBlock;
 
+    // TODO: Should we start rendering individual gap sections again? Pros/cons?
     const gapsLine = factory.createSyntenySection({
       start: block.speciesStart,
       stop: block.speciesStop,
@@ -127,7 +143,7 @@ export default class SyntenyRegion
     //   });
     // }
 
-    if (gaps.length === 0)
+    if (sortedGaps.length === 0)
     {
       // No gaps to split block with...
       this.syntenyBlocks.push(block);
@@ -137,7 +153,7 @@ export default class SyntenyRegion
     // FIXME: How to handle any Gap that hasn't set its backbone positions yet?
     let lastGapBackboneStop = 0;
     let lastGapSpeciesStop = 0;
-    gaps.forEach((gap, index) => {
+    sortedGaps.forEach((gap, index) => {
       const blockBackboneStart = block.backboneAlignment.start;
       const gapBackboneStart = gap.backboneStart;
     
@@ -207,7 +223,7 @@ export default class SyntenyRegion
     });
     
     // Check to see if the gapless block ends with a gap. If not, then create and process the last synteny block
-    const finalGap = gaps[gaps.length - 1];
+    const finalGap = sortedGaps[sortedGaps.length - 1];
     if (finalGap && finalGap.backboneStop < block.backboneAlignment.stop)
     {
       const blockSyntenicSection = factory.createSyntenySection({

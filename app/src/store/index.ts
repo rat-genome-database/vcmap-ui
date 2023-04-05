@@ -8,7 +8,7 @@ import SelectedData from '@/models/SelectedData';
 import { InjectionKey } from 'vue';
 import { createLogger } from 'vuex';
 import { GeneDatatrack, LoadedGene } from '@/models/DatatrackSection';
-import { ConfigurationMode } from '@/utils/Configuration';
+import { ConfigurationMode } from '@/utils/Types';
 
 export const key: InjectionKey<Store<VCMapState>> = Symbol();
 

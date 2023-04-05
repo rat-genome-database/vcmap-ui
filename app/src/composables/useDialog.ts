@@ -1,4 +1,4 @@
-import { DialogTheme } from '@/utils/Dialog';
+import { DialogTheme } from '@/utils/Types';
 import { ref } from 'vue';
 import { useLogger } from 'vue-logger-plugin';
 

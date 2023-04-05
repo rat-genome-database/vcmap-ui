@@ -165,22 +165,51 @@
     @click="handleBackboneVariantClick"
   />
   -->
-  <h2>Blocks</h2>
-  <template v-for="[mapKey, blocks] in props.syntenyTree" :key="mapKey">
-    <p>MapKey {{mapKey}}:</p>
-    <template v-for="(block, index) in blocks" :key="index">
-      <ul>
-        <b>{{ index }}</b>
-        <li>Chr{{ block.chromosome.chromosome }}: ({{ block.start }}, {{ block.stop }}) [{{ block.stop - block.start }}]</li>
-        <li>ChainLevel: {{ block.chainLevel }}</li>
-        <li>Backbone: ({{ block.backboneStart }}, {{ block.backboneStop }})</li>
-        <li>Genes: {{ block.genes.length }}</li>
-        <li>Gaps: {{ block.gaps.length }}</li>
-      </ul>
-    </template>
-  </template>
-  <h2>Genes</h2>
-  <p>{{ props.geneList.size }}</p>
+  <div class="grid p-d-flex">
+    <div class="col-12">
+      <h2>Debug</h2>
+    </div>
+    <div class="col-6">
+      <h3>Blocks</h3>
+      <template v-for="[mapKey, blocks] in props.syntenyTree" :key="mapKey">
+        <p>MapKey {{mapKey}}:</p>
+        <template v-for="(block, index) in blocks" :key="index">
+          <ul>
+            <b>{{ index }}</b>
+            <li>Chr{{ block.chromosome.chromosome }}: ({{ block.start }}, {{ block.stop }}) [{{ block.stop - block.start }}]</li>
+            <li>ChainLevel: {{ block.chainLevel }}</li>
+            <li>Backbone: ({{ block.backboneStart }}, {{ block.backboneStop }})</li>
+            <li>Genes: {{ block.genes.length }}</li>
+            <li>Gaps: {{ block.gaps.length }}</li>
+          </ul>
+        </template>
+      </template>
+      <h3>Genes</h3>
+      <p>{{ props.geneList.size }}</p>
+    </div>
+    <div class="col-6">
+      <h3>SyntenyRegions (Detailed Panel)</h3>
+      <template v-for="(set, index) in detailedSyntenySets" :key="index">
+        <p>Set {{index}} - {{ set.speciesName }} / {{ set.mapName }}</p>
+        <ul>
+          <li>Total Blocks: {{ set.regions.map(r => r.syntenyBlocks).flat().length }} (after splicing in gaps)</li>
+          <li>Total Gaps: {{ set.regions.map(r => r.syntenyGaps).flat().length }} (rendered as single lines per block)</li>
+        </ul>
+        <template v-for="(region, regionIndex) in set.regions" :key="regionIndex">
+          <ul>
+            <b>{{ regionIndex }}</b>
+            <li>Gapless block: Chr{{ region.gaplessBlock.chromosome }}: ({{ region.gaplessBlock.speciesStart }}, {{ region.gaplessBlock.speciesStop }}) [{{ region.gaplessBlock.length }}]</li>
+            <li>Blocks: {{ region.syntenyBlocks.length }}</li>
+            <li>Gaps: {{ region.syntenyGaps.length }}</li>
+            <li>Backbone: ({{ region.gaplessBlock.backboneAlignment.start }}, {{ region.gaplessBlock.backboneAlignment.stop }})</li>
+            <li>Chain Level: {{ region.gaplessBlock.chainLevel }}</li>
+            <li>Orientation: {{ region.gaplessBlock.orientation }}</li>
+          </ul>
+        </template>
+      </template>
+    </div>
+  </div>
+  
 </template>
 
 <script setup lang="ts">

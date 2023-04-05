@@ -2,6 +2,14 @@ import Chromosome from "@/models/Chromosome";
 import Gene from "@/models/Gene";
 import {SyntenyComponent} from "@/api/SyntenyApi";
 
+// Generic type to represent position of any genomic data
+export type GenomicPosition = {
+  start: number;
+  stop: number;
+  backboneStart: number;
+  backboneStop: number;
+};
+
 interface BlockParams
 {
   backbone: Chromosome;

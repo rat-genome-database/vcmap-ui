@@ -33,7 +33,7 @@ import {onMounted, ref, shallowRef, triggerRef, watch} from 'vue';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 import Gene from "@/models/Gene";
-import Block from "@/models/Block";
+import Block, { Gap, GenomicPosition } from "@/models/Block";
 import SyntenyApi, {SpeciesSyntenyData} from "@/api/SyntenyApi";
 import { PANEL_SVG_START, PANEL_SVG_STOP} from '@/utils/SVGConstants';
 import Chromosome from "@/models/Chromosome";
@@ -43,7 +43,7 @@ import BackboneSelection from "@/models/BackboneSelection";
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import useDialog from '@/composables/useDialog';
 import { backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError, noSyntenyFoundError } from '@/utils/VCMapErrors';
-import { getThreshold } from '@/utils/Threshold';
+import { isGenomicDataInViewport, getThreshold } from '@/utils/Shared';
 
 // TODO: Can we figure out a better way to handle blocks with a high chainlevel?
 const MAX_CHAINLEVEL = 2;
@@ -329,6 +329,7 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
             b.backboneStart == blockData.block.backboneStart && b.backboneStop == blockData.block.backboneStop);
       });
 
+      let existingBlockGapCountChanged = false;
       if (blockSearch.length == 0)
       {
         // Create a newly discovered block
@@ -357,6 +358,7 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
         // Use an existing block
         // Keep the reference to this block from our tree
         targetBlock = blockSearch[0];
+        existingBlockGapCountChanged = (targetBlock.gaps.length !== blockData.gaps.length);
 
         const timerLabel = `AddGapsExistingBlock(${targetBlock.gaps.length}, ${blockData.gaps.length})`;
         console.time(timerLabel);
@@ -377,6 +379,7 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
       }
 
       // Handle genes (we need to inspect all of them even in the case of a new block)
+      console.time(`ProcessGenesForBlock`);
       for (let geneIdx = 0, numGenes = blockData.genes.length; geneIdx < numGenes; geneIdx++) {
         // Use any existing genes if we have already loaded one
         const geneData = blockData.genes[geneIdx];
@@ -390,30 +393,13 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
         //   is a reasonable initial implementation.
         if (gene.block === null && targetBlock)
         {
-          // Calculate gene backbone position
-          // FIXME: USE surrounding gap backbone positions for a more accurate positioning!!
-          //   Because the API always sends us the gap backbone coords, we can be much more accurate
-          //   using the surrounding gaps (should be easy to identify because they are in sort order).
-          let blockRatio = Math.abs(targetBlock.backboneStop - targetBlock.backboneStart) / Math.abs(targetBlock.stop - targetBlock.start);
-          if (targetBlock.orientation == '+')
-          {
-            // Forward oriented block
-            // TODO: Some edge cases might not be handled properly with this simplification
-            gene.backboneStart = Math.floor(targetBlock.backboneStart + (gene.start - targetBlock.start) * blockRatio);
-            gene.backboneStop = Math.floor(targetBlock.backboneStart + (gene.stop - targetBlock.start) * blockRatio);
-          }
-          else
-          {
-            // Reverse oriented block
-            // TODO: Some edge cases might not be handled properly with this simplification
-            gene.backboneStart = Math.floor(targetBlock.backboneStart + (targetBlock.stop - gene.stop) * blockRatio);
-            gene.backboneStop = Math.floor(targetBlock.backboneStart + (targetBlock.stop - gene.start) * blockRatio);
-          }
-
-          // Ensure genes don't extend beyond the range of our block
-          // NOTE: This is very important for small block sections near break points
-          if (gene.backboneStart < targetBlock.backboneStart) gene.backboneStart = targetBlock.backboneStart;
-          if (gene.backboneStop > targetBlock.backboneStop) gene.backboneStop = targetBlock.backboneStop;
+          // New gene
+          // TODO: Not the best conditional here. A very large targetBlock that is just barely inside
+          //  the viewport will return "true" and cause us to do some more intensive processing on gene
+          //  positions. See if we can get a bit more precise here...
+          isGenomicDataInViewport(targetBlock, backboneStart, backboneStop)
+            ? processAlignmentsOfGeneInsideOfViewport(gene, targetBlock)
+            : processAlignmentsOfGeneOutsideOfViewport(gene, targetBlock);
 
           // This gene has no parent block -- assign to target block
           // console.log(`Gene ${gene.symbol} without parent block, assigning to block ${targetBlock.chromosome.chromosome} (${targetBlock.start}, ${targetBlock.stop})`);
@@ -421,13 +407,232 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
           // TODO: sort OR use addGene() approach here?
           targetBlock.genes.push(gene);
         }
+        else if (gene.block && targetBlock && existingBlockGapCountChanged 
+          && isGenomicDataInViewport(targetBlock, backboneStart, backboneStop)) // TODO: See above TODO referring to this conditional
+        {
+          console.log(` Gap count changed! ${gene.symbol}`);
+          // Existing gene that is in view and the gap count changed
+          processAlignmentsOfGeneInsideOfViewport(gene, targetBlock);
+        }
 
         // Add any new genes to our geneList (cross-referencing our Blocks)
         // TODO: sort OR use addGene() approach here?
         if (gene && !geneList.value.get(gene.rgdId)) geneList.value.set(gene.rgdId, gene);
       }
+      console.timeEnd(`ProcessGenesForBlock`);
     }
   }
+}
+
+/**
+ * Determines gene backbone alignments without taking gaps into account. This should be good enough
+ * to approximate the angle of ortholog lines as they go off screen.
+ * 
+ * @param gene 
+ * @param targetBlock 
+ */
+function processAlignmentsOfGeneOutsideOfViewport(gene: Gene, targetBlock: Block)
+{
+  // Calculate gene backbone position
+  let blockRatio = Math.abs(targetBlock.backboneStop - targetBlock.backboneStart) / Math.abs(targetBlock.stop - targetBlock.start);
+  if (targetBlock.orientation == '+')
+  {
+    // Forward oriented block
+    // TODO: Some edge cases might not be handled properly with this simplification
+    gene.backboneStart = Math.floor(targetBlock.backboneStart + (gene.start - targetBlock.start) * blockRatio);
+    gene.backboneStop = Math.floor(targetBlock.backboneStart + (gene.stop - targetBlock.start) * blockRatio);
+  }
+  else
+  {
+    // Reverse oriented block
+    // TODO: Some edge cases might not be handled properly with this simplification
+    gene.backboneStart = Math.floor(targetBlock.backboneStart + (targetBlock.stop - gene.stop) * blockRatio);
+    gene.backboneStop = Math.floor(targetBlock.backboneStart + (targetBlock.stop - gene.start) * blockRatio);
+  }
+
+  // Ensure genes don't extend beyond the range of our block
+  // NOTE: This is very important for small block sections near break points
+  if (gene.backboneStart < targetBlock.backboneStart) gene.backboneStart = targetBlock.backboneStart;
+  if (gene.backboneStop > targetBlock.backboneStop) gene.backboneStop = targetBlock.backboneStop;
+}
+
+/**
+ * Determines gene backbone alignments while taking into account the gaps of the target block. This is important for
+ * properly positioning genes that are in view. This function relies on gaps being sorted in ascending order.
+ * 
+ * @param gene 
+ * @param targetBlock 
+ */
+function processAlignmentsOfGeneInsideOfViewport(gene: Gene, targetBlock: Block)
+{
+  // TODO Test logs for specific gene
+  const testGene = 'Prkcq';
+  if (gene.symbol === testGene)
+  {
+    console.log(`${testGene}`, gene, targetBlock.gaps.length);
+    console.log(targetBlock.gaps.map(g => ({ start: g.start, backboneStart: g.backboneStart })));
+  }
+  //
+  if (targetBlock.gaps.length === 0)
+  {
+    // Process gene alignments for gapless blocks just like how we'd process alignments
+    // that are outside of the viewport
+    processAlignmentsOfGeneOutsideOfViewport(gene, targetBlock);
+    return;
+  }
+
+  // Find the block/gap where the gene starts, and the block/gap where the gene ends
+  let startingSection: GenomicPosition | undefined;
+  let endingSection: GenomicPosition | undefined;
+  let previousGap: Gap | undefined;
+  for (let i = 0; i < targetBlock.gaps.length; i++)
+  { 
+    const gap = targetBlock.gaps[i];
+    // TODO TEST
+    if (gene.symbol === testGene)
+      console.log(` Checking gap`, gap);
+    //
+    if (!startingSection)
+    {
+      // Looking for starting section...
+      if (gene.start < gap.start)
+      {
+        // Starts before this gap
+        // TODO: The logic for determining backboneStart/Stop here can be kind of confusing to wrap your head around. I wonder if
+        //   there is a clearer way to code this. previousGap and gap flip-flop depending on orientation of the block.
+        startingSection = {
+          start: previousGap?.stop ?? targetBlock.start,
+          stop: gap.start,
+          backboneStart: (targetBlock.orientation === '-') ? gap.backboneStop : previousGap?.backboneStop ?? targetBlock.backboneStart,
+          backboneStop: (targetBlock.orientation === '-') ? previousGap?.backboneStart ?? targetBlock.backboneStop : gap.backboneStart,
+        };
+      }
+      else if (gene.start >= gap.start && gene.start <= gap.stop)
+      {
+        // Starts inside of this gap
+        startingSection = {
+          start: gap.start,
+          stop: gap.stop,
+          backboneStart: gap.backboneStart,
+          backboneStop: gap.backboneStop,
+        };
+      }
+
+      // TODO TEST
+      if (gene.symbol === testGene && startingSection)
+        console.log(` StartingSection FOUND`, startingSection);
+      //
+    }
+    
+    // NOTE: Not using an else here because the endingSection might be the same as the startingSection.
+    //   Need to evaluate the same gap even if startingSection has just been found.
+    if (startingSection && !endingSection)
+    {
+      // Looking for ending section...
+      if (gene.stop < gap.start)
+      {
+        // Ends before this gap
+        // TODO: The logic for determining backboneStart/Stop here can be kind of confusing to wrap your head around. I wonder if
+        //   there is a clearer way to code this. previousGap and gap flip-flop depending on orientation of the block.
+        endingSection = {
+          start: previousGap?.stop ?? targetBlock.start,
+          stop: gap.start,
+          backboneStart: (targetBlock.orientation === '-') ? gap.backboneStop : previousGap?.backboneStop ?? targetBlock.backboneStart,
+          backboneStop: (targetBlock.orientation === '-') ? previousGap?.backboneStart ?? targetBlock.backboneStop : gap.backboneStart,
+        };
+      }
+      else if (gene.stop >= gap.start && gene.stop <= gap.stop)
+      {
+        // Ends inside of this gap
+        endingSection = {
+          start: gap.start,
+          stop: gap.stop,
+          backboneStart: gap.backboneStart,
+          backboneStop: gap.backboneStop,
+        };
+      }
+
+      // TODO TEST
+      if (gene.symbol === testGene && endingSection)
+        console.log(` EndingSection FOUND`, endingSection);
+      //
+    }
+
+    if (i === targetBlock.gaps.length - 1 && targetBlock.stop > gap.stop && (!startingSection || !endingSection))
+    {
+      // If the last gap was just analyzed and no starting/ending section has been found, then
+      // the missing section(s) should be the final "block" after the last gap
+      const lastSection = {
+        start: gap.stop,
+        stop: targetBlock.stop,
+        backboneStart: (targetBlock.orientation === '-') ? targetBlock.backboneStart : gap.backboneStop,
+        backboneStop: (targetBlock.orientation === '-') ? gap.backboneStart : targetBlock.backboneStop,
+      };
+
+      // TODO TEST
+      if (gene.symbol === testGene)
+        console.log(` Using LastSection`, lastSection);
+      //
+
+      if (!startingSection) startingSection = lastSection;
+      if (!endingSection) endingSection = lastSection;
+    }
+
+    previousGap = gap;
+
+    if (startingSection && endingSection)
+    {
+      // TODO TEST
+      if (gene.symbol === testGene)
+        console.log(` DONE finding sections for ${testGene}`);
+      //
+      break;
+    }
+  }
+
+  if (!startingSection || !endingSection)
+  {
+    // Something went wrong...
+    $log.error(`Gene backbone alignment could not be determined based on block with gaps. See debug logs.`);
+    $log.debug(gene, targetBlock);
+    // Fallback to processing without accounting for gaps
+    processAlignmentsOfGeneOutsideOfViewport(gene, targetBlock);
+    return;
+  }
+
+  // Calculate backbone alignments based on starting/ending section blockRatios and orientations
+  const startingSectionRatio = Math.abs(startingSection.backboneStop - startingSection.backboneStart) / Math.abs(startingSection.stop - startingSection.start);
+  const endingSectionRatio = Math.abs(endingSection.backboneStop - endingSection.backboneStart) / Math.abs(endingSection.stop - endingSection.start);
+  // TODO:
+  if (gene.symbol === testGene)
+    console.log(`Ratios`, startingSectionRatio, endingSectionRatio);
+  //
+  if (targetBlock.orientation === '+')
+  {
+    // Forward oriented block
+    // TODO: Some edge cases might not be handled properly with this simplification
+    gene.backboneStart = Math.floor(startingSection.backboneStart + (gene.start - startingSection.start) * startingSectionRatio);
+    gene.backboneStop = Math.floor(endingSection.backboneStart + (gene.stop - endingSection.start) * endingSectionRatio);
+  }
+  else
+  {
+    // Reverse oriented block
+    // TODO: Some edge cases might not be handled properly with this simplification
+    // TODO:
+    if (gene.symbol === testGene)
+    {
+      console.log(` Calculation backboneStart`, endingSection.backboneStart, endingSection.stop, gene.stop);
+      console.log(` Calculation backboneStop`, startingSection.backboneStart, startingSection.stop, gene.start);
+    }
+    //
+    gene.backboneStart = Math.floor(endingSection.backboneStart + (endingSection.stop - gene.stop) * endingSectionRatio);
+    gene.backboneStop = Math.floor(startingSection.backboneStart + (startingSection.stop - gene.start) * startingSectionRatio);
+  }
+
+  // Ensure genes don't extend beyond the range of our block
+  // NOTE: This is very important for small block sections near break points
+  if (gene.backboneStart < targetBlock.backboneStart) gene.backboneStart = targetBlock.backboneStart;
+  if (gene.backboneStop > targetBlock.backboneStop) gene.backboneStop = targetBlock.backboneStop;
 }
 
 async function queryAndProcessSyntenyForBasePairRange(backboneChromosome: Chromosome, start: number, stop: number)

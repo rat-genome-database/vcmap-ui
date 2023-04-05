@@ -5,13 +5,12 @@ import { LoadedGene, GeneDatatrack } from '@/models/DatatrackSection';
 import Gene from '@/models/Gene';
 import SyntenyRegionSet from '@/models/SyntenyRegionSet';
 import OrthologLine from '@/models/OrthologLine';
-import Label from '@/models/Label';
 import { GenomicSectionFactory } from '@/models/GenomicSectionFactory';
 import Block from "@/models/Block";
 import {useLogger} from "vue-logger-plugin";
-import { getThreshold } from './Threshold';
 import { RenderType } from '@/models/GenomicSection';
 import { Orientation } from '@/models/SyntenySection';
+import { getThreshold } from './Shared';
 
 // FIXME: I don't think we can use the logger here...
 const $log = useLogger();
@@ -210,8 +209,6 @@ console.time('createSyntenySectionAndRegion');
       gaplessBlock: gaplessBlockSection,
       genes: blockGenes,
     });
-    // FIXME: Create a single visible block (ignoring gap data)
-    currSyntenicRegion.syntenyBlocks.push(gaplessBlockSection);
 console.timeEnd('createSyntenySectionAndRegion');
 
     // Step 2: Split the gapless Block into multiple GenomicSections based on gaps.
