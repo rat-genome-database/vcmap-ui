@@ -270,7 +270,7 @@ import { VERSION } from '@/version';
 import { Formatter } from '@/utils/Formatter';
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import { key } from '@/store';
-import { ConfigurationMode } from '@/utils/Configuration';
+import { ConfigurationMode } from '@/utils/Types';
 
 interface ComparativeSpeciesSelection
 {
