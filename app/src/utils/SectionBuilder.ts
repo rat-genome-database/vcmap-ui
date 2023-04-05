@@ -210,8 +210,6 @@ console.time('createSyntenySectionAndRegion');
       gaplessBlock: gaplessBlockSection,
       genes: blockGenes,
     });
-    // FIXME: Create a single visible block (ignoring gap data)
-    currSyntenicRegion.syntenyBlocks.push(gaplessBlockSection);
 console.timeEnd('createSyntenySectionAndRegion');
 
     // Step 2: Split the gapless Block into multiple GenomicSections based on gaps.
