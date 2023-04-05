@@ -120,6 +120,7 @@ export default class SyntenyRegion
 
     const block = this.gaplessBlock;
 
+    // TODO: Should we start rendering individual gap sections again? Pros/cons?
     const gapsLine = factory.createSyntenySection({
       start: block.speciesStart,
       stop: block.speciesStop,
