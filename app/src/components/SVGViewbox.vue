@@ -165,7 +165,7 @@
     @click="handleBackboneVariantClick"
   />
   -->
-  <div class="grid p-d-flex">
+  <div v-if="SHOW_DEBUG" class="grid p-d-flex">
     <div class="col-12">
       <h2>Debug</h2>
     </div>
@@ -209,7 +209,7 @@
       </template>
     </div>
   </div>
-  
+
 </template>
 
 <script setup lang="ts">
@@ -248,6 +248,8 @@ import Block from "@/models/Block";
 import { GeneLabel } from '@/models/Label';
 import SyntenyRegion from '@/models/SyntenyRegion';
 import { createOrthologLines } from '@/utils/OrthologHandler';
+
+const SHOW_DEBUG = process.env.NODE_ENV === 'development';
 const NAV_SHIFT_PERCENT = 0.2;
 
 const store = useStore(key);
