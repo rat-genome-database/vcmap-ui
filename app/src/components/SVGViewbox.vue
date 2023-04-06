@@ -165,7 +165,8 @@
     @click="handleBackboneVariantClick"
   />
   -->
-  <div v-if="SHOW_DEBUG" class="grid p-d-flex">
+  <!-- Uncomment to see debug info in dev mode -->
+  <!-- <div v-if="SHOW_DEBUG" class="grid p-d-flex">
     <div class="col-12">
       <h2>Debug</h2>
     </div>
@@ -208,7 +209,7 @@
         </template>
       </template>
     </div>
-  </div>
+  </div> -->
 
 </template>
 

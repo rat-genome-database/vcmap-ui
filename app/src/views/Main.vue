@@ -1,9 +1,9 @@
 <template>
   <HeaderPanel />
-  <Button
+  <!-- <Button
     label="INSPECT (Main)"
     @click="onInspectPressed"
-  />
+  /> -->
   <div class="grid">
     <div class="col-9">
       <SVGViewbox :geneList="geneList" :synteny-tree="syntenyTree" :loading="isLoading" />
