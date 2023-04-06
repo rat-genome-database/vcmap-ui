@@ -165,7 +165,7 @@
     @click="handleBackboneVariantClick"
   />
   -->
-  <div class="grid p-d-flex">
+  <div v-if="SHOW_DEBUG" class="grid p-d-flex">
     <div class="col-12">
       <h2>Debug</h2>
     </div>
@@ -209,25 +209,22 @@
       </template>
     </div>
   </div>
-  
+
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import SectionSVG from './SectionSVG.vue';
 import SVGConstants, {PANEL_SVG_START, PANEL_SVG_STOP} from '@/utils/SVGConstants';
-import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import GeneLabelSVG from '@/components/GeneLabelSVG.vue';
 import useDialog from '@/composables/useDialog';
 import Gene from '@/models/Gene';
 import OrthologLine from '@/models/OrthologLine';
-import SelectedData from '@/models/SelectedData';
 import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
 import { key } from '@/store';
-import { backboneDetailedError, backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError } from '@/utils/VCMapErrors';
 import { createSyntenicRegionSets,  } from '@/utils/SectionBuilder';
 import useOverviewPanelSelection from '@/composables/useOverviewPanelSelection';
 import { useLogger } from 'vue-logger-plugin';
@@ -248,12 +245,11 @@ import { GenomicSectionFactory } from '@/models/GenomicSectionFactory';
 import {VCMapSVGEl} from "@/models/VCMapSVGElement";
 import Block from "@/models/Block";
 
-// TODO: Unneeded? (Need to rework how to "Load by Gene")
-import { getNewSelectedData } from '@/utils/DataPanelHelpers';
 import { GeneLabel } from '@/models/Label';
 import SyntenyRegion from '@/models/SyntenyRegion';
 import { createOrthologLines } from '@/utils/OrthologHandler';
-const LOAD_BY_GENE_VISIBLE_SIZE_MULTIPLIER = 6;
+
+const SHOW_DEBUG = process.env.NODE_ENV === 'development';
 const NAV_SHIFT_PERCENT = 0.2;
 
 const store = useStore(key);
