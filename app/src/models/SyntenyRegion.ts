@@ -1,10 +1,8 @@
-import BackboneSection from '@/models/BackboneSection';
 import SyntenySection from './SyntenySection';
 import DatatrackSection, { DatatrackSectionType } from './DatatrackSection';
 import DatatrackSet from './DatatrackSet';
-import Label, { GeneLabel } from './Label';
+import { GeneLabel } from './Label';
 import OrthologLine from './OrthologLine';
-import GenomicSection from './GenomicSection';
 import { GenomicSectionFactory } from './GenomicSectionFactory';
 import { Gap } from "@/models/Block";
 import Gene from './Gene';

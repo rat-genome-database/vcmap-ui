@@ -1,4 +1,4 @@
-import { SpeciesSyntenyData, SyntenyRegionData } from "@/api/SyntenyApi";
+import { SyntenyRegionData } from "@/api/SyntenyApi";
 import SVGConstants from "@/utils/SVGConstants";
 import { GenomicSet } from "./GenomicSet";
 import Label, { GeneLabel } from "./Label";
@@ -6,7 +6,6 @@ import OrthologLine from "./OrthologLine";
 import SyntenyRegion from "./SyntenyRegion";
 import SyntenySection from "./SyntenySection";
 import { SelectedRegion } from "./BackboneSelection";
-import { GenomicSectionFactory } from "./GenomicSectionFactory";
 import DatatrackSet from "./DatatrackSet";
 import { mergeGeneLabels } from "@/utils/GeneLabelMerger";
 import Gene from "./Gene";

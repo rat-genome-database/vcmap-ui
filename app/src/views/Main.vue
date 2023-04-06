@@ -29,7 +29,7 @@ import HeaderPanel from '@/components/HeaderPanel.vue';
 import SelectedDataPanel from '@/components/SelectedDataPanel.vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
-import {onMounted, ref, shallowRef, triggerRef, watch} from 'vue';
+import {onMounted, ref, watch} from 'vue';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 import Gene from "@/models/Gene";
@@ -639,7 +639,7 @@ async function queryAndProcessSyntenyForBasePairRange(backboneChromosome: Chromo
 {
   $log.debug(`Querying for specific base pair range: ${start} - ${stop}`);
   const slowAPI = setTimeout(() => {
-    console.log('API is taking longer than usual to respond...')
+    console.log('API is taking longer than usual to respond...');
     showToast('warn', 'Loading Impact', 'API is taking a while to respond, please be patient', 3000);
   }, 15000);
 

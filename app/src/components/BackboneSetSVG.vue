@@ -98,9 +98,8 @@
 </template>
 
 <script lang="ts" setup>
-import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
+import BackboneSelection from '@/models/BackboneSelection';
 import SelectedData, { SelectedDataType } from '@/models/SelectedData';
-import { getNewSelectedData } from '@/utils/DataPanelHelpers';
 import { computed, toRefs } from '@vue/reactivity';
 import { ref, watch, onMounted } from 'vue';
 import { useStore } from 'vuex';

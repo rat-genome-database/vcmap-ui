@@ -841,7 +841,7 @@ const showToast = (severity: string, title: string, details: string, duration: n
   {
     toast.add({severity: severity, summary: title, detail: details, life: duration });
   }
-}
+};
 
 function logPerformanceReport(title: string, totalTimeMillis: number, detailedTimeReportObject: { [key:string]: number} )
 {
