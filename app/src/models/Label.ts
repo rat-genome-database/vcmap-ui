@@ -1,4 +1,3 @@
-import DatatrackSection, { GeneDatatrack } from './DatatrackSection';
 import Gene from './Gene';
 
 interface LabelParams

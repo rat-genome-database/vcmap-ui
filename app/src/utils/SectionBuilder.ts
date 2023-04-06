@@ -1,10 +1,9 @@
 import Species from '@/models/Species';
 import Chromosome from '@/models/Chromosome';
 import SyntenyRegion from '@/models/SyntenyRegion';
-import { LoadedGene, GeneDatatrack } from '@/models/DatatrackSection';
+import { GeneDatatrack } from '@/models/DatatrackSection';
 import Gene from '@/models/Gene';
 import SyntenyRegionSet from '@/models/SyntenyRegionSet';
-import OrthologLine from '@/models/OrthologLine';
 import { GenomicSectionFactory } from '@/models/GenomicSectionFactory';
 import Block from "@/models/Block";
 import {useLogger} from "vue-logger-plugin";
@@ -422,25 +421,22 @@ console.debug(`    Push total: ${pushTotal}`);
 // }
 
 /**
- * TODO: DOCUMENTATION
- * @param masterProcessedGenes
- * @param processedSpecies
- * @param currGene
+ * TODO: Remove if no longer needed for reference
  */
-function orthologLineBuilder(masterProcessedGenes: Map<number, LoadedGene>, processedSpecies: string, currGene: GeneDatatrack)
-{
-  const orthologLines: OrthologLine[] = [];
-  currGene.gene.orthologs.forEach((rgdId: number) => {
-    const loadedGene = masterProcessedGenes.get(rgdId);
-    if (loadedGene && loadedGene.backboneOrtholog != null)
-    {
-      const orthologLine = new OrthologLine({
-        backboneGene: loadedGene.backboneOrtholog, 
-        comparativeGene: currGene,
-      });
-      orthologLines.push(orthologLine);
-    }
-  });
+// function orthologLineBuilder(masterProcessedGenes: Map<number, LoadedGene>, processedSpecies: string, currGene: GeneDatatrack)
+// {
+//   const orthologLines: OrthologLine[] = [];
+//   currGene.gene.orthologs.forEach((rgdId: number) => {
+//     const loadedGene = masterProcessedGenes.get(rgdId);
+//     if (loadedGene && loadedGene.backboneOrtholog != null)
+//     {
+//       const orthologLine = new OrthologLine({
+//         backboneGene: loadedGene.backboneOrtholog, 
+//         comparativeGene: currGene,
+//       });
+//       orthologLines.push(orthologLine);
+//     }
+//   });
 
-  return orthologLines;
-}
+//   return orthologLines;
+// }

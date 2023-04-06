@@ -134,7 +134,7 @@ import { computed, toRefs } from '@vue/reactivity';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import { Formatter } from '@/utils/Formatter';
-import { getNewSelectedData, sortGeneList } from '@/utils/DataPanelHelpers';
+import { sortGeneList } from '@/utils/DataPanelHelpers';
 import { VCMapSVGElement } from '@/models/VCMapSVGElement';
 import ChromosomeLabelSVG from './ChromosomeLabelSVG.vue';
 import SyntenyLinesSVG from './SyntenyLinesSVG.vue';

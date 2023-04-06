@@ -161,8 +161,6 @@ const props = defineProps<Props>();
 const searchedGene = ref<Gene | Gene[] | null>(null);
 const geneSuggestions = ref<Gene[]>([]);
 const numberOfResults = ref<number>(0);
-const overviewStart = ref<number>(0);
-const overviewStop = ref<number>(store.state.chromosome?.seqLength ?? 1);
 
 // fraction of gene bp length to add to the window when jumping
 // to the gene after a search

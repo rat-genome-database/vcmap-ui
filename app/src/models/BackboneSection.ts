@@ -1,8 +1,7 @@
 import Label from './Label';
-import SVGConstants, { PANEL_SVG_START } from '@/utils/SVGConstants';
+import SVGConstants from '@/utils/SVGConstants';
 import { Formatter } from '@/utils/Formatter';
 import Chromosome from './Chromosome';
-import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 import Gene from '@/models/Gene';
 import GenomicSection, { RenderType, WindowBasePairRange } from './GenomicSection';
 import Species from './Species';

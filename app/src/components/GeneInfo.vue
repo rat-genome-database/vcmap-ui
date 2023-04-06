@@ -42,7 +42,6 @@ import Gene from '@/models/Gene';
 import { Formatter } from '@/utils/Formatter';
 import { useStore } from 'vuex';
 import { key } from '@/store';
-import { getNewSelectedData } from '@/utils/DataPanelHelpers';
 import { useLogger } from 'vue-logger-plugin';
 import SelectedData from '@/models/SelectedData';
 
