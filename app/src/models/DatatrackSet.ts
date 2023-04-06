@@ -14,4 +14,11 @@ export default class DatatrackSet
   public addDatatrackSections(datatrackSections: DatatrackSection[])
   {
     this.datatracks = this.datatracks.concat(datatrackSections);
-  }}
+  }
+
+  public clearDatatrackSections()
+  {
+    this.datatracks.splice(0, this.datatracks.length);
+  }
+}
+

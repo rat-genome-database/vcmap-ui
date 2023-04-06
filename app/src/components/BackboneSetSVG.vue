@@ -40,7 +40,7 @@
         class="section clickable"
         @mouseenter="() => onMouseEnter(datatrack, 'Gene')"
         @mouseleave="() => onMouseLeave(datatrack)"
-        @click="onClick($event, datatrack)"
+        @click="onDatatrackSectionClick($event, datatrack)"
 
         :y="datatrack.posY1"
         :x="datatrack.posX1"
@@ -146,7 +146,7 @@ toRefs(props);
 let selectedRegion = ref<BackboneSelection>();
 if (store.state.chromosome)
 {
-  selectedRegion.value = store.state.selectedBackboneRegion ?? new BackboneSelection(new SelectedRegion(0,0,0,0), store.state.chromosome);
+  selectedRegion.value = store.state.selectedBackboneRegion ?? new BackboneSelection(store.state.chromosome);
 }
 const basePairPositionLabel = ref<string>('');
 
@@ -154,7 +154,7 @@ watch(() => store.state.selectedBackboneRegion, (newVal: BackboneSelection | nul
   // Watch for possible clear out of the selected backbone region
   if (!isDetailed.value && newVal == null && store.state.chromosome != null)
   {
-    selectedRegion.value = new BackboneSelection(new SelectedRegion(0,0,0,0), store.state.chromosome);
+    selectedRegion.value = new BackboneSelection(store.state.chromosome);
   }
   else if (!isDetailed.value && newVal != null)
   {
@@ -204,11 +204,13 @@ const getSectionFill = (section: VCMapSVGElement) => {
   return section.elementColor;
 };
 
-const onClick = (event: any, section: GeneDatatrack) => {
+const onDatatrackSectionClick = (event: any, section: GeneDatatrack) => {
   // NOTE: disable selected data for qtls for now
   if (!section.gene?.rgdId || section.type === 'qtl' || section.type === 'variant') {
     return;
   }
+
+  // TODO: This behavior needs to be mimicked in the GeneLabels as well:
   // If clicked section already selected, just reset the selectedGeneId state
   if (store.state.selectedGeneIds.includes(section.gene?.rgdId || -1)) {
     store.dispatch('setSelectedGeneIds', []);
@@ -221,11 +223,8 @@ const onClick = (event: any, section: GeneDatatrack) => {
 
   let newSelectedData: SelectedData[] = [];
   if (section.gene) {
-    const newData = getNewSelectedData(store, section.gene);
-    const geneAndOrthologs = newData.selectedData;
-    const newGeneIds = newData.rgdIds;
-    newSelectedData.push(...geneAndOrthologs);
-    geneIds.push(...newGeneIds);
+    newSelectedData.push(new SelectedData(section.gene.clone(), 'Gene'));
+    geneIds.push(section.gene?.rgdId);
   }
 
   store.dispatch('setSelectedGeneIds', geneIds || []);
@@ -240,9 +239,16 @@ const onClick = (event: any, section: GeneDatatrack) => {
 const highlightSelections = (selectedGeneIds: number[]) => {
   // Look through the sections and highlight based on selected genes
   datatrackSets.value.forEach((set) => {
-    if (set.datatracks[0].type === 'gene')
+    // TODO (SGD): Why the magic number "0" here?
+    //  If the DatatrackSet is intended to have only one type of Datatrack, we should expand that model.
+    //  Otherwise this is a fragile way to do this (datatracks could be empty)
+    if (set.datatracks.length > 0 && set.datatracks[0].type === 'gene')
     {
-      set.datatracks.forEach((section) => {
+      // TODO: Feels a bit fragile to tell the type-checker to treat this as GeneDatatrack[]. Maybe there
+      // is a better way to organize our different types of DatatrackSection models to allow Typescript to
+      // "know" that this is a GeneDatatrack[] type. We should be aware that "as" will not throw an error if
+      // set.datatracks is not of type GeneDatatrack[].
+      (set.datatracks as GeneDatatrack[]).forEach((section) => {
         if (section.gene == null)
         {
           return;

@@ -10,7 +10,7 @@
       @mouseenter="onMouseEnter(blockSection, 'trackSection')"
       @mouseleave="onMouseLeave(blockSection, 'trackSection')"
       @mousemove="updatePositionLabel($event, blockSection)"
-      @click="selectOnClick ? onSectionClick(blockSection) : () => {}"
+      @click="selectOnClick ? onSyntenyBlockClick(blockSection) : () => {}"
       :y="blockSection.posY1"
       :x="blockSection.posX1"
       :width="blockSection.width"
@@ -110,7 +110,7 @@
         class="block-section"
         @mouseenter="onMouseEnter(datatrack, 'Gene')"
         @mouseleave="onMouseLeave(datatrack, 'Gene')"
-        @click="onClick($event, datatrack)"
+        @click="onDatatrackSectionClick($event, datatrack)"
         :y="datatrack.posY1"
         :x="datatrack.posX1"
         :width="datatrack.width"
@@ -134,7 +134,7 @@ import { computed, toRefs } from '@vue/reactivity';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import { Formatter } from '@/utils/Formatter';
-import { getNewSelectedData } from '@/utils/DataPanelHelpers';
+import { getNewSelectedData, sortGeneList } from '@/utils/DataPanelHelpers';
 import { VCMapSVGElement } from '@/models/VCMapSVGElement';
 import ChromosomeLabelSVG from './ChromosomeLabelSVG.vue';
 import SyntenyLinesSVG from './SyntenyLinesSVG.vue';
@@ -144,6 +144,8 @@ import OverviewSyntenyLabelsSVG from './OverviewSyntenyLabelsSVG.vue';
 import { PANEL_SVG_START, PANEL_SVG_STOP } from '@/utils/SVGConstants';
 import useMouseBasePairPos from '@/composables/useMouseBasePairPos';
 import GenomicSection from '@/models/GenomicSection';
+import { GeneLabel } from '@/models/Label';
+import Gene from '@/models/Gene';
 
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
 const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
@@ -167,11 +169,11 @@ const props = defineProps<Props>();
 toRefs(props);
 const basePairPositionLabel = ref<string>('');
 
-watch(() => store.state.selectedGeneIds, () => {
+onMounted(() => {
   highlightSelections(store.state.selectedGeneIds);
 });
 
-onMounted(() => {
+watch([() => store.state.selectedGeneIds, () => props.region], () => {
   highlightSelections(store.state.selectedGeneIds);
 });
 
@@ -192,24 +194,27 @@ const datatrackSets = computed(() => {
 });
 
 const onMouseEnter = (section: SyntenySection | GeneDatatrack, type: SelectedDataType) => {
-  // if ()
-    section.isHovered = true;
-    
-    // If there are selected genes, don't update the selected data panel
-    if (store.state.selectedGeneIds.length === 0) {
-      const selectedData = new SelectedData(section, type);
-      store.dispatch('setSelectedData', [selectedData]);
-    }
-
-    if (type === 'Gene') 
+  section.isHovered = true;
+  
+  // Only update the selected data panel if no Genes are already selected
+  if (store.state.selectedGeneIds.length === 0)
+  {
+    let selectedData;
+    if (type === 'Gene')
     {
       const geneSection = section as GeneDatatrack;
       if (geneSection?.gene)
       {
         highlightGeneLines(geneSection?.gene.rgdId, 'enter');
       }
+      selectedData = new SelectedData(geneSection.gene.clone(), 'Gene');
     }
-
+    else
+    {
+      selectedData = new SelectedData(section, type);
+    }
+    store.dispatch('setSelectedData', [selectedData]);
+  }
 };
 
 const onMouseLeave = (section: VCMapSVGElement, type: SelectedDataType) => {
@@ -233,15 +238,16 @@ const onMouseLeave = (section: VCMapSVGElement, type: SelectedDataType) => {
   }
 };
 
-const onSectionClick = (section: GenomicSection) => {
+const onSyntenyBlockClick = (section: GenomicSection) => {
   const selectedBackboneRegion = store.state.selectedBackboneRegion as BackboneSelection;
   const backboneChromosome = store.state.chromosome;
   if (backboneChromosome && section.backboneAlignment)
   {
     const basePairStart = section.backboneAlignment.start;
     const basePairStop = section.backboneAlignment.stop;
-    selectedBackboneRegion.setViewportSelection(basePairStart, basePairStop, store.state.overviewBasePairToHeightRatio);
-    store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: basePairStop });
+    selectedBackboneRegion.setViewportSelection(basePairStart, basePairStop);
+    store.dispatch('setDetailedBasePairRequest', { start: basePairStart, stop: basePairStop });
+    // store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: basePairStop });
   }
 };
 
@@ -256,7 +262,11 @@ const highlightSelections = (selectedGeneIds: number[]) => {
   datatrackSets.value.forEach((set) => {
     if (set.datatracks && set.datatracks.length > 0 && set.datatracks[0].type === 'gene')
     {
-      set.datatracks.forEach((section) => {
+      // TODO: Feels a bit fragile to tell the type-checker to treat this as GeneDatatrack[]. Maybe there
+      // is a better way to organize our different types of DatatrackSection models to allow Typescript to
+      // "know" that this is a GeneDatatrack[] type. We should be aware that "as" will not throw an error if
+      // set.datatracks is not of type GeneDatatrack[].
+      (set.datatracks as GeneDatatrack[]).forEach(section => {
         if (section.gene == null)
         {
           return;
@@ -290,34 +300,47 @@ const highlightSelections = (selectedGeneIds: number[]) => {
   });
 };
 
-const onClick = (event: any, section: GeneDatatrack) => {
-  if (!section.gene?.rgdId) {
-    return;
-  }
+const onDatatrackSectionClick = (event: any, section: GeneDatatrack) => {
+  if (!section.gene?.rgdId) return;
+
   // If clicked section already selected, just reset the selectedGeneId state
-  if (store.state.selectedGeneIds.includes(section.gene?.rgdId || -1)) {
+  if (store.state.selectedGeneIds.includes(section.gene?.rgdId || -1))
+  {
     store.dispatch('setSelectedGeneIds', []);
     store.dispatch('setSelectedData', null);
     return;
   }
 
+  // TODO: This behavior needs to be mimicked in the GeneLabels as well:
   // If shift key is held, we'll just add to the selections, otherwise, reset first
   let geneIds: number[] = event.shiftKey ? [...store.state.selectedGeneIds] : [];
 
   let newSelectedData: SelectedData[] = [];
-  if (section.gene) {
-    const newData = getNewSelectedData(store, section.gene);
-    const geneAndOrthologs = newData.selectedData;
-    const newGeneIds = newData.rgdIds;
-    newSelectedData.push(...geneAndOrthologs);
-    geneIds.push(...newGeneIds);
+
+  // TODO: Duplicate logic in GeneLabelSVG.vue, should refactor at some point
+  if (section.gene)
+  {
+    // Keep the main gene of the label at the top of the list
+    const geneLabel = section.label ? section.label as GeneLabel : undefined;
+    const mainGene = geneLabel ? geneLabel.mainGene : section.gene;
+    const geneList = geneLabel ? geneLabel.genes.filter(g => g.rgdId !== geneLabel.mainGene.rgdId) : [];
+    sortGeneList(geneList);
+    [mainGene, ...geneList].forEach((gene: Gene) => {
+      // FIXME (orthologs): TEMP
+      newSelectedData.push(new SelectedData(gene.clone(), 'Gene'));
+      geneIds.push(gene.rgdId);
+      // endTEMP
+    });
   }
 
   store.dispatch('setSelectedGeneIds', geneIds || []);
-  if (event.shiftKey) {
+  if (event.shiftKey)
+  {
     const selectedDataArray = [...(store.state.selectedData || []), ...newSelectedData];
     store.dispatch('setSelectedData', selectedDataArray);
-  } else {
+  }
+  else
+  {
     store.dispatch('setSelectedData', newSelectedData);
   }
 };

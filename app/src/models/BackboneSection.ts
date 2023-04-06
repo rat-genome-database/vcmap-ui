@@ -53,7 +53,7 @@ export default class BackboneSection extends GenomicSection
 
   public setBackboneGenes(backboneGenes: Gene[])
   {
-    this.backboneGenes = backboneGenes;
+    this.backboneGenes = backboneGenes.map(g => g.clone());
   }
 
   public addBackboneGenes(backboneGenes: Gene[])
@@ -67,27 +67,6 @@ export default class BackboneSection extends GenomicSection
     {
       this.createLabels();
     } 
-  }
-
-  /**
-   * Creates a BackboneSelection object based on a desired selected region
-   * @param start starting basepair
-   * @param stop stopping basepair
-   * @param basePairToHeightRatio the ratio of bp/svg height units (depends on what panel the track section is rendered in)
-   * @param chromosome backbone chromosome model
-   * @returns a BackboneSelection object containing an inner selection of the same region
-   */
-  public generateBackboneSelection(start: number, stop: number, basePairToHeightRatio: number, chromosome: Chromosome)
-  {
-    const startingSVGY = this.posY1 + (start - this.speciesStart) / basePairToHeightRatio;
-    const svgHeight = (stop - start) / basePairToHeightRatio;
-
-    //calculate full chromosome selection
-    const fullBackboneChr = new SelectedRegion(PANEL_SVG_START, ( chromosome.seqLength / basePairToHeightRatio ), 0, chromosome.seqLength);
-
-    const selection = new BackboneSelection(new SelectedRegion(startingSVGY, svgHeight, start, stop), chromosome, fullBackboneChr);
-    selection.setViewportSelection(start, stop, basePairToHeightRatio);
-    return selection;
   }
 
   private createLabels()

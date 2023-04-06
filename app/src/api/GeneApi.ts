@@ -24,6 +24,7 @@ interface GeneDTO
 function getGeneFromGeneDTO(dto: GeneDTO, speciesName?: string)
 {
   return new Gene({
+    mapKey: dto.mapKey,
     speciesName: speciesName,
     symbol: dto.geneSymbol,
     name: dto.geneName,

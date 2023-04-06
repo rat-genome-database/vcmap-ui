@@ -4,12 +4,11 @@ import Species from '@/models/Species';
 import Chromosome from '@/models/Chromosome';
 import Gene from '@/models/Gene';
 import BackboneSelection, { BasePairRange } from '@/models/BackboneSelection';
-import SVGConstants, { PANEL_HEIGHT } from '@/utils/SVGConstants';
 import SelectedData from '@/models/SelectedData';
 import { InjectionKey } from 'vue';
 import { createLogger } from 'vuex';
 import { GeneDatatrack, LoadedGene } from '@/models/DatatrackSection';
-import { LoadedBlock } from '@/utils/SectionBuilder';
+import { ConfigurationMode } from '@/utils/Types';
 
 export const key: InjectionKey<Store<VCMapState>> = Symbol();
 
@@ -21,14 +20,14 @@ export interface VCMapState
   stopPos: number | null; // backbone stop position
   gene: Gene | null; // backbone gene
   comparativeSpecies: Species[];
-  configTab: number;
+  configMode: ConfigurationMode;
 
+  configurationLoaded: boolean | null;
   selectedBackboneRegion: BackboneSelection | null;
+  detailedBasePairRequest: BasePairRange | null;
   detailedBasePairRange: BasePairRange;
 
-  overviewBasePairToHeightRatio: number;
   overviewSyntenyThreshold: number;
-  detailedBasePairToHeightRatio: number;
   detailsSyntenyThreshold: number;
 
   isDetailedPanelUpdating: boolean;
@@ -39,14 +38,15 @@ export interface VCMapState
 
   /* These data structures have the potential to be pretty large */
   loadedGenes: Map<number, LoadedGene> | null;
-  loadedBlocks: Map<number, LoadedBlock> | null;
+
+  selectionToastCount: number;
 }
 
 const vuexLocal = new VuexPersistence<VCMapState>({
   storage: window.localStorage
 });
 
-const actionsToLog = ['setDetailedBasePairRange'];
+const actionsToLog = ['setDetailedBasePairRange', 'setDetailedBasePairRequest'];
 const mutationsToLog = ['detailedBasePairRange'];
 
 const logger = createLogger({
@@ -67,14 +67,14 @@ export default createStore({
     stopPos: null,
     gene: null,
     comparativeSpecies: [],
-    configTab: 0,
+    configMode: 'gene',
 
+    configurationLoaded: null,
     selectedBackboneRegion: null,
+    detailedBasePairRequest: { start: 0, stop: 0 } ?? null,
     detailedBasePairRange: { start: 0, stop: 0 },
 
-    overviewBasePairToHeightRatio: 1000,
-    overviewSyntenyThreshold: 0,
-    detailedBasePairToHeightRatio: 1000,
+    overviewSyntenyThreshold: 30000,
     detailsSyntenyThreshold: 0,
 
     isDetailedPanelUpdating: false,
@@ -85,7 +85,7 @@ export default createStore({
 
     /* These data structures have the potential to be pretty large */
     loadedGenes: null,
-    loadedBlocks: null,
+    selectionToastCount: 0,
   }),
 
   mutations: {
@@ -110,29 +110,26 @@ export default createStore({
     loadedGenes (state: VCMapState, loadedGenesMap: Map<number, LoadedGene>) {
       state.loadedGenes = loadedGenesMap;
     },
-    loadedBlocks (state: VCMapState, loadedBlocksMap: Map<number, LoadedBlock>) {
-      state.loadedBlocks = loadedBlocksMap;
+    configurationLoaded(state: VCMapState, configState: boolean | null) {
+      state.configurationLoaded = configState;
     },
     selectedBackboneRegion ( state: VCMapState, selection: BackboneSelection) {
       state.selectedBackboneRegion = selection;
     },
+    detailedBasePairRequest(state: VCMapState, range: BasePairRange) {
+      state.detailedBasePairRequest = range;
+    },
     detailedBasePairRange(state: VCMapState, range: BasePairRange) {
       state.detailedBasePairRange = range;
-    },
-    overviewBasePairToHeightRatio(state: VCMapState, ratio: number) {
-      state.overviewBasePairToHeightRatio = ratio;
     },
     overviewSyntenyThreshold(state: VCMapState, threshold: number) {
       state.overviewSyntenyThreshold = threshold;
     },
-    detailedBasePairToHeightRatio(state: VCMapState, ratio: number) {
-      state.detailedBasePairToHeightRatio = ratio;
-    },
     detailsSyntenyThreshold(state: VCMapState, threshold: number) {
       state.detailsSyntenyThreshold = threshold;
     },
-    configTab(state: VCMapState, tab: number) {
-      state.configTab = tab;
+    configMode(state: VCMapState, mode: ConfigurationMode) {
+      state.configMode = mode;
     },
     selectedData(state: VCMapState, selectedData: SelectedData[]) {
       state.selectedData = selectedData;
@@ -146,6 +143,9 @@ export default createStore({
     isOverviewPanelUpdating(state: VCMapState, isUpdating: boolean) {
       state.isOverviewPanelUpdating = isUpdating;
     },
+    selectionToastCount(state: VCMapState, count: number) {
+      state.selectionToastCount = count;
+    }
   },
 
   actions: {
@@ -164,21 +164,11 @@ export default createStore({
     setGene(context: ActionContext<VCMapState, VCMapState>, gene: Gene) {
       context.commit('gene', gene);
     },
-    setOverviewResolution(context: ActionContext<VCMapState, VCMapState>, backboneLength: number) {
-      // The height of the tracks in the overview should have a little buffer on the top and bottom margins
-      const overviewTrackHeight = SVGConstants.viewboxHeight - (SVGConstants.overviewTrackYPosition + SVGConstants.navigationButtonHeight + (SVGConstants.overviewTrackYPosition - SVGConstants.panelTitleHeight));
-      context.commit('overviewBasePairToHeightRatio', backboneLength / overviewTrackHeight);
-      // Note: Dividing by 8,000 is arbitary when calculating synteny threshold
-      context.commit('overviewSyntenyThreshold', (backboneLength > 250000) ? Math.floor((backboneLength) / 8000) : 0);
+    setConfigMode(context: ActionContext<VCMapState, VCMapState>, mode: ConfigurationMode) {
+      context.commit('configMode', mode);
     },
-    setDetailsResolution(context: ActionContext<VCMapState, VCMapState>, backboneLength: number) {
-      // The tracks in the detailed panel should have no top or bottom margins
-      context.commit('detailedBasePairToHeightRatio', backboneLength / PANEL_HEIGHT);
-      // Note: Dividing by 8,000 is arbitary when calculating synteny threshold
-      context.commit('detailsSyntenyThreshold', (backboneLength > 250000) ? Math.floor((backboneLength) / 8000) : 0);
-    },
-    setConfigTab(context: ActionContext<VCMapState, VCMapState>, tab: number) {
-      context.commit('configTab', tab);
+    setConfigurationLoaded(context: ActionContext<VCMapState, VCMapState>, configState: boolean | null) {
+      context.commit('configurationLoaded', configState);
     },
     setSelectedData(context: ActionContext<VCMapState, VCMapState>, selected: SelectedData[]) {
       context.commit('selectedData', selected);
@@ -191,9 +181,6 @@ export default createStore({
     },
     setLoadedGenes(context: ActionContext<VCMapState, VCMapState>, loadedGenes: Gene[]) {
       context.commit('loadedGenes', loadedGenes);
-    },
-    setLoadedBlocks(context: ActionContext<VCMapState, VCMapState>, loadedBlocks: Map<number, LoadedBlock>) {  
-      context.commit('loadedBlocks', loadedBlocks);
     },
     setIsDetailedPanelUpdating(context: ActionContext<VCMapState, VCMapState>, isUpdating: boolean) {
       context.commit('isDetailedPanelUpdating', isUpdating);
@@ -213,6 +200,8 @@ export default createStore({
       context.commit('loadedBlocks', null);
       context.commit('selectedBackboneRegion', null);
       context.commit('detailedBasePairRange', { start: 0, stop: 0 });
+      context.commit('configurationLoaded', null);
+      context.commit('selectionToastCount', 0);
     },
     clearBackboneSelection(context: ActionContext<VCMapState, VCMapState>) {
       context.commit('selectedBackboneRegion', null);
@@ -221,13 +210,17 @@ export default createStore({
     setBackboneSelection(context: ActionContext<VCMapState, VCMapState>, selection: BackboneSelection) {
       if (selection.viewportSelection == null)
       {
-        selection.setViewportSelection(0, selection.chromosome.seqLength, context.state.overviewBasePairToHeightRatio);
+        selection.setViewportSelection(0, selection.chromosome.seqLength);
       }
-      context.commit('startPosition', 0);
-      context.commit('stopPosition', selection.chromosome.seqLength);
+      context.commit('startPosition', selection.viewportSelection?.basePairStart ?? 0);
+      context.commit('stopPosition', selection.viewportSelection?.basePairStop ?? selection.chromosome.seqLength);
       context.commit('selectedBackboneRegion', selection);
       context.commit('detailedBasePairRange', { start: selection.viewportSelection?.basePairStart, stop: selection.viewportSelection?.basePairStop });
       // Note: Committing a change to detailedBasePairRange will trigger an update on the Detailed panel
+    },
+    setDetailedBasePairRequest(context: ActionContext<VCMapState, VCMapState>, range: BasePairRange) {
+      // Note: Committing a change to detailedBasePairRange will trigger an update on the Detailed panel
+      context.commit('detailedBasePairRequest', range);
     },
     setDetailedBasePairRange(context: ActionContext<VCMapState, VCMapState>, range: BasePairRange) {
       // Note: Committing a change to detailedBasePairRange will trigger an update on the Detailed panel
@@ -236,9 +229,13 @@ export default createStore({
     setBackboneOrthologData(context: ActionContext<VCMapState, VCMapState>, orthologs: any) {
       context.commit('backboneOrthologs', orthologs);
     },
+    setSelectionToastCount(context: ActionContext<VCMapState, VCMapState>, count: number) {
+      context.commit('selectionToastCount', count);
+    }
   },
 
   getters: {
+    // FIXME: remove this
     masterGeneMapByRGDId: (state: VCMapState) => {
       const loadedGenes = state.loadedGenes;
 
@@ -269,49 +266,12 @@ export default createStore({
       return mapByRGDId;
     },
 
-    masterGeneMapBySymbol: (state: VCMapState) => {
-      const loadedGenes = state.loadedGenes;
-      // Map of RGD Ids keyed by gene symbol
-      const mapBySymbol = new Map<string, number[]>();
+    isLoadByGene: (state: VCMapState) => {
+      return state.configMode === 'gene';
+    },
 
-      if (loadedGenes == null)
-      {
-        return mapBySymbol;
-      }
-
-     for (const [rgdId, loadedGene] of loadedGenes.entries())
-     {
-        // Collect the backbone ortholog and all comparative species genes with this RGD ID
-        const allGenes: GeneDatatrack[]  = [];
-        for (const speciesName in loadedGene.genes)
-        {
-          const speciesGenes = loadedGene.genes[speciesName];
-          speciesGenes.forEach(gene => allGenes.push(gene));
-        }
-
-        if (loadedGene.backboneOrtholog != null)
-        {
-          allGenes.push(loadedGene.backboneOrtholog);
-        }
-
-        allGenes.forEach(geneDatatrack => {
-          const geneSymbol = geneDatatrack.gene.symbol;
-          if (geneSymbol)
-          {
-            const rgdIds = mapBySymbol.get(geneSymbol);
-            if (rgdIds != null)
-            {
-              mapBySymbol.set(geneSymbol, rgdIds.concat(rgdId));
-            }
-            else
-            {
-              mapBySymbol.set(geneSymbol, [rgdId]);
-            }
-          }
-        });
-      }
-
-      return mapBySymbol;
+    isLoadByPosition: (state: VCMapState) => {
+      return state.configMode === 'position';
     },
   },
 

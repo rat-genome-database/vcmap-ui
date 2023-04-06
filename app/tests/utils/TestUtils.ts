@@ -65,24 +65,23 @@ export namespace TestUtils
         stopPos: null,
         gene: null,
         comparativeSpecies: [],
+        configMode: 'gene',
 
+        configurationLoaded: null,
         selectedBackboneRegion: null,
+        detailedBasePairRequest: null,
         detailedBasePairRange: { start: 0, stop: 0 },
 
-        overviewBasePairToHeightRatio: 1000,
-        overviewSyntenyThreshold: 0,
-        detailedBasePairToHeightRatio: 1000,
+        overviewSyntenyThreshold: 30000,
         detailsSyntenyThreshold: 0,
-
-        configTab: 0,
 
         selectedData: null,
         loadedGenes: null,
-        loadedBlocks: null,
         selectedGeneIds: [],
 
         isDetailedPanelUpdating: false,
         isOverviewPanelUpdating: false,
+        selectionToastCount: 0,
 
         // Overwrite default state with props passed in by the tester
         ...initialState,

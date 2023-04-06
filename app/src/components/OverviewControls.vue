@@ -12,11 +12,18 @@
         <div class="col-5">Synteny Threshold:</div>
         <div class="col-7 bold">{{Formatter.addCommasToBasePair(store.state.overviewSyntenyThreshold)}}bp</div>
         <div class="col-5">Displaying:</div>
-        <div class="col-7 bold"><span class="clickable-range" @click="openSelectionEditModal">{{selectionRange}}</span></div>
+        <div class="p-fluid col-7 bold"><span>{{selectionRange}}</span>
+          <Button 
+            label="Edit BP Range" 
+            class="p-button edit-bp-btn"
+            @click="openSelectionEditModal"
+            >
+          </Button>
+        </div>
       </div>
     </div>
   </div>
-  <VCMapDialog v-model:show="showEditModal" header="Edit Base Selection Start/Stop Positions">
+  <VCMapDialog v-model:show="showEditModal" header="Edit Selected Start/Stop Positions">
     <template #content>
       <div class="grid p-d-flex">
         <div class="col-6">
@@ -132,8 +139,11 @@ const saveSelectionChange = () => {
   if (isValidStartStop.value)
   {
     const selectedBackboneRegion = store.state.selectedBackboneRegion;
-    selectedBackboneRegion.setViewportSelection(startPosition.value, stopPosition.value);
-    store.dispatch('setDetailedBasePairRange', { start: startPosition.value, stop: stopPosition.value });
+    // FIXME:
+    selectedBackboneRegion?.setViewportSelection(startPosition.value, stopPosition.value);
+
+    store.dispatch('setDetailedBasePairRequest', { start: startPosition.value, stop: stopPosition.value });
+    // store.dispatch('setDetailedBasePairRange', { start: startPosition.value, stop: stopPosition.value });
   }
   showEditModal.value = false;
 };
@@ -184,5 +194,12 @@ p.label-description
 .left-align-btn
 {
   text-align: left;
+}
+
+.edit-bp-btn
+{
+  width: 10rem;
+  margin-top: 0.5rem;
+  height: 2rem;
 }
 </style>

@@ -83,13 +83,12 @@ export interface SpeciesSyntenyData
   mapName: string;
   mapKey: number;
   regionData: SyntenyRegionData[];
-  allGenes?: Gene[];
-  allGenesMap?: Map<string, any>; // FIXME: Since this is meant to be an intermediate interface that gets converted into data models, this prop might be better off existing somewhere else
 }
 
 function getGeneFromDTO(dto: SyntenyGeneDTO, speciesName: string)
 {
   return new Gene({
+    mapKey: dto.mapKey,
     speciesName: speciesName,
     symbol: dto.geneSymbol,
     name: dto.geneName,
@@ -187,7 +186,8 @@ export default class SyntenyApi
         if (result.status === 'fulfilled')
         {
           const singleSpeciesSyntenyData = getSpeciesSyntenyDataFromDTO(result.value.data, params.comparativeSpecies[index]);
-          console.debug(`[DEBUG] Syntenic regions found: ${singleSpeciesSyntenyData.regionData.length} [mapKey: '${singleSpeciesSyntenyData.mapKey}', threshold: '${params.optional.threshold}']`);
+          console.debug(`[DEBUG] Syntenic regions found: ${singleSpeciesSyntenyData.regionData.length} ` +
+            `[mapKey: '${singleSpeciesSyntenyData.mapKey}', threshold: '${params.optional.threshold}']`);
           speciesSyntenyData.push(singleSpeciesSyntenyData);
         }
         else
@@ -195,7 +195,9 @@ export default class SyntenyApi
           console.error(result.status, result.reason);
         }
       });
-      console.debug(`[DEBUG] Synteny API: ${Date.now() - start} ms`, params);
+      console.debug(`[DEBUG] Synteny API: ${Date.now() - start} ms`,
+          params.backboneChromosome.chromosome, params.start, params.stop, params.optional.threshold);
+      // console.debug(`[DEBUG] Synteny API: ${Date.now() - start} ms`, params);
 
       return speciesSyntenyData;
     }

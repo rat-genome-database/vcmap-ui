@@ -160,25 +160,29 @@ export default abstract class GenomicSection implements VCMapSVGElement
    */
   private calculateYPositionsBasedOnBackboneAlignment()
   {
-    const svgLength = this.windowSVGStop - this.windowSVGStart;
-    const bpVisibleWindowLength = Math.abs(this.windowStop - this.windowStart);
+    // NOTE: Caching these function calls to avoid extra functions on the call stack
+    const windowSVGStop = this.windowSVGStop, windowSVGStart = this.windowSVGStart;
+    const windowStop = this.windowStop, windowStart = this.windowStart;
+
+    const svgLength = windowSVGStop - windowSVGStart;
+    const bpVisibleWindowLength = Math.abs(windowStop - windowStart);
     const bpToSVGRatio = bpVisibleWindowLength / svgLength;
 
     // Calculate the start and stop SVG positions of this backbone section
-    const basepairDiff = Math.abs(this.windowStart - this.backboneAlignment.start);
+    const basepairDiff = Math.abs(windowStart - this.backboneAlignment.start);
     const svgDiff = basepairDiff / bpToSVGRatio;
 
-    if (this.backboneAlignment.start < this.windowStart)
+    if (this.backboneAlignment.start < windowStart)
     {
-      this.posY1 = this.windowSVGStart - svgDiff;
+      this.posY1 = windowSVGStart - svgDiff;
     }
-    else if (this.backboneAlignment.start > this.windowStart)
+    else if (this.backboneAlignment.start > windowStart)
     {
-      this.posY1 = this.windowSVGStart + svgDiff;
+      this.posY1 = windowSVGStart + svgDiff;
     }
-    else if (this.backboneAlignment.start === this.windowStart)
+    else if (this.backboneAlignment.start === windowStart)
     {
-      this.posY1 = this.windowSVGStart;
+      this.posY1 = windowSVGStart;
     }
 
     this.posY2 = this.posY1 + (this.backboneAlignmentLength / bpToSVGRatio);

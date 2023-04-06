@@ -6,13 +6,6 @@
           <b>Selected Data</b>
         </div>
         <div class="panel-header-item">
-          <Button
-            label="Clear Selection"
-            class="p-button-info"
-            @click="clearSelectedGenes"
-          />
-        </div>
-        <div class="panel-header-item">
           <AutoComplete
             v-model="searchedGene"
             :suggestions="geneSuggestions"
@@ -23,23 +16,31 @@
             :minLength="3"
             placeholder="Search loaded genes..."
           />
-          <Button
-            v-tooltip.right="`Only searches genes loaded in the selected overview \
-              region (${Formatter.convertBasePairToLabel(overviewStart)} - \
-              ${Formatter.convertBasePairToLabel(overviewStop)}). \
-              Select a wider region on the backbone in the overview panel to search more genes.`"
-            icon="pi pi-info-circle"
-            class="p-button-link"
-          >
-          </Button>
         </div>
         <div class="panel-header-item">
-          {{numberOfResults}} Selected Genes
+          <div v-if="numberOfResults > 0">
+            {{numberOfResults}} Selected Genes
+          </div>
+          <div class="clear-selection-btn">
+            <Button
+                v-tooltip.right="`Clear Selection`"
+                class="p-button-info p-button-sm"
+                icon="pi pi-ban"
+                @click="clearSelectedGenes"
+                rounded
+            />
+          </div>
         </div>
       </div>
     </template>
     
     <div class="gene-data">
+      <template v-if="!props.selectedData || props.selectedData.length === 0">
+        <div class="no-data">
+          <p class="placeholder-msg">No data selected</p>
+          <p class="placeholder-msg-txt">Select data by clicking or hovering drawn elements, or searching by gene symbol above</p>
+        </div>
+      </template>
       <template v-for="dataObject in props.selectedData" :key="dataObject">
         <template v-if="dataObject?.type === 'Gene'">
           <GeneInfo
@@ -136,18 +137,23 @@ import SelectedData from '@/models/SelectedData';
 import Gene from '@/models/Gene';
 import GeneInfo from '@/components/GeneInfo.vue';
 import { Formatter } from '@/utils/Formatter';
-import SVGConstants from '@/utils/SVGConstants';
-import { ref, watch } from 'vue';
+import SVGConstants, {PANEL_SVG_START, PANEL_SVG_STOP} from '@/utils/SVGConstants';
+import { ref, watch} from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
-import { getNewSelectedData, sortGeneList } from '@/utils/DataPanelHelpers';
-import { GeneDatatrack } from '@/models/DatatrackSection';
+import { getNewSelectedData, sortGeneList, sortGeneMatches } from '@/utils/DataPanelHelpers';
+
+/**
+ * FIXME: This whole component needs to be looked over. There are references to properties on objects that don't exist.
+ * The template is full of v-ifs and it can be pretty confusing to wrap your head around what's going on.
+ */
 
 const store = useStore(key);
 
 interface Props
 {
   selectedData: SelectedData[] | null;
+  geneList: Map<number, Gene>;
 }
 
 const props = defineProps<Props>();
@@ -156,7 +162,7 @@ const searchedGene = ref<Gene | Gene[] | null>(null);
 const geneSuggestions = ref<Gene[]>([]);
 const numberOfResults = ref<number>(0);
 const overviewStart = ref<number>(0);
-const overviewStop = ref<number>(store.state.chromosome.seqLength ?? 1);
+const overviewStop = ref<number>(store.state.chromosome?.seqLength ?? 1);
 
 // fraction of gene bp length to add to the window when jumping
 // to the gene after a search
@@ -195,32 +201,18 @@ const clearSelectedGenes = () => {
 
 const searchGene = (event: {query: string}) => {
   // Need to figure out how to more efficiently type vuex getters
-  const loadedGenesByRGDId = store.getters.masterGeneMapByRGDId as Map<number, GeneDatatrack[]>;
-  const loadedGeneSymbols = store.getters.masterGeneMapBySymbol as Map<string, number[]>;
+  // const loadedGenesByRGDId = store.getters.masterGeneMapByRGDId as Map<number, GeneDatatrack[]>;
+  // const loadedGeneSymbols = store.getters.masterGeneMapBySymbol as Map<string, number[]>;
 
   let matches: Gene[] = [];
-  for (const symbol of loadedGeneSymbols.keys()) 
-  {
-    if (symbol.toLowerCase().includes(event.query.toLowerCase()))
-    {
-      const rgdIds = loadedGeneSymbols.get(symbol);
-      if (rgdIds == null)
-      {
-        continue;
-      }
+  props.geneList.forEach((gene) => {
+    if (gene.symbol.toLowerCase().includes(event.query.toLowerCase()))
+      // TODO: we may need to push a clone of the Gene here to break other relationships
+      matches.push(gene);
+  });
 
-      for (let rgdId of rgdIds) 
-      {
-        const genes = loadedGenesByRGDId.get(rgdId);
-        if (genes == null)
-        {
-          continue;
-        }
-
-        genes.forEach(geneDatatrack => matches.push(geneDatatrack.gene));
-      }
-    }
-  }
+  const searchKey = searchedGene.value;
+  matches = sortGeneMatches(searchKey, matches);
   geneSuggestions.value = matches;
 };
 
@@ -254,9 +246,9 @@ const getSuggestionDisplay = (item: any) => {
 };
 
 const adjustSelectionWindow = () => {
-  const loadedGenes = store.state.loadedGenes;
-  const selectedRegion = store.state.selectedBackboneRegion;
-  const selectionStart = selectedRegion.viewportSelection?.basePairStart || 0;
+  // const loadedGenes = store.state.loadedGenes;
+  const selectionStart = store.state.detailedBasePairRange.start;
+  const selectionStop = store.state.detailedBasePairRange.stop;
 
   // New start and stop will be +/- some multiple of the gene's length (currently 2x)
   const geneBasePairLength = searchedGene.value.stop - searchedGene.value.start;
@@ -266,18 +258,18 @@ const adjustSelectionWindow = () => {
     - SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), 0);
   // Take min of new stop and selected regions original stop
   const newInnerStop = Math.min(Math.floor(searchedGene.value.stop
-    + SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), selectedRegion.chromosome.seqLength);
+    + SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), store.state.chromosome?.seqLength ?? newInnerStart);
   //get orthologs for backbone gene, and determine the relative highest and lowest positioned genes to reset the window
   const orthologs = searchedGene.value.orthologs;
 
   const orthologInfo: any[] = [];
-  Object.entries(orthologs).forEach((ortholog) => {
-    const currentOrtholog = loadedGenes.get(ortholog[1][0]);
-    orthologInfo.push(currentOrtholog['genes'][Object.keys(currentOrtholog['genes'])][0]);
-  });
+  // Object.entries(orthologs).forEach((ortholog) => {
+  //   const currentOrtholog = loadedGenes.get(ortholog[1][0]);
+  //   orthologInfo.push(currentOrtholog['genes'][Object.keys(currentOrtholog['genes'])][0]);
+  // });
   
-  // if (orthologs.length > 0)
-  if (Object.entries(orthologs).length > 0)
+  if (orthologs.length > 0)
+  // if (Object.entries(orthologs).length > 0)
   {
 
     orthologInfo.sort((a, b) => a.posY1 - b.posY1);
@@ -288,30 +280,35 @@ const adjustSelectionWindow = () => {
     const topOrthologLength = highestOrtholog.gene.stop - highestOrtholog.gene.start;
     const bottomOrthologLength = lowestOrtholog.gene.stop - lowestOrtholog.gene.start;
 
-    const basePairsFromInnerSelection1 = Math.floor((highestOrtholog.posY1- SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
+    const svgHeight = PANEL_SVG_STOP - PANEL_SVG_START;
+    const bpVisibleWindowLength = Math.abs(selectionStop - selectionStart);
+    const pixelsPerBpRatio = svgHeight / bpVisibleWindowLength;
+    const basePairsFromInnerSelection1 = Math.floor((highestOrtholog.posY1- SVGConstants.panelTitleHeight) * pixelsPerBpRatio);
     const basePairStart = Math.max(basePairsFromInnerSelection1 + selectionStart - (topOrthologLength * 5), 0);
 
-    const basePairsFromInnerSelection2 = Math.floor((lowestOrtholog.posY1 - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
-    const basePairStop = Math.min(basePairsFromInnerSelection2 + selectionStart + (bottomOrthologLength * 5), selectedRegion.chromosome.seqLength);
+    const basePairsFromInnerSelection2 = Math.floor((lowestOrtholog.posY1 - SVGConstants.panelTitleHeight) * pixelsPerBpRatio);
+    const basePairStop = Math.min(
+        basePairsFromInnerSelection2 + selectionStart + (bottomOrthologLength * 5),
+        store.state.chromosome?.seqLength ?? basePairStart);
 
 
     // confirm the searched gene is visible in the result and adjust if not
     if (newInnerStart > basePairStart && newInnerStop < basePairStop)
     {
-      store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: basePairStop});
+      store.dispatch('setDetailedBasePairRequest', { start: basePairStart, stop: basePairStop});
     }
     else if (newInnerStart < basePairStart)
     {
-      newInnerStop > basePairStop ? store.dispatch('setDetailedBasePairRange', { start: newInnerStart, stop: newInnerStop }) : store.dispatch('setDetailedBasePairRange', { start: newInnerStart, stop: basePairStop });
+      newInnerStop > basePairStop ? store.dispatch('setDetailedBasePairRequest', { start: newInnerStart, stop: newInnerStop }) : store.dispatch('setDetailedBasePairRequest', { start: newInnerStart, stop: basePairStop });
     }
     else if (newInnerStop > basePairStop)
     {
-      newInnerStart < basePairStart ? store.dispatch('setDetailedBasePairRange', { start: newInnerStart, stop: newInnerStop}) : store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: newInnerStop});
+      newInnerStart < basePairStart ? store.dispatch('setDetailedBasePairRequest', { start: newInnerStart, stop: newInnerStop}) : store.dispatch('setDetailedBasePairRequest', { start: basePairStart, stop: newInnerStop});
     }
   }
   else
   {
-    store.dispatch('setDetailedBasePairRange', { start: newInnerStart, stop: newInnerStop});
+    store.dispatch('setDetailedBasePairRequest', { start: newInnerStart, stop: newInnerStop});
   }
   
 };
@@ -332,5 +329,27 @@ const adjustSelectionWindow = () => {
 .panel-header-item
 {
   padding-bottom: 10px;
+}
+
+.clear-selection-btn
+{
+  margin-top: .5em;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.placeholder-msg
+{
+  font-size: 1.1rem;
+  padding-right: 3rem;
+  margin-top: 0rem;
+  margin-bottom: 0;
+}
+
+.placeholder-msg-txt
+{
+  font-size: .9rem;
+  font-style: italic;
+  margin-top: .5em;
 }
 </style>

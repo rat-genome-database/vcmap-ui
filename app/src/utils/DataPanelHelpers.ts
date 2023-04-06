@@ -4,19 +4,18 @@ import { Store } from "vuex";
 import { VCMapState } from "@/store";
 import { GeneDatatrack } from '@/models/DatatrackSection';
 
-
-export function getNewSelectedData(store: Store<VCMapState>, gene: Gene): {rgdIds: number[], selectedData: SelectedData[] } {
+export function getNewSelectedData(store: Store<VCMapState>, gene: Gene): { rgdIds: number[], selectedData: SelectedData[] } {
   const comparativeSpecies = store.state.comparativeSpecies;
   const compSpeciesNameMap = new Map<Number, string>();
 
-  comparativeSpecies.forEach((species: any) => compSpeciesNameMap.set(species.activeMap.key, species.name));
+  comparativeSpecies.forEach(species => compSpeciesNameMap.set(species.activeMap.key, species.name));
  
-  const allOrthologInfo = getGeneOrthologData(store, gene);
-  return {rgdIds: allOrthologInfo.rgdIds, selectedData: allOrthologInfo.selectedData};
+  //const allOrthologInfo = getGeneOrthologData(store, gene);
+  return {rgdIds: [gene.rgdId], selectedData: []};
 }
 
 export function sortGeneList(geneList: Gene[]) {
-  // for combined or hiddent gene lists, sort LOC
+  // for combined or hidden gene lists, sort LOC
   // genes to end of list, otherwise sort alphabetically
   geneList.sort((geneA, geneB) => {
     const isGeneALOC = geneA.symbol.startsWith('LOC') || false;
@@ -38,6 +37,7 @@ export function sortGeneList(geneList: Gene[]) {
   });
 }
 
+// FIXME: This method will need to be reworked once we decide how to grab orthologs for a specific gene 
 function getGeneOrthologData(store: Store<VCMapState>, gene: Gene) 
 {
   const masterGeneMapByRGDId = store.getters.masterGeneMapByRGDId as Map<number, GeneDatatrack[]>;
@@ -111,4 +111,51 @@ function getGeneOrthologData(store: Store<VCMapState>, gene: Gene)
     rgdIds: rgdIds, 
     selectedData: selectedDataList
   };
+}
+
+export function sortGeneMatches(searchKey: any, partialMatches: Gene[])
+{ 
+  searchKey = searchKey.toLowerCase();
+
+  return partialMatches.sort((a, b) => {
+    const distanceA = levenshteinDistance(searchKey, a.symbol.toLowerCase());
+    const distanceB = levenshteinDistance(searchKey, b.symbol.toLowerCase());
+    return distanceA - distanceB;
+  });
+}
+
+function levenshteinDistance(str1: string, str2: string) 
+{
+  const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(0));
+
+  for (let i = 0; i <= str1.length; i++) 
+  {
+    matrix[0][i] = i;
+  }
+
+  for (let j = 0; j <= str2.length; j++) 
+  {
+    matrix[j][0] = j;
+  }
+
+  for (let j = 1; j <= str2.length; j++) 
+  {
+    for (let i = 1; i <= str1.length; i++) 
+    {
+      if (str2.charAt(j - 1) === str1.charAt(i - 1)) 
+      {
+        matrix[j][i] = matrix[j - 1][i - 1];
+      } 
+      else 
+      {
+        matrix[j][i] = Math.min(
+          matrix[j - 1][i] + 1, // deletion
+          matrix[j][i - 1] + 1, // insertion
+          matrix[j - 1][i - 1] + 1 // substitution
+        );
+      }
+    }
+  }
+
+  return matrix[str2.length][str1.length];
 }

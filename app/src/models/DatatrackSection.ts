@@ -36,7 +36,8 @@ export class GeneDatatrack extends DatatrackSection
 {
   gene: Gene; // gene that this datatrack represents
 
-  constructor(gene: Gene, start: number, stop: number, backboneAlignment: BackboneAlignment, speciesName: string, mapName: string, chromosome: string, windowBasePairRange: WindowBasePairRange, renderType: RenderType)
+  constructor(gene: Gene, start: number, stop: number, backboneAlignment: BackboneAlignment, speciesName: string,
+              mapName: string, chromosome: string, windowBasePairRange: WindowBasePairRange, renderType: RenderType)
   {
     super({
       start: start,
@@ -51,7 +52,7 @@ export class GeneDatatrack extends DatatrackSection
       color: '#00000',
     });
 
-    this.gene = gene;
+    this.gene = gene.clone();
     this.opacity = 0.7;
     this.createGeneLabel();
   }
@@ -65,7 +66,7 @@ export class GeneDatatrack extends DatatrackSection
         text: this.gene.symbol,
         isVisible: false,
       },
-      this.gene
+      [this.gene]
     );
   }
 }

@@ -1,5 +1,5 @@
 <template>
-  <span data-test="zoom-level-label">{{zoomLevel}}x</span>
+  <span data-test="zoom-level-label">{{ Math.round(zoomLevel * 100) / 100.0 }}x</span>
   <Slider :disabled="isZoomDisabled" class="zoom-slider" data-test="zoom-slider" v-model="zoomLevel" :step="1" :min="1" :max="100" @slideend="onZoomSliderEnd" />
   <div class="zoom-options-container">
     <div class="zoom-out-container">
@@ -27,21 +27,18 @@ import { SliderSlideEndEvent } from 'primevue/slider';
 
 const store = useStore(key);
 
-const zoomLevel = ref(1);
-const zoomIntervals = [1.5, 3, 10, 100];
+const zoomLevel = ref(1.0);
+const zoomIntervals = [1.5, 3.0, 10.0, 100.0];
 
-watch(() => store.state.isDetailedPanelUpdating, (isUpdating) => {
-  if (!isUpdating && store.state.selectedBackboneRegion != null)
-  {
-    // Update the zoom level shown in the Slider to match what was calculated based on an overview/detailed panel selection
-    zoomLevel.value = store.state.selectedBackboneRegion.zoomLevel;
-  }
-}, {
-  immediate: true,
-});
+watch(() => store.state.detailedBasePairRange, (newRange) => {
+  // Update the zoom level shown in the Slider to show the ratio of the
+  // viewport size to the total chromosome.
+  let seqLength = store.state.chromosome?.seqLength ?? 0;
+  zoomLevel.value = seqLength * 1.0 / (newRange.stop - newRange.start);
+}, { immediate: true, });
 
 const isZoomDisabled = computed(() => {
-  return store.state.isDetailedPanelUpdating || store.state.selectedBackboneRegion?.viewportSelection == null;
+  return store.state.isDetailedPanelUpdating || store.state.chromosome == null;
 });
 
 const onZoomSliderEnd = (event: SliderSlideEndEvent) => {
@@ -53,31 +50,30 @@ const onZoomSliderEnd = (event: SliderSlideEndEvent) => {
   zoom(event.value);
 };
 
-const zoom = (zoomLevel: number) => {
-  const selectedRegion = store.state.selectedBackboneRegion;
+const zoom = (newZoomLevel: number) => {
   const backboneChromosome = store.state.chromosome;
 
-  if (selectedRegion == null || selectedRegion.viewportSelection == null || backboneChromosome == null)
+  console.debug(`Zoom level: ${newZoomLevel}`);
+
+  if (backboneChromosome == null)
   {
     console.error('Cannot zoom if selectedRegion, viewportSelection, or backboneChromosome is null');
+    return;
   }
-  else if (zoomLevel === 1)
+
+  if (newZoomLevel === 1)
   {
-    store.dispatch('setDetailedBasePairRange', { start: 0, stop: backboneChromosome.seqLength });
+    store.dispatch('setDetailedBasePairRequest', { start: 0, stop: backboneChromosome.seqLength });
+    // store.dispatch('setDetailedBasePairRange', { start: 0, stop: backboneChromosome.seqLength });
   }
   else
   {
-    let zoomedStart = selectedRegion.viewportSelection.basePairStart;
-    let zoomedStop = selectedRegion.viewportSelection.basePairStop;
+    let zoomedStart = store.state.detailedBasePairRange.start;
+    let zoomedStop = store.state.detailedBasePairRange.stop;
     let currentLength = zoomedStop - zoomedStart;
-    if (selectedRegion.viewportSelection)
-    {
-      zoomedStart = selectedRegion.viewportSelection.basePairStart;
-      zoomedStop = selectedRegion.viewportSelection.basePairStop;
-      currentLength = zoomedStop - zoomedStart;
-    }
+    let currentZoomLevel = backboneChromosome.seqLength / currentLength;
 
-    const newRegionLength = (zoomedStop - zoomedStart) * (selectedRegion.zoomLevel / zoomLevel);
+    const newRegionLength = currentLength * (currentZoomLevel / newZoomLevel);
     const lengthDiff = currentLength - newRegionLength;
 
     if (lengthDiff > 0)
@@ -107,12 +103,13 @@ const zoom = (zoomLevel: number) => {
     }
 
     // Trigger detailed panel update
-    store.dispatch('setDetailedBasePairRange', { start: zoomedStart, stop: zoomedStop });
+    store.dispatch('setDetailedBasePairRequest', { start: zoomedStart, stop: zoomedStop });
+    // store.dispatch('setDetailedBasePairRange', { start: zoomedStart, stop: zoomedStop });
   }
 };
 
 const zoomOut = (zoomInterval: number) => {
-  zoom( zoomLevel.value /zoomInterval);
+  zoom( zoomLevel.value / zoomInterval);
 };
 const zoomIn = (zoomInterval: number) => {
   zoom( zoomLevel.value * zoomInterval);
@@ -172,8 +169,12 @@ const zoomIn = (zoomInterval: number) => {
 }
 .zoom-in-label{
   margin-right: 0.5rem;
+  padding-left: .5em;
+  font-size: .85em;
 }
 .zoom-out-label{
   margin-left: 0.5rem;
+  padding-right: .5em;
+  font-size: .85em;
 }
 </style>
