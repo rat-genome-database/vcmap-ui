@@ -180,8 +180,11 @@
             <li>Chr{{ block.chromosome.chromosome }}: ({{ block.start }}, {{ block.stop }}) [{{ block.stop - block.start }}]</li>
             <li>ChainLevel: {{ block.chainLevel }}</li>
             <li>Backbone: ({{ block.backboneStart }}, {{ block.backboneStop }})</li>
-            <li>Genes: {{ block.genes.length }}</li>
-            <li>Gaps: {{ block.gaps.length }}</li>
+            <li>Genes: {{ block.genes.length }} <a href="javascript:void(0)" @click="toggleGenesListForBlock(enabledBlockIndicesForGeneDebugList, index)">Click to see</a></li>
+            <ul v-if="enabledBlockIndicesForGeneDebugList.includes(index)">
+              <li v-for="(gene, geneIndex) in block.genes" :key="geneIndex">{{  gene.symbol }} ({{ gene.start }}, {{ gene.stop }}) [{{ gene.stop - gene.start }}]</li>
+            </ul>
+            <li>Gaps: {{ block.gaps.length }} (Level 1: {{ block.gaps.filter(g => g.chainLevel == 1).length }} | Level 2: {{ block.gaps.filter(g => g.chainLevel === 2).length }} | Level 3+: {{ block.gaps.filter(g => g.chainLevel > 2).length }})</li>
           </ul>
         </template>
       </template>
@@ -205,6 +208,16 @@
             <li>Backbone: ({{ region.gaplessBlock.backboneAlignment.start }}, {{ region.gaplessBlock.backboneAlignment.stop }})</li>
             <li>Chain Level: {{ region.gaplessBlock.chainLevel }}</li>
             <li>Orientation: {{ region.gaplessBlock.orientation }}</li>
+            <li>Gene Datatracks: {{ region.datatrackSets[0]?.datatracks.length ?? 0 }} <a href="javascript:void(0)" @click="toggleGenesListForBlock(enabledRegionIndicesForGeneDebugList, regionIndex)">Click to see</a></li>
+            <ul v-if="enabledRegionIndicesForGeneDebugList.includes(regionIndex)">
+              <li v-for="(geneData, geneIndex) in (region.datatrackSets[0]?.datatracks as GeneDatatrack[])" :key="geneIndex">
+                <ul>
+                  <li>Symbol: {{ geneData.gene.symbol }}</li>
+                  <li>Backbone: {{ geneData.gene.backboneStart }} - {{ geneData.gene.backboneStop }} [{{ geneData.backboneAlignmentLength }}]</li>
+                  <li>Gene Start/Stop: {{ geneData.gene.start }} - {{ geneData.gene.stop }} [{{ geneData.length }}]</li>
+                </ul>
+              </li>
+            </ul>
           </ul>
         </template>
       </template>
@@ -249,6 +262,7 @@ import Block from "@/models/Block";
 import { GeneLabel } from '@/models/Label';
 import SyntenyRegion from '@/models/SyntenyRegion';
 import { createOrthologLines } from '@/utils/OrthologHandler';
+import { GeneDatatrack } from '@/models/DatatrackSection';
 
 const SHOW_DEBUG = process.env.NODE_ENV === 'development';
 const NAV_SHIFT_PERCENT = 0.2;
@@ -275,10 +289,29 @@ let detailedSyntenySets = ref<SyntenyRegionSet[]>([]); // The currently displaye
 let overviewBackboneSet = ref<BackboneSet>();
 let detailedBackboneSet = ref<BackboneSet>();
 let overviewSyntenySets = ref<SyntenyRegionSet[]>([]);
+// TODO: Remove anything involving testRects
 let testRects = ref<VCMapSVGEl[]>();
 let testRects2 = ref<VCMapSVGEl[]>();
 let testRects3 = ref<VCMapSVGEl[]>();
 let testRects4 = ref<VCMapSVGEl[]>();
+
+////
+// Debugging helper refs and methods (debug template is currently commented out):
+const enabledBlockIndicesForGeneDebugList = ref<number[]>([]);
+const enabledRegionIndicesForGeneDebugList = ref<number[]>([]);
+const toggleGenesListForBlock = (debugList: number[], blockIndex: number) => {
+  const elementIndex = debugList.findIndex((val) => val === blockIndex);
+  if (elementIndex !== -1)
+  {
+    // Toggle off
+    debugList.splice(elementIndex, 1);
+    return;
+  }
+
+  debugList.push(blockIndex);
+};
+////
+
 
 const orthologLines = computed(() => {
   let lines: OrthologLine[] = [];
