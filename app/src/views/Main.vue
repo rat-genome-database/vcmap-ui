@@ -464,15 +464,12 @@ function processAlignmentsOfGeneOutsideOfViewport(gene: Gene, targetBlock: Block
  */
 function processAlignmentsOfGeneInsideOfViewport(gene: Gene, targetBlock: Block)
 {
-  // TODO Test logs for specific gene
-  // const testGene = 'Prkcq';
-  // if (gene.symbol === testGene)
-  // {
-  //   console.log(`${testGene}`, gene, targetBlock.gaps.length);
-  //   console.log(targetBlock.gaps.map(g => ({ start: g.start, backboneStart: g.backboneStart })));
-  // }
-  //
-  if (targetBlock.gaps.length === 0)
+  // Only use gaps at the same level as the target block
+  // NOTE: This should really always be level 1, since we only process genes that come back on level 1 blocks
+  //   We will need to adjust the implementation to handle overlapping gaps if we start needing to process 
+  //   level 2 stuff...
+  const gaps = targetBlock.gaps.filter(g => g.chainLevel === targetBlock.chainLevel);
+  if (gaps.length === 0)
   {
     // Process gene alignments for gapless blocks just like how we'd process alignments
     // that are outside of the viewport
@@ -484,13 +481,9 @@ function processAlignmentsOfGeneInsideOfViewport(gene: Gene, targetBlock: Block)
   let startingSection: GenomicPosition | undefined;
   let endingSection: GenomicPosition | undefined;
   let previousGap: Gap | undefined;
-  for (let i = 0; i < targetBlock.gaps.length; i++)
+  for (let i = 0; i < gaps.length; i++)
   { 
-    const gap = targetBlock.gaps[i];
-    // TODO TEST
-    // if (gene.symbol === testGene)
-    //   console.log(` Checking gap`, gap);
-    //
+    const gap = gaps[i];
     if (!startingSection)
     {
       // Looking for starting section...
@@ -516,11 +509,6 @@ function processAlignmentsOfGeneInsideOfViewport(gene: Gene, targetBlock: Block)
           backboneStop: gap.backboneStop,
         };
       }
-
-      // TODO TEST
-      // if (gene.symbol === testGene && startingSection)
-      //   console.log(` StartingSection FOUND`, startingSection);
-      //
     }
     
     // NOTE: Not using an else here because the endingSection might be the same as the startingSection.
@@ -550,14 +538,9 @@ function processAlignmentsOfGeneInsideOfViewport(gene: Gene, targetBlock: Block)
           backboneStop: gap.backboneStop,
         };
       }
-
-      // TODO TEST
-      // if (gene.symbol === testGene && endingSection)
-      //   console.log(` EndingSection FOUND`, endingSection);
-      //
     }
 
-    if (i === targetBlock.gaps.length - 1 && targetBlock.stop > gap.stop && (!startingSection || !endingSection))
+    if (i === gaps.length - 1 && targetBlock.stop > gap.stop && (!startingSection || !endingSection))
     {
       // If the last gap was just analyzed and no starting/ending section has been found, then
       // the missing section(s) should be the final "block" after the last gap
@@ -568,11 +551,6 @@ function processAlignmentsOfGeneInsideOfViewport(gene: Gene, targetBlock: Block)
         backboneStop: (targetBlock.orientation === '-') ? gap.backboneStart : targetBlock.backboneStop,
       };
 
-      // TODO TEST
-      // if (gene.symbol === testGene)
-      //   console.log(` Using LastSection`, lastSection);
-      //
-
       if (!startingSection) startingSection = lastSection;
       if (!endingSection) endingSection = lastSection;
     }
@@ -581,10 +559,6 @@ function processAlignmentsOfGeneInsideOfViewport(gene: Gene, targetBlock: Block)
 
     if (startingSection && endingSection)
     {
-      // TODO TEST
-      // if (gene.symbol === testGene)
-      //   console.log(` DONE finding sections for ${testGene}`);
-      //
       break;
     }
   }
@@ -602,10 +576,7 @@ function processAlignmentsOfGeneInsideOfViewport(gene: Gene, targetBlock: Block)
   // Calculate backbone alignments based on starting/ending section blockRatios and orientations
   const startingSectionRatio = Math.abs(startingSection.backboneStop - startingSection.backboneStart) / Math.abs(startingSection.stop - startingSection.start);
   const endingSectionRatio = Math.abs(endingSection.backboneStop - endingSection.backboneStart) / Math.abs(endingSection.stop - endingSection.start);
-  // TODO:
-  // if (gene.symbol === testGene)
-  //   console.log(`Ratios`, startingSectionRatio, endingSectionRatio);
-  //
+
   if (targetBlock.orientation === '+')
   {
     // Forward oriented block
@@ -615,14 +586,6 @@ function processAlignmentsOfGeneInsideOfViewport(gene: Gene, targetBlock: Block)
   }
   else
   {
-    // TODO:
-    // if (gene.symbol === testGene)
-    // {
-    //   console.log(` Calculation backboneStart`, endingSection.backboneStart, endingSection.stop, gene.stop);
-    //   console.log(` Calculation backboneStop`, startingSection.backboneStart, startingSection.stop, gene.start);
-    // }
-    //
-
     // Reverse oriented block
     // TODO: Some edge cases might not be handled properly with this simplification
     gene.backboneStart = Math.floor(endingSection.backboneStart + (endingSection.stop - gene.stop) * endingSectionRatio);
