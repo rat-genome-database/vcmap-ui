@@ -30,6 +30,7 @@ interface GapParams
   stop: number;
   backboneStart: number;
   backboneStop: number;
+  chainLevel: number;
 }
 export class Gap
 {
@@ -37,12 +38,15 @@ export class Gap
   stop: number = -1;
   backboneStart: number = -1;
   backboneStop: number = -1;
+  chainLevel: number = 1;
+
   constructor(params: GapParams)
   {
     this.start = params.start;
     this.stop = params.stop;
     this.backboneStart = params.backboneStart;
     this.backboneStop = params.backboneStop;
+    this.chainLevel = params.chainLevel;
   }
 }
 
@@ -129,6 +133,7 @@ export default class Block
             stop: newgaps[idx].stop,
             backboneStart: newgaps[idx].backboneStart,
             backboneStop: newgaps[idx].backboneStop,
+            chainLevel: newgaps[idx].chainLevel,
           }));
           break;
         }
@@ -142,6 +147,7 @@ export default class Block
           stop: newgaps[idx].stop,
           backboneStart: newgaps[idx].backboneStart,
           backboneStop: newgaps[idx].backboneStop,
+          chainLevel: newgaps[idx].chainLevel,
         }));
       }
     }
