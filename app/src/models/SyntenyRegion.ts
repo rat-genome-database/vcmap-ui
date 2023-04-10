@@ -98,21 +98,28 @@ export default class SyntenyRegion
   // SyntenyRegion objects a bit lighter...
   public splitBlockWithGaps(factory: GenomicSectionFactory, gaps: Gap[]) // TODO (safe to remove)?:, threshold: number)
   {
-    // Filter out any gaps that are not in the viewport (detailed panel) and sort gaps in order of backbone position
-    // NOTE: This is really important for inverted blocks. The code below is
-    //  is written in a way that expects the gaps to go in order of how they 
-    //  align against the backbone
+    // Do the following:
+    // 1. Filter out any gaps that do not match the chain level of this block
+    //   NOTE: This ensures we don't split up level 1 blocks with level 2 gaps, etc... things get weird above level 1.
+    //     There can be overlapping gaps and gaps inside of other gaps that would make the logic a bit more complicated.
+    //     We'd possibly need to filter out any gaps that are inside of other gaps or combine overlapping gaps into one 
+    //     larger gap...
+    // 2. Filter out any gaps that are not in the viewport (detailed panel)
+    // 3. Sort gaps in order of backbone position
+    //   NOTE: This is really important for inverted blocks. The code below is
+    //     is written in a way that expects the gaps to go in order of how they 
+    //     align against the backbone
     console.time(`Sort gaps for splitBlockWithGaps`);
     const sortedGaps = [...gaps]
-      .filter(g => isGenomicDataInViewport(g, this.gaplessBlock.windowBasePairRange.start, this.gaplessBlock.windowBasePairRange.stop))
+      .filter(g => {
+        return g.chainLevel === this.gaplessBlock.chainLevel
+          && isGenomicDataInViewport(g, this.gaplessBlock.windowBasePairRange.start, this.gaplessBlock.windowBasePairRange.stop)
+      })
       .sort((a, b) => a.backboneStart - b.backboneStart);
     console.timeEnd(`Sort gaps for splitBlockWithGaps`);
 
     console.log(` splitBlockWithGaps: filtered ${gaps.length} down gaps to ${sortedGaps.length}`);
 
-    // Clear old blocks and gaps in this region without losing reactivity
-    //this.syntenyBlocks.splice(0, this.syntenyBlocks.length);
-    //this.syntenyGaps.splice(0, this.syntenyGaps.length);
     this.syntenyBlocks = [];
     this.syntenyGaps = [];
 
@@ -128,18 +135,6 @@ export default class SyntenyRegion
       chainLevel: block.chainLevel,
     });
     this.syntenyGaps.push(gapsLine);
-  
-
-    // TODO (safe to remove)?
-    // Filter gaps according to synteny threshold if present
-    // if (threshold != null)
-    // {
-    //   gaps = gaps.filter(gap => {
-    //     return ((gap.stop - gap.start) >= (threshold * GAPS_THRESHOLD_MULTIPLIER))
-    //       && block.chainLevel === gap.chainLevel
-    //       && (gap.backboneStop > block.windowBasePairRange.start || gap.backboneStart < block.windowBasePairRange.stop);
-    //   });
-    // }
 
     if (sortedGaps.length === 0)
     {
@@ -148,7 +143,6 @@ export default class SyntenyRegion
       return;
     }
 
-    // FIXME: How to handle any Gap that hasn't set its backbone positions yet?
     let lastGapBackboneStop = 0;
     let lastGapSpeciesStop = 0;
     sortedGaps.forEach((gap, index) => {
