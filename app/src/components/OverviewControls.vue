@@ -3,16 +3,16 @@
     <div class="col-12">
       <h4>Overview</h4>
       <div class="grid unpadded">
-        <div class="col-5">Base Selection:</div>
-        <div class="col-7 bold" data-test="backbone-overview-display">{{store.state.species?.name}} chr{{store.state.chromosome?.chromosome}}:{{formattedBackboneStart}}-{{formattedBackboneStop}}</div>
+        <div class="col-5">Backbone Species:</div>
+        <div class="col-7 bold">{{store.state.species?.name}}</div>
         <div class="col-5">Assembly:</div>
         <div class="col-7 bold">{{store.state.species?.activeMap.name}}</div>
         <div class="col-5">Length:</div>
         <div class="col-7 bold">{{backboneLength}}bp</div>
-        <div class="col-5">Synteny Threshold:</div>
-        <div class="col-7 bold">{{Formatter.addCommasToBasePair(store.state.overviewSyntenyThreshold)}}bp</div>
         <div class="col-5">Displaying:</div>
-        <div class="p-fluid col-7 bold"><span>{{selectionRange}}</span>
+        <div class="p-fluid col-7 bold"><span>{{selectionRange}}</span></div>
+        <div class="col-5"></div>
+        <div class="p-fluid col-7 bold">
           <Button 
             label="Edit BP Range" 
             class="p-button edit-bp-btn"
