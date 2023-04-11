@@ -55,26 +55,6 @@
       </template>
     </template>
 
-<!--TEMP-->
-    <template v-for="(rectangle, index) in testRects2" :key="index">
-      <rect :fill="rectangle.elementColor" fill-opacity="0.8" x="460.0" width="10.0"
-            :height="rectangle.posY2 - rectangle.posY1" :y="rectangle.posY1"
-            :data-name="rectangle.name"
-      />
-    </template>
-    <template v-for="(rectangle, index) in testRects3" :key="index">
-      <rect :fill="rectangle.elementColor" fill-opacity="0.8" x="435.0" width="5.0"
-            :height="rectangle.posY2 - rectangle.posY1" :y="rectangle.posY1"
-            :data-name="rectangle.name"
-      />
-    </template>
-    <template v-for="(rectangle, index) in testRects4" :key="index">
-      <rect :fill="rectangle.elementColor" fill-opacity="1.0" x="437.5" width="1.0"
-            :height="rectangle.posY2 - rectangle.posY1" :y="rectangle.posY1"
-            :data-name="rectangle.name"
-      />
-    </template>
-<!--endTEMP-->
     <!-- Title panels -->
     <rect class="panel" x="0" :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.panelTitleHeight" />
     <rect class="panel" :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.panelTitleHeight" />
@@ -231,7 +211,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import SectionSVG from './SectionSVG.vue';
-import SVGConstants, {PANEL_SVG_START, PANEL_SVG_STOP} from '@/utils/SVGConstants';
+import SVGConstants from '@/utils/SVGConstants';
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import GeneLabelSVG from '@/components/GeneLabelSVG.vue';
 import useDialog from '@/composables/useDialog';
@@ -256,7 +236,6 @@ import LoadingSpinnerMask from './LoadingSpinnerMask.vue';
 import { createQtlDatatracks } from '@/utils/QtlBuilder';
 import { createVariantDatatracks } from '@/utils/VariantBuilder';
 import { GenomicSectionFactory } from '@/models/GenomicSectionFactory';
-import {VCMapSVGEl} from "@/models/VCMapSVGElement";
 import Block from "@/models/Block";
 
 import { GeneLabel } from '@/models/Label';
@@ -292,12 +271,6 @@ let detailedBackboneSet = ref<BackboneSet>();
 let overviewSyntenySets = ref<SyntenyRegionSet[]>([]);
 let orthologLines = ref<OrthologLine[]>();
 
-// TODO: Remove anything involving testRects
-let testRects = ref<VCMapSVGEl[]>();
-let testRects2 = ref<VCMapSVGEl[]>();
-let testRects3 = ref<VCMapSVGEl[]>();
-let testRects4 = ref<VCMapSVGEl[]>();
-
 ////
 // Debugging helper refs and methods (debug template is currently commented out):
 const enabledBlockIndicesForGeneDebugList = ref<number[]>([]);
@@ -314,18 +287,6 @@ const toggleGenesListForBlock = (debugList: number[], blockIndex: number) => {
   debugList.push(blockIndex);
 };
 ////
-
-
-// const orthologLines = computed(() => {
-//   let lines: OrthologLine[] = [];
-//   detailedSyntenySets.value.forEach(set => {
-//     set.regions.forEach(region => {
-//       lines = lines.concat(region.orthologLines as OrthologLine[]);
-//     });
-//   });
-
-//   return lines;
-// });
 
 const backboneVariantsLoaded = computed(() => {
   return detailedBackboneSet.value?.datatrackSets.some((set) => set.type === 'variant');
@@ -607,133 +568,6 @@ const getDetailedPosition = () =>
       height: String(detailedPanelDomPositions.height ) + 'px',
     };
   }
-};
-
-
-const tempReplace = () => {
-  const chromosome = store.state.chromosome;
-  const backboneSpecies = store.state.species;
-  const viewportStart = store.state.detailedBasePairRange.start;
-  const viewportStop = store.state.detailedBasePairRange.stop;
-  if (viewportStart == undefined || viewportStop == undefined) return;
-
-  console.log(`Looking at (${viewportStart}, ${viewportStop})`);
-  // Remove all Rectangles from our special Array
-  testRects.value = [];
-  testRects2.value = [];
-
-  // (Backbone) Loop loaded gene data from Main
-  props.geneList.forEach((gene) => {
-    //console.log(`Inspecting gene: `, gene);
-    let start, stop, list:VCMapSVGEl[];
-    if (gene.speciesName == backboneSpecies?.name && gene.chromosome == chromosome?.chromosome)
-    {
-      start = gene.start;
-      stop = gene.stop;
-      list = testRects.value ?? [];
-    }
-    else
-    {
-      start = gene.backboneStart ?? -1;
-      stop = gene.backboneStop ?? -1;
-      list = testRects2.value ?? [];
-    }
-
-    // Create new Rectangle for each gene that should be visible
-    if (isBpRangeVisible(start, stop))
-    {
-      let newRect = new VCMapSVGEl();
-      const svgHeight = PANEL_SVG_STOP - PANEL_SVG_START;
-      const bpVisibleWindowLength = Math.abs(viewportStop - viewportStart);
-      const pixelsPerBpRatio = svgHeight / bpVisibleWindowLength;
-      // console.debug(`Visible: num pixels (${svgLength}), num bp (${bpVisibleWindowLength}) starting at (${viewportStart})`);
-      newRect.posY1 = (start - viewportStart) * pixelsPerBpRatio + PANEL_SVG_START;
-      newRect.posY2 = (stop - viewportStart) * pixelsPerBpRatio + PANEL_SVG_START;
-      newRect.start = start;
-      newRect.stop = stop;
-      newRect.name = gene.symbol;
-
-      // Add to our special list (rendered as red rectangles in the template)
-      // NOTE: This proof of concept will always add all new SVG `rect`s to the SVG on each
-      //   call. This is not performant because we should attempt to adjust existing, remove
-      //   those that are now off-screen, and only add new ones that were previously not
-      //   on-screen.
-      //   Sounds like a lot of work, but less DOM manipulation and reactivity might make
-      //   this more performant because there are fewer microtasks generated as side
-      //   effects.
-      //   However, for now this will demonstrate the concepts needed for the reorganization.
-      list.push(newRect);
-    }
-  });
-
-  // And Blocks
-  testRects3.value = []; // Gapless blocks
-  testRects4.value = []; // Gaps
-  props.syntenyTree.forEach((blocks, mapKey) => {
-    console.log(`Processing mapKey ${mapKey}`);
-    blocks.forEach((block) => {
-      if (block.chainLevel == 1)
-      {
-        if (isBpRangeVisible(block.backboneStart, block.backboneStop))
-        {
-          let newRect = new VCMapSVGEl();
-          const svgLength = PANEL_SVG_STOP - PANEL_SVG_START;
-          const bpVisibleWindowLength = Math.abs(viewportStop - viewportStart);
-          const pixelsToBpRatio = svgLength / bpVisibleWindowLength;
-          // console.debug(`Visible: num pixels (${svgLength}), num bp (${bpVisibleWindowLength}) starting at (${viewportStart})`);
-          newRect.posY1 = (block.backboneStart - viewportStart) * pixelsToBpRatio + PANEL_SVG_START;
-          newRect.posY2 = (block.backboneStop - viewportStart) * pixelsToBpRatio + PANEL_SVG_START;
-          newRect.start = block.backboneStart;
-          newRect.stop = block.backboneStop;
-
-          // Now handle gaps
-          // TODO: Gaps should actually adjust the ratio as they would add to the aligned bp for the block...
-          let blockRatio = Math.abs(block.backboneStop - block.backboneStart) /
-              Math.abs(block.stop - block.start);
-          if (block.orientation == '+')
-          {
-            for (let i = 0, len = block.gaps.length; i < len; i++)
-            {
-              let gapStart = block.backboneStart + (block.gaps[i].start - block.start) * blockRatio;
-              let gapStop = block.backboneStart + (block.gaps[i].stop - block.start) * blockRatio;
-              if (gapStop > viewportStop) break;
-              if (isBpRangeVisible(gapStart, gapStop))
-              {
-                let gapRect = new VCMapSVGEl();
-                gapRect.elementColor = 'black';
-                gapRect.posY1 = (gapStart - viewportStart) * pixelsToBpRatio + PANEL_SVG_START;
-                gapRect.posY2 = (gapStop - viewportStart) * pixelsToBpRatio + PANEL_SVG_START;
-                testRects4.value?.push(gapRect);
-              }
-            }
-          }
-          else if (block.orientation == '-')
-          {
-            for (let i = block.gaps.length - 1; i >= 0; i--)
-            {
-              let gapStart = block.backboneStart + (block.stop - block.gaps[i].stop) * blockRatio;
-              let gapStop = block.backboneStart + (block.stop - block.gaps[i].start) * blockRatio;
-              if (gapStop > viewportStop) break;
-              if (isBpRangeVisible(gapStart, gapStop))
-              {
-                let gapRect = new VCMapSVGEl();
-                gapRect.elementColor = 'black';
-                gapRect.posY1 = (gapStart - viewportStart) * pixelsToBpRatio + PANEL_SVG_START;
-                gapRect.posY2 = (gapStop - viewportStart) * pixelsToBpRatio + PANEL_SVG_START;
-                testRects4.value?.push(gapRect);
-              }
-            }
-          }
-
-          testRects3.value?.push(newRect);
-        }
-      }
-      // else if (block.chainLevel == 2)
-      // {
-      //
-      // }
-    });
-  });
 };
 
 /**
