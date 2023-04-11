@@ -15,6 +15,7 @@ const constants = {
   selectedBackboneXPosition: 320,
   navigationButtonHeight: 15,
   overviewTrackPadding: 15,
+  backboneDatatrackXOffset: 10,
 };
 
 export const PANEL_SVG_START = constants.panelTitleHeight;

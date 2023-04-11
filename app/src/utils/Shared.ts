@@ -3,7 +3,7 @@
  */
 
 import Block, { Gap } from "@/models/Block";
-import { PANEL_SVG_STOP, PANEL_SVG_START } from "./SVGConstants";
+import SVGConstants, { PANEL_SVG_STOP, PANEL_SVG_START } from "./SVGConstants";
 
 /**
  * Gets threshold based on how many basepairs = 0.25 SVG units
@@ -36,4 +36,14 @@ export function isGenomicDataInViewport(targetBlock: Block | Gap, backboneStart:
   return (targetBlock.backboneStart > backboneStart && targetBlock.backboneStart < backboneStop)
     || (targetBlock.backboneStop < backboneStop && targetBlock.backboneStop > backboneStart)
     || (targetBlock.backboneStart < backboneStart && targetBlock.backboneStop > backboneStop);
+}
+
+export function getDetailedPanelXPositionForDatatracks(order: number, index: number)
+{
+  return getDetailedPanelXPositionForSynteny(order) + 30 * (index + 1);
+}
+
+export function getDetailedPanelXPositionForSynteny(order: number)
+{
+  return (order * 120) + SVGConstants.selectedBackboneXPosition;
 }

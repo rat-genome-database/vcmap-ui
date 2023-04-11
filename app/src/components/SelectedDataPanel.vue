@@ -113,19 +113,19 @@
 
         <template v-else-if="dataObject?.type === 'orthologLine'">
           <div data-test="start-stop">BACKBONE GENE:</div>
-          <div data-test="gene-symbol">Symbol: {{dataObject.genomicSection.backboneGene.gene.symbol}}</div>
-          <div data-test="gene-name">Name:{{dataObject.genomicSection.backboneGene.gene.name ?? 'N/A'}}</div>
-          <div data-test="chromosome-name">Chromosome: {{dataObject.genomicSection.backboneGene.gene.chromosome}}</div>
-          <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(dataObject.genomicSection.backboneGene.gene.start)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.backboneGene.gene.stop)}}</div>
+          <div data-test="gene-symbol">Symbol: {{dataObject.genomicSection.backboneGene.symbol}}</div>
+          <div data-test="gene-name">Name:{{dataObject.genomicSection.backboneGene.name ?? 'N/A'}}</div>
+          <div data-test="chromosome-name">Chromosome: {{dataObject.genomicSection.backboneGene.chromosome}}</div>
+          <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(dataObject.genomicSection.backboneGene.start)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.backboneGene.stop)}}</div>
 
           <div data-test="start-stop">&lt;---------------------------------------&gt;</div>
 
           <div data-test="start-stop">COMPARATIVE GENE HOMOLOG:</div>
-          <div data-test="gene-symbol">Species: {{dataObject.genomicSection.comparativeGene.gene.speciesName}}</div>
-          <div data-test="gene-symbol">Symbol: {{dataObject.genomicSection.comparativeGene.gene.symbol}}</div>
-          <div data-test="gene-name">Name:{{dataObject.genomicSection.comparativeGene.gene.name ?? 'N/A'}}</div>
-          <div data-test="chromosome-name">Chromosome: {{dataObject.genomicSection.comparativeGene.gene.chromosome}}</div>
-          <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(dataObject.genomicSection.comparativeGene.gene.start)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.comparativeGene.gene.stop)}}</div>
+          <div data-test="gene-symbol">Species: {{dataObject.genomicSection.offBackboneGene.speciesName}}</div>
+          <div data-test="gene-symbol">Symbol: {{dataObject.genomicSection.offBackboneGene.symbol}}</div>
+          <div data-test="gene-name">Name:{{dataObject.genomicSection.offBackboneGene.name ?? 'N/A'}}</div>
+          <div data-test="chromosome-name">Chromosome: {{dataObject.genomicSection.offBackboneGene.chromosome}}</div>
+          <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(dataObject.genomicSection.offBackboneGene.start)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.offBackboneGene.stop)}}</div>
         </template>
       </template>
     </div>

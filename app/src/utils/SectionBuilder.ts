@@ -255,22 +255,6 @@ console.time(timerLabel);
       // Add gene datatrack sections (this will always be the first datatrack set)
       currSyntenicRegion.addDatatrackSections(processedGeneInfo, 0, 'gene');
 console.timeEnd(timerLabel);
-// console.time("  addOrthologLines");
-      // FIXME: currSyntenicRegion.addOrthologLines(processedGeneInfo.orthologLines);
-// console.timeEnd("  addOrthologLines");
-      // FIXME (Unneeded?): currSyntenicRegion.geneIds = processedGeneInfo.geneIds;
-
-//       currSyntenicRegion.datatrackLabels = [];
-// console.time("  geneDataLabels");
-//       for (let i = 0; i < processedGeneInfo.length; i++)
-//       {
-//         const geneData = processedGeneInfo[i];
-//         if (geneData.label)
-//         {
-//           allGeneLabels.push(geneData.label);
-//         }
-//       }
-// console.timeEnd("  geneDataLabels");
      }
 
     processedSyntenicRegions.push(currSyntenicRegion);

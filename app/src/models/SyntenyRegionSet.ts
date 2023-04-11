@@ -1,30 +1,18 @@
-import { SyntenyRegionData } from "@/api/SyntenyApi";
 import SVGConstants from "@/utils/SVGConstants";
 import { GenomicSet } from "./GenomicSet";
 import Label, { GeneLabel } from "./Label";
-import OrthologLine from "./OrthologLine";
 import SyntenyRegion from "./SyntenyRegion";
 import SyntenySection from "./SyntenySection";
-import { SelectedRegion } from "./BackboneSelection";
 import DatatrackSet from "./DatatrackSet";
 import { mergeGeneLabels } from "@/utils/GeneLabelMerger";
 import Gene from "./Gene";
+import { getDetailedPanelXPositionForDatatracks, getDetailedPanelXPositionForSynteny } from "@/utils/Shared";
 
 const LEVEL_2_WIDTH_MULTIPLIER = 0.75;
 
 function getOverviewPanelXPosition(order: number)
 {
   return (order * -80) + SVGConstants.backboneXPosition;
-}
-
-function getDetailedPanelXPositionForSynteny(order: number)
-{
-  return (order * 120) + SVGConstants.selectedBackboneXPosition;
-}
-
-function getDetailedPanelXPositionForDatatracks(order: number, index: number)
-{
-  return getDetailedPanelXPositionForSynteny(order) + 30 * (index + 1);
 }
 
 /**
@@ -35,8 +23,6 @@ export default class SyntenyRegionSet extends GenomicSet
   regions: SyntenyRegion[] = [];
   order: number = 1;
   renderType: 'overview' | 'detailed' = 'overview';
-  //speciesSyntenyData: SpeciesSyntenyData; // Raw synteny data for the species represented by this SyntenyRegionSet
-  //datatrackLabels: Label[] = []; // array of Label objects associated with the datatrackSections in every SyntenyRegion
 
   constructor(speciesName: string, mapName: string, regions: SyntenyRegion[], order: number, renderType: 'overview' | 'detailed')
   {
@@ -44,8 +30,6 @@ export default class SyntenyRegionSet extends GenomicSet
     this.regions = regions;
     this.order = order;
     this.renderType = renderType;
-    //this.speciesSyntenyData = speciesSyntenyData;
-    //this.datatrackLabels = geneLabels ?? [];
 
     this.setRegionXPositionsBasedOnOrder();
     this.createTitleLabels();
@@ -69,119 +53,11 @@ export default class SyntenyRegionSet extends GenomicSet
     mergeGeneLabels(geneLabels, genes);
   }
 
-  /**
-   * TODO: It is very possible the SVG elements will not be in charge of this, at least not in the same way
-   *   now that we have our data structures on Main...
-   */
-  public adjustVisibleSet(visibleBackboneStart: number, visibleBackboneStop: number, updateCache: boolean, bufferzone: SelectedRegion, threshold: number, updateData?: SyntenyRegionData[])
-  {
-    // TODO: No-op for now
-  }
-
-  // public adjustVisibleSet(visibleBackboneStart: number, visibleBackboneStop: number,  updateCache: boolean, bufferzone: SelectedRegion, threshold: number, updateData?: SyntenyRegionData[])
-  // {
-  //   for (let index = 0; index < this.regions.length; index++)
-  //   {
-  //     const currRegion = this.regions[index];
-  //     if (updateCache && this.regionIsVisible(currRegion, bufferzone.basePairStart, bufferzone.basePairStop))
-  //     {
-  //       currRegion.adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
-  //       if (updateData)
-  //       {
-  //         const updateGaps = updateData.find(region => region.block.backboneStart == currRegion.gaplessBlock.backboneAlignment.start);
-  //         if (updateGaps)
-  //         {
-  //           const factory = new GenomicSectionFactory(
-  //             this.speciesName,
-  //             this.mapName,
-  //             currRegion.gaplessBlock.chromosome,
-  //             { start: visibleBackboneStart, stop: visibleBackboneStop },
-  //             this.renderType
-  //           );
-  //           currRegion.splitBlockWithGaps(factory, updateGaps.gaps, threshold);
-  //           // TODO: Adjust backbone alignments of genes when gaps change
-  //         }
-  //       }
-  //     }
-  //     else if (updateCache)
-  //     {
-  //       currRegion.adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
-  //     }
-  //     else
-  //     {
-  //       currRegion.adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
-  //     }
-  //   }
-  //
-  //   if (!updateCache)
-  //   {
-  //     this.processGeneLabels();
-  //   }
-  // }
-  //
-  //
-  // public adjustVisibleSetOnNav(visibleBackboneStart: number, visibleBackboneStop: number, adjustedRegion: SelectedRegion, updateCache: boolean, threshold: number, updateData?: SyntenyRegionData[])
-  // {
-  //   for (let index = 0; index < this.regions.length; index++)
-  //   {
-  //     const currRegion = this.regions[index];
-  //     if (updateCache && this.regionIsVisible(currRegion, adjustedRegion.basePairStart, adjustedRegion.basePairStop))
-  //     {
-  //       currRegion.adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
-  //       if (updateData)
-  //       {
-  //         const updateGaps = updateData.find(region => region.block.backboneStart == currRegion.gaplessBlock.backboneAlignment.start);
-  //         if (updateGaps && updateGaps.gaps.length > 0)
-  //         {
-  //           const factory = new GenomicSectionFactory(
-  //             this.speciesName,
-  //             this.mapName,
-  //             currRegion.gaplessBlock.chromosome,
-  //             { start: visibleBackboneStart, stop: visibleBackboneStop },
-  //             this.renderType
-  //           );
-  //           currRegion.splitBlockWithGaps(factory, updateGaps.gaps, threshold);
-  //           // TODO: Adjust backbone alignments of genes when gaps change
-  //         }
-  //       }
-  //     }
-  //     else if (updateCache)
-  //     {
-  //       currRegion.adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
-  //     }
-  //     else
-  //     {
-  //       currRegion.adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart, visibleBackboneStop);
-  //     }
-  //   }
-  //
-  //   this.processGeneLabels();
-  // }
-  //
-  //
-  // public updateRawData(speciesSyntenyData: SpeciesSyntenyData)
-  // {
-  //   if (this.speciesSyntenyData.allGenes && speciesSyntenyData.allGenes)
-  //   {
-  //     this.speciesSyntenyData.allGenes = this.speciesSyntenyData.allGenes.concat(speciesSyntenyData.allGenes);
-  //   }
-  //
-  //   if (this.speciesSyntenyData.regionData && speciesSyntenyData.regionData)
-  //   {
-  //     this.speciesSyntenyData.regionData = this.speciesSyntenyData.regionData.concat(speciesSyntenyData.regionData);
-  //   }
-  // }
-
   public addRegions(regions: SyntenyRegion[])
   {
     this.regions.length > 0 ? this.regions = this.regions.concat(regions) : this.regions = regions;
     this.setRegionXPositionsBasedOnOrder();
   }
-
-  // public addDatatrackLabels(labels: Label[])
-  // {
-  //   this.datatrackLabels.length > 0 ? this.datatrackLabels = this.datatrackLabels.concat(labels) : this.datatrackLabels = labels;
-  // }
 
   protected createTitleLabels()
   {
@@ -209,7 +85,7 @@ export default class SyntenyRegionSet extends GenomicSet
         this.setGaplessSyntenyBlockXPositions(region.gaplessBlock);
         this.setSyntenyBlockXPositions(region.syntenyBlocks);
         this.setSyntenyGapXPositions(region.syntenyGaps);
-        this.setDatatrackSectionXPositions(region.datatrackSets, region.orthologLines);
+        this.setDatatrackSectionXPositions(region.datatrackSets);
       });
     }
   }
@@ -266,7 +142,7 @@ export default class SyntenyRegionSet extends GenomicSet
     section.stopLabel.posX = section.posX2;
   }
 
-  private setDatatrackSectionXPositions(datatrackSets: DatatrackSet[], lines: OrthologLine[])
+  private setDatatrackSectionXPositions(datatrackSets: DatatrackSet[])
   {
     datatrackSets.forEach((set, index) => {
       let posX1 = 0;
@@ -290,18 +166,6 @@ export default class SyntenyRegionSet extends GenomicSet
         }
         section.width = Math.abs(section.posX2 - section.posX1);
       });
-    });
-
-    lines.forEach(line => {
-      const geneDatatrackIdx = datatrackSets.findIndex((set) => set.type === 'gene');
-      if (this.renderType === 'overview')
-      {
-        line.posX2 = getOverviewPanelXPosition(this.order);
-      }
-      else if (this.renderType === 'detailed')
-      {
-        line.posX2 = getDetailedPanelXPositionForDatatracks(this.order, geneDatatrackIdx);
-      }
     });
   }
 
@@ -331,11 +195,4 @@ export default class SyntenyRegionSet extends GenomicSet
   {
     return this.regions.map(r => r.geneDatatrackLabels).flat();
   }
-
-  // private regionIsVisible(region: SyntenyRegion, start: number, stop: number): boolean
-  // {
-  //   return ( region.gaplessBlock.backboneAlignment.start >= start && region.gaplessBlock.backboneAlignment.start < stop )
-  //       || (region.gaplessBlock.backboneAlignment.stop <= stop && region.gaplessBlock.backboneAlignment.stop > start)
-  //       || (region.gaplessBlock.backboneAlignment.start <= start && region.gaplessBlock.backboneAlignment.stop >= stop);
-  // }
 }

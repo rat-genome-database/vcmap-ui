@@ -286,12 +286,12 @@ const highlightSelections = (selectedGeneIds: number[]) => {
   // Highlight the line if needed, and make sure genes highlighted too
   // (this ensures backbone and comparitive genes are highlighted, regardless of which is clicked)
   props.region.orthologLines.forEach((line) => {
-    if (selectedGeneIds.includes(line.backboneGene.gene?.rgdId || -1) ||
-        selectedGeneIds.includes(line.comparativeGene.gene?.rgdId || -1)) 
+    if (selectedGeneIds.includes(line.backboneGene.rgdId || -1) ||
+        selectedGeneIds.includes(line.offBackboneGene.rgdId || -1)) 
     {
       line.isSelected = true;
-      line.backboneGene.isSelected = true;
-      line.comparativeGene.isSelected = true;
+      if (line.backboneGeneDatatrack) line.backboneGeneDatatrack.isSelected = true;
+      if (line.offBackboneGeneDatatrack) line.offBackboneGeneDatatrack.isSelected = true;
     } 
     else 
     {
@@ -348,8 +348,8 @@ const onDatatrackSectionClick = (event: any, section: GeneDatatrack) => {
 const highlightGeneLines = (sectionId: number, type: string) => {
   const dataPanelSelected = store.state.selectedGeneIds.includes(sectionId);
   props.region.orthologLines.forEach((line) => {
-    if (line.comparativeGene.gene?.rgdId == sectionId ||
-        line.backboneGene.gene?.rgdId == sectionId)
+    if (line.offBackboneGene.rgdId == sectionId ||
+        line.backboneGene.rgdId == sectionId)
     {
       if (type == 'enter')
       {

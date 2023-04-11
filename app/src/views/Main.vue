@@ -6,7 +6,7 @@
   /> -->
   <div class="grid">
     <div class="col-9">
-      <SVGViewbox :geneList="geneList" :synteny-tree="syntenyTree" :loading="isLoading" />
+      <SVGViewbox :geneList="geneList" :synteny-tree="syntenyTree" :orthologs="orthologs" :loading="isLoading" />
       <Toast />
     </div>
     <div class="col-3">
@@ -35,7 +35,6 @@ import { useToast } from 'primevue/usetoast';
 import Gene from "@/models/Gene";
 import Block, { Gap, GenomicPosition } from "@/models/Block";
 import SyntenyApi, {SpeciesSyntenyData} from "@/api/SyntenyApi";
-import { PANEL_SVG_START, PANEL_SVG_STOP} from '@/utils/SVGConstants';
 import Chromosome from "@/models/Chromosome";
 import GeneApi from "@/api/GeneApi";
 import {useLogger} from "vue-logger-plugin";
@@ -44,6 +43,7 @@ import VCMapDialog from '@/components/VCMapDialog.vue';
 import useDialog from '@/composables/useDialog';
 import { backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError, noSyntenyFoundError } from '@/utils/VCMapErrors';
 import { isGenomicDataInViewport, getThreshold } from '@/utils/Shared';
+import { OrthologPair } from '@/models/OrthologLine';
 
 // TODO: Can we figure out a better way to handle blocks with a high chainlevel?
 const MAX_CHAINLEVEL = 2;
@@ -83,6 +83,8 @@ const geneList = ref(new Map<number, Gene>());
 //   work the way I expect (only updates the template for Main, not SelectedDataPanel)
 // const geneList = shallowRef(new Map<number, Gene>());
 
+const orthologs = ref<OrthologPair[]>([]);
+
 // TODO TEMP
 const onInspectPressed = () => {
   console.debug('Gene List:', geneList);
@@ -121,16 +123,20 @@ onMounted(initVCMapProcessing);
 watch(() => store.state.detailedBasePairRequest, async () => {
   isLoading.value = true;
   // Grab blocks and genes with using a threshold of approximately .25 of a pixel
-  if (store.state.detailedBasePairRequest && store.state.chromosome)
+  if (store.state.detailedBasePairRequest && store.state.chromosome && store.state.species)
   {
     $log.debug(`Detailed Base Pair range change request detected (${store.state.detailedBasePairRequest?.start},
        ${store.state.detailedBasePairRequest?.stop}).`);
 
-    await queryAndProcessSyntenyForBasePairRange(store.state.chromosome, store.state.detailedBasePairRequest.start, store.state.detailedBasePairRequest.stop);
+    await queryAndProcessSyntenyForBasePairRange(store.state.chromosome, store.state.detailedBasePairRequest.start, store.state.detailedBasePairRequest.stop, store.state.species.activeMap.key);
 
     triggerDetailedPanelProcessing(store.state.chromosome, store.state.detailedBasePairRequest.start, store.state.detailedBasePairRequest.stop);
     // Data processing done, ready to complete request
     store.dispatch('setDetailedBasePairRequest', null);
+  }
+  else if (store.state.chromosome == null || store.state.species == null)
+  {
+    $log.error(`DetailedBasePairRequest: Missing data required for querying and processing synteny`, store.state.chromosome, store.state.species);
   }
   isLoading.value = false;
 });
@@ -231,7 +237,7 @@ async function initVCMapProcessing()
     showToast('warn', 'Loading Impact', message, 5000);
   }, 3000);
 
-  processSynteny(speciesSyntenyDataArray, 0, store.state.chromosome.seqLength);
+  processSynteny(speciesSyntenyDataArray, 0, store.state.chromosome.seqLength, store.state.species.activeMap.key);
 
   //
   // Adjust the selected start and stop based on our configuration mode (load by gene vs load by position)
@@ -258,7 +264,7 @@ async function initVCMapProcessing()
   if (selectionStart !== 0 || selectionStop !== store.state.chromosome.seqLength)
   {
     // Query synteny at threshold determined by selected base pair range (for detailed panel)
-    await queryAndProcessSyntenyForBasePairRange(store.state.chromosome, selectionStart, selectionStop);
+    await queryAndProcessSyntenyForBasePairRange(store.state.chromosome, selectionStart, selectionStop, store.state.species.activeMap.key);
   }
 
   // Kick off the OverviewPanel load
@@ -274,8 +280,7 @@ async function initVCMapProcessing()
  * Process a synteny block response (with genes, gaps, and orthologs) from the API.
  * TODO: We might need to control the number of chainLevel >= 2 we add, these are excessive...
  */
-// TODO: Handle orthologs
-function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefined, backboneStart: number, backboneStop: number)
+function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefined, backboneStart: number, backboneStop: number, backboneMapKey: number)
 {
   // Make sure we have something to do
   if (!speciesSyntenyDataArray)
@@ -313,9 +318,9 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
       // NOTE: We cannot process everything...
       //   Skip any blocks with chainLevel > MAX_CHAINLEVEL, and any
       //   blocks outside the range [backboneStart, backboneStop].
-      if (blockData.block.chainLevel > MAX_CHAINLEVEL) return;
+      if (blockData.block.chainLevel > MAX_CHAINLEVEL) continue;
       // TODO: See if we can get Marek to just not even send these!
-      if (blockData.block.backboneStart > backboneStop || blockData.block.backboneStop < backboneStart) return;
+      if (blockData.block.backboneStart > backboneStop || blockData.block.backboneStop < backboneStart) continue;
 
       let targetBlock: Block | null = null;
 
@@ -421,6 +426,10 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
       console.timeEnd(`ProcessGenesForBlock`);
     }
   }
+
+  console.time(`ProcessOrthologs`);
+  processOrthologs(geneList.value, backboneMapKey, backboneStop - backboneStart);
+  console.timeEnd(`ProcessOrthologs`);
 }
 
 /**
@@ -598,7 +607,53 @@ function processAlignmentsOfGeneInsideOfViewport(gene: Gene, targetBlock: Block)
   if (gene.backboneStop > targetBlock.backboneStop) gene.backboneStop = targetBlock.backboneStop;
 }
 
-async function queryAndProcessSyntenyForBasePairRange(backboneChromosome: Chromosome, start: number, stop: number)
+/**
+ * Iterates through the gene list and pairs up off-backbone genes with their backbone orthologs
+ * 
+ * @param geneList
+ *   list of all genes loaded in memory
+ * @param backboneMapKey
+ *   the map key of the backbone (used to determine which genes are backbone genes)
+ * @param visibleBPRange
+ *   the basepair length of the viewport (used to skip over genes that are too small to render)
+ */
+function processOrthologs(geneList: Map<number, Gene>, backboneMapKey: number, visibleBPRange: number)
+{
+  const threshold = getThreshold(visibleBPRange);
+
+  const offBackboneGenesWithOrthologs = Array.from(geneList.values()).filter(g => {
+    if (g.backboneStart == null || g.backboneStop == null)
+    {
+      return false;
+    }
+
+    return g.mapKey !== backboneMapKey && g.orthologs != null && g.orthologs.length > 0
+      && (g.backboneStop - g.backboneStart) >= threshold;
+  });
+
+  const orthologPairs: OrthologPair[] = [];
+  for (let i = 0; i < offBackboneGenesWithOrthologs.length; i++)
+  {
+    const orthologs = offBackboneGenesWithOrthologs[i].orthologs;
+    for (let j = 0; j < orthologs.length; j++)
+    {
+      const potentialBackboneGene = geneList.get(orthologs[j]);
+      if (potentialBackboneGene != undefined && potentialBackboneGene.mapKey === backboneMapKey 
+        && (potentialBackboneGene.stop - potentialBackboneGene.start) >= threshold)
+      {
+        orthologPairs.push({
+          backboneGene: potentialBackboneGene.clone(),
+          offBackboneGene: offBackboneGenesWithOrthologs[i].clone(),
+        });
+      }
+    }
+  }
+
+  $log.debug(`Ortholog pairs: ${orthologPairs.length}`);
+  orthologs.value = orthologPairs;
+}
+
+async function queryAndProcessSyntenyForBasePairRange(backboneChromosome: Chromosome, start: number, stop: number, backboneMapKey: number)
 {
   $log.debug(`Querying for specific base pair range: ${start} - ${stop}`);
   const slowAPI = setTimeout(() => {
@@ -606,10 +661,7 @@ async function queryAndProcessSyntenyForBasePairRange(backboneChromosome: Chromo
     showToast('warn', 'Loading Impact', 'API is taking a while to respond, please be patient', 3000);
   }, 15000);
 
-  let threshold = Math.round(
-    (stop - start) /
-    (PANEL_SVG_STOP - PANEL_SVG_START) / 4
-  );
+  let threshold = getThreshold(stop - start);
   const speciesSyntenyDataArray = await SyntenyApi.getSyntenicRegions({
     backboneChromosome: backboneChromosome,
     start: start,
@@ -625,7 +677,7 @@ async function queryAndProcessSyntenyForBasePairRange(backboneChromosome: Chromo
   clearTimeout(slowAPI);
 
   // Process response
-  processSynteny(speciesSyntenyDataArray, start, stop);
+  processSynteny(speciesSyntenyDataArray, start, stop, backboneMapKey);
 }
 
 function triggerDetailedPanelProcessing(backboneChromosome: Chromosome, selectionStart: number, selectionStop: number)

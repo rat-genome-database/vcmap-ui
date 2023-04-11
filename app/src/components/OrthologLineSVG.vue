@@ -32,14 +32,17 @@ defineProps<Props>();
 const onMouseEnter = (line: OrthologLine) => {
 
   line.isHovered = true;
-  line.comparativeGene.elementColor = HOVER_HIGHLIGHT_COLOR;
-  line.backboneGene.elementColor = HOVER_HIGHLIGHT_COLOR;
+  if (line.offBackboneGeneDatatrack) line.offBackboneGeneDatatrack.elementColor = HOVER_HIGHLIGHT_COLOR;
+  if (line.backboneGeneDatatrack) line.backboneGeneDatatrack.elementColor = HOVER_HIGHLIGHT_COLOR;
 
   // If there are selected genes, don't update the selected data panel
   if (store.state.selectedGeneIds.length === 0) {
-
-    const newSelectedData = getNewSelectedData(store, line.comparativeGene.gene);
-    store.dispatch('setSelectedData', newSelectedData.selectedData);
+    const selectedOrthologs = [
+      new SelectedData(line.offBackboneGene, 'Gene'),
+      new SelectedData(line.backboneGene, 'Gene'),
+    ];
+    //const newSelectedData = getNewSelectedData(store, line.offBackboneGene);
+    store.dispatch('setSelectedData', selectedOrthologs);
   }
 
 };
@@ -47,8 +50,8 @@ const onMouseEnter = (line: OrthologLine) => {
 const onMouseLeave = (line: OrthologLine) => {
   if (line) {
     line.isHovered = false;
-    line.comparativeGene.elementColor = '#000000';
-    line.backboneGene.elementColor = '#000000';
+    if (line.offBackboneGeneDatatrack) line.offBackboneGeneDatatrack.elementColor = '#000000';
+    if (line.backboneGeneDatatrack) line.backboneGeneDatatrack.elementColor = '#000000';
   }
 
   // Only reset data onMouseLeave if there isn't a selected gene
@@ -59,10 +62,8 @@ const onMouseLeave = (line: OrthologLine) => {
 };
 
 const onClick = (event: any, line: OrthologLine) => {
-  if (!line.comparativeGene.gene?.rgdId || !line.backboneGene.gene?.rgdId) return;
-
   // If clicked section already selected, just reset the selectedGeneId state
-  if (store.state.selectedGeneIds.includes(line.comparativeGene.gene?.rgdId || line.backboneGene.gene?.rgdId || -1)) {
+  if (store.state.selectedGeneIds.includes(line.offBackboneGene.rgdId || line.backboneGene.rgdId || -1)) {
     store.dispatch('setSelectedGeneIds', []);
     store.dispatch('setSelectedData', null);
   }
@@ -73,7 +74,7 @@ const onClick = (event: any, line: OrthologLine) => {
   let newSelectedData: SelectedData[] = [];
 
   // FIXME
-  const newData = getNewSelectedData(store, line.comparativeGene.gene);
+  const newData = getNewSelectedData(store, line.offBackboneGene);
   const geneAndOrthologs = newData.selectedData;
   const newGeneIds = newData.rgdIds;
   newSelectedData.push(...geneAndOrthologs);
