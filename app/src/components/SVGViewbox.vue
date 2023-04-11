@@ -236,7 +236,7 @@ import VCMapDialog from '@/components/VCMapDialog.vue';
 import GeneLabelSVG from '@/components/GeneLabelSVG.vue';
 import useDialog from '@/composables/useDialog';
 import Gene from '@/models/Gene';
-import OrthologLine from '@/models/OrthologLine';
+import OrthologLine, { OrthologPair } from '@/models/OrthologLine';
 import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
 import { key } from '@/store';
 import { createSyntenicRegionSets,  } from '@/utils/SectionBuilder';
@@ -280,6 +280,7 @@ interface Props
 {
   geneList: Map<number, Gene>;
   syntenyTree: Map<number, Block[]>;
+  orthologs: OrthologPair[];
   loading: boolean;
 }
 
@@ -289,6 +290,8 @@ let detailedSyntenySets = ref<SyntenyRegionSet[]>([]); // The currently displaye
 let overviewBackboneSet = ref<BackboneSet>();
 let detailedBackboneSet = ref<BackboneSet>();
 let overviewSyntenySets = ref<SyntenyRegionSet[]>([]);
+let orthologLines = ref<OrthologLine[]>();
+
 // TODO: Remove anything involving testRects
 let testRects = ref<VCMapSVGEl[]>();
 let testRects2 = ref<VCMapSVGEl[]>();
@@ -313,16 +316,16 @@ const toggleGenesListForBlock = (debugList: number[], blockIndex: number) => {
 ////
 
 
-const orthologLines = computed(() => {
-  let lines: OrthologLine[] = [];
-  detailedSyntenySets.value.forEach(set => {
-    set.regions.forEach(region => {
-      lines = lines.concat(region.orthologLines as OrthologLine[]);
-    });
-  });
+// const orthologLines = computed(() => {
+//   let lines: OrthologLine[] = [];
+//   detailedSyntenySets.value.forEach(set => {
+//     set.regions.forEach(region => {
+//       lines = lines.concat(region.orthologLines as OrthologLine[]);
+//     });
+//   });
 
-  return lines;
-});
+//   return lines;
+// });
 
 const backboneVariantsLoaded = computed(() => {
   return detailedBackboneSet.value?.datatrackSets.some((set) => set.type === 'variant');
@@ -502,7 +505,7 @@ const updateDetailsPanel = async () => {
   // Create ortholog lines
   // NOTE: Casting the type here since .value can't "unpack" the private methods on the object and thus,
   //  doesn't see it as equaling the SyntenyRegionSet type
-  createOrthologLines(props.geneList, backboneSpecies.activeMap.key, detailedBackboneSet.value, (detailedSyntenySets.value as SyntenyRegionSet[]));
+  orthologLines.value = createOrthologLines(props.orthologs, detailedBackboneSet.value, (detailedSyntenySets.value as SyntenyRegionSet[]));
 
   // Report timing data
   const timeDetailedUpdate= Date.now() - detailedUpdateStart;

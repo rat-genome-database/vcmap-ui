@@ -2,29 +2,19 @@ import { SyntenyRegionData } from "@/api/SyntenyApi";
 import SVGConstants from "@/utils/SVGConstants";
 import { GenomicSet } from "./GenomicSet";
 import Label, { GeneLabel } from "./Label";
-import OrthologLine from "./OrthologLine";
 import SyntenyRegion from "./SyntenyRegion";
 import SyntenySection from "./SyntenySection";
 import { SelectedRegion } from "./BackboneSelection";
 import DatatrackSet from "./DatatrackSet";
 import { mergeGeneLabels } from "@/utils/GeneLabelMerger";
 import Gene from "./Gene";
+import { getDetailedPanelXPositionForDatatracks, getDetailedPanelXPositionForSynteny } from "@/utils/Shared";
 
 const LEVEL_2_WIDTH_MULTIPLIER = 0.75;
 
 function getOverviewPanelXPosition(order: number)
 {
   return (order * -80) + SVGConstants.backboneXPosition;
-}
-
-function getDetailedPanelXPositionForSynteny(order: number)
-{
-  return (order * 120) + SVGConstants.selectedBackboneXPosition;
-}
-
-function getDetailedPanelXPositionForDatatracks(order: number, index: number)
-{
-  return getDetailedPanelXPositionForSynteny(order) + 30 * (index + 1);
 }
 
 /**
@@ -35,8 +25,6 @@ export default class SyntenyRegionSet extends GenomicSet
   regions: SyntenyRegion[] = [];
   order: number = 1;
   renderType: 'overview' | 'detailed' = 'overview';
-  //speciesSyntenyData: SpeciesSyntenyData; // Raw synteny data for the species represented by this SyntenyRegionSet
-  //datatrackLabels: Label[] = []; // array of Label objects associated with the datatrackSections in every SyntenyRegion
 
   constructor(speciesName: string, mapName: string, regions: SyntenyRegion[], order: number, renderType: 'overview' | 'detailed')
   {
@@ -44,8 +32,6 @@ export default class SyntenyRegionSet extends GenomicSet
     this.regions = regions;
     this.order = order;
     this.renderType = renderType;
-    //this.speciesSyntenyData = speciesSyntenyData;
-    //this.datatrackLabels = geneLabels ?? [];
 
     this.setRegionXPositionsBasedOnOrder();
     this.createTitleLabels();
@@ -209,7 +195,7 @@ export default class SyntenyRegionSet extends GenomicSet
         this.setGaplessSyntenyBlockXPositions(region.gaplessBlock);
         this.setSyntenyBlockXPositions(region.syntenyBlocks);
         this.setSyntenyGapXPositions(region.syntenyGaps);
-        this.setDatatrackSectionXPositions(region.datatrackSets, region.orthologLines);
+        this.setDatatrackSectionXPositions(region.datatrackSets);
       });
     }
   }
@@ -266,7 +252,7 @@ export default class SyntenyRegionSet extends GenomicSet
     section.stopLabel.posX = section.posX2;
   }
 
-  private setDatatrackSectionXPositions(datatrackSets: DatatrackSet[], lines: OrthologLine[])
+  private setDatatrackSectionXPositions(datatrackSets: DatatrackSet[])
   {
     datatrackSets.forEach((set, index) => {
       let posX1 = 0;
@@ -292,17 +278,17 @@ export default class SyntenyRegionSet extends GenomicSet
       });
     });
 
-    lines.forEach(line => {
-      const geneDatatrackIdx = datatrackSets.findIndex((set) => set.type === 'gene');
-      if (this.renderType === 'overview')
-      {
-        line.posX2 = getOverviewPanelXPosition(this.order);
-      }
-      else if (this.renderType === 'detailed')
-      {
-        line.posX2 = getDetailedPanelXPositionForDatatracks(this.order, geneDatatrackIdx);
-      }
-    });
+    // lines.forEach(line => {
+    //   const geneDatatrackIdx = datatrackSets.findIndex((set) => set.type === 'gene');
+    //   if (this.renderType === 'overview')
+    //   {
+    //     line.posX2 = getOverviewPanelXPosition(this.order);
+    //   }
+    //   else if (this.renderType === 'detailed')
+    //   {
+    //     line.posX2 = getDetailedPanelXPositionForDatatracks(this.order, geneDatatrackIdx);
+    //   }
+    // });
   }
 
   private sortBasePairLabels()

@@ -8,9 +8,6 @@ import DatatrackSet from "./DatatrackSet";
 import { GenomicSet } from "./GenomicSet";
 import Label, { GeneLabel } from "./Label";
 
-
-const DataTrack_X_OFFSET = 10;
-
 /**
  * Model for representing a set of Backbone sections and its datatrack sections
  */
@@ -91,10 +88,10 @@ export default class BackboneSet extends GenomicSet
   //   console.timeEnd(`Backbone Gene Label Processing ${visibleStartStopString}`);
   // }
 
-  public updateBackboneGenes(genes: Gene[])
-  {
-    this.backbone.addBackboneGenes(genes);
-  }
+  // public updateBackboneGenes(genes: Gene[])
+  // {
+  //   this.backbone.addBackboneGenes(genes);
+  // }
 
   protected createTitleLabels()
   {
@@ -135,7 +132,7 @@ export default class BackboneSet extends GenomicSet
   {
     this.datatrackSets.forEach((set, index) => {
       set.datatracks.forEach((section) => {
-        section.posX1 = this.backbone.posX2 + (DataTrack_X_OFFSET) * (index + 1) + (DataTrack_X_OFFSET * index);
+        section.posX1 = this.backbone.posX2 + (SVGConstants.backboneDatatrackXOffset) * (index + 1) + (SVGConstants.backboneDatatrackXOffset * index);
         section.posX2 = section.posX1 + SVGConstants.dataTrackWidth;
         section.width = SVGConstants.dataTrackWidth;
         if (section.label)
