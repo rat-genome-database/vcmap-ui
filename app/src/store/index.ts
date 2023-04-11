@@ -7,13 +7,14 @@ import BackboneSelection, { BasePairRange } from '@/models/BackboneSelection';
 import SelectedData from '@/models/SelectedData';
 import { InjectionKey } from 'vue';
 import { createLogger } from 'vuex';
-import { GeneDatatrack, LoadedGene } from '@/models/DatatrackSection';
+import { LoadedGene } from '@/models/DatatrackSection';
 import { ConfigurationMode } from '@/utils/Types';
 
 export const key: InjectionKey<Store<VCMapState>> = Symbol();
 
 export interface VCMapState
 {
+  /* User configuration-related properties */
   species: Species | null; // backbone species
   chromosome: Chromosome | null; // backbone chromosome
   startPos: number | null; // backbone start position
@@ -22,13 +23,11 @@ export interface VCMapState
   comparativeSpecies: Species[];
   configMode: ConfigurationMode;
 
+  /* Triggers for VCMap processing/rendering */
   configurationLoaded: boolean | null;
   selectedBackboneRegion: BackboneSelection | null;
   detailedBasePairRequest: BasePairRange | null;
   detailedBasePairRange: BasePairRange;
-
-  overviewSyntenyThreshold: number;
-  detailsSyntenyThreshold: number;
 
   isDetailedPanelUpdating: boolean;
   isOverviewPanelUpdating: boolean;
@@ -36,10 +35,11 @@ export interface VCMapState
   selectedGeneIds: number[];
   selectedData: SelectedData[] | null;
 
-  /* These data structures have the potential to be pretty large */
-  loadedGenes: Map<number, LoadedGene> | null;
-
   selectionToastCount: number;
+
+  /* These data structures have the potential to be pretty large */
+  // TODO: I think we can remove this from state
+  loadedGenes: Map<number, LoadedGene> | null;
 }
 
 const vuexLocal = new VuexPersistence<VCMapState>({
@@ -74,18 +74,16 @@ export default createStore({
     detailedBasePairRequest: { start: 0, stop: 0 } ?? null,
     detailedBasePairRange: { start: 0, stop: 0 },
 
-    overviewSyntenyThreshold: 30000,
-    detailsSyntenyThreshold: 0,
-
     isDetailedPanelUpdating: false,
     isOverviewPanelUpdating: false,
 
     selectedGeneIds: [],
     selectedData: null,
 
+    selectionToastCount: 0,
+
     /* These data structures have the potential to be pretty large */
     loadedGenes: null,
-    selectionToastCount: 0,
   }),
 
   mutations: {
@@ -121,12 +119,6 @@ export default createStore({
     },
     detailedBasePairRange(state: VCMapState, range: BasePairRange) {
       state.detailedBasePairRange = range;
-    },
-    overviewSyntenyThreshold(state: VCMapState, threshold: number) {
-      state.overviewSyntenyThreshold = threshold;
-    },
-    detailsSyntenyThreshold(state: VCMapState, threshold: number) {
-      state.detailsSyntenyThreshold = threshold;
     },
     configMode(state: VCMapState, mode: ConfigurationMode) {
       state.configMode = mode;
@@ -235,37 +227,6 @@ export default createStore({
   },
 
   getters: {
-    // FIXME: remove this
-    masterGeneMapByRGDId: (state: VCMapState) => {
-      const loadedGenes = state.loadedGenes;
-
-      const mapByRGDId = new Map<number, GeneDatatrack[]>();
-
-      if (loadedGenes == null)
-      {
-        return mapByRGDId;
-      }
-
-      for (const [rgdId, loadedGene] of loadedGenes.entries())
-      {
-        const allGenes: GeneDatatrack[] = [];
-        if (loadedGene.backboneOrtholog != null)
-        {
-          allGenes.push(loadedGene.backboneOrtholog);
-        }
-
-        for (const speciesName in loadedGene.genes)
-        {
-          const speciesGenes = loadedGene.genes[speciesName];
-          speciesGenes.forEach(gene => allGenes.push(gene));
-        }
-
-        mapByRGDId.set(rgdId, allGenes);
-      }
-
-      return mapByRGDId;
-    },
-
     isLoadByGene: (state: VCMapState) => {
       return state.configMode === 'gene';
     },
