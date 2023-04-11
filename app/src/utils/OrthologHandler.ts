@@ -131,7 +131,7 @@ function getOffbackboneGeneDetails(offBackboneSyntenyRegionSets: SyntenyRegionSe
           posX1: posX1,
           gene: dt.gene.clone(),
           datatrack: dt,
-        })
+        });
       });
 
       // Get all genes whether they have a datatrack section or not and set them in the map if they haven't been already

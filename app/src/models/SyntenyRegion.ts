@@ -88,11 +88,6 @@ export default class SyntenyRegion
     }
   }
 
-  public addOrthologLines(orthologLine: OrthologLine[])
-  {
-    this.orthologLines.length > 0 ? this.orthologLines = this.orthologLines.concat(orthologLine) : this.orthologLines = orthologLine;
-  }
-
   // TODO: Wonder if we should move this method back out of this class to a utils file? It might help make each of these
   // SyntenyRegion objects a bit lighter...
   public splitBlockWithGaps(factory: GenomicSectionFactory, gaps: Gap[]) // TODO (safe to remove)?:, threshold: number)
