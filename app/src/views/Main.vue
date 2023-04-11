@@ -35,7 +35,6 @@ import { useToast } from 'primevue/usetoast';
 import Gene from "@/models/Gene";
 import Block, { Gap, GenomicPosition } from "@/models/Block";
 import SyntenyApi, {SpeciesSyntenyData} from "@/api/SyntenyApi";
-import { PANEL_SVG_START, PANEL_SVG_STOP} from '@/utils/SVGConstants';
 import Chromosome from "@/models/Chromosome";
 import GeneApi from "@/api/GeneApi";
 import {useLogger} from "vue-logger-plugin";

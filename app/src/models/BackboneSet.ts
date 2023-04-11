@@ -2,7 +2,6 @@ import { ProcessedGenomicData } from "@/utils/BackboneBuilder";
 import SVGConstants from "@/utils/SVGConstants";
 import { mergeGeneLabels } from "@/utils/GeneLabelMerger";
 import BackboneSection from "./BackboneSection";
-import Gene from "./Gene";
 import DatatrackSection, { DatatrackSectionType } from "./DatatrackSection";
 import DatatrackSet from "./DatatrackSet";
 import { GenomicSet } from "./GenomicSet";
@@ -38,60 +37,6 @@ export default class BackboneSet extends GenomicSet
     this.processGeneLabels();
     console.timeEnd(`Backbone Gene Label Processing`);
   }
-
-  /**
-   * TODO: We might not need this at all anymore if we are re-creating the BackboneSet on each nav or zoom 
-   * instead of just adjusting Y positions
-   */
-  public adjustVisibleSet(visibleBackboneStart: number, visibleBackboneStop: number)
-  {
-    // TODO: No-op for now
-  }
-
-  /**
-   * Adjusts the Y positions of all of the data associated with this BackboneSet
-   * 
-   * @param visibleBackboneStart backbone start bp in visible selection
-   * @param visibleBackboneStop backbone stop bp in visible selection
-   * @returns an object containing timing info so we can log it if we choose
-   */
-  // public adjustVisibleSet(visibleBackboneStart: number, visibleBackboneStop: number)
-  // {
-  //   const visibleStartStopString = `[${visibleBackboneStart}, ${visibleBackboneStop}]`;
-
-  //   // Change visible backbone section
-  //   console.time(`Backbone Y position adjustment ${visibleStartStopString}`);
-  //   this.backbone.adjustYPositionsBasedOnVisibleStartAndStop({
-  //     start: visibleBackboneStart,
-  //     stop: visibleBackboneStop,
-  //   });
-  //   this.backbone.recalculateLabelYPositions();
-  //   console.timeEnd(`Backbone Y position adjustment ${visibleStartStopString}`);
-
-  //   console.time(`Backbone Datatrack Y position adjustments ${visibleStartStopString}`);
-  //   for (let i = 0; i < this.datatrackSets.length; i++)
-  //   {
-  //     const set = this.datatrackSets[i];
-  //     for (let j = 0; j < set.datatracks.length; j++)
-  //     {
-  //       set.datatracks[j].adjustYPositionsBasedOnVisibleStartAndStop({
-  //         start: visibleBackboneStart,
-  //         stop: visibleBackboneStop
-  //       });
-  //       set.datatracks[j].recalculateLabelYPositions();
-  //     }
-  //   }
-  //   console.timeEnd(`Backbone Datatrack Y position adjustments ${visibleStartStopString}`);
-
-  //   console.time(`Backbone Gene Label Processing ${visibleStartStopString}`);
-  //   this.processGeneLabels();
-  //   console.timeEnd(`Backbone Gene Label Processing ${visibleStartStopString}`);
-  // }
-
-  // public updateBackboneGenes(genes: Gene[])
-  // {
-  //   this.backbone.addBackboneGenes(genes);
-  // }
 
   protected createTitleLabels()
   {
@@ -164,7 +109,6 @@ export default class BackboneSet extends GenomicSet
 
     // TODO: Seems a bit precarious to cast a type of Label[] as GeneLabel[] here... could maybe be addressed at the same time
     // as the TODO above this one
-    //mergeGeneLabels(this.datatrackLabels as GeneLabel[], this.backbone.backboneGenes ?? []);
     mergeGeneLabels(this.datatrackLabels as GeneLabel[], this.backbone.backboneGenes ?? []);
   }
 
