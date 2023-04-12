@@ -138,13 +138,6 @@
     @click="loadBackboneQtls"
   />
   -->
-  <!--
-  <Button
-    class="p-button-info"
-    :label="backboneVariantsLoaded ? 'Remove Backbone Variants' : 'Load Backbone Variants'"
-    @click="handleBackboneVariantClick"
-  />
-  -->
   <!-- Uncomment to see debug info in dev mode -->
   <!-- <div v-if="SHOW_DEBUG" class="grid p-d-flex">
     <div class="col-12">
@@ -228,13 +221,12 @@ import { createBackboneSection, backboneDatatrackBuilder, createBackboneSet } fr
 import BackboneSetSVG from './BackboneSetSVG.vue';
 import SyntenyRegionSet from '@/models/SyntenyRegionSet';
 import QtlApi from '@/api/QtlApi';
-import VariantApi from '@/api/VariantApi';
 import BackboneSet from '@/models/BackboneSet';
 import { createOverviewSyntenicRegionSets } from '@/utils/SectionBuilder';
 import OrthologLineSVG from './OrthologLineSVG.vue';
 import LoadingSpinnerMask from './LoadingSpinnerMask.vue';
 import { createQtlDatatracks } from '@/utils/QtlBuilder';
-import { createVariantDatatracks } from '@/utils/VariantBuilder';
+import { backboneVariantTrackBuilder } from '@/utils/VariantBuilder';
 import { GenomicSectionFactory } from '@/models/GenomicSectionFactory';
 import Block from "@/models/Block";
 
@@ -242,6 +234,9 @@ import { GeneLabel } from '@/models/Label';
 import SyntenyRegion from '@/models/SyntenyRegion';
 import { createOrthologLines } from '@/utils/OrthologHandler';
 import { GeneDatatrack } from '@/models/DatatrackSection';
+import VariantPositions from '@/models/VariantPositions';
+import Species from '@/models/Species';
+import BackboneSection from '@/models/BackboneSection';
 
 const SHOW_DEBUG = process.env.NODE_ENV === 'development';
 const NAV_SHIFT_PERCENT = 0.2;
@@ -261,6 +256,7 @@ interface Props
   syntenyTree: Map<number, Block[]>;
   orthologs: OrthologPair[];
   loading: boolean;
+  variantPositionsList: VariantPositions[];
 }
 
 const props = defineProps<Props>();
@@ -287,10 +283,6 @@ const toggleGenesListForBlock = (debugList: number[], blockIndex: number) => {
   debugList.push(blockIndex);
 };
 ////
-
-const backboneVariantsLoaded = computed(() => {
-  return detailedBackboneSet.value?.datatrackSets.some((set) => set.type === 'variant');
-});
 
 async function attachToProgressLoader(storeLoadingActionName: string, func: () => Promise<any>)
 {
@@ -334,6 +326,21 @@ watch(() => store.state.detailedBasePairRange, () => {
     attachToProgressLoader('setIsDetailedPanelUpdating', updateDetailsPanel);
   }
 });
+
+// TODO: not sure if watch is the best thing for this
+watch(() => props.variantPositionsList, () => {
+  const backboneSpecies = store.state.species;
+  const detailedBackbone = detailedBackboneSet.value?.backbone;
+  if (backboneSpecies && detailedBackbone)
+  {
+    props.variantPositionsList.forEach((variantPositions) => {
+      if (variantPositions.mapKey === backboneSpecies.activeMap.key)
+      {
+        updateBackboneVariants(backboneSpecies, variantPositions, detailedBackbone);
+      }
+    });
+  }
+}, {deep: true})
 
 // FIXME: check on this (probably needs to be attached to Main props instead):
 const arePanelsLoading = computed(() => {
@@ -449,6 +456,15 @@ const updateDetailsPanel = async () => {
   // the positions should already be set. We'd just need to move the gene label processing into the constructor of the BackboneSet
   // model.
   //detailedBackboneSet.value?.adjustVisibleSet(store.state.detailedBasePairRange.start, store.state.detailedBasePairRange.stop);
+
+  // Now check for other potential datatracks to add to the backbone (like variant positions)
+  props.variantPositionsList.forEach((variantPositions) => {
+    if (variantPositions.mapKey === backboneSpecies.activeMap.key)
+    {
+        updateBackboneVariants(backboneSpecies, variantPositions, detailedBackbone);
+    }
+  });
+
   timeCreateBackboneSet = Date.now() - backboneSetStart;
 
   //
@@ -617,42 +633,6 @@ const loadBackboneQtls = async () => {
   }
 };
 
-const loadBackboneVariants = async () => {
-  const chromosome = store.state.chromosome;
-  const backboneSpecies = store.state.species;
-  const backboneRegion = store.state.selectedBackboneRegion;
-  const start = backboneRegion?.viewportSelection?.basePairStart;
-  const stop = backboneRegion?.viewportSelection?.basePairStop;
-  const speciesMap = store.state.species?.activeMap;
-  if (chromosome && stop && speciesMap && backboneSpecies)
-  {
-    // NOTE: for now, we always query for the whole chrom to get maxCount for chrom
-    // This should/could probably get moved the VariantBuilder
-    const variantPositions = await VariantApi.getVariants(chromosome.chromosome, 0, chromosome.seqLength, speciesMap.key);
-    if (variantPositions.length > 0)
-    {
-      const factory = new GenomicSectionFactory(
-        backboneSpecies.name,
-        speciesMap.name,
-        chromosome.chromosome,
-        { start: start || 0, stop: stop },
-        'detailed'
-      );
-      const variantDatatracks = createVariantDatatracks(factory, variantPositions, chromosome, start || 0, stop);
-      detailedBackboneSet.value?.addNewDatatrackSetToStart(variantDatatracks, 'variant');
-      // NOTE: because we're shifting the genes when adding to start, we also need to shift lines
-      if (orthologLines.value)
-      {
-        orthologLines.value.forEach((line) => line.posX1 += 20);
-      }
-    }
-    else
-    {
-      onError(null, 'No variants found for the requested region.', false);
-    }
-  }
-};
-
 const removeBackboneVariants = () => {
   const variantSetIdx = detailedBackboneSet.value?.datatrackSets.findIndex((set) => set.type === 'variant') ?? -1;
   if (variantSetIdx !== -1)
@@ -668,11 +648,10 @@ const removeBackboneVariants = () => {
   }
 };
 
-// TODO: temp ignore here, should remove once this method is actively being used
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const handleBackboneVariantClick = () => {
-  backboneVariantsLoaded.value ? removeBackboneVariants() : loadBackboneVariants();
-};
+const updateBackboneVariants = (backboneSpecies: Species, variantPositions: VariantPositions, detailedBackbone: BackboneSection) => {
+  const variantDatatracks = backboneVariantTrackBuilder(backboneSpecies, variantPositions, detailedBackbone);
+  detailedBackboneSet.value?.addNewDatatrackSetToStart(variantDatatracks, 'variant');
+}
 
 document.addEventListener('scroll' , getDetailedPosition);
 

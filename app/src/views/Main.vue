@@ -4,9 +4,20 @@
     label="INSPECT (Main)"
     @click="onInspectPressed"
   /> -->
+  <Button
+    class="p-button-info"
+    label="Load Backbone Variants"
+    @click="loadBackboneVariants"
+  />
   <div class="grid">
     <div class="col-9">
-      <SVGViewbox :geneList="geneList" :synteny-tree="syntenyTree" :orthologs="orthologs" :loading="isLoading" />
+      <SVGViewbox
+        :geneList="geneList"
+        :synteny-tree="syntenyTree"
+        :orthologs="orthologs"
+        :loading="isLoading"
+        :variant-positions-list="variantPositionsList"
+      />
       <Toast />
     </div>
     <div class="col-3">
@@ -44,6 +55,8 @@ import useDialog from '@/composables/useDialog';
 import { backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError, noSyntenyFoundError } from '@/utils/VCMapErrors';
 import { isGenomicDataInViewport, getThreshold } from '@/utils/Shared';
 import { OrthologPair } from '@/models/OrthologLine';
+import { buildVariantPositions } from '@/utils/VariantBuilder';
+import VariantPositions from '@/models/VariantPositions';
 
 // TODO: Can we figure out a better way to handle blocks with a high chainlevel?
 const MAX_CHAINLEVEL = 2;
@@ -82,6 +95,9 @@ const geneList = ref(new Map<number, Gene>());
 //   In theory, we could use triggerRef when we are ready too, but I cannot seem to get that to
 //   work the way I expect (only updates the template for Main, not SelectedDataPanel)
 // const geneList = shallowRef(new Map<number, Gene>());
+
+// Our list of variantPositions that have been loaded/generated
+const variantPositionsList = ref<VariantPositions[]>([]);
 
 const orthologs = ref<OrthologPair[]>([]);
 
@@ -773,5 +789,23 @@ function onProceedWithErrors()
 function showToast(severity: string, title: string, details: string, duration: number)
 {
   toast.add({severity: severity, summary: title, detail: details, life: duration });
+}
+
+
+async function loadBackboneVariants() {
+  const chromosome = store.state.chromosome;
+  const backboneSpecies = store.state.species;
+  const backboneRegion = store.state.selectedBackboneRegion;
+  const start = backboneRegion?.viewportSelection?.basePairStart;
+  const stop = backboneRegion?.viewportSelection?.basePairStop;
+  const speciesMap = store.state.species?.activeMap;
+  if (chromosome && stop && speciesMap && backboneSpecies)
+  {
+    const variantPositions = await buildVariantPositions(chromosome.chromosome, start || 0, stop, speciesMap.key);
+    if (variantPositions)
+    {
+      variantPositionsList.value.push(variantPositions);
+    }
+  }
 }
 </script>
