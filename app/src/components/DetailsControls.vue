@@ -7,8 +7,6 @@
         <div class="col-9 bold">{{store.state.species?.name}} chr{{store.state.chromosome?.chromosome}}:{{displayedSpeciesRegionLabel}}</div>
         <div class="col-3">Comparative Species:</div>
         <div class="col-9 bold">{{comparativeSpeciesText}}</div>
-        <div class="col-3">Synteny Threshold:</div>
-        <div class="col-9 bold">{{Formatter.addCommasToBasePair(store.state.detailsSyntenyThreshold)}}bp</div>
         <div class="col-3">Zoom Level:</div>
         <div class="col-9 bold"><Zoom /></div>
       </div>
@@ -28,9 +26,9 @@ const store = useStore(key);
 
 const displayedSpeciesRegionLabel = computed(() => {
   const selectedRegion = store.state.selectedBackboneRegion;
-  if (selectedRegion && selectedRegion.viewPortSelection && selectedRegion.viewPortSelection.svgHeight > 0)
+  if (selectedRegion && selectedRegion.viewportSelection && selectedRegion.viewportSelection.svgHeight > 0)
   {
-    return `${Formatter.addCommasToBasePair(selectedRegion.viewPortSelection.basePairStart)}-${Formatter.addCommasToBasePair(selectedRegion.viewPortSelection.basePairStop)}`;
+    return `${Formatter.addCommasToBasePair(selectedRegion.viewportSelection.basePairStart)}-${Formatter.addCommasToBasePair(selectedRegion.viewportSelection.basePairStop)}`;
   }
   
   return '';

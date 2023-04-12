@@ -72,9 +72,6 @@ export namespace TestUtils
         detailedBasePairRequest: null,
         detailedBasePairRange: { start: 0, stop: 0 },
 
-        overviewSyntenyThreshold: 30000,
-        detailsSyntenyThreshold: 0,
-
         selectedData: null,
         loadedGenes: null,
         selectedGeneIds: [],
