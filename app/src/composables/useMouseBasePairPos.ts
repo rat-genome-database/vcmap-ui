@@ -12,7 +12,15 @@ export default function useMouseBasePairPos() {
   /**
    * Method to calculate the basepair position by SVG position
    */
-  const getBasePairPositionFromSVG = (event: any, svgStart: number, svgStop: number, basePairStart: number, basePairStop: number) => {
+  const getBasePairPositionFromSVG = (svgY: number, svgStart: number, svgStop: number, basePairStart: number, basePairStop: number) => {
+    mouseYPos.value = svgY;
+    return basePairStart + (svgY - svgStart) * ((basePairStop - basePairStart) / (svgStop - svgStart));
+  };
+
+  /**
+   * Method to calculate the basepair position from a MouseEvent
+   */
+  const getBasePairPositionFromMouseEvent = (event: MouseEvent, svgStart: number, svgStop: number, basePairStart: number, basePairStop: number) => {
     const mousePos = getMousePosSVG(svg, event);
     mouseYPos.value = mousePos.y;
     return basePairStart + (mousePos.y - svgStart) * ((basePairStop - basePairStart) / (svgStop - svgStart));
@@ -20,6 +28,7 @@ export default function useMouseBasePairPos() {
 
   return {
     getBasePairPositionFromSVG,
+    getBasePairPositionFromMouseEvent,
     mouseYPos,
   };
 }

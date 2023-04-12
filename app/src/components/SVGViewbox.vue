@@ -32,11 +32,15 @@
 
     <!-- Detail panel SVGs ----------------------------------------->
     <template v-if="detailedBackboneSet">
-      <BackboneSetSVG show-data-on-hover :backbone-set="detailedBackboneSet" />
+      <BackboneSetSVG 
+        show-data-on-hover 
+        :backbone-set="detailedBackboneSet" 
+        :synteny-hover-svg-y="detailedSyntenySvgYPosition"
+        @synteny-hover="onDetailedSyntenyHover" />
       <template v-if="detailedBackboneSet.datatrackLabels">
         <template v-for="(label, index) in detailedBackboneSet.datatrackLabels" :key="index">
           <template v-if="(label.isVisible)">
-            <GeneLabelSVG :label="label as GeneLabel" :gene-list="geneList"/>
+            <GeneLabelSVG :label="(label as GeneLabel)" :gene-list="geneList"/>
           </template>
         </template>
       </template>
@@ -45,7 +49,11 @@
     <template v-if="detailedSyntenySets.length">
       <template v-for="(syntenySet, index) in detailedSyntenySets" :key="index">
         <template v-for="(syntenicRegion, index) in syntenySet.regions" :key="index">
-          <SectionSVG show-chromosome :region="syntenicRegion as SyntenyRegion" />
+          <SectionSVG 
+            show-chromosome 
+            :region="(syntenicRegion as SyntenyRegion)" 
+            :synteny-hover-svg-y="detailedSyntenySvgYPosition" 
+            @synteny-hover="onDetailedSyntenyHover" />
         </template>
         <template v-for="(label, index) in syntenySet.geneLabels" :key="index">
           <template v-if="label.isVisible">
@@ -270,6 +278,7 @@ let overviewBackboneSet = ref<BackboneSet>();
 let detailedBackboneSet = ref<BackboneSet>();
 let overviewSyntenySets = ref<SyntenyRegionSet[]>([]);
 let orthologLines = ref<OrthologLine[]>();
+let detailedSyntenySvgYPosition = ref<number | null>(null);
 
 ////
 // Debugging helper refs and methods (debug template is currently commented out):
@@ -548,6 +557,10 @@ const isNavigationDownDisabled = computed(() => {
 
   return false;
 });
+
+const onDetailedSyntenyHover = (svgY: number | null) => {
+  detailedSyntenySvgYPosition.value = svgY;
+};
 
 
 const getDetailedPosition = () =>

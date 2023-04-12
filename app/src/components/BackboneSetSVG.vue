@@ -5,7 +5,7 @@
     class="section"
     @mouseenter="() => onMouseEnter(backbone, 'backbone')"
     @mouseleave="() => onMouseLeave(backbone)"
-    @mousemove="updatePositionLabel($event)"
+    @mousemove="updatePositionLabelFromMouseEvent($event)"
     :fill="backbone.isHovered && showDataOnHover ? HOVER_HIGHLIGHT_COLOR : backbone.elementColor"
     :x="backbone.posX1" :y="backbone.posY1"
     :width="backbone.width"
@@ -77,7 +77,7 @@
     </text>
   </template>
 
-  <template v-if="mouseYPos && backbone.isHovered && isDetailed">
+  <template v-if="showBasePairLine">
     <text
       class="label small"
       text-anchor="end"
@@ -118,15 +118,20 @@ const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
 
 const store = useStore(key);
 
-const { getBasePairPositionFromSVG, mouseYPos, } = useMouseBasePairPos();
+const { getBasePairPositionFromMouseEvent, getBasePairPositionFromSVG, mouseYPos, } = useMouseBasePairPos();
 
 interface Props
 {
   showDataOnHover?: boolean;
   backboneSet: BackboneSet;
+  syntenyHoverSvgY?: number | null;
 }
 
 const props = defineProps<Props>();
+
+const emit = defineEmits<{
+  (e: 'synteny-hover', svgY: number | null): void
+}>();
 
 const backbone = computed(() => {
   return props.backboneSet.backbone;
@@ -138,6 +143,10 @@ const datatrackSets = computed(() => {
 
 const isDetailed = computed(() => {
   return props.backboneSet.backbone.renderType === 'detailed';
+});
+
+const showBasePairLine = computed(() => {
+  return props.syntenyHoverSvgY != null && mouseYPos.value != null && isDetailed.value;
 });
 
 //Converts each property in this object to its own reactive prop
@@ -165,6 +174,15 @@ watch(() => store.state.selectedGeneIds, () => {
   highlightSelections(store.state.selectedGeneIds);
 });
 
+watch(() => props.syntenyHoverSvgY, () => {
+  // If backbone is not being hovered but another synteny section is emitting a mouse event,
+  // show the bp position on this backbone section
+  if (!props.backboneSet.backbone.isHovered && props.syntenyHoverSvgY != null)
+  {
+    updatePositionLabelFromSVG(props.syntenyHoverSvgY);
+  }
+});
+
 onMounted(() => {
   highlightSelections(store.state.selectedGeneIds);
 });
@@ -186,6 +204,8 @@ const onMouseEnter = (section: BackboneSection | DatatrackSection, type: Selecte
 };
 
 const onMouseLeave = (section: BackboneSection | DatatrackSection) => {
+  emit('synteny-hover', null);
+
   if (section && section.isHovered == true)
   {
     section.isHovered = false;
@@ -266,8 +286,19 @@ const highlightSelections = (selectedGeneIds: number[]) => {
   });
 };
 
-const updatePositionLabel = (event: any) => {
-  const basePairPos = getBasePairPositionFromSVG(event, backbone.value.windowSVGStart, backbone.value.windowSVGStop, backbone.value.windowStart, backbone.value.windowStop);
+const updatePositionLabelFromMouseEvent = (event: MouseEvent) => {
+  const basePairPos = getBasePairPositionFromMouseEvent(event, backbone.value.windowSVGStart, backbone.value.windowSVGStop, backbone.value.windowStart, backbone.value.windowStop);
+  basePairPositionLabel.value = Formatter.convertBasePairToLabel(basePairPos) || '';
+
+  if (props.backboneSet.backbone.isHovered)
+  {
+    // Emit our svg y position so that other synteny sections can see it
+    emit('synteny-hover', mouseYPos.value ?? null);
+  }
+};
+
+const updatePositionLabelFromSVG = (svgY: number) => {
+  const basePairPos = getBasePairPositionFromSVG(svgY, backbone.value.windowSVGStart, backbone.value.windowSVGStop, backbone.value.windowStart, backbone.value.windowStop);
   basePairPositionLabel.value = Formatter.convertBasePairToLabel(basePairPos) || '';
 };
 </script>
