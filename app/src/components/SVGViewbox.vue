@@ -650,7 +650,12 @@ const removeBackboneVariants = () => {
 
 const updateBackboneVariants = (backboneSpecies: Species, variantPositions: VariantPositions, detailedBackbone: BackboneSection) => {
   const variantDatatracks = backboneVariantTrackBuilder(backboneSpecies, variantPositions, detailedBackbone);
-  detailedBackboneSet.value?.addNewDatatrackSetToStart(variantDatatracks, 'variant');
+  if (detailedBackboneSet.value)
+  {
+    detailedBackboneSet.value?.addNewDatatrackSetToStart(variantDatatracks, 'variant');
+    // For now, let's just rebuild the ortholog lines to get the positions correct
+    orthologLines.value = createOrthologLines(props.orthologs, detailedBackboneSet.value, (detailedSyntenySets.value as SyntenyRegionSet[]))
+  }
 }
 
 document.addEventListener('scroll' , getDetailedPosition);
