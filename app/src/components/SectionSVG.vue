@@ -9,7 +9,7 @@
       class="block-section"
       @mouseenter="onMouseEnter(blockSection, 'trackSection')"
       @mouseleave="onMouseLeave(blockSection, 'trackSection')"
-      @mousemove="updatePositionLabel($event, blockSection)"
+      @mousemove="updatePositionLabelFromMouseEvent($event, blockSection)"
       @click="selectOnClick ? onSyntenyBlockClick(blockSection) : () => {}"
       :y="blockSection.posY1"
       :x="blockSection.posX1"
@@ -27,6 +27,7 @@
       class="level-2 block-section"
       @mouseenter="onMouseEnter(blockSection, 'trackSection')"
       @mouseleave="onMouseLeave(blockSection, 'trackSection')"
+      @mousemove="updatePositionLabelFromMouseEvent($event, blockSection)"
       :y="blockSection.posY1"
       :x="blockSection.posX1"
       :width="blockSection.width"
@@ -83,7 +84,7 @@
       </text>
     </template>
   </template>
-  <template v-if="mouseYPos && !showStartStop && region.syntenyBlocks.some((section) => section.isHovered)">
+  <template v-if="showBasePairLine">
     <text
       class="label small"
       text-anchor="end"
@@ -153,7 +154,7 @@ const SYNTENY_LABEL_SHIFT = 10;
 
 const store = useStore(key);
 
-const { getBasePairPositionFromSVG, mouseYPos } = useMouseBasePairPos();
+const { getBasePairPositionFromMouseEvent, getBasePairPositionFromSVG, mouseYPos } = useMouseBasePairPos();
 
 interface Props
 {
@@ -162,8 +163,13 @@ interface Props
   showChromosome?: boolean;
   selectOnClick?: boolean;
   region: SyntenyRegion;
+  syntenyHoverSvgY?: number | null;
 }
 const props = defineProps<Props>();
+
+const emit = defineEmits<{
+  (e: 'synteny-hover', svgY: number | null): void
+}>();
 
 //Converts each property in this object to its own reactive prop
 toRefs(props);
@@ -175,6 +181,15 @@ onMounted(() => {
 
 watch([() => store.state.selectedGeneIds, () => props.region], () => {
   highlightSelections(store.state.selectedGeneIds);
+});
+
+watch(() => props.syntenyHoverSvgY, () => {
+  // If backbone is not being hovered but another synteny section is emitting a mouse event,
+  // show the bp position on this backbone section
+  if (!isRegionHovered.value && props.syntenyHoverSvgY != null)
+  {
+    updatePositionLabelFromSVG(props.syntenyHoverSvgY);
+  }
 });
 
 const level1Blocks = computed(() => {
@@ -191,6 +206,14 @@ const level2Gaps = computed(() => {
 });
 const datatrackSets = computed(() => {
   return (props.region.datatrackSets);
+});
+const isRegionHovered = computed(() => {
+  return props.region.syntenyBlocks.some(b => b.isHovered);
+});
+
+const showBasePairLine = computed(() => {
+  return props.syntenyHoverSvgY != null && mouseYPos.value != null && !props.showStartStop
+    && (isRegionHovered.value || basePairPositionLabel.value !== '');
 });
 
 const onMouseEnter = (section: SyntenySection | GeneDatatrack, type: SelectedDataType) => {
@@ -218,6 +241,9 @@ const onMouseEnter = (section: SyntenySection | GeneDatatrack, type: SelectedDat
 };
 
 const onMouseLeave = (section: VCMapSVGElement, type: SelectedDataType) => {
+  emit('synteny-hover', null);
+  basePairPositionLabel.value = '';
+
   if (section)
   {
     section.isHovered = false;
@@ -379,9 +405,46 @@ const calculateSectionStopPositionLabel = (section: SyntenySection) => {
   return Formatter.convertBasePairToLabel(Math.round(labelBasePair));
 };
 
-const updatePositionLabel = (event: any, blockSection: SyntenySection) => {
-  const basePairPos = getBasePairPositionFromSVG(event, blockSection.posY1, blockSection.posY2, blockSection.speciesStart, blockSection.speciesStop);
+const updatePositionLabelFromMouseEvent = (event: MouseEvent, blockSection: SyntenySection) => {
+  const basePairPos = getBasePairPositionFromMouseEvent(event, blockSection.posY1, blockSection.posY2, blockSection.speciesStart, blockSection.speciesStop);
   basePairPositionLabel.value = Formatter.convertBasePairToLabel(basePairPos) || '';
+
+  if (isRegionHovered.value)
+  {
+    // Emit our svg y position so that other synteny sections can see it
+    emit('synteny-hover', mouseYPos.value ?? null);
+  }
+};
+
+const getBlockFromSVGPosition = (svgY: number) => {
+  // First check the gapless block to see if we even need to loop through the synteny blocks
+  if (props.region.gaplessBlock.posY1 <= svgY && props.region.gaplessBlock.posY2 >= svgY)
+  {
+    // Loop through its synteny blocks to identify which block is at this svg position
+    for (let i = 0; i < props.region.syntenyBlocks.length; i++)
+    {
+      const block = props.region.syntenyBlocks[i];
+      if (block.posY1 <= svgY && block.posY2 >= svgY)
+      {
+        return block;
+      }
+    }
+  }
+
+  return null;
+};
+
+const updatePositionLabelFromSVG = (svgY: number) => {
+  const blockSection = getBlockFromSVGPosition(svgY);
+  if (blockSection != null)
+  {
+    const basePairPos = getBasePairPositionFromSVG(svgY, blockSection.posY1, blockSection.posY2, blockSection.speciesStart, blockSection.speciesStop);
+    basePairPositionLabel.value = Formatter.convertBasePairToLabel(basePairPos) || '';
+  }
+  else
+  {
+    basePairPositionLabel.value = '';
+  }
 };
 </script>
 
