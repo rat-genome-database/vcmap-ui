@@ -162,3 +162,38 @@ function calculateSVGYPositionBasedOnBackboneAlignment(geneBackboneStart: number
 
   return svgStart + ((svgStop - svgStart) / 2);
 }
+
+export function isOrthologLineInView(geneA: Gene, geneB: Gene, visibleBackboneStart: number, visibleBackboneStop: number)
+{
+  // Get backbone start/stops of each gene -- if backboneStart or backboneStop is missing, assume it's a backbone gene
+  // and use the regular start/stop of the gene
+  const geneABackboneStart = geneA.backboneStart ?? geneA.start;
+  const geneABackboneStop = geneA.backboneStop ?? geneA.stop;
+  const geneBBackboneStart = geneB.backboneStart ?? geneB.start;
+  const geneBBackboneStop = geneB.backboneStop ?? geneB.stop;
+
+  // Test if any part of either gene is inside of the bp range
+  if (isInBPRange(geneABackboneStart, visibleBackboneStart, visibleBackboneStop)
+    || isInBPRange(geneABackboneStop, visibleBackboneStart, visibleBackboneStop)
+    || isInBPRange(geneBBackboneStart, visibleBackboneStart, visibleBackboneStop)
+    || isInBPRange(geneBBackboneStop, visibleBackboneStart, visibleBackboneStop))
+  {
+    return true;
+  }
+
+  // Test if either gene includes the bp range
+  if ((geneABackboneStart < visibleBackboneStart && geneABackboneStop > visibleBackboneStop)
+    || (geneBBackboneStart < visibleBackboneStart && geneBBackboneStop > visibleBackboneStop))
+  {
+    return true;
+  }
+
+  // Test if both genes are outside of the bp range (ortholog line should cross the viewport)
+  return (geneABackboneStop < visibleBackboneStart && geneBBackboneStart > visibleBackboneStop)
+    || (geneBBackboneStop < visibleBackboneStart && geneABackboneStart > visibleBackboneStop);
+}
+
+function isInBPRange(testBP: number, visibleBackboneStart: number, visibleBackboneStop: number)
+{
+  return testBP >= visibleBackboneStart && testBP <= visibleBackboneStop;
+}

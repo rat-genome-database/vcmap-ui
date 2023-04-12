@@ -5,6 +5,9 @@
 import Block, { Gap } from "@/models/Block";
 import SVGConstants, { PANEL_SVG_STOP, PANEL_SVG_START } from "./SVGConstants";
 
+// Don't render anything smaller than this
+const SMALLEST_RENDERABLE_SVG_UNIT = 0.2; // 1/5th of an SVG unit
+
 /**
  * Gets threshold based on how many basepairs = 0.25 SVG units
  * 
@@ -15,7 +18,7 @@ import SVGConstants, { PANEL_SVG_STOP, PANEL_SVG_START } from "./SVGConstants";
  */
 export function getThreshold(bpLength: number)
 {
-  return Math.round(bpLength / (PANEL_SVG_STOP - PANEL_SVG_START) / 4);
+  return Math.round(bpLength / (PANEL_SVG_STOP - PANEL_SVG_START) * SMALLEST_RENDERABLE_SVG_UNIT);
 }
 
 /**

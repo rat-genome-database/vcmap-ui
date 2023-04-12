@@ -44,6 +44,7 @@ import useDialog from '@/composables/useDialog';
 import { backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError, noSyntenyFoundError } from '@/utils/VCMapErrors';
 import { isGenomicDataInViewport, getThreshold } from '@/utils/Shared';
 import { OrthologPair } from '@/models/OrthologLine';
+import { isOrthologLineInView } from '@/utils/OrthologHandler';
 
 // TODO: Can we figure out a better way to handle blocks with a high chainlevel?
 const MAX_CHAINLEVEL = 2;
@@ -428,7 +429,7 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
   }
 
   console.time(`ProcessOrthologs`);
-  processOrthologs(geneList.value, backboneMapKey, backboneStop - backboneStart);
+  processOrthologs(geneList.value, backboneMapKey, backboneStart, backboneStop);
   console.timeEnd(`ProcessOrthologs`);
 }
 
@@ -614,13 +615,16 @@ function processAlignmentsOfGeneInsideOfViewport(gene: Gene, targetBlock: Block)
  *   list of all genes loaded in memory
  * @param backboneMapKey
  *   the map key of the backbone (used to determine which genes are backbone genes)
- * @param visibleBPRange
- *   the basepair length of the viewport (used to skip over genes that are too small to render)
+ * @param visibleBackboneStart
+ *   backbone start basepair of the viewport
+ * @param visibleBackboneStop
+ *   backbone stop basepair of the viewport
  */
-function processOrthologs(geneList: Map<number, Gene>, backboneMapKey: number, visibleBPRange: number)
+function processOrthologs(geneList: Map<number, Gene>, backboneMapKey: number, visibleBackboneStart: number, visibleBackboneStop: number)
 {
-  const threshold = getThreshold(visibleBPRange);
+  const threshold = getThreshold(visibleBackboneStop - visibleBackboneStart);
 
+  $log.debug(`Process orthologs for visible range: ${visibleBackboneStart} - ${visibleBackboneStop} [threshold: ${threshold}]`);
   const offBackboneGenesWithOrthologs = Array.from(geneList.values()).filter(g => {
     if (g.backboneStart == null || g.backboneStop == null)
     {
@@ -634,22 +638,25 @@ function processOrthologs(geneList: Map<number, Gene>, backboneMapKey: number, v
   const orthologPairs: OrthologPair[] = [];
   for (let i = 0; i < offBackboneGenesWithOrthologs.length; i++)
   {
+    const offBackboneGene = offBackboneGenesWithOrthologs[i];
     const orthologs = offBackboneGenesWithOrthologs[i].orthologs;
     for (let j = 0; j < orthologs.length; j++)
     {
       const potentialBackboneGene = geneList.get(orthologs[j]);
       if (potentialBackboneGene != undefined && potentialBackboneGene.mapKey === backboneMapKey 
-        && (potentialBackboneGene.stop - potentialBackboneGene.start) >= threshold)
+        && (potentialBackboneGene.stop - potentialBackboneGene.start) >= threshold
+        && isOrthologLineInView(potentialBackboneGene, offBackboneGene, visibleBackboneStart, visibleBackboneStop)
+      )
       {
         orthologPairs.push({
           backboneGene: potentialBackboneGene.clone(),
-          offBackboneGene: offBackboneGenesWithOrthologs[i].clone(),
+          offBackboneGene: offBackboneGene.clone(),
         });
       }
     }
   }
 
-  $log.debug(`Ortholog pairs: ${orthologPairs.length}`);
+  $log.debug(`Ortholog pairs (determined be visible): ${orthologPairs.length}`);
   orthologs.value = orthologPairs;
 }
 
