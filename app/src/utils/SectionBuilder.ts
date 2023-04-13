@@ -218,6 +218,13 @@ console.time("splitBlockWithGaps");
     currSyntenicRegion.splitBlockWithGaps(factory, blockGaps);
 console.timeEnd("splitBlockWithGaps");
 
+    // Check if there are variants and build those data tracks
+    if (blockVariantPositions)
+    {
+      const variantDatatracks = createVariantDatatracks(factory, blockVariantPositions.positions,
+        blockInfo.start, blockInfo.stop, blockInfo.backboneStart, blockInfo.backboneStop);
+        currSyntenicRegion.addDatatrackSections(variantDatatracks, 0, 'variant');
+    }
 
     // Step 3: For each (now processed) block, create a SyntenySection for each gene
     if (blockGenes && blockGenes.length > 0)
@@ -254,21 +261,15 @@ console.time(timerLabel);
       // geneTrackIdx = geneTrackIdx === -1 ? 0 : geneTrackIdx;
       // currSyntenicRegion.addDatatrackSections(processedGeneInfo, geneTrackIdx, 'gene');
 
-      // Add gene datatrack sections (this will always be the first datatrack set)
-      currSyntenicRegion.addDatatrackSections(processedGeneInfo, 0, 'gene');
+      // Add gene datatrack sections (this will always be the last datatrack set)
+      const idx = currSyntenicRegion.datatrackSets.length;
+      currSyntenicRegion.addDatatrackSections(processedGeneInfo, idx, 'gene');
 console.timeEnd(timerLabel);
      } else {
       // Add empty gene datatrack section so every region as one
-      currSyntenicRegion.addDatatrackSections([], 0, 'gene');
+      const idx = currSyntenicRegion.datatrackSets.length;
+      currSyntenicRegion.addDatatrackSections([], idx, 'gene');
      }
-
-    // Check if there are variants and build those data tracks
-    if (blockVariantPositions)
-    {
-      const variantDatatracks = createVariantDatatracks(factory, blockVariantPositions.positions,
-        blockInfo.start, blockInfo.stop, blockInfo.backboneStart, blockInfo.backboneStop);
-        currSyntenicRegion.addDatatrackSections(variantDatatracks, 1, 'variant');
-    }
 
     processedSyntenicRegions.push(currSyntenicRegion);
   }
