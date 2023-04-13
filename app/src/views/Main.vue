@@ -199,7 +199,7 @@ async function initVCMapProcessing()
   // Query the Genes API
 
   const slowAPI = setTimeout(() => {
-    showToast('warn', 'Loading Impact', 'API is taking a while to respond, please be patient', 3000);
+    showToast('warn', 'Loading Impact', 'API is taking a while to respond, please be patient', 5000);
   }, 15000);
 
   let comparativeSpeciesIds: number[] = [];
@@ -679,7 +679,7 @@ async function queryAndProcessSyntenyForBasePairRange(backboneChromosome: Chromo
   $log.debug(`Querying for specific base pair range: ${start} - ${stop}`);
   const slowAPI = setTimeout(() => {
     console.log('API is taking longer than usual to respond...');
-    showToast('warn', 'Loading Impact', 'API is taking a while to respond, please be patient', 3000);
+    showToast('warn', 'Loading Impact', 'API is taking a while to respond, please be patient', 5000);
   }, 15000);
 
   let threshold = getThreshold(stop - start);
@@ -802,7 +802,6 @@ async function loadBackboneVariants() {
   const chromosome = store.state.chromosome;
   const backboneSpecies = store.state.species;
   const backboneRegion = store.state.selectedBackboneRegion;
-  const start = backboneRegion?.viewportSelection?.basePairStart;
   const stop = backboneRegion?.viewportSelection?.basePairStop;
   const speciesMap = store.state.species?.activeMap;
   if (chromosome && stop && speciesMap && backboneSpecies)
@@ -821,9 +820,13 @@ async function loadBackboneVariants() {
         chromosome.seqLength,
         speciesMap.key
       );
-      if (variantPositions)
+      if (variantPositions.positions.length > 0)
       {
         variantPositionsList.value.push(variantPositions);
+      }
+      else
+      {
+        showToast('warn', 'No Variants Found', 'There were no variants found for the given chromosome', 5000);
       }
     }
   }
@@ -832,6 +835,7 @@ async function loadBackboneVariants() {
 
 async function loadSyntenyVariants() {
   isLoading.value = true;
+  let foundSomeVariants = false;
   let variantPromises: Promise<void>[] = [];
   syntenyTree.value.forEach( async (blockSet) => {
     variantPromises.push(...blockSet.map( async (block) => {
@@ -845,6 +849,10 @@ async function loadSyntenyVariants() {
       );
       if (variantRes)
       {
+        if (!foundSomeVariants && variantRes.positions.length > 0)
+        {
+          foundSomeVariants = true;
+        }
         block.variantPositions = variantRes;
         // NOTE: adding to variantPositionList is how we tell SVGViewbox to update
         // the backbone variants, but if we push the responses here SVGViewbox will
@@ -856,6 +864,10 @@ async function loadSyntenyVariants() {
   });
   await Promise.allSettled(variantPromises);
   isLoading.value = false;
+  if (!foundSomeVariants)
+  {
+    showToast('warn', 'No Variants Found', 'There were no variants found for the given regions.', 5000);
+  }
   store.dispatch('setIsUpdatingVariants', true);
 }
 </script>
