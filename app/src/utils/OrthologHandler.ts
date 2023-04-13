@@ -3,7 +3,7 @@ import { GeneDatatrack } from "@/models/DatatrackSection";
 import Gene from "@/models/Gene";
 import OrthologLine, { OrthologPair } from "@/models/OrthologLine";
 import SyntenyRegionSet from "@/models/SyntenyRegionSet";
-import { getDetailedPanelXPositionForDatatracks } from "./Shared";
+import { getDetailedPanelXPositionForDatatracks, getThreshold } from "./Shared";
 import SVGConstants, { PANEL_HEIGHT, PANEL_SVG_START, PANEL_SVG_STOP } from "./SVGConstants";
 
 type GeneDetails = {
@@ -28,6 +28,7 @@ export function createOrthologLines(orthologs: OrthologPair[], backboneSet: Back
   //
   // Prep and reorganize some of our data structures TODO: There can probably be some improvement either here or with our data models
 
+  const threshold = getThreshold(backboneSet.backbone.windowStop - backboneSet.backbone.windowStart);
   // Get the "on-screen" gene datatracks for the backbone
   const backboneGeneDatatracks = backboneSet.datatrackSets
     .filter(datatrackSet => datatrackSet.datatracks[0]?.type === 'gene')
@@ -47,16 +48,23 @@ export function createOrthologLines(orthologs: OrthologPair[], backboneSet: Back
   for (let i = 0; i < orthologs.length; i++)
   {
     const pair = orthologs[i];
+    if ( ( pair.offBackboneGene.backboneStop - pair.offBackboneGene.backboneStart) < threshold || pair.backboneGene.backboneStop - pair.backboneGene.backboneStart < threshold ) 
+    {
+      continue;
+    }
+
     const backboneGeneDatatrack = backboneDatatrackMap.get(pair.backboneGene.rgdId);
     const offBackboneGeneDetails = offBackboneGeneMap.get(pair.offBackboneGene.rgdId);
     const offBackboneGeneDatatrack = offBackboneGeneDetails?.datatrack;
 
+  
     const line = new OrthologLine({
       backboneGene: pair.backboneGene,
       backboneGeneDatatrack: backboneGeneDatatrack,
       offBackboneGene: pair.offBackboneGene,
       offBackboneGeneDatatrack: offBackboneGeneDatatrack,
     });
+  
 
     try
     {
