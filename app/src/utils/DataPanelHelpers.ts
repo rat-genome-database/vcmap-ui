@@ -3,6 +3,10 @@ import SelectedData from '@/models/SelectedData';
 import { Store } from "vuex";
 import { VCMapState } from "@/store";
 import { GeneDatatrack } from '@/models/DatatrackSection';
+import { OrthologPair } from '@/models/OrthologLine';
+
+
+const SEARCHED_GENE_WINDOW_FACTOR = 3;
 
 export function getNewSelectedData(store: Store<VCMapState>, gene: Gene): { rgdIds: number[], selectedData: SelectedData[] } {
   const comparativeSpecies = store.state.comparativeSpecies;
@@ -37,80 +41,48 @@ export function sortGeneList(geneList: Gene[]) {
   });
 }
 
-// FIXME: This method will need to be reworked once we decide how to grab orthologs for a specific gene 
-function getGeneOrthologData(store: Store<VCMapState>, gene: Gene) 
+export function adjustSelectionWindow(searchedGene: Gene, orthologs: OrthologPair[], store: Store<VCMapState>)
 {
-  const masterGeneMapByRGDId = store.getters.masterGeneMapByRGDId as Map<number, GeneDatatrack[]>;
-  const geneDatatracks = masterGeneMapByRGDId?.get(gene.rgdId);
+  // const loadedGenes = store.state.loadedGenes;
 
-  const selectedDataList: SelectedData[] = [];
-  const rgdIds: number[] = [];
+  // New start and stop will be +/- some multiple of the gene's length (currently 2x)
+  const geneBasePairLength = searchedGene.stop - searchedGene.start;
+  // Take the max of new start position, and selected region's original start
+  // to avoid jumping to outside of loaded region
+  const newInnerStart = Math.max(Math.floor(searchedGene.start
+    - SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), 0);
+  // Take min of new stop and selected regions original stop
+  const newInnerStop = Math.min(Math.floor(searchedGene.stop
+    + SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), store.state.chromosome?.seqLength ?? newInnerStart);
+  //get orthologs for backbone gene, and determine the relative highest and lowest positioned genes to reset the window
+  const reframeGenes: Gene[] = [];
 
-  if (!geneDatatracks)
-  {
-    return {
-      rgdIds: rgdIds, 
-      selectedData: selectedDataList 
-    };
+  orthologs.forEach((orthologPair) => {
+    //
+    if (orthologPair.backboneGene.rgdId == searchedGene.rgdId ) 
+    {
+      reframeGenes.push(orthologPair.offBackboneGene);
+    }
+    else if (orthologPair.offBackboneGene.rgdId == searchedGene.rgdId ) 
+    {
+      reframeGenes.push(orthologPair.backboneGene);
+    }
+  });
+
+  if (reframeGenes.length > 0)
+  {  
+    reframeGenes.push(searchedGene);
+    reframeGenes.sort((a, b) => a.backboneStart - b.backboneStart );
+
+    const newStart = Math.max(Math.floor(reframeGenes[0].backboneStart - SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), 0);
+    const newStop = Math.min(Math.floor(reframeGenes[reframeGenes.length - 1].backboneStop + SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), store.state.chromosome?.seqLength ?? newStart);
+
+    return { start: newStart, stop: newStop };
   }
-
-  selectedDataList.push(new SelectedData(gene, 'Gene'));
-
-  rgdIds.push(gene.rgdId);
-
-  // If the gene has orthologs, add them to the selected data
-  const geneOrthos = geneDatatracks[0].gene.orthologs;
-  if (geneOrthos) {
-    const geneValues = Object.values(geneOrthos);
-    geneValues.forEach( (rgdIdx: any) => {
-        const orthologGenes = masterGeneMapByRGDId?.get(rgdIdx[0]);
-        orthologGenes?.forEach(geneDatatrack => {
-          selectedDataList.push(new SelectedData(geneDatatrack.gene, 'Gene'));
-        });
-        rgdIds.push(rgdIdx[0]);
-      });
-    } else if (!Array.isArray(gene.orthologs)) {
-      const geneValues = Object.values(gene.orthologs);
-      geneValues.forEach( (rgdIdx: any) => {
-          const orthologGenes = masterGeneMapByRGDId?.get(rgdIdx[0]);
-          orthologGenes?.forEach(geneDatatrack => {
-            selectedDataList.push(new SelectedData(geneDatatrack.gene, 'Gene'));
-          });
-          rgdIds.push(rgdIdx[0]);
-        });
-      }
-  
-  if (gene.orthologs.length > 0)
+  else
   {
-    gene.orthologs.forEach((rgdId: number) => {
-      const orthologGenes = masterGeneMapByRGDId?.get(rgdId);
-      orthologGenes?.forEach(geneDatatrack => {
-        const orthos = geneDatatrack.gene.orthologs;
-
-        // Backbone gene might have multiple orthos to check
-        if (orthos) {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          for (const [key, value] of Object.entries(orthos)) {
-            if (Number(`${value}`) !== gene.rgdId) {
-              const newOrthoData = masterGeneMapByRGDId?.get(Number(`${value}`));
-              newOrthoData?.forEach(geneDatatrack => {
-                selectedDataList.push(new SelectedData(geneDatatrack.gene, 'Gene'));
-              });
-              rgdIds.push(Number(`${value}`));
-            }
-          }
-        }
-
-        selectedDataList.push(new SelectedData(geneDatatrack.gene, 'Gene'));
-      });
-      rgdIds.push(rgdId);
-    });
+    return { start: newInnerStart, stop: newInnerStop };
   }
-
-  return {
-    rgdIds: rgdIds, 
-    selectedData: selectedDataList
-  };
 }
 
 export function sortGeneMatches(searchKey: any, partialMatches: Gene[])
