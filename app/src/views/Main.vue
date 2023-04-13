@@ -798,6 +798,7 @@ function showToast(severity: string, title: string, details: string, duration: n
 
 
 async function loadBackboneVariants() {
+  isLoading.value = true;
   const chromosome = store.state.chromosome;
   const backboneSpecies = store.state.species;
   const backboneRegion = store.state.selectedBackboneRegion;
@@ -826,9 +827,11 @@ async function loadBackboneVariants() {
       }
     }
   }
+  isLoading.value = false;
 }
 
 async function loadSyntenyVariants() {
+  isLoading.value = true;
   let variantPromises: Promise<void>[] = [];
   syntenyTree.value.forEach( async (blockSet) => {
     variantPromises.push(...blockSet.map( async (block) => {
@@ -852,6 +855,7 @@ async function loadSyntenyVariants() {
     }));
   });
   await Promise.allSettled(variantPromises);
+  isLoading.value = false;
   store.dispatch('setIsUpdatingVariants', true);
 }
 </script>
