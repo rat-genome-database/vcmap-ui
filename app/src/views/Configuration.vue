@@ -176,7 +176,6 @@
                   showButtons
                   v-model="startPosition"
                   :disabled="!backboneChromosome"
-                  suffix="bp"
                   :step="1000"
                   :max="(maxPosition != null) ? maxPosition - 1 : 1"
                   :min="0"
@@ -190,7 +189,6 @@
                     showButtons
                     v-model="stopPosition"
                     :disabled="!backboneChromosome"
-                    suffix="bp"
                     :step="1000"
                     :max="maxPosition ?? undefined"
                     :min="1"
