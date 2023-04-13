@@ -116,7 +116,7 @@
         :width="datatrack.width"
         :height="datatrack.height"
         :fill="getSectionFill(datatrack)"
-        :fill-opacity=".7"
+        :fill-opacity="datatrack.opacity"
       />
     </template>
   </template>

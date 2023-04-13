@@ -27,7 +27,6 @@ export function createVariantDatatracks(factory: GenomicSectionFactory, position
   const variantCounts: number[] = new Array(numBins).fill(0);
   let binStart = sequenceStart;
   const backboneBinSize = Math.round(BIN_SIZE * (backboneStop - backboneStart) / seqLength);
-  console.log('before count loop');
   // Only loop through positions array once and count based on what bin it should be in
   // NOTE: this assumes we have bins of equal size, if we ever want different bin sizes
   // in the same rendered view we'll need to adjust this

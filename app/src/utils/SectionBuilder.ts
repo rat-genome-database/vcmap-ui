@@ -1,7 +1,7 @@
 import Species from '@/models/Species';
 import Chromosome from '@/models/Chromosome';
 import SyntenyRegion from '@/models/SyntenyRegion';
-import { GeneDatatrack } from '@/models/DatatrackSection';
+import { GeneDatatrack, VariantDensity } from '@/models/DatatrackSection';
 import Gene from '@/models/Gene';
 import SyntenyRegionSet from '@/models/SyntenyRegionSet';
 import { GenomicSectionFactory } from '@/models/GenomicSectionFactory';
@@ -168,6 +168,7 @@ function syntenicSectionBuilder(speciesSyntenyData: Block[], species: Species, s
 
   const currSpecies = species.name;
   const currMapName = species.activeMap.name;
+  const processVariantDensity = speciesSyntenyData.some((block) => block.variantPositions && block.variantPositions.positions.length > 0);
   // const allGeneLabels: Label[] = [];
 
 console.debug(`About to loop over ${speciesSyntenyData.length} Blocks...`);
@@ -219,7 +220,7 @@ console.time("splitBlockWithGaps");
 console.timeEnd("splitBlockWithGaps");
 
     // Check if there are variants and build those data tracks
-    if (blockVariantPositions)
+    if (blockVariantPositions && processVariantDensity)
     {
       const variantDatatracks = createVariantDatatracks(factory, blockVariantPositions.positions,
         blockInfo.start, blockInfo.stop, blockInfo.backboneStart, blockInfo.backboneStop);
@@ -272,6 +273,28 @@ console.timeEnd(timerLabel);
      }
 
     processedSyntenicRegions.push(currSyntenicRegion);
+  }
+
+  // Adjust variant datatrack colors now that all are processed
+  if (processVariantDensity)
+  {
+    let regionSetMaxCount = 0;
+    const datatracks: VariantDensity[] = [];
+    for (let i = 0; i < processedSyntenicRegions.length; i++)
+    {
+      const variantIdx = processedSyntenicRegions[i].datatrackSets.findIndex((set) => set.type === 'variant');
+      if (variantIdx !== -1)
+      {
+        datatracks.push(...processedSyntenicRegions[i].datatrackSets[variantIdx].datatracks as VariantDensity[]);
+        datatracks.forEach((track) => {
+          regionSetMaxCount = track.variantCount > regionSetMaxCount ? track.variantCount : regionSetMaxCount;
+        });
+      }
+    }
+    if (regionSetMaxCount > 0)
+    {
+      datatracks.forEach((track) => track.setDensityColor(regionSetMaxCount));
+    }
   }
 
   // Finished creating this Set:
