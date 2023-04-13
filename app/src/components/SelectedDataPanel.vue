@@ -136,12 +136,13 @@
 import SelectedData from '@/models/SelectedData';
 import Gene from '@/models/Gene';
 import GeneInfo from '@/components/GeneInfo.vue';
+import { OrthologPair } from '@/models/OrthologLine';
 import { Formatter } from '@/utils/Formatter';
 import SVGConstants, {PANEL_SVG_START, PANEL_SVG_STOP} from '@/utils/SVGConstants';
 import { ref, watch} from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
-import { getNewSelectedData, sortGeneList, sortGeneMatches } from '@/utils/DataPanelHelpers';
+import { getNewSelectedData, sortGeneList, sortGeneMatches, adjustSelectionWindow } from '@/utils/DataPanelHelpers';
 
 /**
  * FIXME: This whole component needs to be looked over. There are references to properties on objects that don't exist.
@@ -154,6 +155,7 @@ interface Props
 {
   selectedData: SelectedData[] | null;
   geneList: Map<number, Gene>;
+  orthologs: OrthologPair[];
 }
 
 const props = defineProps<Props>();
@@ -164,7 +166,6 @@ const numberOfResults = ref<number>(0);
 
 // fraction of gene bp length to add to the window when jumping
 // to the gene after a search
-const SEARCHED_GENE_WINDOW_FACTOR = 3;
 
 watch(() => props.selectedData, () => {
   numberOfResults.value = 0;
@@ -220,8 +221,9 @@ const searchSVG = (event: any) => {
   store.dispatch('setSelectedData', newData.selectedData);
   // Only adjust window of the searched gene is on backbone
 
-  if (event.value && event.value.speciesName === store.state.species?.name) {
-    adjustSelectionWindow();
+  if (event.value ) {
+    const newWindow = adjustSelectionWindow(searchedGene.value, props.orthologs, store);
+    store.dispatch('setDetailedBasePairRequest', newWindow);
   }
 };
 
@@ -233,82 +235,15 @@ const selectAndSearchSVG = (event: any) => {
     store.dispatch('setGene', searchedGene.value);
     store.dispatch('setSelectedGeneIds', newData.rgdIds || []);
     store.dispatch('setSelectedData', newData.selectedData);
-    if (searchedGene.value && searchedGene.value.speciesName === store.state.species?.name) {
-      adjustSelectionWindow();
+    if (searchedGene.value) {
+      const newWindow = adjustSelectionWindow(searchedGene.value, props.orthologs, store);
+      store.dispatch('setDetailedBasePairRequest', newWindow);
     }
   }
 };
 
 const getSuggestionDisplay = (item: any) => {
   return `${item.symbol} - ${item.speciesName}`;
-};
-
-const adjustSelectionWindow = () => {
-  // const loadedGenes = store.state.loadedGenes;
-  const selectionStart = store.state.detailedBasePairRange.start;
-  const selectionStop = store.state.detailedBasePairRange.stop;
-
-  // New start and stop will be +/- some multiple of the gene's length (currently 2x)
-  const geneBasePairLength = searchedGene.value.stop - searchedGene.value.start;
-  // Take the max of new start position, and selected region's original start
-  // to avoid jumping to outside of loaded region
-  const newInnerStart = Math.max(Math.floor(searchedGene.value.start
-    - SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), 0);
-  // Take min of new stop and selected regions original stop
-  const newInnerStop = Math.min(Math.floor(searchedGene.value.stop
-    + SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), store.state.chromosome?.seqLength ?? newInnerStart);
-  //get orthologs for backbone gene, and determine the relative highest and lowest positioned genes to reset the window
-  const orthologs = searchedGene.value.orthologs;
-
-  const orthologInfo: any[] = [];
-  // Object.entries(orthologs).forEach((ortholog) => {
-  //   const currentOrtholog = loadedGenes.get(ortholog[1][0]);
-  //   orthologInfo.push(currentOrtholog['genes'][Object.keys(currentOrtholog['genes'])][0]);
-  // });
-  
-  if (orthologs.length > 0)
-  // if (Object.entries(orthologs).length > 0)
-  {
-
-    orthologInfo.sort((a, b) => a.posY1 - b.posY1);
-
-    const highestOrtholog = orthologInfo[0];
-    const lowestOrtholog = orthologInfo[orthologInfo.length - 1];
-
-    const topOrthologLength = highestOrtholog.gene.stop - highestOrtholog.gene.start;
-    const bottomOrthologLength = lowestOrtholog.gene.stop - lowestOrtholog.gene.start;
-
-    const svgHeight = PANEL_SVG_STOP - PANEL_SVG_START;
-    const bpVisibleWindowLength = Math.abs(selectionStop - selectionStart);
-    const pixelsPerBpRatio = svgHeight / bpVisibleWindowLength;
-    const basePairsFromInnerSelection1 = Math.floor((highestOrtholog.posY1- SVGConstants.panelTitleHeight) * pixelsPerBpRatio);
-    const basePairStart = Math.max(basePairsFromInnerSelection1 + selectionStart - (topOrthologLength * 5), 0);
-
-    const basePairsFromInnerSelection2 = Math.floor((lowestOrtholog.posY1 - SVGConstants.panelTitleHeight) * pixelsPerBpRatio);
-    const basePairStop = Math.min(
-        basePairsFromInnerSelection2 + selectionStart + (bottomOrthologLength * 5),
-        store.state.chromosome?.seqLength ?? basePairStart);
-
-
-    // confirm the searched gene is visible in the result and adjust if not
-    if (newInnerStart > basePairStart && newInnerStop < basePairStop)
-    {
-      store.dispatch('setDetailedBasePairRequest', { start: basePairStart, stop: basePairStop});
-    }
-    else if (newInnerStart < basePairStart)
-    {
-      newInnerStop > basePairStop ? store.dispatch('setDetailedBasePairRequest', { start: newInnerStart, stop: newInnerStop }) : store.dispatch('setDetailedBasePairRequest', { start: newInnerStart, stop: basePairStop });
-    }
-    else if (newInnerStop > basePairStop)
-    {
-      newInnerStart < basePairStart ? store.dispatch('setDetailedBasePairRequest', { start: newInnerStart, stop: newInnerStop}) : store.dispatch('setDetailedBasePairRequest', { start: basePairStart, stop: newInnerStop});
-    }
-  }
-  else
-  {
-    store.dispatch('setDetailedBasePairRequest', { start: newInnerStart, stop: newInnerStop});
-  }
-  
 };
 </script>
 

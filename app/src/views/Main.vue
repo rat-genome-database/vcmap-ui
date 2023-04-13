@@ -10,7 +10,7 @@
       <Toast />
     </div>
     <div class="col-3">
-      <SelectedDataPanel :selected-data="store.state.selectedData" :gene-list="geneList"/>
+      <SelectedDataPanel :selected-data="store.state.selectedData" :gene-list="geneList" :orthologs="orthologs"/>
     </div>
   </div>
   <VCMapDialog 
@@ -29,7 +29,7 @@ import HeaderPanel from '@/components/HeaderPanel.vue';
 import SelectedDataPanel from '@/components/SelectedDataPanel.vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
-import {onMounted, ref, watch} from 'vue';
+import {nextTick, onMounted, ref, watch} from 'vue';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 import Gene from "@/models/Gene";
@@ -41,6 +41,7 @@ import {useLogger} from "vue-logger-plugin";
 import BackboneSelection from "@/models/BackboneSelection";
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import useDialog from '@/composables/useDialog';
+import { adjustSelectionWindow } from '@/utils/DataPanelHelpers';
 import { backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError, noSyntenyFoundError } from '@/utils/VCMapErrors';
 import { isGenomicDataInViewport, getThreshold } from '@/utils/Shared';
 import { OrthologPair } from '@/models/OrthologLine';
@@ -246,12 +247,12 @@ async function initVCMapProcessing()
   let selectionStop = store.state.chromosome.seqLength;
   if (store.getters.isLoadByGene && store.state.gene != null)
   {
-    //
     // Load By Gene
     const loadedGene = store.state.gene;
-    const basePairRangeAdjustment = (loadedGene.stop - loadedGene.start) / 2 * LOAD_BY_GENE_DETAILED_RANGE_MULTIPLIER;
-    selectionStart = Math.max(0, loadedGene.start - basePairRangeAdjustment);
-    selectionStop = Math.min(loadedGene.stop + basePairRangeAdjustment, store.state.chromosome.seqLength);
+    const newWindow = adjustSelectionWindow(loadedGene, orthologs.value, store);
+
+    selectionStart = newWindow.start;
+    selectionStop = newWindow.stop;
   }
   else if (store.getters.isLoadByPosition && store.state.startPos != null && store.state.stopPos != null)
   {
@@ -631,8 +632,7 @@ function processOrthologs(geneList: Map<number, Gene>, backboneMapKey: number, v
       return false;
     }
 
-    return g.mapKey !== backboneMapKey && g.orthologs != null && g.orthologs.length > 0
-      && (g.backboneStop - g.backboneStart) >= threshold;
+    return g.mapKey !== backboneMapKey && g.orthologs != null && g.orthologs.length > 0;
   });
 
   const orthologPairs: OrthologPair[] = [];
@@ -644,7 +644,6 @@ function processOrthologs(geneList: Map<number, Gene>, backboneMapKey: number, v
     {
       const potentialBackboneGene = geneList.get(orthologs[j]);
       if (potentialBackboneGene != undefined && potentialBackboneGene.mapKey === backboneMapKey 
-        && (potentialBackboneGene.stop - potentialBackboneGene.start) >= threshold
         && isOrthologLineInView(potentialBackboneGene, offBackboneGene, visibleBackboneStart, visibleBackboneStop)
       )
       {

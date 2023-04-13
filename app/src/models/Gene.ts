@@ -26,8 +26,8 @@ export default class Gene
   chromosome: string = '';
   start: number = 0;
   stop: number = 0;
-  backboneStart: number | null = null;
-  backboneStop: number | null = null;
+  backboneStart: number = 0;
+  backboneStop: number = 0;
   // RGD IDs -- Note: will only be populated if Gene was received from the Synteny API with the includeOrthologs param
   // TODO: Switch to "null" here to indicate not yet obtained.
   orthologs: number[] = [];
