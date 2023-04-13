@@ -32,6 +32,8 @@ function getGeneFromGeneDTO(dto: GeneDTO, speciesName?: string)
     chromosome: dto.chr,
     start: dto.startPos,
     stop: dto.stopPos,
+    backboneStart: dto.startPos,
+    backboneStop: dto.stopPos,
     orthologs: dto.orthologs,
   });
 }
