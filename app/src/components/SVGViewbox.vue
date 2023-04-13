@@ -139,7 +139,7 @@
   />
   -->
   <!-- Uncomment to see debug info in dev mode -->
-  <!-- <div v-if="SHOW_DEBUG" class="grid p-d-flex">
+  <div v-if="SHOW_DEBUG" class="grid p-d-flex">
     <div class="col-12">
       <h2>Debug</h2>
     </div>
@@ -158,6 +158,7 @@
               <li v-for="(gene, geneIndex) in block.genes" :key="geneIndex">{{  gene.symbol }} ({{ gene.start }}, {{ gene.stop }}) [{{ gene.stop - gene.start }}]</li>
             </ul>
             <li>Gaps: {{ block.gaps.length }} (Level 1: {{ block.gaps.filter(g => g.chainLevel == 1).length }} | Level 2: {{ block.gaps.filter(g => g.chainLevel === 2).length }} | Level 3+: {{ block.gaps.filter(g => g.chainLevel > 2).length }})</li>
+            <li>Variant Positions: {{ block.variantPositions?.positions.length }}</li>
           </ul>
         </template>
       </template>
@@ -181,6 +182,7 @@
             <li>Backbone: ({{ region.gaplessBlock.backboneAlignment.start }}, {{ region.gaplessBlock.backboneAlignment.stop }})</li>
             <li>Chain Level: {{ region.gaplessBlock.chainLevel }}</li>
             <li>Orientation: {{ region.gaplessBlock.orientation }}</li>
+            <li>Variant Datatracks: {{ region.datatrackSets[1]?.datatracks.length ?? 0 }}</li>
             <li>Gene Datatracks: {{ region.datatrackSets[0]?.datatracks.length ?? 0 }} <a href="javascript:void(0)" @click="toggleGenesListForBlock(enabledRegionIndicesForGeneDebugList, regionIndex)">Click to see</a></li>
             <ul v-if="enabledRegionIndicesForGeneDebugList.includes(regionIndex)">
               <li v-for="(geneData, geneIndex) in (region.datatrackSets[0]?.datatracks as GeneDatatrack[])" :key="geneIndex">
@@ -195,7 +197,7 @@
         </template>
       </template>
     </div>
-  </div> -->
+  </div>
 
 </template>
 
@@ -340,7 +342,11 @@ watch(() => props.variantPositionsList, () => {
       }
     });
   }
-}, {deep: true})
+}, {deep: true});
+
+watch(() => store.state.isUpdatingVariants, () => {
+  if (store.state.isUpdatingVariants) updateSyntenyVariants();
+});
 
 // FIXME: check on this (probably needs to be attached to Main props instead):
 const arePanelsLoading = computed(() => {
@@ -633,30 +639,21 @@ const loadBackboneQtls = async () => {
   }
 };
 
-const removeBackboneVariants = () => {
-  const variantSetIdx = detailedBackboneSet.value?.datatrackSets.findIndex((set) => set.type === 'variant') ?? -1;
-  if (variantSetIdx !== -1)
-  {
-    detailedBackboneSet.value?.removeDatatrackSet(variantSetIdx);
-
-      // NOTE: this only works because we are always adding the variants first/before the genes,
-      // Long term we'll want to make this more general
-      if (orthologLines.value)
-      {
-        orthologLines.value.forEach((line) => line.posX1 -= 20);
-      }
-  }
-};
-
 const updateBackboneVariants = (backboneSpecies: Species, variantPositions: VariantPositions, detailedBackbone: BackboneSection) => {
   const variantDatatracks = backboneVariantTrackBuilder(backboneSpecies, variantPositions, detailedBackbone);
   if (detailedBackboneSet.value)
   {
     detailedBackboneSet.value?.addNewDatatrackSetToStart(variantDatatracks, 'variant');
     // For now, let's just rebuild the ortholog lines to get the positions correct
-    orthologLines.value = createOrthologLines(props.orthologs, detailedBackboneSet.value, (detailedSyntenySets.value as SyntenyRegionSet[]))
+    orthologLines.value = createOrthologLines(props.orthologs, detailedBackboneSet.value, (detailedSyntenySets.value as SyntenyRegionSet[]));
   }
-}
+};
+
+const updateSyntenyVariants = () => {
+  // TODO: I shouldn't need to update the whole panel just to add variants
+  updateDetailsPanel();
+  store.dispatch('setIsUpdatingVariants', false);
+};
 
 document.addEventListener('scroll' , getDetailedPosition);
 

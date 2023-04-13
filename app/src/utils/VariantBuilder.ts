@@ -33,7 +33,7 @@ export function createVariantDatatracks(factory: GenomicSectionFactory, position
   // in the same rendered view we'll need to adjust this
   for (let i = 0; i < positions.length; i++)
   {
-    const binIdx = Math.floor(positions[i] / BIN_SIZE);
+    const binIdx = Math.floor((positions[i] - sequenceStart) / BIN_SIZE);
     variantCounts[binIdx]++;
   }
 
@@ -56,19 +56,19 @@ export function createVariantDatatracks(factory: GenomicSectionFactory, position
 }
 
 
-export async function buildVariantPositions(chromosome: string, bpStart: number, bpStop: number, mapKey: number)
+export async function buildVariantPositions(chromosome: string, bpStart: number, bpStop: number,
+  backboneStart: number, backboneStop: number, mapKey: number)
 {
-  const positions = await VariantApi.getVariants(chromosome, bpStart, bpStop, mapKey)
-  if (positions.length > 0)
-  {
-    return new VariantPositions({
-        mapKey: mapKey,
-        chromosome: chromosome,
-        positions: positions,
-        backboneStart: bpStart,
-        backboneStop: bpStop,
-    });
-  }
+  const positions = await VariantApi.getVariants(chromosome, bpStart, bpStop, mapKey);
+  return new VariantPositions({
+      mapKey: mapKey,
+      chromosome: chromosome,
+      positions: positions,
+      blockStart: bpStart,
+      blockStop: bpStop,
+      backboneStart: backboneStart,
+      backboneStop: backboneStop,
+  });
 }
 
 export function backboneVariantTrackBuilder(species: Species, variantPositions: VariantPositions, backboneSection: BackboneSection)

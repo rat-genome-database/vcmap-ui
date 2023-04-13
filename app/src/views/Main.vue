@@ -9,6 +9,11 @@
     label="Load Backbone Variants"
     @click="loadBackboneVariants"
   />
+  <Button
+    class="p-button-info"
+    label="Load Synteny Variants"
+    @click="loadSyntenyVariants"
+  />
   <div class="grid">
     <div class="col-9">
       <SVGViewbox
@@ -801,11 +806,52 @@ async function loadBackboneVariants() {
   const speciesMap = store.state.species?.activeMap;
   if (chromosome && stop && speciesMap && backboneSpecies)
   {
-    const variantPositions = await buildVariantPositions(chromosome.chromosome, start || 0, stop, speciesMap.key);
-    if (variantPositions)
+    // Check if this variantPosition set has been loaded
+    const matchIdx = variantPositionsList.value.findIndex((positions) => (
+      positions.mapKey === speciesMap.key && positions.blockStart === 0 && positions.blockStop === chromosome.seqLength
+    ));
+    if (matchIdx === -1)
     {
-      variantPositionsList.value.push(variantPositions);
+      const variantPositions = await buildVariantPositions(
+        chromosome.chromosome,
+        0,
+        chromosome.seqLength,
+        0,
+        chromosome.seqLength,
+        speciesMap.key
+      );
+      if (variantPositions)
+      {
+        variantPositionsList.value.push(variantPositions);
+      }
     }
   }
+}
+
+async function loadSyntenyVariants() {
+  let variantPromises: Promise<void>[] = [];
+  syntenyTree.value.forEach( async (blockSet) => {
+    variantPromises.push(...blockSet.map( async (block) => {
+      const variantRes = await buildVariantPositions(
+        block.chromosome.chromosome,
+        block.start,
+        block.stop,
+        block.backboneStart,
+        block.backboneStop,
+        block.chromosome.mapKey
+      );
+      if (variantRes)
+      {
+        block.variantPositions = variantRes;
+        // NOTE: adding to variantPositionList is how we tell SVGViewbox to update
+        // the backbone variants, but if we push the responses here SVGViewbox will
+        // update everytime a request completes
+        // So we need a better way to tell SVGViewbox to update
+        // variantPositionsList.value.push(variantRes);
+      }
+    }));
+  });
+  await Promise.allSettled(variantPromises);
+  store.dispatch('setIsUpdatingVariants', true);
 }
 </script>

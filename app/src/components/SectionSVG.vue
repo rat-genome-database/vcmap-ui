@@ -194,8 +194,11 @@ const datatrackSets = computed(() => {
 });
 
 const onMouseEnter = (section: SyntenySection | GeneDatatrack, type: SelectedDataType) => {
+  // NOTE: ignore variant datatracks for now
+  if (section.type === 'variant') return;
+
   section.isHovered = true;
-  
+
   // Only update the selected data panel if no Genes are already selected
   if (store.state.selectedGeneIds.length === 0)
   {
@@ -301,7 +304,8 @@ const highlightSelections = (selectedGeneIds: number[]) => {
 };
 
 const onDatatrackSectionClick = (event: any, section: GeneDatatrack) => {
-  if (!section.gene?.rgdId) return;
+  // NOTE: ignore variant datatrack sections for now
+  if (!section.gene?.rgdId || section.type === 'variant') return;
 
   // If clicked section already selected, just reset the selectedGeneId state
   if (store.state.selectedGeneIds.includes(section.gene?.rgdId || -1))

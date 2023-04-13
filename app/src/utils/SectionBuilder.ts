@@ -10,6 +10,7 @@ import {useLogger} from "vue-logger-plugin";
 import { RenderType } from '@/models/GenomicSection';
 import { Orientation } from '@/models/SyntenySection';
 import { getThreshold } from './Shared';
+import { createVariantDatatracks } from './VariantBuilder';
 
 // FIXME: I don't think we can use the logger here...
 const $log = useLogger();
@@ -177,6 +178,7 @@ console.debug(`About to loop over ${speciesSyntenyData.length} Blocks...`);
     const blockGaps = blockInfo.gaps;
     const blockGenes = blockInfo.genes;
     const blockChrStr = blockInfo.chromosome.chromosome;
+    const blockVariantPositions = blockInfo.variantPositions;
 
     // Create a factory for the creation of our "Regions" (Blocks, Gaps, etc)
     const factory = new GenomicSectionFactory(currSpecies, currMapName, blockChrStr,
@@ -255,7 +257,18 @@ console.time(timerLabel);
       // Add gene datatrack sections (this will always be the first datatrack set)
       currSyntenicRegion.addDatatrackSections(processedGeneInfo, 0, 'gene');
 console.timeEnd(timerLabel);
+     } else {
+      // Add empty gene datatrack section so every region as one
+      currSyntenicRegion.addDatatrackSections([], 0, 'gene');
      }
+
+    // Check if there are variants and build those data tracks
+    if (blockVariantPositions)
+    {
+      const variantDatatracks = createVariantDatatracks(factory, blockVariantPositions.positions,
+        blockInfo.start, blockInfo.stop, blockInfo.backboneStart, blockInfo.backboneStop);
+        currSyntenicRegion.addDatatrackSections(variantDatatracks, 1, 'variant');
+    }
 
     processedSyntenicRegions.push(currSyntenicRegion);
   }
