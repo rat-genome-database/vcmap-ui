@@ -107,7 +107,7 @@
   <template v-for="(datatrackSet, index) in datatrackSets" :key="index">
     <template v-for="(datatrack, index) in datatrackSet.datatracks" :key="index">
       <rect
-        class="block-section"
+        :class="getDatatrackClass(datatrackSet)"
         @mouseenter="onMouseEnter(datatrack, 'Gene')"
         @mouseleave="onMouseLeave(datatrack, 'Gene')"
         @click="onDatatrackSectionClick($event, datatrack)"
@@ -117,10 +117,10 @@
         :height="datatrack.height"
         :fill="getSectionFill(datatrack)"
         :fill-opacity="datatrack.opacity"
+        :stroke="getSectionFill(datatrack)"
       />
     </template>
   </template>
-  
 </template>
 
 
@@ -146,6 +146,7 @@ import useMouseBasePairPos from '@/composables/useMouseBasePairPos';
 import GenomicSection from '@/models/GenomicSection';
 import { GeneLabel } from '@/models/Label';
 import Gene from '@/models/Gene';
+import DatatrackSet from '@/models/DatatrackSet';
 
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
 const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
@@ -259,6 +260,17 @@ const getSectionFill = (section: VCMapSVGElement) => {
   if (section.isSelected) {return SELECTED_HIGHLIGHT_COLOR;}
   if (section.isHovered) {return HOVER_HIGHLIGHT_COLOR;}
   return section.elementColor;
+};
+
+const getDatatrackClass = (datatrackSet: DatatrackSet) => {
+  if (datatrackSet.type === 'variant')
+  {
+    return 'block-section variant';
+  }
+  else
+  {
+    return 'block-section';
+  }
 };
 
 const highlightSelections = (selectedGeneIds: number[]) => {
@@ -423,6 +435,11 @@ const updatePositionLabel = (event: any, blockSection: SyntenySection) => {
 .block-section:hover
 {
   cursor: pointer;
+}
+
+.variant
+{
+  stroke-width: 0.25;
 }
 
 .position-label

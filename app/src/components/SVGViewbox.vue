@@ -130,8 +130,27 @@
     :show-back-button="showDialogBackButton"
   />
   <LoadingSpinnerMask v-if="arePanelsLoading" :style="getDetailedPosition()"></LoadingSpinnerMask>
-  <div>Vairant counts (per 1.0 Mbp)</div>
-  <GradientLegend species-name="Human" :min-value="0" :max-value="1000000" min-color="#0000FF" max-color="#FF0000"></GradientLegend>
+  <template v-if="displayVariantLegend">
+    <div><b>Variant counts (per 1.0 Mbp)</b></div>
+    <!--Backbone-->
+    <template v-if="detailedBackboneSet && detailedBackboneSet.maxVariantCount && detailedBackboneSet.maxVariantCount > 0">
+      <GradientLegend
+        :species-name="detailedBackboneSet?.speciesName || ''"
+        :min-value="0" :max-value="detailedBackboneSet?.maxVariantCount || 0"
+        min-color="#0000FF" max-color="#FF0000">
+      </GradientLegend>
+    </template>
+    <!--Synteny-->
+    <template v-for="(set, index) in detailedSyntenySets" :key="index">
+      <template v-if="set.maxVariantCount && set.maxVariantCount > 0">
+        <GradientLegend
+          :species-name="set.speciesName"
+          :min-value="0" :max-value="set.maxVariantCount"
+          min-color="#0000FF" max-color="#FF0000">
+        </GradientLegend>
+      </template>
+    </template>
+  </template>
   <!--
   <Button
     style="margin-right: 20px;"
@@ -359,6 +378,26 @@ const arePanelsLoading = computed(() => {
   return store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating || props.loading;
 });
 
+const displayVariantLegend = computed(() => {
+  const backboneVariantIdx = detailedBackboneSet.value?.datatrackSets.findIndex((set) => set.type === 'variant');
+  console.log(`backboneVariantIdx: ${backboneVariantIdx}`);
+  if (backboneVariantIdx !== undefined && backboneVariantIdx !== -1)
+  {
+    return true;
+  }
+  for (let i = 0; i < detailedSyntenySets.value.length; i++)
+  {
+    const hasVariantTracks = detailedSyntenySets.value[i].regions.some((region) =>
+      region.datatrackSets.findIndex((set) => set.type === 'variant') !== -1
+    );
+    if (hasVariantTracks)
+    {
+      return true;
+    }
+  }
+  return false;
+});
+
 const currentlySelectingRegion = () => {
   return (getOverviewSelectionStatus() || getDetailedSelectionStatus());
 };
@@ -472,7 +511,7 @@ const updateDetailsPanel = async () => {
   props.variantPositionsList.forEach((variantPositions) => {
     if (variantPositions.mapKey === backboneSpecies.activeMap.key)
     {
-        updateBackboneVariants(backboneSpecies, variantPositions, detailedBackbone);
+      updateBackboneVariants(backboneSpecies, variantPositions, detailedBackbone);
     }
   });
 
@@ -646,9 +685,11 @@ const loadBackboneQtls = async () => {
 
 const updateBackboneVariants = (backboneSpecies: Species, variantPositions: VariantPositions, detailedBackbone: BackboneSection) => {
   const variantDatatracks = backboneVariantTrackBuilder(backboneSpecies, variantPositions, detailedBackbone);
+  const setMaxCount = Math.max(...variantDatatracks.map((track) => track.variantCount));
   if (detailedBackboneSet.value)
   {
     detailedBackboneSet.value?.addNewDatatrackSetToStart(variantDatatracks, 'variant');
+    detailedBackboneSet.value.maxVariantCount = setMaxCount;
     // For now, let's just rebuild the ortholog lines to get the positions correct
     orthologLines.value = createOrthologLines(props.orthologs, detailedBackboneSet.value, (detailedSyntenySets.value as SyntenyRegionSet[]));
   }

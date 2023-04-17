@@ -37,7 +37,7 @@
   <template v-for="(datatrackSet, index) in datatrackSets" :key="index">
     <template v-for="(datatrack, index) in datatrackSet.datatracks" :key="index">
       <rect
-        class="section clickable"
+        :class="getSectionClass(datatrackSet)"
         @mouseenter="() => onMouseEnter(datatrack, 'Gene')"
         @mouseleave="() => onMouseLeave(datatrack)"
         @click="onDatatrackSectionClick($event, datatrack)"
@@ -48,6 +48,7 @@
         :height="datatrack.height"
         :fill="getSectionFill(datatrack)"
         :fill-opacity="datatrack.opacity"
+        :stroke="getSectionFill(datatrack)"
       />
     </template>
   </template>
@@ -109,6 +110,7 @@ import { Formatter } from '@/utils/Formatter';
 import BackboneSection from '@/models/BackboneSection';
 import BackboneSet from '@/models/BackboneSet';
 import DatatrackSection, { GeneDatatrack } from '@/models/DatatrackSection';
+import DatatrackSet from '@/models/DatatrackSet';
 import { VCMapSVGElement } from '@/models/VCMapSVGElement';
 import useMouseBasePairPos from '@/composables/useMouseBasePairPos';
 
@@ -201,6 +203,17 @@ const getSectionFill = (section: VCMapSVGElement) => {
   if (section.isSelected) {return SELECTED_HIGHLIGHT_COLOR;}
   if (section.isHovered) {return HOVER_HIGHLIGHT_COLOR;}
   return section.elementColor;
+};
+
+const getSectionClass = (datatrackSet: DatatrackSet) => {
+  if (datatrackSet.type === 'variant')
+  {
+    return 'section clickable variant';
+  }
+  else
+  {
+    return 'section clickable';
+  }
 };
 
 const onDatatrackSectionClick = (event: any, section: GeneDatatrack) => {
@@ -301,6 +314,11 @@ const updatePositionLabel = (event: any) => {
   &.clickable
   {
     cursor: pointer;
+  }
+
+  &.variant
+  {
+    stroke-width: 0.25;
   }
 }
 

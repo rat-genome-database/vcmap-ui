@@ -275,10 +275,10 @@ console.timeEnd(timerLabel);
     processedSyntenicRegions.push(currSyntenicRegion);
   }
 
+  let regionSetMaxCount = 0;
   // Adjust variant datatrack colors now that all are processed
   if (processVariantDensity)
   {
-    let regionSetMaxCount = 0;
     const datatracks: VariantDensity[] = [];
     for (let i = 0; i < processedSyntenicRegions.length; i++)
     {
@@ -300,6 +300,7 @@ console.timeEnd(timerLabel);
   // Finished creating this Set:
 console.time("createSyntenyRegionSet");
   const regionSet = new SyntenyRegionSet(currSpecies, currMapName, processedSyntenicRegions, setOrder, renderType);
+  regionSet.maxVariantCount = regionSetMaxCount;
 console.timeEnd("createSyntenyRegionSet");
   return regionSet;
 }

@@ -1,13 +1,13 @@
 <template>
-  <div>{{ speciesName }}</div>
+  <div class="legend-label">{{ speciesName }}</div>
   <div class="legend-container">
     <div>
-      {{ minValue }}
+      {{ parseFloat(minValue.toPrecision(3)).toLocaleString() }}
     </div>
     <div class="color-legend">
     </div>
     <div>
-      {{ maxValue }}
+      {{ parseFloat(maxValue.toPrecision(3)).toLocaleString() }}
     </div>
   </div>
 
@@ -41,5 +41,12 @@ const props = defineProps<Props>();
   display: flex;
   flex-direction: row;
   gap: 10px;
+}
+
+.legend-label
+{
+  font-weight: bold;
+  padding-top: 10px;
+  padding-bottom: 5px;
 }
 </style>
