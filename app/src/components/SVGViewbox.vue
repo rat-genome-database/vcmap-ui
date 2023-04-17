@@ -37,8 +37,8 @@
         :backbone-set="detailedBackboneSet" 
         :synteny-hover-svg-y="detailedSyntenySvgYPosition"
         @synteny-hover="onDetailedSyntenyHover" />
-      <template v-if="detailedBackboneSet.datatrackLabels">
-        <template v-for="(label, index) in detailedBackboneSet.datatrackLabels" :key="index">
+      <template v-if="detailedBackboneSet.geneLabels">
+        <template v-for="(label, index) in detailedBackboneSet.geneLabels" :key="index">
           <template v-if="(label.isVisible)">
             <GeneLabelSVG :label="(label as GeneLabel)" :gene-list="geneList"/>
           </template>

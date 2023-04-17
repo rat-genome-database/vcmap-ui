@@ -3,8 +3,8 @@ import { GeneDatatrack } from "@/models/DatatrackSection";
 import Gene from "@/models/Gene";
 import OrthologLine, { OrthologPair } from "@/models/OrthologLine";
 import SyntenyRegionSet from "@/models/SyntenyRegionSet";
-import { getDetailedPanelXPositionForDatatracks, getThreshold } from "./Shared";
-import SVGConstants, { PANEL_HEIGHT, PANEL_SVG_START, PANEL_SVG_STOP } from "./SVGConstants";
+import { calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment, getDetailedPanelXPositionForDatatracks, getThreshold } from "./Shared";
+import SVGConstants from "./SVGConstants";
 
 type GeneDetails = {
   posX1: number;
@@ -74,7 +74,7 @@ export function createOrthologLines(orthologs: OrthologPair[], backboneSet: Back
 
       const y1 = (backboneGeneDatatrack) 
         ? backboneGeneDatatrack.posY1 + (backboneGeneDatatrack.height / 2)
-        : calculateSVGYPositionBasedOnBackboneAlignment(pair.backboneGene.start, pair.backboneGene.stop, backboneSet.backbone.windowStart, backboneSet.backbone.windowStop);
+        : calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment(pair.backboneGene.start, pair.backboneGene.stop, backboneSet.backbone.windowStart, backboneSet.backbone.windowStop);
       
       const x2 = (offBackboneGeneDatatrack) ? offBackboneGeneDatatrack.posX1 : offBackboneGeneDetails?.posX1;
 
@@ -89,7 +89,7 @@ export function createOrthologLines(orthologs: OrthologPair[], backboneSet: Back
         {
           throw new Error(`Off-backbone gene is missing backboneStart and backboneStop properties`);
         }
-        y2 = calculateSVGYPositionBasedOnBackboneAlignment(pair.offBackboneGene.backboneStart, pair.offBackboneGene.backboneStop, backboneSet.backbone.windowStart, backboneSet.backbone.windowStop);
+        y2 = calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment(pair.offBackboneGene.backboneStart, pair.offBackboneGene.backboneStop, backboneSet.backbone.windowStart, backboneSet.backbone.windowStop);
       }
       
       // Throw error if any possible null positions are null...
@@ -156,19 +156,6 @@ function getOffbackboneGeneDetails(offBackboneSyntenyRegionSets: SyntenyRegionSe
   });
 
   return offBackboneGeneMap;
-}
-
-function calculateSVGYPositionBasedOnBackboneAlignment(geneBackboneStart: number, geneBackboneStop: number, visibleBackboneStart: number, visibleBackboneStop: number)
-{
-  const svgToBackboneRatio = (PANEL_HEIGHT) / (visibleBackboneStop - visibleBackboneStart);
-
-  const backboneStartDiff = geneBackboneStart - visibleBackboneStart;
-  const backboneStopDiff = visibleBackboneStop - geneBackboneStop;
-
-  const svgStart = PANEL_SVG_START + (backboneStartDiff * svgToBackboneRatio);
-  const svgStop = PANEL_SVG_STOP - (backboneStopDiff * svgToBackboneRatio);
-
-  return svgStart + ((svgStop - svgStart) / 2);
 }
 
 export function isOrthologLineInView(geneA: Gene, geneB: Gene, visibleBackboneStart: number, visibleBackboneStop: number)

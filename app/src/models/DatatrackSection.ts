@@ -22,14 +22,6 @@ export default class DatatrackSection extends GenomicSection
   {
     super(params);
   }
-
-  public recalculateLabelYPositions()
-  {
-    if (this.label)
-    {
-      this.label.posY = (this.posY1 + this.posY2) / 2;
-    }
-  }
 }
 
 export class GeneDatatrack extends DatatrackSection
@@ -54,21 +46,21 @@ export class GeneDatatrack extends DatatrackSection
 
     this.gene = gene.clone();
     this.opacity = 0.7;
-    this.createGeneLabel();
+    //this.createGeneLabel();
   }
 
-  private createGeneLabel()
-  {
-    this.label = new GeneLabel(
-      {
-        posX: 0, 
-        posY: (this.posY1 + this.posY2) / 2, 
-        text: this.gene.symbol,
-        isVisible: false,
-      },
-      [this.gene]
-    );
-  }
+  // private createGeneLabel()
+  // {
+  //   this.label = new GeneLabel(
+  //     {
+  //       posX: 0, 
+  //       posY: (this.posY1 + this.posY2) / 2, 
+  //       text: this.gene.symbol,
+  //       isVisible: false,
+  //     },
+  //     [this.gene]
+  //   );
+  // }
 }
 
 export class VariantDensity extends DatatrackSection

@@ -38,6 +38,17 @@ export class GeneLabel extends Label
     super(params);
     this.genes = genes;
     this.rgdIds = genes.map(g => g.rgdId);
+    if (this.genes.length > 0)
+    {
+      this.text = this.genes[0].symbol;
+    }
+  }
+
+  setMainGene(gene: Gene)
+  {
+    this.genes.unshift(gene);
+    this.rgdIds.unshift(gene.rgdId);
+    this.text = gene.symbol;
   }
 
   addGenes(...genes: Gene[])

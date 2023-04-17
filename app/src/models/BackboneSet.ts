@@ -6,6 +6,7 @@ import DatatrackSection, { DatatrackSectionType } from "./DatatrackSection";
 import DatatrackSet from "./DatatrackSet";
 import { GenomicSet } from "./GenomicSet";
 import Label, { GeneLabel } from "./Label";
+import { calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment, getDetailedPanelXPositionForBackboneDatatracks, isGenomicDataInViewport } from "@/utils/Shared";
 
 /**
  * Model for representing a set of Backbone sections and its datatrack sections
@@ -14,7 +15,7 @@ export default class BackboneSet extends GenomicSet
 {
   backbone: BackboneSection;
   datatrackSets: DatatrackSet[] = [];
-  datatrackLabels: Label[] = [];
+  geneLabels: GeneLabel[] = [];
 
   constructor(backboneSection: BackboneSection, processedGenomicData?: ProcessedGenomicData)
   {
@@ -33,9 +34,15 @@ export default class BackboneSet extends GenomicSet
     this.createTitleLabels();
     this.setDatatrackXPositions();
 
-    console.time(`Backbone Gene Label Processing`);
-    this.processGeneLabels();
-    console.timeEnd(`Backbone Gene Label Processing`);
+    if (this.backbone.renderType === 'detailed')
+    {
+      console.time(`Create Backbone Gene Labels`);
+      this.generateGeneLabels();
+      console.timeEnd(`Create Backbone Gene Labels`);
+      console.time(`Backbone Gene Label Processing`);
+      mergeGeneLabels(this.geneLabels);
+      console.timeEnd(`Backbone Gene Label Processing`);
+    }
   }
 
   protected createTitleLabels()
@@ -77,7 +84,8 @@ export default class BackboneSet extends GenomicSet
   {
     this.datatrackSets.forEach((set, index) => {
       set.datatracks.forEach((section) => {
-        section.posX1 = this.backbone.posX2 + (SVGConstants.backboneDatatrackXOffset) * (index + 1) + (SVGConstants.backboneDatatrackXOffset * index);
+        section.posX1 = getDetailedPanelXPositionForBackboneDatatracks(this.backbone.posX2, index);
+        //section.posX1 = this.backbone.posX2 + (SVGConstants.backboneDatatrackXOffset) * (index + 1) + (SVGConstants.backboneDatatrackXOffset * index);
         section.posX2 = section.posX1 + SVGConstants.dataTrackWidth;
         section.width = SVGConstants.dataTrackWidth;
         if (section.label)
@@ -88,28 +96,45 @@ export default class BackboneSet extends GenomicSet
     });
   }
 
-  private processGeneLabels()
+  public generateGeneLabels()
   {
-    const allLabels: Label[] = [];
-    this.datatrackSets.forEach((set) => {
-      // TODO (SGD): Why the magic number "0" here?
-      //  If the DatatrackSet is intended to have only one type of Datatrack, we should expand that model.
-      //  Otherwise this is a fragile way to do this (datatracks could be empty)
-      if (set.datatracks.length > 0 && set.datatracks[0].type === 'gene')
-      {
-        set.datatracks.forEach((section) => {
-          if (section.label)
-          {
-            allLabels.push(section.label);
-          }
-        });
-      }
-    });
-    this.datatrackLabels = allLabels;
+    if (this.backbone.backboneGenes == null || this.backbone.backboneGenes.length === 0)
+    {
+      return;
+    }
 
-    // TODO: Seems a bit precarious to cast a type of Label[] as GeneLabel[] here... could maybe be addressed at the same time
-    // as the TODO above this one
-    mergeGeneLabels(this.datatrackLabels as GeneLabel[], this.backbone.backboneGenes ?? []);
+    // Get X position based on where the gene datatrack set is positioned
+    let xPos: number | null = null;
+    for (let i = 0; i < this.datatrackSets.length; i++)
+    {
+      if (this.datatrackSets[i].type === 'gene')
+      {
+        xPos = getDetailedPanelXPositionForBackboneDatatracks(this.backbone.posX2, i) + SVGConstants.dataTrackWidth;
+        break;
+      }
+    }
+
+    if (xPos == null)
+    {
+      console.debug(`(BackboneSet) generateGeneLabels: xPos is null after iterating through DatatrackSets`);
+      return;
+    }
+
+    const filteredGenes = this.backbone.backboneGenes
+      .filter(g => isGenomicDataInViewport(g, this.backbone.windowSVGStart, this.backbone.windowStop));
+    // Create gene labels for all genes in the viewport
+    for (let i = 0; i < filteredGenes.length; i++)
+    {
+      const g = filteredGenes[i];
+      const yPos = calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment(g.backboneStart, 
+        g.backboneStop, this.backbone.windowStart, this.backbone.windowStop);
+      this.geneLabels.push(new GeneLabel({
+        posX: xPos, 
+        posY: yPos, 
+        text: g.symbol,
+        isVisible: false,
+      }, [g]));
+    }
   }
 
   public addNewDatatrackSetToEnd(datatrackSections: DatatrackSection[], type: DatatrackSectionType)

@@ -35,9 +35,19 @@ export default class SyntenyRegionSet extends GenomicSet
     this.createTitleLabels();
     this.sortBasePairLabels();
     
-    console.time(`Process Gene Labels`);
-    this.processGeneLabelsInAllRegions();
-    console.timeEnd(`Process Gene Labels`);
+    if (renderType === 'detailed')
+    {
+      console.time(`Create Gene Labels`);
+      for (let i = 0; i < this.regions.length; i++)
+      {
+        this.regions[i].generateGeneLabels(this.order);
+      }
+      console.timeEnd(`Create Gene Labels`);
+
+      console.time(`Process Gene Labels`);
+      this.processGeneLabelsInAllRegions();
+      console.timeEnd(`Process Gene Labels`);
+    }
   }
 
   public processGeneLabelsInAllRegions()
@@ -47,10 +57,9 @@ export default class SyntenyRegionSet extends GenomicSet
     const genes: Gene[] = [];
     this.regions.forEach(r => {
       geneLabels.push(...r.geneDatatrackLabels);
-      genes.push(...r.genes);
     });
 
-    mergeGeneLabels(geneLabels, genes);
+    mergeGeneLabels(geneLabels);
   }
 
   public addRegions(regions: SyntenyRegion[])
@@ -144,6 +153,7 @@ export default class SyntenyRegionSet extends GenomicSet
 
   private setDatatrackSectionXPositions(datatrackSets: DatatrackSet[])
   {
+    // TODO: Skip for overview since datatracks are only shown in Detailed Panel?
     datatrackSets.forEach((set, index) => {
       let posX1 = 0;
       if (this.renderType === 'overview')

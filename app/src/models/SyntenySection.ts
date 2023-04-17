@@ -56,15 +56,6 @@ export default class SyntenySection extends GenomicSection
     }
   }
 
-  public recalculateLabelYPositions()
-  {
-    if (this.startLabel && this.stopLabel)
-    {
-      this.startLabel.posY = this.posY1;
-      this.stopLabel.posY = this.posY2;
-    }
-  }
-
   private createSyntenySectionLabels()
   {
     this.startLabel = new Label({
