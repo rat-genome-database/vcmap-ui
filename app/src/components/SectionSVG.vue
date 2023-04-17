@@ -491,14 +491,17 @@ const updatePositionLabelFromSVG = (svgY: number) => {
   filter: brightness(60%);
 }
 
+.block-section
+{
+  stroke-width: 0;
+  &.variant
+  {
+    stroke-width: 0.25;
+  }
+}
 .block-section:hover
 {
   cursor: pointer;
-}
-
-.variant
-{
-  stroke-width: 0.25;
 }
 
 .position-label
