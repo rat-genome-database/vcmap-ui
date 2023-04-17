@@ -6,7 +6,7 @@ import { GeneDatatrack } from '@/models/DatatrackSection';
 import { OrthologPair } from '@/models/OrthologLine';
 
 
-const SEARCHED_GENE_WINDOW_FACTOR = 3;
+const SEARCHED_GENE_WINDOW_FACTOR = 6;
 
 export function getNewSelectedData(store: Store<VCMapState>, gene: Gene): { rgdIds: number[], selectedData: SelectedData[] } {
   const comparativeSpecies = store.state.comparativeSpecies;
@@ -41,7 +41,7 @@ export function sortGeneList(geneList: Gene[]) {
   });
 }
 
-export function adjustSelectionWindow(searchedGene: Gene, orthologs: OrthologPair[], store: Store<VCMapState>)
+export function adjustSelectionWindow(searchedGene: Gene, geneList: Map<number, Gene>, store: Store<VCMapState>)
 {
   // const loadedGenes = store.state.loadedGenes;
 
@@ -57,17 +57,16 @@ export function adjustSelectionWindow(searchedGene: Gene, orthologs: OrthologPai
   //get orthologs for backbone gene, and determine the relative highest and lowest positioned genes to reset the window
   const reframeGenes: Gene[] = [];
 
-  orthologs.forEach((orthologPair) => {
-    //
-    if (orthologPair.backboneGene.rgdId == searchedGene.rgdId ) 
-    {
-      reframeGenes.push(orthologPair.offBackboneGene);
-    }
-    else if (orthologPair.offBackboneGene.rgdId == searchedGene.rgdId ) 
-    {
-      reframeGenes.push(orthologPair.backboneGene);
-    }
-  });
+  if (searchedGene.orthologs)
+  {
+    searchedGene.orthologs.forEach((orthologId: number) => {
+      const ortholog = geneList.get(orthologId);
+      if (ortholog)
+      {
+        reframeGenes.push(ortholog);
+      }
+    });
+  }
 
   if (reframeGenes.length > 0)
   {  

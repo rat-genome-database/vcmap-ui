@@ -50,7 +50,6 @@ import { isOrthologLineInView } from '@/utils/OrthologHandler';
 // TODO: Can we figure out a better way to handle blocks with a high chainlevel?
 const MAX_CHAINLEVEL = 2;
 const MAX_CHAINLEVEL_GENES = 1;
-const LOAD_BY_GENE_DETAILED_RANGE_MULTIPLIER = 6;
 
 const store = useStore(key);
 const $log = useLogger();
@@ -249,7 +248,7 @@ async function initVCMapProcessing()
   {
     // Load By Gene
     const loadedGene = store.state.gene;
-    const newWindow = adjustSelectionWindow(loadedGene, orthologs.value, store);
+    const newWindow = adjustSelectionWindow(loadedGene, geneList.value, store);
 
     selectionStart = newWindow.start;
     selectionStop = newWindow.stop;

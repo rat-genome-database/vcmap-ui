@@ -222,7 +222,7 @@ const searchSVG = (event: any) => {
   // Only adjust window of the searched gene is on backbone
 
   if (event.value ) {
-    const newWindow = adjustSelectionWindow(searchedGene.value, props.orthologs, store);
+    const newWindow = adjustSelectionWindow(searchedGene.value, props.geneList, store);
     store.dispatch('setDetailedBasePairRequest', newWindow);
   }
 };
@@ -236,7 +236,7 @@ const selectAndSearchSVG = (event: any) => {
     store.dispatch('setSelectedGeneIds', newData.rgdIds || []);
     store.dispatch('setSelectedData', newData.selectedData);
     if (searchedGene.value) {
-      const newWindow = adjustSelectionWindow(searchedGene.value, props.orthologs, store);
+      const newWindow = adjustSelectionWindow(searchedGene.value, props.geneList, store);
       store.dispatch('setDetailedBasePairRequest', newWindow);
     }
   }
