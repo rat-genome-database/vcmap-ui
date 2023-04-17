@@ -344,10 +344,6 @@ const highlightSelections = (selectedGeneIds: number[]) => {
 
 const onDatatrackSectionClick = (event: any, section: GeneDatatrack) => {
   // NOTE: ignore variant datatrack sections for now
-  if (section.type === 'variant')
-  {
-    console.log(section);
-  }
   if (!section.gene?.rgdId || section.type === 'variant') return;
 
   // If clicked section already selected, just reset the selectedGeneId state
