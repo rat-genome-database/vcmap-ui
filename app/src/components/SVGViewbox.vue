@@ -130,6 +130,8 @@
     :show-back-button="showDialogBackButton"
   />
   <LoadingSpinnerMask v-if="arePanelsLoading" :style="getDetailedPosition()"></LoadingSpinnerMask>
+  <div>Vairant counts (per 1.0 Mbp)</div>
+  <GradientLegend species-name="Human" :min-value="0" :max-value="1000000" min-color="#0000FF" max-color="#FF0000"></GradientLegend>
   <!--
   <Button
     style="margin-right: 20px;"
@@ -241,6 +243,7 @@ import { GeneDatatrack } from '@/models/DatatrackSection';
 import VariantPositions from '@/models/VariantPositions';
 import Species from '@/models/Species';
 import BackboneSection from '@/models/BackboneSection';
+import GradientLegend from './GradientLegend.vue';
 
 const SHOW_DEBUG = process.env.NODE_ENV === 'development';
 const NAV_SHIFT_PERCENT = 0.2;

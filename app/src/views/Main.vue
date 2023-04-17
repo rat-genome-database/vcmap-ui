@@ -29,7 +29,6 @@
       <SelectedDataPanel :selected-data="store.state.selectedData" :gene-list="geneList"/>
     </div>
   </div>
-  <GradientLegend :min-value="0" :max-value="1000000" min-color="#0000FF" max-color="#FF0000"/>
   <VCMapDialog 
     v-model:show="showDialog" 
     :header="dialogHeader" 
@@ -44,7 +43,6 @@
 import SVGViewbox from '@/components/SVGViewbox.vue';
 import HeaderPanel from '@/components/HeaderPanel.vue';
 import SelectedDataPanel from '@/components/SelectedDataPanel.vue';
-import GradientLegend from '@/components/GradientLegend.vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import {onMounted, ref, watch} from 'vue';

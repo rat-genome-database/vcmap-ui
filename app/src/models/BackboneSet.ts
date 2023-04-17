@@ -15,6 +15,9 @@ export default class BackboneSet extends GenomicSet
   backbone: BackboneSection;
   datatrackSets: DatatrackSet[] = [];
   datatrackLabels: Label[] = [];
+  // TODO: figure out if this is this best place for this,
+  // because it's only relevant to variant density
+  maxVariantCount?: number;
 
   constructor(backboneSection: BackboneSection, processedGenomicData?: ProcessedGenomicData)
   {
