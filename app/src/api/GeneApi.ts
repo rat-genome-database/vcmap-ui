@@ -23,6 +23,13 @@ interface GeneDTO
  */
 function getGeneFromGeneDTO(dto: GeneDTO, speciesName?: string)
 {
+  let formattedOrthologs = null;
+  if (dto.orthologs)
+  {
+    const orthologIds = Object.values(dto.orthologs);
+    formattedOrthologs = orthologIds.flat();
+  }
+
   return new Gene({
     mapKey: dto.mapKey,
     speciesName: speciesName,
@@ -34,7 +41,7 @@ function getGeneFromGeneDTO(dto: GeneDTO, speciesName?: string)
     stop: dto.stopPos,
     backboneStart: dto.startPos,
     backboneStop: dto.stopPos,
-    orthologs: dto.orthologs,
+    orthologs: formattedOrthologs ? formattedOrthologs : [],
   });
 }
 

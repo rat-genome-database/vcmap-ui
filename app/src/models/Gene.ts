@@ -73,7 +73,6 @@ export default class Gene
     });
     if (this.backboneStart) clone.backboneStart = this.backboneStart;
     if (this.backboneStop) clone.backboneStop = this.backboneStop;
-    if (this.orthologs.length > 0) clone.orthologs = this.orthologs;
     return clone;
   }
 
