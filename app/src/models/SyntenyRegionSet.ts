@@ -23,6 +23,9 @@ export default class SyntenyRegionSet extends GenomicSet
   regions: SyntenyRegion[] = [];
   order: number = 1;
   renderType: 'overview' | 'detailed' = 'overview';
+  // TODO: figure out if this is this best place for this,
+  // because it's only relevant to variant density
+  maxVariantCount?: number;
 
   constructor(speciesName: string, mapName: string, regions: SyntenyRegion[], order: number, renderType: 'overview' | 'detailed')
   {

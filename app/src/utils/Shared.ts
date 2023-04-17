@@ -43,10 +43,11 @@ export function isGenomicDataInViewport(targetBlock: Block | Gap, backboneStart:
 
 export function getDetailedPanelXPositionForDatatracks(order: number, index: number)
 {
-  return getDetailedPanelXPositionForSynteny(order) + 30 * (index + 1);
+  return getDetailedPanelXPositionForSynteny(order) + SVGConstants.trackWidth
+    + SVGConstants.backboneDatatrackXOffset * (index + 1) + (SVGConstants.backboneDatatrackXOffset * index);
 }
 
 export function getDetailedPanelXPositionForSynteny(order: number)
 {
-  return (order * 120) + SVGConstants.selectedBackboneXPosition;
+  return (order * 140) + SVGConstants.selectedBackboneXPosition;
 }

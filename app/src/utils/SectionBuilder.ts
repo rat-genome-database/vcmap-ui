@@ -1,7 +1,7 @@
 import Species from '@/models/Species';
 import Chromosome from '@/models/Chromosome';
 import SyntenyRegion from '@/models/SyntenyRegion';
-import { GeneDatatrack } from '@/models/DatatrackSection';
+import { GeneDatatrack, VariantDensity } from '@/models/DatatrackSection';
 import Gene from '@/models/Gene';
 import SyntenyRegionSet from '@/models/SyntenyRegionSet';
 import { GenomicSectionFactory } from '@/models/GenomicSectionFactory';
@@ -10,6 +10,7 @@ import {useLogger} from "vue-logger-plugin";
 import { RenderType } from '@/models/GenomicSection';
 import { Orientation } from '@/models/SyntenySection';
 import { getThreshold } from './Shared';
+import { createVariantDatatracks } from './VariantBuilder';
 
 // FIXME: I don't think we can use the logger here...
 const $log = useLogger();
@@ -167,6 +168,7 @@ function syntenicSectionBuilder(speciesSyntenyData: Block[], species: Species, s
 
   const currSpecies = species.name;
   const currMapName = species.activeMap.name;
+  const processVariantDensity = speciesSyntenyData.some((block) => block.variantPositions && block.variantPositions.positions.length > 0);
   // const allGeneLabels: Label[] = [];
 
 console.debug(`About to loop over ${speciesSyntenyData.length} Blocks...`);
@@ -177,6 +179,7 @@ console.debug(`About to loop over ${speciesSyntenyData.length} Blocks...`);
     const blockGaps = blockInfo.gaps;
     const blockGenes = blockInfo.genes;
     const blockChrStr = blockInfo.chromosome.chromosome;
+    const blockVariantPositions = blockInfo.variantPositions;
 
     // Create a factory for the creation of our "Regions" (Blocks, Gaps, etc)
     const factory = new GenomicSectionFactory(currSpecies, currMapName, blockChrStr,
@@ -216,6 +219,13 @@ console.time("splitBlockWithGaps");
     currSyntenicRegion.splitBlockWithGaps(factory, blockGaps);
 console.timeEnd("splitBlockWithGaps");
 
+    // Check if there are variants and build those data tracks
+    if (blockVariantPositions && processVariantDensity)
+    {
+      const variantDatatracks = createVariantDatatracks(factory, blockVariantPositions.positions,
+        blockInfo.start, blockInfo.stop, blockInfo.backboneStart, blockInfo.backboneStop);
+        currSyntenicRegion.addDatatrackSections(variantDatatracks, 0, 'variant');
+    }
 
     // Step 3: For each (now processed) block, create a SyntenySection for each gene
     if (blockGenes && blockGenes.length > 0)
@@ -252,17 +262,45 @@ console.time(timerLabel);
       // geneTrackIdx = geneTrackIdx === -1 ? 0 : geneTrackIdx;
       // currSyntenicRegion.addDatatrackSections(processedGeneInfo, geneTrackIdx, 'gene');
 
-      // Add gene datatrack sections (this will always be the first datatrack set)
-      currSyntenicRegion.addDatatrackSections(processedGeneInfo, 0, 'gene');
+      // Add gene datatrack sections (this will always be the last datatrack set)
+      const idx = currSyntenicRegion.datatrackSets.length;
+      currSyntenicRegion.addDatatrackSections(processedGeneInfo, idx, 'gene');
 console.timeEnd(timerLabel);
+     } else {
+      // Add empty gene datatrack section so every region as one
+      const idx = currSyntenicRegion.datatrackSets.length;
+      currSyntenicRegion.addDatatrackSections([], idx, 'gene');
      }
 
     processedSyntenicRegions.push(currSyntenicRegion);
   }
 
+  let regionSetMaxCount = 0;
+  // Adjust variant datatrack colors now that all are processed
+  if (processVariantDensity)
+  {
+    const datatracks: VariantDensity[] = [];
+    for (let i = 0; i < processedSyntenicRegions.length; i++)
+    {
+      const variantIdx = processedSyntenicRegions[i].datatrackSets.findIndex((set) => set.type === 'variant');
+      if (variantIdx !== -1)
+      {
+        datatracks.push(...processedSyntenicRegions[i].datatrackSets[variantIdx].datatracks as VariantDensity[]);
+        datatracks.forEach((track) => {
+          regionSetMaxCount = track.variantCount > regionSetMaxCount ? track.variantCount : regionSetMaxCount;
+        });
+      }
+    }
+    if (regionSetMaxCount > 0)
+    {
+      datatracks.forEach((track) => track.setDensityColor(regionSetMaxCount));
+    }
+  }
+
   // Finished creating this Set:
 console.time("createSyntenyRegionSet");
   const regionSet = new SyntenyRegionSet(currSpecies, currMapName, processedSyntenicRegions, setOrder, renderType);
+  regionSet.maxVariantCount = regionSetMaxCount;
 console.timeEnd("createSyntenyRegionSet");
   return regionSet;
 }

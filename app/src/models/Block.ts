@@ -1,6 +1,7 @@
 import Chromosome from "@/models/Chromosome";
 import Gene from "@/models/Gene";
 import {SyntenyComponent} from "@/api/SyntenyApi";
+import VariantPositions from "./VariantPositions";
 
 // Generic type to represent position of any genomic data
 export type GenomicPosition = {
@@ -63,6 +64,7 @@ export default class Block
   orientation: "+" | "-" = '+';
   gaps: Gap[] = [];
   genes: Gene[] = [];
+  variantPositions?: VariantPositions;
 
   // Constructor
   constructor(params: BlockParams)

@@ -91,8 +91,16 @@ export class VariantDensity extends DatatrackSection
     this.variantCount = variantCount;
     // NOTE: setting the color is very preliminary, this will likely change
     // and I want to add a lot more structure around it.
-    const blueVal = Math.round((this.variantCount / maxCount) * 255);
-    const redVal = Math.round(((maxCount - this.variantCount) / maxCount) * 255);
+    // Only change the color if there are variants for this section, otherwise leave as white
+    if (maxCount !== 0)
+    {
+      this.setDensityColor(maxCount);
+    }
+  }
+
+  setDensityColor(maxCount: number) {
+    const blueVal = Math.round(((maxCount - this.variantCount) / maxCount) * 255);
+    const redVal = Math.round((this.variantCount / maxCount) * 255);
     let redHex = redVal.toString(16);
     redHex = redHex.length === 1 ? `0${redHex}` : redHex;
     let blueHex = blueVal.toString(16);

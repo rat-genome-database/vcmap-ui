@@ -4,9 +4,27 @@
     label="INSPECT (Main)"
     @click="onInspectPressed"
   /> -->
+  <!--
+  <Button
+    class="p-button-info"
+    label="Load Backbone Variants"
+    @click="loadBackboneVariants"
+  />
+  <Button
+    class="p-button-info"
+    label="Load Synteny Variants"
+    @click="loadSyntenyVariants"
+  />
+  -->
   <div class="grid">
     <div class="col-9">
-      <SVGViewbox :geneList="geneList" :synteny-tree="syntenyTree" :orthologs="orthologs" :loading="isLoading" />
+      <SVGViewbox
+        :geneList="geneList"
+        :synteny-tree="syntenyTree"
+        :orthologs="orthologs"
+        :loading="isLoading"
+        :variant-positions-list="variantPositionsList"
+      />
       <Toast />
     </div>
     <div class="col-3">
@@ -46,6 +64,8 @@ import { backboneOverviewError, missingComparativeSpeciesError, noRegionLengthEr
 import { isGenomicDataInViewport, getThreshold } from '@/utils/Shared';
 import { OrthologPair } from '@/models/OrthologLine';
 import { isOrthologLineInView } from '@/utils/OrthologHandler';
+import { buildVariantPositions } from '@/utils/VariantBuilder';
+import VariantPositions from '@/models/VariantPositions';
 
 // TODO: Can we figure out a better way to handle blocks with a high chainlevel?
 const MAX_CHAINLEVEL = 2;
@@ -84,9 +104,14 @@ const geneList = ref(new Map<number, Gene>());
 //   work the way I expect (only updates the template for Main, not SelectedDataPanel)
 // const geneList = shallowRef(new Map<number, Gene>());
 
+// Our list of variantPositions that have been loaded/generated
+const variantPositionsList = ref<VariantPositions[]>([]);
+
 const orthologs = ref<OrthologPair[]>([]);
 
 // TODO TEMP
+// TODO: temp ignore here, should remove once this method is actively being used
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const onInspectPressed = () => {
   console.debug('Gene List:', geneList);
   console.debug('Synteny Tree:', syntenyTree);
@@ -179,7 +204,7 @@ async function initVCMapProcessing()
   // Query the Genes API
 
   const slowAPI = setTimeout(() => {
-    showToast('warn', 'Loading Impact', 'API is taking a while to respond, please be patient', 3000);
+    showToast('warn', 'Loading Impact', 'API is taking a while to respond, please be patient', 5000);
   }, 15000);
 
   let comparativeSpeciesIds: number[] = [];
@@ -663,7 +688,7 @@ async function queryAndProcessSyntenyForBasePairRange(backboneChromosome: Chromo
   $log.debug(`Querying for specific base pair range: ${start} - ${stop}`);
   const slowAPI = setTimeout(() => {
     console.log('API is taking longer than usual to respond...');
-    showToast('warn', 'Loading Impact', 'API is taking a while to respond, please be patient', 3000);
+    showToast('warn', 'Loading Impact', 'API is taking a while to respond, please be patient', 5000);
   }, 15000);
 
   let threshold = getThreshold(stop - start);
@@ -778,5 +803,83 @@ function onProceedWithErrors()
 function showToast(severity: string, title: string, details: string, duration: number)
 {
   toast.add({severity: severity, summary: title, detail: details, life: duration });
+}
+
+// TODO: temp ignore here, should remove once this method is actively being used
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function loadBackboneVariants() {
+  isLoading.value = true;
+  const chromosome = store.state.chromosome;
+  const backboneSpecies = store.state.species;
+  const backboneRegion = store.state.selectedBackboneRegion;
+  const stop = backboneRegion?.viewportSelection?.basePairStop;
+  const speciesMap = store.state.species?.activeMap;
+  if (chromosome && stop && speciesMap && backboneSpecies)
+  {
+    // Check if this variantPosition set has been loaded
+    const matchIdx = variantPositionsList.value.findIndex((positions) => (
+      positions.mapKey === speciesMap.key && positions.blockStart === 0 && positions.blockStop === chromosome.seqLength
+    ));
+    if (matchIdx === -1)
+    {
+      const variantPositions = await buildVariantPositions(
+        chromosome.chromosome,
+        0,
+        chromosome.seqLength,
+        0,
+        chromosome.seqLength,
+        speciesMap.key
+      );
+      if (variantPositions.positions.length > 0)
+      {
+        variantPositionsList.value.push(variantPositions);
+      }
+      else
+      {
+        showToast('warn', 'No Variants Found', 'There were no variants found for the given chromosome', 5000);
+      }
+    }
+  }
+  isLoading.value = false;
+}
+
+// TODO: temp ignore here, should remove once this method is actively being used
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function loadSyntenyVariants() {
+  isLoading.value = true;
+  let foundSomeVariants = false;
+  let variantPromises: Promise<void>[] = [];
+  syntenyTree.value.forEach( async (blockSet) => {
+    variantPromises.push(...blockSet.map( async (block) => {
+      const variantRes = await buildVariantPositions(
+        block.chromosome.chromosome,
+        block.start,
+        block.stop,
+        block.backboneStart,
+        block.backboneStop,
+        block.chromosome.mapKey
+      );
+      if (variantRes)
+      {
+        if (!foundSomeVariants && variantRes.positions.length > 0)
+        {
+          foundSomeVariants = true;
+        }
+        block.variantPositions = variantRes;
+        // NOTE: adding to variantPositionList is how we tell SVGViewbox to update
+        // the backbone variants, but if we push the responses here SVGViewbox will
+        // update everytime a request completes
+        // So we need a better way to tell SVGViewbox to update
+        // variantPositionsList.value.push(variantRes);
+      }
+    }));
+  });
+  await Promise.allSettled(variantPromises);
+  isLoading.value = false;
+  if (!foundSomeVariants)
+  {
+    showToast('warn', 'No Variants Found', 'There were no variants found for the given regions.', 5000);
+  }
+  store.dispatch('setIsUpdatingVariants', true);
 }
 </script>

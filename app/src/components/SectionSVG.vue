@@ -108,7 +108,7 @@
   <template v-for="(datatrackSet, index) in datatrackSets" :key="index">
     <template v-for="(datatrack, index) in datatrackSet.datatracks" :key="index">
       <rect
-        class="block-section"
+        :class="getDatatrackClass(datatrackSet)"
         @mouseenter="onMouseEnter(datatrack, 'Gene')"
         @mouseleave="onMouseLeave(datatrack, 'Gene')"
         @click="onDatatrackSectionClick($event, datatrack)"
@@ -117,11 +117,11 @@
         :width="datatrack.width"
         :height="datatrack.height"
         :fill="getSectionFill(datatrack)"
-        :fill-opacity=".7"
+        :fill-opacity="datatrack.opacity"
+        :stroke="getSectionFill(datatrack)"
       />
     </template>
   </template>
-  
 </template>
 
 
@@ -147,6 +147,7 @@ import useMouseBasePairPos from '@/composables/useMouseBasePairPos';
 import GenomicSection from '@/models/GenomicSection';
 import { GeneLabel } from '@/models/Label';
 import Gene from '@/models/Gene';
+import DatatrackSet from '@/models/DatatrackSet';
 
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
 const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
@@ -217,8 +218,12 @@ const showBasePairLine = computed(() => {
 });
 
 const onMouseEnter = (section: SyntenySection | GeneDatatrack, type: SelectedDataType) => {
+
   section.isHovered = true;
-  
+
+  // NOTE: ignore variant datatracks for now
+  if (section.type === 'variant') return;
+
   // Only update the selected data panel if no Genes are already selected
   if (store.state.selectedGeneIds.length === 0)
   {
@@ -283,6 +288,17 @@ const getSectionFill = (section: VCMapSVGElement) => {
   return section.elementColor;
 };
 
+const getDatatrackClass = (datatrackSet: DatatrackSet) => {
+  if (datatrackSet.type === 'variant')
+  {
+    return 'block-section variant';
+  }
+  else
+  {
+    return 'block-section';
+  }
+};
+
 const highlightSelections = (selectedGeneIds: number[]) => {
   // Look through the sections and highlight based on selected genes
   datatrackSets.value.forEach((set) => {
@@ -327,7 +343,12 @@ const highlightSelections = (selectedGeneIds: number[]) => {
 };
 
 const onDatatrackSectionClick = (event: any, section: GeneDatatrack) => {
-  if (!section.gene?.rgdId) return;
+  // NOTE: ignore variant datatrack sections for now
+  if (section.type === 'variant')
+  {
+    console.log(section);
+  }
+  if (!section.gene?.rgdId || section.type === 'variant') return;
 
   // If clicked section already selected, just reset the selectedGeneId state
   if (store.state.selectedGeneIds.includes(section.gene?.rgdId || -1))
@@ -477,6 +498,11 @@ const updatePositionLabelFromSVG = (svgY: number) => {
 .block-section:hover
 {
   cursor: pointer;
+}
+
+.variant
+{
+  stroke-width: 0.25;
 }
 
 .position-label

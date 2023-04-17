@@ -78,6 +78,7 @@ export namespace TestUtils
 
         isDetailedPanelUpdating: false,
         isOverviewPanelUpdating: false,
+        isUpdatingVariants: false,
         selectionToastCount: 0,
 
         // Overwrite default state with props passed in by the tester

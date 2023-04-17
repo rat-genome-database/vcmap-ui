@@ -29,7 +29,7 @@ export default class SyntenyRegion
   mapName: string = '';
   geneDatatrackLabels: GeneLabel[] = [];    // array of Label objects associated with the datatrackSections
   genes: Gene[] = [];                       // All genes associated with this SyntenyRegion (the block that this region represents) -- note: will be empty for overview SyntenyRegions since genes aren't needed
-  
+
   constructor(params: SyntenyRegionParams)
   {
     this.species = params.species;
