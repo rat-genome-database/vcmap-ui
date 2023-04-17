@@ -150,6 +150,7 @@ export default class BackboneSet extends GenomicSet
   {
     this.datatrackSets.unshift(new DatatrackSet(datatrackSections, type));
     this.setDatatrackXPositions();
+    this.updateGeneLabelXPositions();
   }
 
   public addToDatatrackSet(datatrackSections: DatatrackSection[], datatrackSetIdx: number)
@@ -162,5 +163,36 @@ export default class BackboneSet extends GenomicSet
   {
     this.datatrackSets.splice(datatrackSetIdx, 1);
     this.setDatatrackXPositions();
+    this.updateGeneLabelXPositions();
+  }
+
+  public updateGeneLabelXPositions()
+  {
+    if (this.backbone.backboneGenes == null || this.backbone.backboneGenes.length === 0)
+    {
+      return;
+    }
+
+    // Get X position based on where the gene datatrack set is positioned
+    let xPos: number | null = null;
+    for (let i = 0; i < this.datatrackSets.length; i++)
+    {
+      if (this.datatrackSets[i].type === 'gene')
+      {
+        xPos = getDetailedPanelXPositionForBackboneDatatracks(this.backbone.posX2, i) + SVGConstants.dataTrackWidth;
+        break;
+      }
+    }
+
+    if (xPos == null)
+    {
+      console.debug(`(BackboneSet) updateGeneLabelXPositions: xPos is null after iterating through DatatrackSets`);
+      return;
+    }
+
+    for (let i = 0; i < this.geneLabels.length; i++)
+    {
+      this.geneLabels[i].posX = xPos;
+    }
   }
 }
