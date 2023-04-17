@@ -46,6 +46,7 @@ export default function useOverviewPanelSelection(store: Store<VCMapState>) {
 
     inSelectMode = true;
     startingPoint = getMousePosSVG(svg, event);
+
     startOverviewSelectionY.value = startingPoint.y;
   };
 
@@ -88,8 +89,16 @@ export default function useOverviewPanelSelection(store: Store<VCMapState>) {
       const svgHeight = PANEL_SVG_STOP - PANEL_SVG_START - (2 * constants.overviewTrackPadding);
       const bpVisibleWindowLength = store.state.chromosome.seqLength;
       const pixelsPerBpRatio = svgHeight / bpVisibleWindowLength;
-      const basePairStart = Math.floor((startOverviewSelectionY.value - PANEL_SVG_START  - constants.overviewTrackPadding) / pixelsPerBpRatio);
-      const basePairStop = Math.floor((stopOverviewSelectionY.value - PANEL_SVG_START  - constants.overviewTrackPadding) / pixelsPerBpRatio);
+      let basePairStart = Math.floor((startOverviewSelectionY.value - PANEL_SVG_START  - constants.overviewTrackPadding) / pixelsPerBpRatio);
+      let basePairStop = Math.floor((stopOverviewSelectionY.value - PANEL_SVG_START  - constants.overviewTrackPadding) / pixelsPerBpRatio);
+
+      // never emit base pair range outside of the backbone chromosome start/stop
+      if (basePairStart < 0) {
+        basePairStart = 0;
+      }
+      if (basePairStop > store.state.chromosome.seqLength) {
+        basePairStop = store.state.chromosome.seqLength;
+      }
 
       const selectedBackboneRegion = store.state.selectedBackboneRegion;
       if (selectedBackboneRegion && selectedBackboneRegion.setViewportSelection)
