@@ -344,10 +344,6 @@ const highlightSelections = (selectedGeneIds: number[]) => {
 
 const onDatatrackSectionClick = (event: any, section: GeneDatatrack) => {
   // NOTE: ignore variant datatrack sections for now
-  if (section.type === 'variant')
-  {
-    console.log(section);
-  }
   if (!section.gene?.rgdId || section.type === 'variant') return;
 
   // If clicked section already selected, just reset the selectedGeneId state
@@ -495,14 +491,17 @@ const updatePositionLabelFromSVG = (svgY: number) => {
   filter: brightness(60%);
 }
 
+.block-section
+{
+  stroke-width: 0;
+  &.variant
+  {
+    stroke-width: 0.25;
+  }
+}
 .block-section:hover
 {
   cursor: pointer;
-}
-
-.variant
-{
-  stroke-width: 0.25;
 }
 
 .position-label

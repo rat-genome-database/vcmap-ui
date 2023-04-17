@@ -389,7 +389,6 @@ const arePanelsLoading = computed(() => {
 
 const displayVariantLegend = computed(() => {
   const backboneVariantIdx = detailedBackboneSet.value?.datatrackSets.findIndex((set) => set.type === 'variant');
-  console.log(`backboneVariantIdx: ${backboneVariantIdx}`);
   if (backboneVariantIdx !== undefined && backboneVariantIdx !== -1)
   {
     return true;

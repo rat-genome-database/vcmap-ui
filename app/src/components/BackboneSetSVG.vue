@@ -238,10 +238,6 @@ const getSectionClass = (datatrackSet: DatatrackSet) => {
 
 const onDatatrackSectionClick = (event: any, section: GeneDatatrack) => {
   // NOTE: disable selected data for qtls for now
-  if (section.type === 'variant')
-  {
-    console.log(section);
-  }
   if (!section.gene?.rgdId || section.type === 'qtl' || section.type === 'variant') {
     return;
   }
