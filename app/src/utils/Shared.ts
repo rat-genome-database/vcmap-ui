@@ -3,7 +3,8 @@
  */
 
 import Block, { Gap } from "@/models/Block";
-import SVGConstants, { PANEL_SVG_STOP, PANEL_SVG_START } from "./SVGConstants";
+import Gene from "@/models/Gene";
+import SVGConstants, { PANEL_SVG_STOP, PANEL_SVG_START, PANEL_HEIGHT } from "./SVGConstants";
 
 // Don't render anything smaller than this
 const SMALLEST_RENDERABLE_SVG_UNIT = 0.2; // 1/5th of an SVG unit
@@ -34,7 +35,7 @@ export function getThreshold(bpLength: number)
  * @returns
  *   True if block is partially in the viewport, False if not
  */
-export function isGenomicDataInViewport(targetBlock: Block | Gap, backboneStart: number, backboneStop: number)
+export function isGenomicDataInViewport(targetBlock: Block | Gap | Gene, backboneStart: number, backboneStop: number)
 {
   return (targetBlock.backboneStart > backboneStart && targetBlock.backboneStart < backboneStop)
     || (targetBlock.backboneStop < backboneStop && targetBlock.backboneStop > backboneStart)
@@ -50,4 +51,25 @@ export function getDetailedPanelXPositionForDatatracks(order: number, index: num
 export function getDetailedPanelXPositionForSynteny(order: number)
 {
   return (order * 140) + SVGConstants.selectedBackboneXPosition;
+}
+
+export function getDetailedPanelXPositionForBackboneDatatracks(backboneX2: number, datatrackSetIndex: number)
+{
+  return backboneX2 + (SVGConstants.backboneDatatrackXOffset * (datatrackSetIndex + 1)) + (SVGConstants.backboneDatatrackXOffset * datatrackSetIndex);
+}
+
+/**
+ * Calculates and returns the "middle" SVG Y coordinate of a gene in the Detailed Panel
+ */
+export function calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment(geneBackboneStart: number, geneBackboneStop: number, visibleBackboneStart: number, visibleBackboneStop: number)
+{
+  const svgToBackboneRatio = (PANEL_HEIGHT) / (visibleBackboneStop - visibleBackboneStart);
+
+  const backboneStartDiff = geneBackboneStart - visibleBackboneStart;
+  const backboneStopDiff = visibleBackboneStop - geneBackboneStop;
+
+  const svgStart = PANEL_SVG_START + (backboneStartDiff * svgToBackboneRatio);
+  const svgStop = PANEL_SVG_STOP - (backboneStopDiff * svgToBackboneRatio);
+
+  return svgStart + ((svgStop - svgStart) / 2);
 }

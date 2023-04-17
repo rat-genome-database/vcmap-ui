@@ -1,4 +1,4 @@
-import Label from './Label';
+import Label, { GeneLabel } from './Label';
 import SVGConstants from '@/utils/SVGConstants';
 import { Formatter } from '@/utils/Formatter';
 import Chromosome from './Chromosome';
@@ -53,19 +53,6 @@ export default class BackboneSection extends GenomicSection
   public setBackboneGenes(backboneGenes: Gene[])
   {
     this.backboneGenes = backboneGenes.map(g => g.clone());
-  }
-
-  // public addBackboneGenes(backboneGenes: Gene[])
-  // {
-  //   this.backboneGenes = this.backboneGenes?.concat(backboneGenes) ?? backboneGenes;
-  // }
-
-  public recalculateLabelYPositions(): void
-  {
-    if (this.hasLabels)
-    {
-      this.createLabels();
-    } 
   }
 
   private createLabels()

@@ -6,7 +6,8 @@ import OrthologLine from './OrthologLine';
 import { GenomicSectionFactory } from './GenomicSectionFactory';
 import { Gap } from "@/models/Block";
 import Gene from './Gene';
-import { isGenomicDataInViewport } from '@/utils/Shared';
+import { calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment, getDetailedPanelXPositionForDatatracks, isGenomicDataInViewport } from '@/utils/Shared';
+import SVGConstants from '@/utils/SVGConstants';
 
 interface SyntenyRegionParams
 {
@@ -38,18 +39,6 @@ export default class SyntenyRegion
     this.genes = params.genes ? params.genes.map(g => g.clone()) : [];
   }
 
-  // TODO: Can remove if we are going to re-generate our models used for rendering on each nav/zoom
-  // public adjustSectionYPositionsBasedOnVisibleStartAndStop(visibleBackboneStart: number, visibleBackboneStop: number)
-  // {
-  //   this.genomicSections.forEach(section => {
-  //     section.adjustYPositionsBasedOnVisibleStartAndStop({ start: visibleBackboneStart, stop: visibleBackboneStop});
-  //     section.recalculateLabelYPositions();
-  //   });
-  //   this.orthologLines.forEach(line => {
-  //     line.setSVGPositions();
-  //   });
-  // }
-
   public addSyntenyGaps(syntenyGap: SyntenySection[])
   {
     this.syntenyGaps.length > 0 ? this.syntenyGaps = this.syntenyGaps.concat(syntenyGap) : this.syntenyGaps = syntenyGap;
@@ -69,28 +58,48 @@ export default class SyntenyRegion
   {
     this.datatrackSets[datatrackSetIdx] && this.datatrackSets[datatrackSetIdx].datatracks.length > 0 ?
       this.datatrackSets[datatrackSetIdx].addDatatrackSections(datatrackSection) : this.datatrackSets[datatrackSetIdx] = new DatatrackSet(datatrackSection, type);
-    
-    if (type === 'gene')
+  }
+
+  public generateGeneLabels(setOrder: number)
+  {
+    // Get X position based on where the gene datatrack set is positioned
+    let xPos: number | null = null;
+    for (let i = 0; i < this.datatrackSets.length; i++)
     {
-      // Update datatrack labels
-      for (let i = 0; i < datatrackSection.length; i++)
+      if (this.datatrackSets[i].type === 'gene')
       {
-        if (datatrackSection[i].label)
-        {
-          // TODO: Not sure if there is a better way to handle this in Typescript. We "know" that the label
-          // of a GeneDatatrack object will be of type GeneLabel, but the type-checking can't know that for sure.
-          // It just sees an instance of Label that every GenomicSection object has. Maybe our classes need to be
-          // structured differently? For now, using "as" to tell the type-checker that this is a GeneLabel but nothing
-          // is guaranteeing that.
-          this.geneDatatrackLabels.push(datatrackSection[i].label as GeneLabel);
-        }
+        xPos = getDetailedPanelXPositionForDatatracks(setOrder, i) + SVGConstants.dataTrackWidth;
+        break;
       }
+    }
+
+    if (xPos == null)
+    {
+      console.debug(`(SyntenyRegion) generateGeneLabels: xPos is null after iterating through DatatrackSets [Block level: ${this.gaplessBlock.chainLevel}]`);
+      return;
+    }
+
+    // Create gene labels for all genes that are contained in the viewport
+    const filteredGenes = this.genes
+      .filter(g => isGenomicDataInViewport(g, this.gaplessBlock.windowStart, this.gaplessBlock.windowStop));
+
+    for (let i = 0; i < filteredGenes.length; i++)
+    {
+      const g = filteredGenes[i];
+      const yPos = calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment(g.backboneStart, 
+        g.backboneStop, this.gaplessBlock.windowStart, this.gaplessBlock.windowStop);
+      this.geneDatatrackLabels.push(new GeneLabel({
+        posX: xPos,
+        posY: yPos, 
+        text: g.symbol,
+        isVisible: false,
+      }, [g]));
     }
   }
 
   // TODO: Wonder if we should move this method back out of this class to a utils file? It might help make each of these
   // SyntenyRegion objects a bit lighter...
-  public splitBlockWithGaps(factory: GenomicSectionFactory, gaps: Gap[]) // TODO (safe to remove)?:, threshold: number)
+  public splitBlockWithGaps(factory: GenomicSectionFactory, gaps: Gap[])
   {
     // Do the following:
     // 1. Filter out any gaps that do not match the chain level of this block
