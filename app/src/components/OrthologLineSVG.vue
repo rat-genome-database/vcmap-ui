@@ -62,6 +62,7 @@ const onMouseLeave = (line: OrthologLine) => {
 };
 
 const onClick = (event: any, line: OrthologLine) => {
+  line.isSelected = true;
   // If clicked section already selected, just reset the selectedGeneId state
   if (store.state.selectedGeneIds.includes(line.offBackboneGene.rgdId || line.backboneGene.rgdId || -1)) {
     store.dispatch('setSelectedGeneIds', []);
@@ -74,6 +75,7 @@ const onClick = (event: any, line: OrthologLine) => {
   let newSelectedData: SelectedData[] = [];
 
   // FIXME
+  console.log('LINE', line);
   const newData = getNewSelectedData(store, line.offBackboneGene);
   const geneAndOrthologs = newData.selectedData;
   const newGeneIds = newData.rgdIds;
