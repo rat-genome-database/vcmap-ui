@@ -4,7 +4,6 @@
     label="INSPECT (Main)"
     @click="onInspectPressed"
   /> -->
-  <!--
   <Button
     class="p-button-info"
     label="Load Backbone Variants"
@@ -15,7 +14,6 @@
     label="Load Synteny Variants"
     @click="loadSyntenyVariants"
   />
-  -->
   <div class="grid">
     <div class="col-9">
       <SVGViewbox
@@ -846,6 +844,8 @@ async function loadBackboneVariants() {
 // TODO: temp ignore here, should remove once this method is actively being used
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function loadSyntenyVariants() {
+  // Ensure isUpdatingVariants is false
+  store.dispatch('setIsUpdatingVariants', false);
   isLoading.value = true;
   let foundSomeVariants = false;
   let variantPromises: Promise<void>[] = [];
