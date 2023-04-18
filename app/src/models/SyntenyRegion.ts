@@ -6,8 +6,7 @@ import OrthologLine from './OrthologLine';
 import { GenomicSectionFactory } from './GenomicSectionFactory';
 import { Gap } from "@/models/Block";
 import Gene from './Gene';
-import { calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment, getDetailedPanelXPositionForDatatracks, isGenomicDataInViewport } from '@/utils/Shared';
-import SVGConstants from '@/utils/SVGConstants';
+import { isGenomicDataInViewport } from '@/utils/Shared';
 
 interface SyntenyRegionParams
 {
@@ -58,43 +57,6 @@ export default class SyntenyRegion
   {
     this.datatrackSets[datatrackSetIdx] && this.datatrackSets[datatrackSetIdx].datatracks.length > 0 ?
       this.datatrackSets[datatrackSetIdx].addDatatrackSections(datatrackSection) : this.datatrackSets[datatrackSetIdx] = new DatatrackSet(datatrackSection, type);
-  }
-
-  public generateGeneLabels(setOrder: number)
-  {
-    // Get X position based on where the gene datatrack set is positioned
-    let xPos: number | null = null;
-    for (let i = 0; i < this.datatrackSets.length; i++)
-    {
-      if (this.datatrackSets[i].type === 'gene')
-      {
-        xPos = getDetailedPanelXPositionForDatatracks(setOrder, i) + SVGConstants.dataTrackWidth;
-        break;
-      }
-    }
-
-    if (xPos == null)
-    {
-      console.debug(`(SyntenyRegion) generateGeneLabels: xPos is null after iterating through DatatrackSets [Block level: ${this.gaplessBlock.chainLevel}]`);
-      return;
-    }
-
-    // Create gene labels for all genes that are contained in the viewport
-    const filteredGenes = this.genes
-      .filter(g => isGenomicDataInViewport(g, this.gaplessBlock.windowStart, this.gaplessBlock.windowStop));
-
-    for (let i = 0; i < filteredGenes.length; i++)
-    {
-      const g = filteredGenes[i];
-      const yPos = calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment(g.backboneStart, 
-        g.backboneStop, this.gaplessBlock.windowStart, this.gaplessBlock.windowStop);
-      this.geneDatatrackLabels.push(new GeneLabel({
-        posX: xPos,
-        posY: yPos, 
-        text: g.symbol,
-        isVisible: false,
-      }, [g]));
-    }
   }
 
   // TODO: Wonder if we should move this method back out of this class to a utils file? It might help make each of these

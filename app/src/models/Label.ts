@@ -44,19 +44,6 @@ export class GeneLabel extends Label
     }
   }
 
-  setMainGene(gene: Gene)
-  {
-    this.genes.unshift(gene);
-    this.rgdIds.unshift(gene.rgdId);
-    this.text = gene.symbol;
-  }
-
-  addGenes(...genes: Gene[])
-  {
-    this.genes.push(...genes);
-    this.rgdIds.push(...genes.map(g => g.rgdId));
-  }
-
   /**
    * Returns the "main" gene that belongs to this GeneLabel
    */
@@ -66,3 +53,9 @@ export class GeneLabel extends Label
     return this.genes[0] ?? null;
   }
 }
+
+export type IntermediateGeneLabel = {
+  gene: Gene,
+  posY: number,
+  posX: number,
+};

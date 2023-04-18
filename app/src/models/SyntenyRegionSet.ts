@@ -1,12 +1,11 @@
 import SVGConstants from "@/utils/SVGConstants";
 import { GenomicSet } from "./GenomicSet";
-import Label, { GeneLabel } from "./Label";
+import Label, { GeneLabel, IntermediateGeneLabel } from "./Label";
 import SyntenyRegion from "./SyntenyRegion";
 import SyntenySection from "./SyntenySection";
 import DatatrackSet from "./DatatrackSet";
-import { mergeGeneLabels } from "@/utils/GeneLabelMerger";
-import Gene from "./Gene";
-import { getDetailedPanelXPositionForDatatracks, getDetailedPanelXPositionForSynteny } from "@/utils/Shared";
+import { mergeAndCreateGeneLabels } from "@/utils/GeneLabelMerger";
+import { calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment, getDetailedPanelXPositionForDatatracks, getDetailedPanelXPositionForSynteny, isGenomicDataInViewport } from "@/utils/Shared";
 
 const LEVEL_2_WIDTH_MULTIPLIER = 0.75;
 
@@ -26,6 +25,7 @@ export default class SyntenyRegionSet extends GenomicSet
   // TODO: figure out if this is this best place for this,
   // because it's only relevant to variant density
   maxVariantCount?: number;
+  geneLabels: GeneLabel[] = [];
 
   constructor(speciesName: string, mapName: string, regions: SyntenyRegion[], order: number, renderType: 'overview' | 'detailed')
   {
@@ -41,28 +41,75 @@ export default class SyntenyRegionSet extends GenomicSet
     if (renderType === 'detailed')
     {
       console.time(`Create Gene Labels`);
-      for (let i = 0; i < this.regions.length; i++)
-      {
-        this.regions[i].generateGeneLabels(this.order);
-      }
+      this.generateGeneLabels();
       console.timeEnd(`Create Gene Labels`);
-
-      console.time(`Process Gene Labels`);
-      this.processGeneLabelsInAllRegions();
-      console.timeEnd(`Process Gene Labels`);
     }
   }
 
-  public processGeneLabelsInAllRegions()
+  private generateGeneLabels()
   {
-    // Gather all gene labels across the gene datatracks belonging to this SyntenyRegionSet
-    const geneLabels: GeneLabel[] = [];
-    const genes: Gene[] = [];
-    this.regions.forEach(r => {
-      geneLabels.push(...r.geneDatatrackLabels);
-    });
+    // Get:
+    // + X position based on where the gene datatrack set is positioned in the regions
+    // + window start base pair (backbone)
+    // + window stop base pair (backbone)
+    // TODO: The backbone window start/stop should probably be more accessible at this level in some way
+    let xPos: number | null = null;
+    let visibleBackboneStart: number | null = null;
+    let visibleBackboneStop: number | null = null;
+    for (let i = 0; i < this.regions.length; i++)
+    {
+      if (visibleBackboneStart == null || visibleBackboneStop == null)
+      {
+        visibleBackboneStart = this.regions[i].gaplessBlock.windowStart;
+        visibleBackboneStop = this.regions[i].gaplessBlock.windowStop;
+      }
 
-    mergeGeneLabels(geneLabels);
+      for (let j = 0; j < this.regions[i].datatrackSets.length; j++)
+      {
+        if (this.regions[i].datatrackSets[j].type === 'gene')
+        {
+          xPos = getDetailedPanelXPositionForDatatracks(this.order, i) + SVGConstants.dataTrackWidth;
+          break;
+        }
+      }
+
+      if (xPos != null && visibleBackboneStart != null && visibleBackboneStop != null)
+      {
+        break;
+      }
+    }
+
+    if (xPos == null || visibleBackboneStart == null || visibleBackboneStop == null)
+    {
+      console.debug(`(SyntenyRegionSet) generateGeneLabels: xPos || visibleBackboneStart || visibleBackboneStop is null after iterating through DatatrackSets`);
+      console.debug(`  ${xPos}, ${visibleBackboneStart}, ${visibleBackboneStop}`);
+      return;
+    }
+
+    // Create gene labels for all genes that are contained in the viewport
+    const filteredGenes = this.regions.map(r => r.genes)
+      .flat()
+      // Using '!' to declare visibleBackboneStart and visibleBackboneStop are never null at this point
+      // Typescript seems to not be able to pick this up inside of an anonymous function
+      .filter(g => isGenomicDataInViewport(g, visibleBackboneStart!, visibleBackboneStop!));
+
+    console.time(`Create intermediate labels`);
+    // Create intermediate gene labels for all genes in the viewport:
+    const intermediateLabels: IntermediateGeneLabel[] = [];
+    for (let i = 0; i < filteredGenes.length; i++)
+    {
+      const g = filteredGenes[i];
+      const yPos = calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment(g.backboneStart, 
+        g.backboneStop, visibleBackboneStart, visibleBackboneStop);
+      intermediateLabels.push({
+        gene: g,
+        posY: yPos,
+        posX: xPos,
+      });
+    }
+    console.timeEnd(`Create intermediate labels`);
+
+    this.geneLabels = mergeAndCreateGeneLabels(intermediateLabels);
   }
 
   public addRegions(regions: SyntenyRegion[])
@@ -202,10 +249,5 @@ export default class SyntenyRegionSet extends GenomicSet
         continue;
       }
     }
-  }
-
-  public get geneLabels()
-  {
-    return this.regions.map(r => r.geneDatatrackLabels).flat();
   }
 }

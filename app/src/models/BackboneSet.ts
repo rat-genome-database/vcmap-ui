@@ -1,11 +1,11 @@
 import { ProcessedGenomicData } from "@/utils/BackboneBuilder";
 import SVGConstants from "@/utils/SVGConstants";
-import { mergeGeneLabels } from "@/utils/GeneLabelMerger";
+import { mergeAndCreateGeneLabels } from "@/utils/GeneLabelMerger";
 import BackboneSection from "./BackboneSection";
 import DatatrackSection, { DatatrackSectionType } from "./DatatrackSection";
 import DatatrackSet from "./DatatrackSet";
 import { GenomicSet } from "./GenomicSet";
-import Label, { GeneLabel } from "./Label";
+import Label, { GeneLabel, IntermediateGeneLabel } from "./Label";
 import { calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment, getDetailedPanelXPositionForBackboneDatatracks, isGenomicDataInViewport } from "@/utils/Shared";
 
 /**
@@ -42,9 +42,6 @@ export default class BackboneSet extends GenomicSet
       console.time(`Create Backbone Gene Labels`);
       this.generateGeneLabels();
       console.timeEnd(`Create Backbone Gene Labels`);
-      console.time(`Backbone Gene Label Processing`);
-      mergeGeneLabels(this.geneLabels);
-      console.timeEnd(`Backbone Gene Label Processing`);
     }
   }
 
@@ -99,12 +96,15 @@ export default class BackboneSet extends GenomicSet
     });
   }
 
-  public generateGeneLabels()
+  private generateGeneLabels()
   {
     if (this.backbone.backboneGenes == null || this.backbone.backboneGenes.length === 0)
     {
       return;
     }
+
+    //
+    // First, create our intermediate gene-labels before passing them to the label merge processing:
 
     // Get X position based on where the gene datatrack set is positioned
     let xPos: number | null = null;
@@ -125,19 +125,26 @@ export default class BackboneSet extends GenomicSet
 
     const filteredGenes = this.backbone.backboneGenes
       .filter(g => isGenomicDataInViewport(g, this.backbone.windowSVGStart, this.backbone.windowStop));
-    // Create gene labels for all genes in the viewport
+
+    console.time(`Create intermediate labels`);
+    // Create intermediate gene labels for all genes in the viewport:
+    const intermediateLabels: IntermediateGeneLabel[] = [];
     for (let i = 0; i < filteredGenes.length; i++)
     {
       const g = filteredGenes[i];
       const yPos = calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment(g.backboneStart, 
         g.backboneStop, this.backbone.windowStart, this.backbone.windowStop);
-      this.geneLabels.push(new GeneLabel({
-        posX: xPos, 
-        posY: yPos, 
-        text: g.symbol,
-        isVisible: false,
-      }, [g]));
+      intermediateLabels.push({
+        gene: g,
+        posY: yPos,
+        posX: xPos,
+      });
     }
+    console.timeEnd('Create intermediate labels');
+
+    //
+    // Create the visible gene labels from our intermediate labels (apply merging logic as appropriate)
+    this.geneLabels = mergeAndCreateGeneLabels(intermediateLabels);
   }
 
   public addNewDatatrackSetToEnd(datatrackSections: DatatrackSection[], type: DatatrackSectionType)
