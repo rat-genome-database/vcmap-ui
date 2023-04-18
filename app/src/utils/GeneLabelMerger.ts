@@ -1,62 +1,81 @@
-import Label, { GeneLabel } from '../models/Label';
+import Gene from '@/models/Gene';
+import { GeneLabel, IntermediateGeneLabel } from '../models/Label';
+import { PANEL_SVG_START } from './SVGConstants';
 
-const OVERLAP_SIZE = 10; // TODO: Determine this size based on a constant for font size of the SVG label text?
+const OVERLAP_SIZE = 8;
 const LOC_PREFIX = 'loc';
 
-export function mergeGeneLabels(labels: GeneLabel[])
+export function mergeAndCreateGeneLabels(possibleLabels: IntermediateGeneLabel[])
 {
-  console.debug(` Merge gene labels [processing ${labels.length}]`);
-  // Sort the labels by their SVG Y position
-  labels.sort((a, b) => a.posY - b.posY);
+  const geneLabels: GeneLabel[] = [];
 
-  // Iterate through the labels and combine any overlapping labels
-  for (let i = 0; i < labels.length; i++)
+  console.debug(` Merge gene labels [processing ${possibleLabels.length}]`);
+  // Sort the labels by their SVG Y position
+  possibleLabels.sort((a, b) => a.posY - b.posY);
+
+  for (let i = 0; i < possibleLabels.length; i++)
   {
-    const label = labels[i];
-    label.isVisible = true;
-    if (i < labels.length - 1)
+    const curLabel = possibleLabels[i];
+    // If label is too close to top of detailed panel, move it down a bit
+    if (Math.abs(curLabel.posY - PANEL_SVG_START) < OVERLAP_SIZE)
     {
-      // There are more labels after this one!
+      curLabel.posY = curLabel.posY + OVERLAP_SIZE;
+    }
+
+    let mainGene = curLabel.gene;
+    const overlappingGenes: Gene[] = [];
+
+    // If there are more labels after this one...
+    if (i < possibleLabels.length - 1)
+    {
       // Get nearest overlapping labels
-      for (let j = i + 1; j < labels.length; j++)
+      for (let j = i + 1; j < possibleLabels.length; j++)
       {
-        const potentialOverlappingLabel = labels[j];
-        if (labelsOverlap(label, potentialOverlappingLabel))
+        const potentialOverlappingLabel = possibleLabels[j];
+        if (labelsOverlap(curLabel, potentialOverlappingLabel))
         {
           // If the current label is an LOC gene or is smaller than the overlapping label, use the overlapping label
           // as the visible label
-          if (label.mainGene.symbol.toLowerCase().startsWith(LOC_PREFIX)
-            || label.mainGene.size < potentialOverlappingLabel.mainGene.size)
+          if (!potentialOverlappingLabel.gene.symbol.toLowerCase().startsWith(LOC_PREFIX) 
+            && (curLabel.gene.symbol.toLowerCase().startsWith(LOC_PREFIX) || curLabel.gene.size < potentialOverlappingLabel.gene.size))
           {
-            label.setMainGene(potentialOverlappingLabel.mainGene);
+            overlappingGenes.push(mainGene);
+            mainGene = potentialOverlappingLabel.gene;
           }
           else
           {
             // Add the overlapping label's genes to this label and hide it
-            label.addGenes(...potentialOverlappingLabel.genes);
+            overlappingGenes.push(potentialOverlappingLabel.gene);
           }
-
-          potentialOverlappingLabel.isVisible = false;
 
           // If last label has been looked at, skip outer for-loop to the end
           // (so that it does not get set to "visible" at the beginning of the next iteration)
-          if (j === labels.length - 1)
+          if (j === possibleLabels.length - 1)
           {
-            i = j - 1; // j - 1 since i will iterate by 1 at the end of the outer for-loop
+            i = j;
           }
         }
         else
         {
           // Move outer for-loop to next label that doesn't overlap
-          i = j - 1; // j - 1 since i will iterate by 1 at the end of the outer for-loop
+          i = j - 1; // j - 1 since i will iterate by 1 at the end of the outer for-loop causing the next curLabel to be at index "j"
           break;
         }
       }
     }
+
+    geneLabels.push(new GeneLabel({
+      posX: curLabel.posX,
+      posY: curLabel.posY,
+      text: mainGene.symbol,
+      isVisible: true,
+    }, [mainGene, ...overlappingGenes]));
   }
+
+  return geneLabels;
 }
 
-function labelsOverlap(label1: Label, label2: Label)
+function labelsOverlap(label1: IntermediateGeneLabel, label2: IntermediateGeneLabel)
 {
   return Math.abs(label1.posY - label2.posY) < OVERLAP_SIZE;
 }
