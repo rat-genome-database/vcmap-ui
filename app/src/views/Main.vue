@@ -4,6 +4,7 @@
     label="INSPECT (Main)"
     @click="onInspectPressed"
   /> -->
+  <!--
   <Button
     class="p-button-info"
     label="Load Backbone Variants"
@@ -14,6 +15,7 @@
     label="Load Synteny Variants"
     @click="loadSyntenyVariants"
   />
+  -->
   <div class="grid">
     <div class="col-9">
       <SVGViewbox
