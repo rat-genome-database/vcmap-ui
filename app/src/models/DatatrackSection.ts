@@ -66,7 +66,7 @@ export class GeneDatatrack extends DatatrackSection
 export class VariantDensity extends DatatrackSection
 {
   variantCount: number; // number of variants contained within the datatrack section
-  constructor(variantCount: number, maxCount: number, start: number, stop: number, backboneAlignment: BackboneAlignment, speciesName: string, mapName: string, chromosome: string, windowBasePairRange: WindowBasePairRange, renderType: RenderType)
+  constructor(variantCount: number, maxDensity: number, start: number, stop: number, backboneAlignment: BackboneAlignment, speciesName: string, mapName: string, chromosome: string, windowBasePairRange: WindowBasePairRange, renderType: RenderType)
   {
     super({
       start: start,
@@ -84,19 +84,25 @@ export class VariantDensity extends DatatrackSection
     // NOTE: setting the color is very preliminary, this will likely change
     // and I want to add a lot more structure around it.
     // Only change the color if there are variants for this section, otherwise leave as white
-    if (maxCount !== 0)
+    if (maxDensity !== 0)
     {
-      this.setDensityColor(maxCount);
+      this.setDensityColor(maxDensity);
     }
   }
 
-  setDensityColor(maxCount: number) {
-    const blueVal = Math.round(((maxCount - this.variantCount) / maxCount) * 255);
-    const redVal = Math.round((this.variantCount / maxCount) * 255);
+  setDensityColor(maxDensity: number) {
+    // Number of variants per 1.0 Mbp
+    const variantDensity = this.calculateVariantDensity();
+    const blueVal = Math.round(((maxDensity - variantDensity) / maxDensity) * 255);
+    const redVal = Math.round((variantDensity / maxDensity) * 255);
     let redHex = redVal.toString(16);
     redHex = redHex.length === 1 ? `0${redHex}` : redHex;
     let blueHex = blueVal.toString(16);
     blueHex = blueHex.length === 1 ? `0${blueHex}` : blueHex;
     this.elementColor = `#${redHex}00${blueHex}`;
+  }
+
+  calculateVariantDensity() {
+    return (this.variantCount / Math.abs(this.speciesStop - this.speciesStart)) * 1000000;
   }
 }

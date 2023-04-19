@@ -6,50 +6,99 @@ import Species from "@/models/Species";
 import BackboneSection from "@/models/BackboneSection";
 import { VariantDensity } from "@/models/DatatrackSection";
 
-const BIN_SIZE = 1000000;
+const NUM_BINS = 100; // For whole window per species
+const MIN_BIN_SIZE = 10000; // Smallest size for a variant density datatrack (in species base pairs)
 
-/**
- *
- * @param factory the GenomicSectionFactory to use to build the datatracks
- * @param positions array of variants positions
- * @param sequenceStart sequenceStart represents the start bp for the region of this set of variants
- * @param sequenceStop  sequenceStop represents the stop bp for the region of this set of variants
- * @param backboneStart backboneStart represents the backbone start bp equivalent for the start of this set of variants
- * @param backboneStop  backboneStop represents the backbone stop bp equivalent for the stop of this set of variants
- * @returns VariantDensity[]
- */
 export function createVariantDatatracks(factory: GenomicSectionFactory, positions: number[],
-  sequenceStart: number, sequenceStop: number, backboneStart: number, backboneStop: number): VariantDensity[]
+  sequenceStart: number, sequenceStop: number, backboneStart: number, backboneStop: number, invertedBlock: boolean): VariantDensity[]
 {
   const seqLength = sequenceStop - sequenceStart;
-  const numBins = Math.ceil(seqLength / BIN_SIZE);
+  const backboneWindowStart = factory.windowBasePairRange.start;
+  const backboneWindowStop = factory.windowBasePairRange.stop;
+  let speciesWindowStart;
+  let speciesWindowStop;
+  if (invertedBlock)
+  {
+    speciesWindowStart = backboneStart > backboneWindowStart ? sequenceStop
+      : Math.round(sequenceStop - (seqLength / (backboneStop - backboneStart)) * (backboneWindowStart - backboneStart));
+    speciesWindowStop = backboneStop < backboneWindowStop ? sequenceStart
+      : Math.round(sequenceStart + (seqLength / (backboneStop - backboneStart)) * (backboneStop - backboneWindowStop));
+  }
+  else
+  {
+    speciesWindowStart = backboneStart > backboneWindowStart ? sequenceStart
+      : Math.round(sequenceStart + (seqLength / (backboneStop - backboneStart)) * (backboneWindowStart - backboneStart));
+    speciesWindowStop = backboneStop < backboneWindowStop ? sequenceStop
+      : Math.round(sequenceStop - (seqLength / (backboneStop - backboneStart)) * (backboneStop - backboneWindowStop));
+  }
+
+  const speciesWindowSequenceLength = Math.abs(speciesWindowStop - speciesWindowStart);
+  const visibleBackboneSectionLength = Math.min(backboneStop, backboneWindowStop) - Math.max(backboneStart, backboneWindowStart);
+  const visibleSectionWindowFraction = (visibleBackboneSectionLength) / (backboneWindowStop - backboneWindowStart);
+  const estBinsForSection = Math.ceil(NUM_BINS * visibleSectionWindowFraction);
+  const binSize = Math.max(Math.round(speciesWindowSequenceLength / estBinsForSection), MIN_BIN_SIZE);
+  const numBinsForSection = Math.round(speciesWindowSequenceLength / binSize);
   // Preallocate counts array with number of bins we'll have
-  const variantCounts: number[] = new Array(numBins).fill(0);
-  let binStart = sequenceStart;
-  const backboneBinSize = Math.round(BIN_SIZE * (backboneStop - backboneStart) / seqLength);
+  const variantCounts: number[] = new Array(numBinsForSection).fill(0);
+  let binStart = invertedBlock ? speciesWindowStop : speciesWindowStart;
+  const backboneBinSize = Math.round(binSize * (visibleBackboneSectionLength) / speciesWindowSequenceLength);
   // Only loop through positions array once and count based on what bin it should be in
   // NOTE: this assumes we have bins of equal size, if we ever want different bin sizes
   // in the same rendered view we'll need to adjust this
   for (let i = 0; i < positions.length; i++)
   {
-    const binIdx = Math.floor((positions[i] - sequenceStart) / BIN_SIZE);
-    variantCounts[binIdx]++;
+    if (invertedBlock)
+    {
+      if (positions[i] >= speciesWindowStop && positions[i] <= speciesWindowStart)
+      {
+        const binIdx = Math.min(Math.floor((positions[i] - speciesWindowStop) / binSize), numBinsForSection - 1);
+        variantCounts[binIdx]++;
+      }
+    }
+    else
+    {
+      if (positions[i] >= speciesWindowStart && positions[i] <= speciesWindowStop)
+      {
+        const binIdx = Math.min(Math.floor((positions[i] - speciesWindowStart) / binSize), numBinsForSection - 1);
+        variantCounts[binIdx]++;
+      }
+    }
   }
 
   const maxCount = Math.max(...variantCounts);
-  let backboneBinStart = backboneStart;
-  binStart = sequenceStart;
+  const maxDensity = (maxCount / binSize) * 1000000; // number of variants per 1.0 Mbp
   const variantDatatracks = [];
-  for (let i = 0; i < variantCounts.length; i++)
+  if (invertedBlock)
   {
-    const binStop = Math.min(binStart + BIN_SIZE, sequenceStop);
-    const backboneBinStop = Math.min(backboneBinStart + backboneBinSize, backboneStop);
-    const backboneAlignment: BackboneAlignment = { start: backboneBinStart, stop: backboneBinStop };
-    const newVariant = factory.createVariantDensitySection(variantCounts[i], maxCount, binStart, binStop, backboneAlignment);
-    newVariant.adjustYPositionsBasedOnVisibleStartAndStop(factory.windowBasePairRange);
-    variantDatatracks.push(newVariant);
-    binStart += BIN_SIZE;
-    backboneBinStart += backboneBinSize;
+    let backboneBinStop = Math.min(backboneStop, backboneWindowStop);
+    binStart = speciesWindowStop;
+    for (let i = 0; i < variantCounts.length; i++)
+    {
+      const binStop = Math.min(binStart + binSize, speciesWindowStart);
+      const backboneBinStart = Math.max(backboneBinStop - backboneBinSize, backboneStart);
+      const backboneAlignment: BackboneAlignment = { start: backboneBinStart, stop: backboneBinStop };
+      const newVariant = factory.createVariantDensitySection(variantCounts[i], maxDensity, binStart, binStop, backboneAlignment);
+      newVariant.adjustYPositionsBasedOnVisibleStartAndStop(factory.windowBasePairRange);
+      variantDatatracks.push(newVariant);
+      binStart += binSize;
+      backboneBinStop -= backboneBinSize;
+    }
+  }
+  else
+  {
+    let backboneBinStart = Math.max(backboneStart, backboneWindowStart);
+    binStart = speciesWindowStart;
+    for (let i = 0; i < variantCounts.length; i++)
+    {
+      const binStop = Math.min(binStart + binSize, speciesWindowStop);
+      const backboneBinStop = Math.min(backboneBinStart + backboneBinSize, backboneStop);
+      const backboneAlignment: BackboneAlignment = { start: backboneBinStart, stop: backboneBinStop };
+      const newVariant = factory.createVariantDensitySection(variantCounts[i], maxDensity, binStart, binStop, backboneAlignment);
+      newVariant.adjustYPositionsBasedOnVisibleStartAndStop(factory.windowBasePairRange);
+      variantDatatracks.push(newVariant);
+      binStart += binSize;
+      backboneBinStart += backboneBinSize;
+    }
   }
   return variantDatatracks;
 }
@@ -83,10 +132,11 @@ export function backboneVariantTrackBuilder(species: Species, variantPositions: 
   const variantDatatracks = createVariantDatatracks(
     factory,
     variantPositions.positions,
-    variantPositions.backboneStart || 0,
-    variantPositions.backboneStop || 0,
-    variantPositions.backboneStart || 0,
-    variantPositions.backboneStop || 0,
+    backboneSection.windowBasePairRange.start,
+    backboneSection.windowBasePairRange.stop,
+    backboneSection.windowBasePairRange.start,
+    backboneSection.windowBasePairRange.stop,
+    false
   );
 
   return variantDatatracks;

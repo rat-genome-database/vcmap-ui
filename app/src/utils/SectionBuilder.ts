@@ -9,7 +9,7 @@ import Block from "@/models/Block";
 import {useLogger} from "vue-logger-plugin";
 import { RenderType } from '@/models/GenomicSection';
 import { Orientation } from '@/models/SyntenySection';
-import { getThreshold } from './Shared';
+import { getThreshold, isGenomicDataInViewport } from './Shared';
 import { createVariantDatatracks } from './VariantBuilder';
 
 // FIXME: I don't think we can use the logger here...
@@ -222,9 +222,17 @@ console.timeEnd("splitBlockWithGaps");
     // Check if there are variants and build those data tracks
     if (blockVariantPositions && processVariantDensity)
     {
-      const variantDatatracks = createVariantDatatracks(factory, blockVariantPositions.positions,
-        blockInfo.start, blockInfo.stop, blockInfo.backboneStart, blockInfo.backboneStop);
+      // NOTE: only process blocks that are at least partially contained in the view
+      if (isGenomicDataInViewport(blockInfo, factory.windowBasePairRange.start, factory.windowBasePairRange.stop))
+      {
+        const variantDatatracks = createVariantDatatracks(factory, blockVariantPositions.positions,
+          blockInfo.start, blockInfo.stop, blockInfo.backboneStart, blockInfo.backboneStop, blockInfo.isBlockInverted());
         currSyntenicRegion.addDatatrackSections(variantDatatracks, 0, 'variant');
+      }
+      else
+      {
+        currSyntenicRegion.addDatatrackSections([], 0, 'variant');
+      }
     }
 
     // Step 3: For each (now processed) block, create a SyntenySection for each gene
@@ -275,7 +283,7 @@ console.timeEnd(timerLabel);
     processedSyntenicRegions.push(currSyntenicRegion);
   }
 
-  let regionSetMaxCount = 0;
+  let regionSetMaxDensity = 0;
   // Adjust variant datatrack colors now that all are processed
   if (processVariantDensity)
   {
@@ -287,20 +295,21 @@ console.timeEnd(timerLabel);
       {
         datatracks.push(...processedSyntenicRegions[i].datatrackSets[variantIdx].datatracks as VariantDensity[]);
         datatracks.forEach((track) => {
-          regionSetMaxCount = track.variantCount > regionSetMaxCount ? track.variantCount : regionSetMaxCount;
+          const trackDensity = track.calculateVariantDensity();
+          regionSetMaxDensity = trackDensity > regionSetMaxDensity ? trackDensity : regionSetMaxDensity;
         });
       }
     }
-    if (regionSetMaxCount > 0)
+    if (regionSetMaxDensity > 0)
     {
-      datatracks.forEach((track) => track.setDensityColor(regionSetMaxCount));
+      datatracks.forEach((track) => track.setDensityColor(regionSetMaxDensity));
     }
   }
 
   // Finished creating this Set:
 console.time("createSyntenyRegionSet");
   const regionSet = new SyntenyRegionSet(currSpecies, currMapName, processedSyntenicRegions, setOrder, renderType);
-  regionSet.maxVariantCount = regionSetMaxCount;
+  regionSet.maxVariantDensity = regionSetMaxDensity;
 console.timeEnd("createSyntenyRegionSet");
   return regionSet;
 }

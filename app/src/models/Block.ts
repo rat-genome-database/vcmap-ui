@@ -164,4 +164,10 @@ export default class Block
       });
     }
   }
+
+  // Helper function to convert orientation to boolen if the block is inverted
+  isBlockInverted()
+  {
+    return this.orientation === '-';
+  }
 }

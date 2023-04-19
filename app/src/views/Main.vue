@@ -703,11 +703,23 @@ async function queryAndProcessSyntenyForBasePairRange(backboneChromosome: Chromo
     },
     comparativeSpecies: store.state.comparativeSpecies,
   });
-  
+
   clearTimeout(slowAPI);
 
   // Process response
   processSynteny(speciesSyntenyDataArray, start, stop, backboneMapKey);
+
+  // If any variant data has been loaded, check for new blocks after syntenyTree has been updated
+  const syntenyTreeKeys = syntenyTree.value.keys();
+  for (let key of syntenyTreeKeys)
+  {
+    const speciesData = syntenyTree.value.get(key);
+    if (speciesData && speciesData.some((block) => block.variantPositions))
+    {
+      // TODO: this function should eventually only load for on mapKey at a time
+      loadSyntenyVariants();
+    }
+  }
 }
 
 function triggerDetailedPanelProcessing(backboneChromosome: Chromosome, selectionStart: number, selectionStop: number)
@@ -846,31 +858,45 @@ async function loadBackboneVariants() {
 // TODO: temp ignore here, should remove once this method is actively being used
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function loadSyntenyVariants() {
+  // Ensure isUpdatingVariants is false
+  store.dispatch('setIsUpdatingVariants', false);
   isLoading.value = true;
   let foundSomeVariants = false;
   let variantPromises: Promise<void>[] = [];
+  // TODO maybe should use forEach here. Either way, this method should
+  // eventually only need to load for one species at a time so we won't need
+  // to iterate over the syntenyTree
   syntenyTree.value.forEach( async (blockSet) => {
     variantPromises.push(...blockSet.map( async (block) => {
-      const variantRes = await buildVariantPositions(
-        block.chromosome.chromosome,
-        block.start,
-        block.stop,
-        block.backboneStart,
-        block.backboneStop,
-        block.chromosome.mapKey
-      );
-      if (variantRes)
+      // If this block already has positions loaded, don't load again
+      if (block.variantPositions)
       {
-        if (!foundSomeVariants && variantRes.positions.length > 0)
+        foundSomeVariants = true; // some variants exist so we don't need to warn the user
+        return;
+      }
+      else
+      {
+        const variantRes = await buildVariantPositions(
+          block.chromosome.chromosome,
+          block.start,
+          block.stop,
+          block.backboneStart,
+          block.backboneStop,
+          block.chromosome.mapKey
+        );
+        if (variantRes)
         {
-          foundSomeVariants = true;
+          if (!foundSomeVariants && variantRes.positions.length > 0)
+          {
+            foundSomeVariants = true;
+          }
+          block.variantPositions = variantRes;
+          // NOTE: adding to variantPositionList is how we tell SVGViewbox to update
+          // the backbone variants, but if we push the responses here SVGViewbox will
+          // update everytime a request completes
+          // So we need a better way to tell SVGViewbox to update
+          // variantPositionsList.value.push(variantRes);
         }
-        block.variantPositions = variantRes;
-        // NOTE: adding to variantPositionList is how we tell SVGViewbox to update
-        // the backbone variants, but if we push the responses here SVGViewbox will
-        // update everytime a request completes
-        // So we need a better way to tell SVGViewbox to update
-        // variantPositionsList.value.push(variantRes);
       }
     }));
   });
