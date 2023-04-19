@@ -15,7 +15,6 @@ import OrthologLine from '@/models/OrthologLine';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import SelectedData from '@/models/SelectedData';
-import { getNewSelectedData } from '@/utils/DataPanelHelpers';
 
 const store = useStore(key);
 
@@ -31,9 +30,11 @@ defineProps<Props>();
 
 const onMouseEnter = (line: OrthologLine) => {
 
-  line.isHovered = true;
-  if (line.offBackboneGeneDatatrack) line.offBackboneGeneDatatrack.elementColor = HOVER_HIGHLIGHT_COLOR;
-  if (line.backboneGeneDatatrack) line.backboneGeneDatatrack.elementColor = HOVER_HIGHLIGHT_COLOR;
+  if (!line.isSelected) {
+    line.isHovered = true;
+    if (line.offBackboneGeneDatatrack) line.offBackboneGeneDatatrack.elementColor = HOVER_HIGHLIGHT_COLOR;
+    if (line.backboneGeneDatatrack) line.backboneGeneDatatrack.elementColor = HOVER_HIGHLIGHT_COLOR;
+  }
 
   // If there are selected genes, don't update the selected data panel
   if (store.state.selectedGeneIds.length === 0) {
@@ -41,14 +42,13 @@ const onMouseEnter = (line: OrthologLine) => {
       new SelectedData(line.offBackboneGene, 'Gene'),
       new SelectedData(line.backboneGene, 'Gene'),
     ];
-    //const newSelectedData = getNewSelectedData(store, line.offBackboneGene);
     store.dispatch('setSelectedData', selectedOrthologs);
   }
 
 };
 
 const onMouseLeave = (line: OrthologLine) => {
-  if (line) {
+  if (!line.isSelected) {
     line.isHovered = false;
     if (line.offBackboneGeneDatatrack) line.offBackboneGeneDatatrack.elementColor = '#000000';
     if (line.backboneGeneDatatrack) line.backboneGeneDatatrack.elementColor = '#000000';
@@ -62,23 +62,37 @@ const onMouseLeave = (line: OrthologLine) => {
 };
 
 const onClick = (event: any, line: OrthologLine) => {
+
+  const isSelected = store.state.selectedGeneIds.includes(line.offBackboneGene.rgdId || line.backboneGene.rgdId || -1);
+
   // If clicked section already selected, just reset the selectedGeneId state
-  if (store.state.selectedGeneIds.includes(line.offBackboneGene.rgdId || line.backboneGene.rgdId || -1)) {
+  if (line.isSelected) {
     store.dispatch('setSelectedGeneIds', []);
     store.dispatch('setSelectedData', null);
+    line.isSelected = false;
+    // if (line.offBackboneGeneDatatrack) line.offBackboneGeneDatatrack.elementColor = '#000000';
+    // if (line.backboneGeneDatatrack) line.backboneGeneDatatrack.elementColor = '#000000';
+    return;
   }
+
+  line.isSelected = true;
+  if (line.offBackboneGeneDatatrack) line.offBackboneGeneDatatrack.elementColor = SELECTED_HIGHLIGHT_COLOR;
+  if (line.backboneGeneDatatrack) line.backboneGeneDatatrack.elementColor = SELECTED_HIGHLIGHT_COLOR;
+
 
   // If shift key is held, we'll just add to the selections, otherwise, reset first
   let geneIds: number[] = event.shiftKey ? [...store.state.selectedGeneIds] : [];
 
   let newSelectedData: SelectedData[] = [];
 
-  // FIXME
-  const newData = getNewSelectedData(store, line.offBackboneGene);
-  const geneAndOrthologs = newData.selectedData;
-  const newGeneIds = newData.rgdIds;
-  newSelectedData.push(...geneAndOrthologs);
-  geneIds.push(...newGeneIds);
+  let selectedOrthologs = [
+    new SelectedData(line.offBackboneGene, 'Gene'),
+    new SelectedData(line.backboneGene, 'Gene'),
+  ];
+  
+  newSelectedData.push(...selectedOrthologs);
+  const orthoIds = selectedOrthologs.map(ortho => ortho.genomicSection.rgdId);
+  geneIds.push(orthoIds);
 
   store.dispatch('setSelectedGeneIds', geneIds || []);
   if (event.shiftKey) {
@@ -87,7 +101,6 @@ const onClick = (event: any, line: OrthologLine) => {
   } else {
     store.dispatch('setSelectedData', newSelectedData);
   }
-
 };
 
 const lineColor = (line: OrthologLine) => {
