@@ -1,10 +1,10 @@
 <template>
-  <HeaderPanel />
-  <!-- <Button
+  <HeaderPanel :on-load-synteny-variants="loadSyntenyVariants" />
+  <Button
     label="INSPECT (Main)"
     @click="onInspectPressed"
-  /> -->
-  <!--
+  />
+  
   <Button
     class="p-button-info"
     label="Load Backbone Variants"
@@ -15,7 +15,7 @@
     label="Load Synteny Variants"
     @click="loadSyntenyVariants"
   />
-  -->
+ 
   <div class="grid">
     <div class="col-9">
       <SVGViewbox
@@ -867,6 +867,8 @@ async function loadSyntenyVariants() {
   // eventually only need to load for one species at a time so we won't need
   // to iterate over the syntenyTree
   syntenyTree.value.forEach( async (blockSet) => {
+    // eslint-disable-next-line no-console
+    console.log('blockset here ****');
     variantPromises.push(...blockSet.map( async (block) => {
       // If this block already has positions loaded, don't load again
       if (block.variantPositions)

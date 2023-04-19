@@ -19,6 +19,11 @@
               class="p-button-secondary header-btn"
               @click="goToConfigurationScreen"
               data-test="load-config-btn" />
+            <Button 
+              label="Load Data Track" 
+              class="p-button-secondary header-btn"
+              @click="openLoadDataTrackModal"
+              data-test="load-config-btn" />
           </div>
         </template>
         <div class="grid p-d-flex">
@@ -29,6 +34,18 @@
       </Panel>
     </div>
   </div>
+  <LoadDataTrackControls v-model:show="showLoadDataTrackModal" header="Load Data Tracks">
+    <template #footer>
+      <div class="grid p-d-flex">
+        <div class="left-align-btn">
+          <Button label="Cancel" class="p-button-danger" @click="closeLoadDataTrackModal" />
+        </div>
+        <div>
+          <Button label="Load" class="p-button-success" @click="confirmLoadDataTrack" />
+        </div>
+      </div>
+    </template>
+  </LoadDataTrackControls>
 </template>
 
 <script lang="ts" setup>
@@ -36,8 +53,34 @@ import { useRouter } from 'vue-router';
 import OverviewControls from '@/components/OverviewControls.vue';
 import DetailsControls from '@/components/DetailsControls.vue';
 import { VERSION } from '@/version';
+import { ref } from 'vue';
+import LoadDataTrackControls from '@/components/LoadDataTrackControls.vue';
+
+interface Props 
+{
+  onLoadSyntenyVariants: () => void;
+}
+
+const props = defineProps<Props>();
 
 const router = useRouter();
+
+let showLoadDataTrackModal = ref(false);
+
+const openLoadDataTrackModal = () => {
+  showLoadDataTrackModal.value = true;
+};
+
+const closeLoadDataTrackModal = () => {
+  showLoadDataTrackModal.value = false;
+};
+
+const confirmLoadDataTrack = () => {
+  // eslint-disable-next-line no-debugger
+  debugger;
+  closeLoadDataTrackModal();
+  props.onLoadSyntenyVariants();
+};
 
 const goToConfigurationScreen = () => {
   router.push('/');
