@@ -73,8 +73,8 @@ export class GenomicSectionFactory
   /**
    * Creates a new VariantDensity datatrack section
    */
-  createVariantDensitySection(variantCount: number, maxCount: number, start: number, stop: number, backboneAlignment: BackboneAlignment): VariantDensity
+  createVariantDensitySection(variantCount: number, maxDensity: number, start: number, stop: number, backboneAlignment: BackboneAlignment): VariantDensity
   {
-    return new VariantDensity(variantCount, maxCount, start, stop, backboneAlignment, this.speciesName, this.mapName, this.chromosome, this.windowBasePairRange, this.renderType);
+    return new VariantDensity(variantCount, maxDensity, start, stop, backboneAlignment, this.speciesName, this.mapName, this.chromosome, this.windowBasePairRange, this.renderType);
   }
 }

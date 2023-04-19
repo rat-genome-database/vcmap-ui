@@ -283,7 +283,7 @@ console.timeEnd(timerLabel);
     processedSyntenicRegions.push(currSyntenicRegion);
   }
 
-  let regionSetMaxCount = 0;
+  let regionSetMaxDensity = 0;
   // Adjust variant datatrack colors now that all are processed
   if (processVariantDensity)
   {
@@ -295,20 +295,21 @@ console.timeEnd(timerLabel);
       {
         datatracks.push(...processedSyntenicRegions[i].datatrackSets[variantIdx].datatracks as VariantDensity[]);
         datatracks.forEach((track) => {
-          regionSetMaxCount = track.variantCount > regionSetMaxCount ? track.variantCount : regionSetMaxCount;
+          const trackDensity = track.calculateVariantDensity();
+          regionSetMaxDensity = trackDensity > regionSetMaxDensity ? trackDensity : regionSetMaxDensity;
         });
       }
     }
-    if (regionSetMaxCount > 0)
+    if (regionSetMaxDensity > 0)
     {
-      datatracks.forEach((track) => track.setDensityColor(regionSetMaxCount));
+      datatracks.forEach((track) => track.setDensityColor(regionSetMaxDensity));
     }
   }
 
   // Finished creating this Set:
 console.time("createSyntenyRegionSet");
   const regionSet = new SyntenyRegionSet(currSpecies, currMapName, processedSyntenicRegions, setOrder, renderType);
-  regionSet.maxVariantCount = regionSetMaxCount;
+  regionSet.maxVariantDensity = regionSetMaxDensity;
 console.timeEnd("createSyntenyRegionSet");
   return regionSet;
 }

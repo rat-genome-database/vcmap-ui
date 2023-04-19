@@ -6,7 +6,8 @@ import Species from "@/models/Species";
 import BackboneSection from "@/models/BackboneSection";
 import { VariantDensity } from "@/models/DatatrackSection";
 
-const NUM_BINS = 200; // For whole window per species
+const NUM_BINS = 100; // For whole window per species
+const MIN_BIN_SIZE = 10000; // Smallest size for a variant density datatrack (in species base pairs)
 
 export function createVariantDatatracks(factory: GenomicSectionFactory, positions: number[],
   sequenceStart: number, sequenceStop: number, backboneStart: number, backboneStop: number, invertedBlock: boolean): VariantDensity[]
@@ -34,8 +35,9 @@ export function createVariantDatatracks(factory: GenomicSectionFactory, position
   const speciesWindowSequenceLength = Math.abs(speciesWindowStop - speciesWindowStart);
   const visibleBackboneSectionLength = Math.min(backboneStop, backboneWindowStop) - Math.max(backboneStart, backboneWindowStart);
   const visibleSectionWindowFraction = (visibleBackboneSectionLength) / (backboneWindowStop - backboneWindowStart);
-  const numBinsForSection = Math.ceil(NUM_BINS * visibleSectionWindowFraction);
-  const binSize = Math.round(speciesWindowSequenceLength / numBinsForSection);
+  const estBinsForSection = Math.ceil(NUM_BINS * visibleSectionWindowFraction);
+  const binSize = Math.max(Math.round(speciesWindowSequenceLength / estBinsForSection), MIN_BIN_SIZE);
+  const numBinsForSection = Math.round(speciesWindowSequenceLength / binSize);
   // Preallocate counts array with number of bins we'll have
   const variantCounts: number[] = new Array(numBinsForSection).fill(0);
   let binStart = invertedBlock ? speciesWindowStop : speciesWindowStart;
@@ -49,7 +51,7 @@ export function createVariantDatatracks(factory: GenomicSectionFactory, position
     {
       if (positions[i] >= speciesWindowStop && positions[i] <= speciesWindowStart)
       {
-        const binIdx = Math.min(Math.floor((positions[i] - speciesWindowStop) / binSize), numBinsForSection - 1)
+        const binIdx = Math.min(Math.floor((positions[i] - speciesWindowStop) / binSize), numBinsForSection - 1);
         variantCounts[binIdx]++;
       }
     }
@@ -64,6 +66,7 @@ export function createVariantDatatracks(factory: GenomicSectionFactory, position
   }
 
   const maxCount = Math.max(...variantCounts);
+  const maxDensity = (maxCount / binSize) * 1000000; // number of variants per 1.0 Mbp
   const variantDatatracks = [];
   if (invertedBlock)
   {
@@ -74,7 +77,7 @@ export function createVariantDatatracks(factory: GenomicSectionFactory, position
       const binStop = Math.min(binStart + binSize, speciesWindowStart);
       const backboneBinStart = Math.max(backboneBinStop - backboneBinSize, backboneStart);
       const backboneAlignment: BackboneAlignment = { start: backboneBinStart, stop: backboneBinStop };
-      const newVariant = factory.createVariantDensitySection(variantCounts[i], maxCount, binStart, binStop, backboneAlignment);
+      const newVariant = factory.createVariantDensitySection(variantCounts[i], maxDensity, binStart, binStop, backboneAlignment);
       newVariant.adjustYPositionsBasedOnVisibleStartAndStop(factory.windowBasePairRange);
       variantDatatracks.push(newVariant);
       binStart += binSize;
@@ -90,7 +93,7 @@ export function createVariantDatatracks(factory: GenomicSectionFactory, position
       const binStop = Math.min(binStart + binSize, speciesWindowStop);
       const backboneBinStop = Math.min(backboneBinStart + backboneBinSize, backboneStop);
       const backboneAlignment: BackboneAlignment = { start: backboneBinStart, stop: backboneBinStop };
-      const newVariant = factory.createVariantDensitySection(variantCounts[i], maxCount, binStart, binStop, backboneAlignment);
+      const newVariant = factory.createVariantDensitySection(variantCounts[i], maxDensity, binStart, binStop, backboneAlignment);
       newVariant.adjustYPositionsBasedOnVisibleStartAndStop(factory.windowBasePairRange);
       variantDatatracks.push(newVariant);
       binStart += binSize;

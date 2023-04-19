@@ -141,19 +141,19 @@
   <template v-if="displayVariantLegend">
     <div><b>Variant counts (per 1.0 Mbp)</b></div>
     <!--Backbone-->
-    <template v-if="detailedBackboneSet && detailedBackboneSet.maxVariantCount && detailedBackboneSet.maxVariantCount > 0">
+    <template v-if="detailedBackboneSet && detailedBackboneSet.maxVariantDensity && detailedBackboneSet.maxVariantDensity > 0">
       <GradientLegend
         :species-name="detailedBackboneSet?.speciesName || ''"
-        :min-value="0" :max-value="detailedBackboneSet?.maxVariantCount || 0"
+        :min-value="0" :max-value="detailedBackboneSet?.maxVariantDensity || 0"
         min-color="#0000FF" max-color="#FF0000">
       </GradientLegend>
     </template>
     <!--Synteny-->
     <template v-for="(set, index) in detailedSyntenySets" :key="index">
-      <template v-if="set.maxVariantCount && set.maxVariantCount > 0">
+      <template v-if="set.maxVariantDensity && set.maxVariantDensity > 0">
         <GradientLegend
           :species-name="set.speciesName"
-          :min-value="0" :max-value="set.maxVariantCount"
+          :min-value="0" :max-value="set.maxVariantDensity"
           min-color="#0000FF" max-color="#FF0000">
         </GradientLegend>
       </template>
@@ -695,11 +695,11 @@ const loadBackboneQtls = async () => {
 
 const updateBackboneVariants = (backboneSpecies: Species, variantPositions: VariantPositions, detailedBackbone: BackboneSection) => {
   const variantDatatracks = backboneVariantTrackBuilder(backboneSpecies, variantPositions, detailedBackbone);
-  const setMaxCount = Math.max(...variantDatatracks.map((track) => track.variantCount));
+  const setMaxDensity = Math.max(...variantDatatracks.map((track) => track.calculateVariantDensity()));
   if (detailedBackboneSet.value)
   {
     detailedBackboneSet.value?.addNewDatatrackSetToStart(variantDatatracks, 'variant');
-    detailedBackboneSet.value.maxVariantCount = setMaxCount;
+    detailedBackboneSet.value.maxVariantDensity = setMaxDensity;
     // For now, let's just rebuild the ortholog lines to get the positions correct
     orthologLines.value = createOrthologLines(props.orthologs, detailedBackboneSet.value, (detailedSyntenySets.value as SyntenyRegionSet[]));
   }
