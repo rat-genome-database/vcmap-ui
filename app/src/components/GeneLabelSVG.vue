@@ -28,7 +28,7 @@ interface Props
   label: GeneLabel;
   geneList: Map<number, Gene>;
 }
-defineProps<Props>();
+const props = defineProps<Props>();
 
 /**
  * TODO: Documenting a situation that results in some slightly confusing UX that we should
@@ -98,16 +98,32 @@ const onGeneLabelClick = (event: any, label: GeneLabel) => {
   }
   const geneIds: number[] = event.shiftKey ? [...store.state.selectedGeneIds] : [];
 
+  
   // Keep the main gene of the label at the top of the list
   const mainGene = label.mainGene;
   const geneList = label.genes.filter(g => g.rgdId !== label.mainGene.rgdId);
+
   let newSelectedData: SelectedData[] = [];
   sortGeneList(geneList);
   [mainGene, ...geneList].forEach((gene: Gene) => {
-    // FIXME (orthologs): TEMP
+    console.log('GENE', gene);
     newSelectedData.push(new SelectedData(gene.clone(), 'Gene'));
     geneIds.push(gene.rgdId);
-    // endTEMP
+
+    // Retrieve ortholog data
+    let geneData = props.geneList.get(gene.rgdId);
+
+    if (geneData?.orthologs && geneData.orthologs?.length > 0) {
+      const orthoIds = geneData.orthologs;
+      geneIds.push(...orthoIds);
+      
+      const orthoData = orthoIds.map((id: number) => {
+        return props.geneList.get(id);
+      });
+
+      orthoData.forEach(data => newSelectedData.push(new SelectedData(data?.clone(), 'Gene')));
+    }
+ 
   });
 
   store.dispatch('setSelectedGeneIds', geneIds || []);
