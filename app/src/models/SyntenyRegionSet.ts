@@ -68,7 +68,7 @@ export default class SyntenyRegionSet extends GenomicSet
       {
         if (this.regions[i].datatrackSets[j].type === 'gene')
         {
-          xPos = getDetailedPanelXPositionForDatatracks(this.order, i) + SVGConstants.dataTrackWidth;
+          xPos = getDetailedPanelXPositionForDatatracks(this.order, j) + SVGConstants.dataTrackWidth;
           break;
         }
       }
