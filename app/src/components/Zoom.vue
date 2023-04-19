@@ -47,8 +47,8 @@ const onZoomSliderEnd = (event: SliderSlideEndEvent) => {
     return;
   }
 
-  // zoom(event.value);
-  logZoom(event.value);
+  zoom(event.value);
+  // logZoom(event.value);
 };
 
 const zoom = (newZoomLevel: number) => {
