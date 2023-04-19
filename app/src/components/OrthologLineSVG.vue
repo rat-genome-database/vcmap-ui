@@ -15,6 +15,7 @@ import OrthologLine from '@/models/OrthologLine';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import SelectedData from '@/models/SelectedData';
+import { isStaticPropertyKey } from '@vue/compiler-core';
 
 const store = useStore(key);
 
@@ -66,7 +67,7 @@ const onClick = (event: any, line: OrthologLine) => {
   const isSelected = store.state.selectedGeneIds.includes(line.offBackboneGene.rgdId || line.backboneGene.rgdId || -1);
 
   // If clicked section already selected, just reset the selectedGeneId state
-  if (line.isSelected) {
+  if (line.isSelected || isSelected) {
     store.dispatch('setSelectedGeneIds', []);
     store.dispatch('setSelectedData', null);
     line.isSelected = false;
@@ -74,7 +75,7 @@ const onClick = (event: any, line: OrthologLine) => {
     return;
   }
 
-  line.isSelected = true;
+  // line.isSelected = true;
   if (line.offBackboneGeneDatatrack) line.offBackboneGeneDatatrack.elementColor = SELECTED_HIGHLIGHT_COLOR;
   if (line.backboneGeneDatatrack) line.backboneGeneDatatrack.elementColor = SELECTED_HIGHLIGHT_COLOR;
 
@@ -103,7 +104,11 @@ const onClick = (event: any, line: OrthologLine) => {
 };
 
 const lineColor = (line: OrthologLine) => {
-  if (line.isSelected) {return SELECTED_HIGHLIGHT_COLOR;}
+  const selectedGeneIds = store.state.selectedGeneIds;
+  if (selectedGeneIds.includes(line.offBackboneGene.rgdId || line.backboneGene.rgdId || -1)) {
+    return SELECTED_HIGHLIGHT_COLOR;
+  }
+  // if (line.isSelected) {return SELECTED_HIGHLIGHT_COLOR;}
   if (line.isHovered) {return HOVER_HIGHLIGHT_COLOR;}
   return 'lightgray';
 };
