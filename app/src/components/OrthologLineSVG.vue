@@ -70,8 +70,7 @@ const onClick = (event: any, line: OrthologLine) => {
     store.dispatch('setSelectedGeneIds', []);
     store.dispatch('setSelectedData', null);
     line.isSelected = false;
-    // if (line.offBackboneGeneDatatrack) line.offBackboneGeneDatatrack.elementColor = '#000000';
-    // if (line.backboneGeneDatatrack) line.backboneGeneDatatrack.elementColor = '#000000';
+
     return;
   }
 
@@ -92,7 +91,7 @@ const onClick = (event: any, line: OrthologLine) => {
   
   newSelectedData.push(...selectedOrthologs);
   const orthoIds = selectedOrthologs.map(ortho => ortho.genomicSection.rgdId);
-  geneIds.push(orthoIds);
+  geneIds.push(...orthoIds);
 
   store.dispatch('setSelectedGeneIds', geneIds || []);
   if (event.shiftKey) {
