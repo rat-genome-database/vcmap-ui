@@ -47,7 +47,8 @@ const onZoomSliderEnd = (event: SliderSlideEndEvent) => {
     return;
   }
 
-  zoom(event.value);
+  // zoom(event.value);
+  logZoom(event.value);
 };
 
 const zoom = (newZoomLevel: number) => {
@@ -108,11 +109,32 @@ const zoom = (newZoomLevel: number) => {
   }
 };
 
+const logZoom = (zoomLevel: number) => {
+  const selectedRegion = store.state.selectedBackboneRegion;
+
+  if (selectedRegion == null || selectedRegion.viewportSelection == null) {
+    console.error('ERROR WITH SELECTED REGION');
+  } else {
+    let minZoom = selectedRegion.viewportSelection.basePairStart+1;
+    let maxZoom = selectedRegion.viewportSelection.basePairStop;
+
+    let logMinZoom = Math.log(minZoom) * (1/Math.log(100));
+    let logMaxZoom = Math.log(maxZoom) * (1/Math.log(100));
+
+    let logZoom = logMinZoom + (logMaxZoom-logMinZoom)*zoomLevel/(100-1);
+    let zoomed = Math.exp(logZoom);
+
+    zoom(zoomed);
+  }
+
+
+};
+
 const zoomOut = (zoomInterval: number) => {
   zoom( zoomLevel.value / zoomInterval);
 };
 const zoomIn = (zoomInterval: number) => {
-  zoom( zoomLevel.value * zoomInterval);
+  zoom(zoomLevel.value * zoomInterval);
 };
 </script>
 
