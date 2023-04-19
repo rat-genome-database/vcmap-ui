@@ -23,7 +23,7 @@
           <div class="clear-selection-btn">
             <Button
                 v-tooltip.right="`Clear Selection`"
-                class="p-button-info p-button-sm"
+                class="p-button-info p-button-sm p-button-warning"
                 icon="pi pi-ban"
                 @click="clearSelectedGenes"
                 rounded

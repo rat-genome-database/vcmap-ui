@@ -3,19 +3,15 @@
     <div class="col-12">
       <h4>Overview</h4>
       <div class="grid unpadded">
-        <div class="col-5">Backbone Species:</div>
-        <div class="col-7 bold">{{store.state.species?.name}}</div>
-        <div class="col-5">Assembly:</div>
-        <div class="col-7 bold">{{store.state.species?.activeMap.name}}</div>
+        <div class="col-5">Backbone:</div>
+        <div class="col-7 bold">{{store.state.species?.name}} chr{{ store.state.chromosome?.chromosome }} ({{ store.state.species?.activeMap.name }})</div>
         <div class="col-5">Length:</div>
         <div class="col-7 bold">{{backboneLength}}bp</div>
-        <div class="col-5">Displaying:</div>
-        <div class="p-fluid col-7 bold"><span>{{selectionRange}}</span></div>
-        <div class="col-5"></div>
-        <div class="p-fluid col-7 bold">
+        <div class="p-fluid col-12 bold">
           <Button 
-            label="Edit BP Range" 
-            class="p-button edit-bp-btn"
+            label="Edit BP Range"
+            icon="pi pi-pencil"
+            class="p-button-sm edit-bp-btn p-button-secondary"
             @click="openSelectionEditModal"
             >
           </Button>
@@ -53,7 +49,7 @@
     <template #footer>
       <div class="grid p-d-flex">
         <div class="col-6 left-align-btn">
-          <Button label="Cancel" class="p-button-primary" @click="closeModal" />
+          <Button label="Cancel" class="p-button-outlined p-button-secondary" @click="closeModal" />
         </div>
         <div class="col-6">
           <Button label="Confirm New Selection" class="p-button-success" @click="saveSelectionChange" :disabled="!isValidStartStop || store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating" />
@@ -76,7 +72,7 @@ const $log = useLogger();
 
 let showEditModal = ref(false);
 let startPosition = ref(0);
-let stopPosition = ref(store.state.chromosome.seqLength ?? 1);
+let stopPosition = ref(store.state.chromosome?.seqLength ?? 1);
 
 const isValidStartStop = computed(() => {
   // Do we account for stop positions below start?
@@ -88,14 +84,6 @@ const maxPosition = computed(() => {
   return store.state.chromosome?.seqLength ?? 0;
 });
 
-const formattedBackboneStart = computed(() => {
-  return Formatter.addCommasToBasePair(0);
-});
-
-const formattedBackboneStop = computed(() => {
-  return (store.state.chromosome) ? Formatter.addCommasToBasePair(store.state.chromosome.seqLength) : '-';
-});
-
 const backboneLength = computed(() => {
   if (store.state.chromosome == null)
   {
@@ -105,23 +93,12 @@ const backboneLength = computed(() => {
   return Formatter.addCommasToBasePair(store.state.chromosome.seqLength);
 });
 
-const selectionRange = computed(() => {
-  let selectedRegion = store.state.selectedBackboneRegion;
-  let chromosome = store.state.chromosome;
-
-  if (selectedRegion)
-  {
-    return `${Formatter.addCommasToBasePair(selectedRegion.viewportSelection?.basePairStart ?? 0)}bp - ${Formatter.addCommasToBasePair(selectedRegion.viewportSelection?.basePairStop ?? chromosome.seqLength)}bp`;
-  }
-  else
-  {
-    return `${Formatter.addCommasToBasePair(0)}bp - ${Formatter.addCommasToBasePair(chromosome.seqLength)}bp`;
-  }
-});
-
 const openSelectionEditModal = () => {
-  startPosition.value = store.state.selectedBackboneRegion.viewportSelection.basePairStart;
-  stopPosition.value = store.state.selectedBackboneRegion.viewportSelection.basePairStop;
+  const defaultStart = 0;
+  const defaultStop = store.state.chromosome?.seqLength ?? 0;
+
+  startPosition.value = store.state.selectedBackboneRegion?.viewportSelection?.basePairStart ?? defaultStart;
+  stopPosition.value = store.state.selectedBackboneRegion?.viewportSelection?.basePairStop ?? defaultStop;
   showEditModal.value = true;
 };
 
@@ -138,8 +115,8 @@ const saveSelectionChange = () => {
 
   if (isValidStartStop.value)
   {
+    // FIXME: What is the point of setting the viewport selection here? See if we can remove these next couple lines.
     const selectedBackboneRegion = store.state.selectedBackboneRegion;
-    // FIXME:
     selectedBackboneRegion?.setViewportSelection(startPosition.value, stopPosition.value);
 
     store.dispatch('setDetailedBasePairRequest', { start: startPosition.value, stop: stopPosition.value });
