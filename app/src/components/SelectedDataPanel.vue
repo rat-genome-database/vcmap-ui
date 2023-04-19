@@ -11,7 +11,6 @@
             :suggestions="geneSuggestions"
             @complete="searchGene($event)"
             @item-select="searchSVG($event)"
-            @keydown="selectAndSearchSVG($event)"
             :field="getSuggestionDisplay"
             :minLength="3"
             placeholder="Search loaded genes..."
@@ -138,7 +137,6 @@ import Gene from '@/models/Gene';
 import GeneInfo from '@/components/GeneInfo.vue';
 import { OrthologPair } from '@/models/OrthologLine';
 import { Formatter } from '@/utils/Formatter';
-import SVGConstants, {PANEL_SVG_START, PANEL_SVG_STOP} from '@/utils/SVGConstants';
 import { ref, watch} from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
@@ -160,16 +158,14 @@ interface Props
 
 const props = defineProps<Props>();
 
-const searchedGene = ref<Gene | Gene[] | null>(null);
+const searchedGene = ref<Gene | null>(null);
 const geneSuggestions = ref<Gene[]>([]);
 const numberOfResults = ref<number>(0);
 
-// fraction of gene bp length to add to the window when jumping
-// to the gene after a search
-
 watch(() => props.selectedData, () => {
   numberOfResults.value = 0;
-  if (props.selectedData) {
+  if (props.selectedData)
+  {
     props.selectedData.forEach((dataObject) => {
       if (dataObject.type === 'trackSection' || dataObject.type === 'Gene' || dataObject.type === 'geneLabel') {
         if (dataObject.type === 'trackSection' && dataObject.genomicSection.gene) 
@@ -199,14 +195,9 @@ const clearSelectedGenes = () => {
 };
 
 const searchGene = (event: {query: string}) => {
-  // Need to figure out how to more efficiently type vuex getters
-  // const loadedGenesByRGDId = store.getters.masterGeneMapByRGDId as Map<number, GeneDatatrack[]>;
-  // const loadedGeneSymbols = store.getters.masterGeneMapBySymbol as Map<string, number[]>;
-
   let matches: Gene[] = [];
   props.geneList.forEach((gene) => {
     if (gene.symbol.toLowerCase().includes(event.query.toLowerCase()))
-      // TODO: we may need to push a clone of the Gene here to break other relationships
       matches.push(gene);
   });
 
@@ -215,30 +206,16 @@ const searchGene = (event: {query: string}) => {
   geneSuggestions.value = matches;
 };
 
-const searchSVG = (event: any) => {
+const searchSVG = (event: { value: Gene }) => {
   const newData = getNewSelectedData(store, event.value);
+  store.dispatch('setGene', event.value.clone()); // Update store config to see this as last gene selected
   store.dispatch('setSelectedGeneIds', newData.rgdIds || []);
   store.dispatch('setSelectedData', newData.selectedData);
-  // Only adjust window of the searched gene is on backbone
 
-  if (event.value ) {
-    const newWindow = adjustSelectionWindow(searchedGene.value, props.geneList, store);
+  if (event.value)
+  {
+    const newWindow = adjustSelectionWindow(event.value, props.geneList, store);
     store.dispatch('setDetailedBasePairRequest', newWindow);
-  }
-};
-
-const selectAndSearchSVG = (event: any) => {
-  // If "Enter" is pressed, just search the first gene
-  if (event.key === "Enter") {
-    searchedGene.value = geneSuggestions.value[0];
-    const newData = getNewSelectedData(store, searchedGene.value);
-    store.dispatch('setGene', searchedGene.value);
-    store.dispatch('setSelectedGeneIds', newData.rgdIds || []);
-    store.dispatch('setSelectedData', newData.selectedData);
-    if (searchedGene.value) {
-      const newWindow = adjustSelectionWindow(searchedGene.value, props.geneList, store);
-      store.dispatch('setDetailedBasePairRequest', newWindow);
-    }
   }
 };
 
