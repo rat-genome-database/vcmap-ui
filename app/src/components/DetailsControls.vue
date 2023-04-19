@@ -7,8 +7,7 @@
         <div class="col-9 bold">{{store.state.species?.name}} chr{{store.state.chromosome?.chromosome}}:{{displayedSpeciesRegionLabel}}</div>
         <div class="col-3">Comparative Species:</div>
         <div class="col-9 bold">{{comparativeSpeciesText}}</div>
-        <div class="col-3">Zoom Level:</div>
-        <div class="col-9 bold"><Zoom /></div>
+        <div class="col-12"><Zoom /></div>
       </div>
     </div>
   </div>

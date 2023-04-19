@@ -5,7 +5,7 @@
         <template #header>
           <div class="vcmap-header">
             <img alt="VCMap Logo" class="logo" src="../assets/images/vcmap_logo_v2.png">
-            <h3 class="header">VCMap</h3><span class="version-label">v{{VERSION}}</span>
+            <Tag icon="pi pi-tag" severity="info" rounded>v{{ VERSION }}</Tag>
           </div>
         </template>
         <template #icons>
@@ -14,8 +14,9 @@
               v-tooltip.bottom="`Go to RGD Home Page`"
             ></a>
             <Button 
-              label="New Configuration" 
-              class="p-button-info header-btn"
+              label="New Configuration"
+              icon="pi pi-cog" 
+              class="p-button-secondary header-btn"
               @click="goToConfigurationScreen"
               data-test="load-config-btn" />
           </div>

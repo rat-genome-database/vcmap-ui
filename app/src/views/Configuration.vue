@@ -1,7 +1,7 @@
 <template>
   <div class="configuration-header">
     <img alt="VCMap Logo" class="logo" src="../assets/images/vcmap_logo_v2.png">
-    <h3 class="header">VCMap</h3><span class="version-label">v{{VERSION}}</span>
+    <Tag icon="pi pi-tag" severity="info" rounded>v{{ VERSION }}</Tag>
     <a  class="logo-link" href="https://rgd.mcw.edu/" target="_blank"><img class="rgd-logo" src="../assets/images/rgd_logo.png" alt="RGD logo"></a>
   </div>
   <div>

@@ -1,5 +1,4 @@
 <template>
-  <span data-test="zoom-level-label">{{ Math.round(zoomLevel * 100) / 100.0 }}x</span>
   <Slider :disabled="isZoomDisabled" class="zoom-slider" data-test="zoom-slider" v-model="zoomLevel" :step="1" :min="1" :max="100" @slideend="onZoomSliderEnd" />
   <div class="zoom-options-container">
     <div class="zoom-out-container">
@@ -8,6 +7,9 @@
         <p class="interval-label">{{interval}}x</p>
       </div>
       <p class="zoom-out-label">Zoom Out</p>
+    </div>
+    <div class="zoom-level-container">
+      <p class="zoom-level-label">{{ Math.round(zoomLevel * 100) / 100.0 }}x</p>
     </div>
     <div class="zoom-in-container">
       <div class="zoom-options" v-for="interval in zoomIntervals" :key="interval">
@@ -65,7 +67,6 @@ const zoom = (newZoomLevel: number) => {
   if (newZoomLevel === 1)
   {
     store.dispatch('setDetailedBasePairRequest', { start: 0, stop: backboneChromosome.seqLength });
-    // store.dispatch('setDetailedBasePairRange', { start: 0, stop: backboneChromosome.seqLength });
   }
   else
   {
@@ -105,7 +106,6 @@ const zoom = (newZoomLevel: number) => {
 
     // Trigger detailed panel update
     store.dispatch('setDetailedBasePairRequest', { start: zoomedStart, stop: zoomedStop });
-    // store.dispatch('setDetailedBasePairRange', { start: zoomedStart, stop: zoomedStop });
   }
 };
 
@@ -165,6 +165,7 @@ const zoomIn = (zoomInterval: number) => {
   flex-direction: column;
   margin: 0;
   padding: 0;
+  font-weight: bold;
 }
 
 .interval-label{
@@ -173,8 +174,7 @@ const zoomIn = (zoomInterval: number) => {
   align-self: center;
 }
 .zoom-button{
-  color: black;
-  color: black;
+  color: white;
   margin-left: 2px;
   margin-right: 2px;
   height: 1rem;
@@ -193,10 +193,17 @@ const zoomIn = (zoomInterval: number) => {
   margin-right: 0.5rem;
   padding-left: .5em;
   font-size: .85em;
+  font-weight: bold;
 }
 .zoom-out-label{
   margin-left: 0.5rem;
   padding-right: .5em;
   font-size: .85em;
+  font-weight: bold;
+}
+
+.zoom-level-label {
+  font-weight: bold;
+  font-size: 1em;
 }
 </style>
