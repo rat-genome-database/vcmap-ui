@@ -698,8 +698,11 @@ const updateBackboneVariants = (backboneSpecies: Species, variantPositions: Vari
   {
     detailedBackboneSet.value?.addNewDatatrackSetToStart(variantDatatracks, 'variant');
     detailedBackboneSet.value.maxVariantDensity = setMaxDensity;
-    // For now, let's just rebuild the ortholog lines to get the positions correct
-    orthologLines.value = createOrthologLines(props.orthologs, detailedBackboneSet.value, (detailedSyntenySets.value as SyntenyRegionSet[]));
+
+    // NOTE: we can do this because we always know the variant track is first and then the genes
+    // When variants are displayed, lines should start two gaps and two track widths from the right of the backbone
+    const xPos = detailedBackboneSet.value.backbone.posX2 + SVGConstants.backboneDatatrackXOffset * 2 + SVGConstants.dataTrackWidth * 2;
+    orthologLines.value?.forEach((line) => line.setBackboneSVGPosition(xPos, line.posY1));
   }
 };
 

@@ -4,7 +4,6 @@
     label="INSPECT (Main)"
     @click="onInspectPressed"
   /> -->
-  <!--
   <Button
     class="p-button-info"
     label="Load Backbone Variants"
@@ -15,7 +14,6 @@
     label="Load Synteny Variants"
     @click="loadSyntenyVariants"
   />
-  -->
   <div class="grid">
     <div class="col-9">
       <SVGViewbox
@@ -868,13 +866,14 @@ async function loadSyntenyVariants() {
   // to iterate over the syntenyTree
   syntenyTree.value.forEach( async (blockSet) => {
     variantPromises.push(...blockSet.map( async (block) => {
+      console.log(block);
       // If this block already has positions loaded, don't load again
       if (block.variantPositions)
       {
         foundSomeVariants = true; // some variants exist so we don't need to warn the user
         return;
       }
-      else
+      else if (block.chainLevel === 1)
       {
         const variantRes = await buildVariantPositions(
           block.chromosome.chromosome,
@@ -898,6 +897,7 @@ async function loadSyntenyVariants() {
           // variantPositionsList.value.push(variantRes);
         }
       }
+      return;
     }));
   });
   await Promise.allSettled(variantPromises);
