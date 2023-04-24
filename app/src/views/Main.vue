@@ -1,21 +1,20 @@
 <template>
-  <HeaderPanel />
+  <HeaderPanel :on-load-synteny-variants="loadSyntenyVariants" />
   <!-- <Button
     label="INSPECT (Main)"
     @click="onInspectPressed"
   /> -->
-  <!--
-  <Button
+  <!-- <Button
     class="p-button-info"
     label="Load Backbone Variants"
     @click="loadBackboneVariants"
-  />
-  <Button
+  /> -->
+  <!-- <Button
     class="p-button-info"
     label="Load Synteny Variants"
     @click="loadSyntenyVariants"
-  />
-  -->
+  /> -->
+ 
   <div class="grid">
     <div class="col-9">
       <SVGViewbox
@@ -852,57 +851,67 @@ async function loadBackboneVariants() {
       }
     }
   }
-  isLoading.value = false;
+  // isLoading.value = false;
 }
 
 // TODO: temp ignore here, should remove once this method is actively being used
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function loadSyntenyVariants() {
+async function loadSyntenyVariants(mapKeys: number[]) {
   // Ensure isUpdatingVariants is false
   store.dispatch('setIsUpdatingVariants', false);
   isLoading.value = true;
+  let loadingBackbone = false;
   let foundSomeVariants = false;
   let variantPromises: Promise<void>[] = [];
   // TODO maybe should use forEach here. Either way, this method should
   // eventually only need to load for one species at a time so we won't need
   // to iterate over the syntenyTree
-  syntenyTree.value.forEach( async (blockSet) => {
-    variantPromises.push(...blockSet.map( async (block) => {
-      // If this block already has positions loaded, don't load again
-      if (block.variantPositions)
-      {
-        foundSomeVariants = true; // some variants exist so we don't need to warn the user
-        return;
-      }
-      else
-      {
-        const variantRes = await buildVariantPositions(
-          block.chromosome.chromosome,
-          block.start,
-          block.stop,
-          block.backboneStart,
-          block.backboneStop,
-          block.chromosome.mapKey
-        );
-        if (variantRes)
+  mapKeys.forEach( async (mapKey) => {
+  // syntenyTree.value.forEach( async (blockSet) => {
+    if (mapKey === store.state.chromosome.mapKey) {
+      loadingBackbone = true;
+      loadBackboneVariants();
+    } else {
+      let currentBlockSet = syntenyTree.value.get(mapKey);
+      if (currentBlockSet) {
+        variantPromises.push(...currentBlockSet.map( async (block) => {
+        // If this block already has positions loaded, don't load again
+        if (block.variantPositions)
         {
-          if (!foundSomeVariants && variantRes.positions.length > 0)
-          {
-            foundSomeVariants = true;
-          }
-          block.variantPositions = variantRes;
-          // NOTE: adding to variantPositionList is how we tell SVGViewbox to update
-          // the backbone variants, but if we push the responses here SVGViewbox will
-          // update everytime a request completes
-          // So we need a better way to tell SVGViewbox to update
-          // variantPositionsList.value.push(variantRes);
+          foundSomeVariants = true; // some variants exist so we don't need to warn the user
+          return;
         }
+        else
+        {
+          const variantRes = await buildVariantPositions(
+            block.chromosome.chromosome,
+            block.start,
+            block.stop,
+            block.backboneStart,
+            block.backboneStop,
+            block.chromosome.mapKey
+          );
+          if (variantRes)
+          {
+            if (!foundSomeVariants && variantRes.positions.length > 0)
+            {
+              foundSomeVariants = true;
+            }
+            block.variantPositions = variantRes;
+            // NOTE: adding to variantPositionList is how we tell SVGViewbox to update
+            // the backbone variants, but if we push the responses here SVGViewbox will
+            // update everytime a request completes
+            // So we need a better way to tell SVGViewbox to update
+            // variantPositionsList.value.push(variantRes);
+          }
       }
     }));
+    }
+    }
   });
   await Promise.allSettled(variantPromises);
   isLoading.value = false;
-  if (!foundSomeVariants)
+  if (!foundSomeVariants && !loadingBackbone)
   {
     showToast('warn', 'No Variants Found', 'There were no variants found for the given regions.', 5000);
   }

@@ -19,6 +19,11 @@
               class="p-button-secondary header-btn"
               @click="goToConfigurationScreen"
               data-test="load-config-btn" />
+            <Button 
+              label="Load Data Track" 
+              class="p-button-secondary header-btn"
+              @click="openLoadDataTrackModal"
+              data-test="load-config-btn" />
           </div>
         </template>
         <div class="grid p-d-flex">
@@ -29,6 +34,12 @@
       </Panel>
     </div>
   </div>
+  <LoadDataTrackControls
+    v-model:show="showLoadDataTrackModal"
+    :on-load-synteny-variants="onLoadSyntenyVariants"
+    :on-close-load-data-track-modal="closeLoadDataTrackModal"
+    header="Load Data Tracks"
+  />
 </template>
 
 <script lang="ts" setup>
@@ -36,8 +47,31 @@ import { useRouter } from 'vue-router';
 import OverviewControls from '@/components/OverviewControls.vue';
 import DetailsControls from '@/components/DetailsControls.vue';
 import { VERSION } from '@/version';
+import { ref } from 'vue';
+import LoadDataTrackControls from '@/components/LoadDataTrackControls.vue';
+
+interface Props 
+{
+  onLoadSyntenyVariants: (mapKeys: number[] | null) => void;
+}
+
+const props = defineProps<Props>();
 
 const router = useRouter();
+
+let showLoadDataTrackModal = ref(false);
+
+const openLoadDataTrackModal = () => {
+  showLoadDataTrackModal.value = true;
+};
+
+const onLoadSyntenyVariants = (mapKeys: number[] | null) => {
+  props.onLoadSyntenyVariants(mapKeys);
+}
+
+const closeLoadDataTrackModal = () => {
+  showLoadDataTrackModal.value = false;
+};
 
 const goToConfigurationScreen = () => {
   router.push('/');
