@@ -34,13 +34,14 @@
     </template>
     <div class="content-container">
       <Button label="Add Data Track" icon="pi pi-plus" class="p-button-secondary p-button-sm add-track-btn" @click="onAddDataTrack" />
+      <!-- <Button label="Debug" icon="pi pi-circle" class="p-button-info p-button-sm add-track-btn" @click="onDebugClick" /> -->
       <div class="track-item-container">
         <div class="grid track-item" v-for="(item, index) in dataTrackItems" :key="index">
         <Dropdown 
           v-model="dataTrackItems[index].species"
           :options="speciesOptions"
-          optionValue="typeKey"
-          optionLabel="name" 
+          optionValue="activeMap"
+          optionLabel="label"
           placeholder="Species"
         />
         <div class="lg:col-1 md:col-2 sm:col-2">
@@ -49,10 +50,14 @@
       </div>
       </div>
     </div>
-    <template #footer>
-      <slot name="footer">
-      </slot>
-    </template>
+    <div class="grid p-d-flex modal-controls-container">
+        <div class="left-align-btn">
+          <Button label="Cancel" class="p-button-danger" @click="close" />
+        </div>
+        <div>
+          <Button label="Load Tracks" class="p-button-secondary" icon="pi pi-arrow-right" @click="onConfirmLoadDataTrack" />
+        </div>
+      </div>
   </Dialog>
 </template>
   
@@ -64,6 +69,7 @@
   import Species from '@/models/Species';
   import SpeciesApi from '@/api/SpeciesApi';
   // import SpeciesApi from '@/api/SpeciesApi';
+  import SpeciesMap from '@/models/SpeciesMap';
 
 /**
  * Can use v-model:show to do 2 way binding
@@ -76,6 +82,8 @@ interface Props
   theme?: 'error' | 'normal';
   showBackButton?: boolean;
   onConfirmCallback?: () => void;
+  onLoadSyntenyVariants: (mapKeys: number[] | null) => void;
+  onCloseLoadDataTrackModal: () => void;
 }
 
 interface Emits
@@ -86,12 +94,7 @@ interface Emits
 
 interface DataTrackItem
 {
-  species: string;
-  dataType: string;
-  sourceMethod: string;
-  subCategory?: string;
-  showWarning: boolean;
-  key: number;
+  species: SpeciesMap;
 }
 
 const props = defineProps<Props>();
@@ -119,23 +122,47 @@ const isActive = computed({
   }
 });
 
+// todo: temp - remove along with UI button later
+const onDebugClick = () => {
+  console.log(dataTrackItems.value);
+
+  dataTrackItems.value.forEach((item) => {
+    console.log(item.species?.key === store.state.chromosome.mapKey);
+  });
+}
+
+const onConfirmLoadDataTrack = () => {
+  const selectedMapKeys: number[] = [];
+  dataTrackItems.value.forEach((item) => {
+    if (item.species) {
+      selectedMapKeys.push(item.species.key);
+    }
+  });
+
+  if (selectedMapKeys.length > 0) {
+    props.onCloseLoadDataTrackModal();
+    props.onLoadSyntenyVariants(selectedMapKeys);
+    dataTrackItems.value.length = 0;
+  }
+};
+
 const onAddDataTrack = () => {
   let currLength = dataTrackItems.value.length;
 
   // limit max number of tracks
   if (currLength < store.state.comparativeSpecies.length + 1)
   {
-    dataTrackItems.value.push({ species: null, dataType: null, sourceMethod: null, showWarning: false });
+    dataTrackItems.value.push({ species: null });
   }
   else {
     // todo: Error Handling
     console.log("Item Limit Reached")
   }
-  console.log(speciesOptions);
 }
 
 const close = () => {
-  emit('update:show', false);
+  dataTrackItems.value.length = 0;
+  props.onCloseLoadDataTrackModal();
 };
 
 // const goToConfiguration = () => {
@@ -156,15 +183,19 @@ function removeDataTrackItem(index: number)
   dataTrackItems.value.splice(index, 1);
 }
 
-async function prepopulateConfigOptions()
+function prepopulateConfigOptions()
 {
   let loadedSpecies = [];
   try
   {
-    loadedSpecies.push(store.state.species?.name)
+    let loadedBackbone = store.state.species;
+    loadedBackbone.label = loadedBackbone.name + ": " + loadedBackbone.activeMap.name;
+    loadedSpecies.push(loadedBackbone)
     store.state.comparativeSpecies.forEach((entry) => {
-      loadedSpecies.push(entry.name);
+      entry.label = entry.name + ": " + entry.activeMap.name;
+      loadedSpecies.push(entry);
     });
+    speciesOptions.value = loadedSpecies;
   }
   catch (err: any)
   {
@@ -172,18 +203,18 @@ async function prepopulateConfigOptions()
     console.log(err);
   }
 
-  try
-  {
-    // to filter only for currently loaded species
-    speciesOptions.value = await (await SpeciesApi.getSpecies()).filter((item) => {
-      return (loadedSpecies.includes(item.name));
-    });
-    // speciesOptions.value = await (await SpeciesApi.getSpecies())
-  }
-  catch (err: any)
-  {
-    console.log('An error occurred while looking up the available species');
-  }
+  // try
+  // {
+  //   // to filter only for currently loaded species
+  //   speciesOptions.value = await (await SpeciesApi.getSpecies()).filter((item) => {
+  //     return (loadedSpecies.includes(item.name));
+  //   });
+  //   // speciesOptions.value = await (await SpeciesApi.getSpecies())
+  // }
+  // catch (err: any)
+  // {
+  //   console.log('An error occurred while looking up the available species');
+  // }
 
   if (speciesOptions.value.length === 0 || store.state.species == null)
   {
@@ -218,7 +249,7 @@ async function prepopulateConfigOptions()
 
           .content-container {
             // background-color: rgb(217, 225, 225);
-            height: 100%;
+            height: 95%;
             padding-top: 1.5em;
 
             .add-track-btn {
@@ -239,6 +270,10 @@ async function prepopulateConfigOptions()
       }
       .grid {
           justify-content: space-between;
+      }
+      .modal-controls-container {
+        padding: 0 1rem 2rem 1rem;
+        height: 5%;
       }
       .track-item-container {
         display: grid;

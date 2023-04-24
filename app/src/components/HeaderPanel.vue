@@ -34,18 +34,12 @@
       </Panel>
     </div>
   </div>
-  <LoadDataTrackControls v-model:show="showLoadDataTrackModal" header="Load Data Tracks">
-    <template #footer>
-      <div class="grid p-d-flex">
-        <div class="left-align-btn">
-          <Button label="Cancel" class="p-button-danger" @click="closeLoadDataTrackModal" />
-        </div>
-        <div>
-          <Button label="Load" class="p-button-success" @click="confirmLoadDataTrack" />
-        </div>
-      </div>
-    </template>
-  </LoadDataTrackControls>
+  <LoadDataTrackControls
+    v-model:show="showLoadDataTrackModal"
+    :on-load-synteny-variants="onLoadSyntenyVariants"
+    :on-close-load-data-track-modal="closeLoadDataTrackModal"
+    header="Load Data Tracks"
+  />
 </template>
 
 <script lang="ts" setup>
@@ -58,7 +52,7 @@ import LoadDataTrackControls from '@/components/LoadDataTrackControls.vue';
 
 interface Props 
 {
-  onLoadSyntenyVariants: () => void;
+  onLoadSyntenyVariants: (mapKeys: number[] | null) => void;
 }
 
 const props = defineProps<Props>();
@@ -71,15 +65,12 @@ const openLoadDataTrackModal = () => {
   showLoadDataTrackModal.value = true;
 };
 
+const onLoadSyntenyVariants = (mapKeys: number[] | null) => {
+  props.onLoadSyntenyVariants(mapKeys);
+}
+
 const closeLoadDataTrackModal = () => {
   showLoadDataTrackModal.value = false;
-};
-
-const confirmLoadDataTrack = () => {
-  // eslint-disable-next-line no-debugger
-  debugger;
-  closeLoadDataTrackModal();
-  props.onLoadSyntenyVariants();
 };
 
 const goToConfigurationScreen = () => {
