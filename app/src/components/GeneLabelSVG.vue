@@ -106,7 +106,6 @@ const onGeneLabelClick = (event: any, label: GeneLabel) => {
   let newSelectedData: SelectedData[] = [];
   sortGeneList(geneList);
   [mainGene, ...geneList].forEach((gene: Gene) => {
-    console.log('GENE', gene);
     newSelectedData.push(new SelectedData(gene.clone(), 'Gene'));
     geneIds.push(gene.rgdId);
 

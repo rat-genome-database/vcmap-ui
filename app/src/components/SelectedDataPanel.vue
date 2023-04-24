@@ -204,10 +204,12 @@ const searchGene = (event: {query: string}) => {
   const searchKey = searchedGene.value;
   matches = sortGeneMatches(searchKey, matches);
   geneSuggestions.value = matches;
+
+
 };
 
 const searchSVG = (event: { value: Gene }) => {
-  const newData = getNewSelectedData(store, event.value);
+  const newData = getNewSelectedData(store, event.value, props.geneList);
   store.dispatch('setGene', event.value.clone()); // Update store config to see this as last gene selected
   store.dispatch('setSelectedGeneIds', newData.rgdIds || []);
   store.dispatch('setSelectedData', newData.selectedData);

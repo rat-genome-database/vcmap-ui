@@ -8,14 +8,33 @@ import { OrthologPair } from '@/models/OrthologLine';
 
 const SEARCHED_GENE_WINDOW_FACTOR = 6;
 
-export function getNewSelectedData(store: Store<VCMapState>, gene: Gene): { rgdIds: number[], selectedData: SelectedData[] } {
+export function getNewSelectedData(store: Store<VCMapState>, gene: Gene, geneList: Map<number, Gene>): { rgdIds: number[], selectedData: SelectedData[] } {
   const comparativeSpecies = store.state.comparativeSpecies;
   const compSpeciesNameMap = new Map<Number, string>();
 
   comparativeSpecies.forEach(species => compSpeciesNameMap.set(species.activeMap.key, species.name));
- 
-  //const allOrthologInfo = getGeneOrthologData(store, gene);
-  return {rgdIds: [gene.rgdId], selectedData: []};
+
+  const rgdIds: number[] = [];
+  const selectedData: SelectedData[] = [];
+
+  const data = geneList.get(gene.rgdId);
+  if (data) {
+    rgdIds.push(data.rgdId);
+    selectedData.push(new SelectedData(data.clone(), 'Gene'));
+
+    if (data.orthologs && data.orthologs.length > 0) {
+      const orthoIds = data.orthologs;
+      rgdIds.push(...orthoIds);
+
+      const orthoData = orthoIds.map((id: number) => geneList.get(id));
+      orthoData.forEach((data => {
+        if (data)
+        selectedData.push(new SelectedData(data?.clone(), 'Gene'));
+      }
+      ));
+    }
+  }
+  return {rgdIds, selectedData};
 }
 
 export function sortGeneList(geneList: Gene[]) {
