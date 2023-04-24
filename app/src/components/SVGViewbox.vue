@@ -141,19 +141,19 @@
   <template v-if="displayVariantLegend">
     <div><b>Variant counts (per 1.0 Mbp)</b></div>
     <!--Backbone-->
-    <template v-if="detailedBackboneSet && detailedBackboneSet.maxVariantDensity && detailedBackboneSet.maxVariantDensity > 0">
+    <template v-if="detailedBackboneSet && detailedBackboneSet.maxVariantCount && detailedBackboneSet.maxVariantCount > 0">
       <GradientLegend
         :species-name="detailedBackboneSet?.speciesName || ''"
-        :min-value="0" :max-value="detailedBackboneSet?.maxVariantDensity || 0"
+        :min-value="0" :max-value="detailedBackboneSet?.maxVariantCount || 0"
         min-color="#0000FF" max-color="#FF0000">
       </GradientLegend>
     </template>
     <!--Synteny-->
     <template v-for="(set, index) in detailedSyntenySets" :key="index">
-      <template v-if="set.maxVariantDensity && set.maxVariantDensity > 0">
+      <template v-if="set.maxVariantCount && set.maxVariantCount > 0">
         <GradientLegend
           :species-name="set.speciesName"
-          :min-value="0" :max-value="set.maxVariantDensity"
+          :min-value="0" :max-value="set.maxVariantCount"
           min-color="#0000FF" max-color="#FF0000">
         </GradientLegend>
       </template>
@@ -693,11 +693,11 @@ const loadBackboneQtls = async () => {
 
 const updateBackboneVariants = (backboneSpecies: Species, variantPositions: VariantPositions, detailedBackbone: BackboneSection) => {
   const variantDatatracks = backboneVariantTrackBuilder(backboneSpecies, variantPositions, detailedBackbone);
-  const setMaxDensity = Math.max(...variantDatatracks.map((track) => track.calculateVariantDensity()));
+  const setMaxCount = Math.max(...variantDatatracks.map((track) => track.variantCount));
   if (detailedBackboneSet.value)
   {
     detailedBackboneSet.value?.addNewDatatrackSetToStart(variantDatatracks, 'variant');
-    detailedBackboneSet.value.maxVariantDensity = setMaxDensity;
+    detailedBackboneSet.value.maxVariantCount = setMaxCount;
 
     // NOTE: we can do this because we always know the variant track is first and then the genes
     // When variants are displayed, lines should start two gaps and two track widths from the right of the backbone
@@ -707,7 +707,6 @@ const updateBackboneVariants = (backboneSpecies: Species, variantPositions: Vari
 };
 
 const updateSyntenyVariants = () => {
-  // TODO: I shouldn't need to update the whole panel just to add variants
   updateDetailsPanel();
   store.dispatch('setIsUpdatingVariants', false);
 };

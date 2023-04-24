@@ -866,7 +866,6 @@ async function loadSyntenyVariants() {
   // to iterate over the syntenyTree
   syntenyTree.value.forEach( async (blockSet) => {
     variantPromises.push(...blockSet.map( async (block) => {
-      console.log(block);
       // If this block already has positions loaded, don't load again
       if (block.variantPositions)
       {
