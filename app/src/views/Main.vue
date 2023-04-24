@@ -1,9 +1,9 @@
 <template>
   <HeaderPanel :on-load-synteny-variants="loadSyntenyVariants" />
-  <Button
+  <!-- <Button
     label="INSPECT (Main)"
     @click="onInspectPressed"
-  />
+  /> -->
   <!-- <Button
     class="p-button-info"
     label="Load Backbone Variants"
