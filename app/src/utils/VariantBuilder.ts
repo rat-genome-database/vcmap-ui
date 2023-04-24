@@ -10,37 +10,20 @@ const NUM_BINS = 100; // For whole window per species
 const MIN_BIN_SIZE = 10000; // Smallest size for a variant density datatrack (in species base pairs)
 
 export function createVariantDatatracks(factory: GenomicSectionFactory, positions: number[],
-  sequenceStart: number, sequenceStop: number, backboneStart: number, backboneStop: number, invertedBlock: boolean): VariantDensity[]
+  sequenceStart: number, sequenceStop: number, backboneStart: number, backboneStop: number,
+  invertedBlock: boolean): {datatracks: VariantDensity[], maxCount: number, binSize: number}
 {
   const seqLength = sequenceStop - sequenceStart;
   const backboneWindowStart = factory.windowBasePairRange.start;
   const backboneWindowStop = factory.windowBasePairRange.stop;
 
-  let speciesWindowStart;
-  let speciesWindowStop;
-  if (invertedBlock)
-  {
-    speciesWindowStart = backboneStart > backboneWindowStart ? sequenceStop
-      : Math.round(sequenceStop - (seqLength / (backboneStop - backboneStart)) * (backboneWindowStart - backboneStart));
-    speciesWindowStop = backboneStop < backboneWindowStop ? sequenceStart
-      : Math.round(sequenceStart + (seqLength / (backboneStop - backboneStart)) * (backboneStop - backboneWindowStop));
-  }
-  else
-  {
-    speciesWindowStart = backboneStart > backboneWindowStart ? sequenceStart
-      : Math.round(sequenceStart + (seqLength / (backboneStop - backboneStart)) * (backboneWindowStart - backboneStart));
-    speciesWindowStop = backboneStop < backboneWindowStop ? sequenceStop
-      : Math.round(sequenceStop - (seqLength / (backboneStop - backboneStart)) * (backboneStop - backboneWindowStop));
-  }
+  // NOTE: to make sure counts are consistent within an off-backbone species, just go off the backbone size
+  const binSize = Math.max(Math.round((backboneWindowStop - backboneWindowStart) / NUM_BINS), MIN_BIN_SIZE);
+  // But then need to translate this "binSize" to what it would be for the backbone to increment backbone alignments
+  const backboneBinSize = Math.round(((backboneStop - backboneStart) / seqLength) * binSize);
 
-  const speciesWindowSequenceLength = Math.abs(speciesWindowStop - speciesWindowStart);
-
-  const visibleBackboneSectionLength = Math.min(backboneStop, backboneWindowStop) - Math.max(backboneStart, backboneWindowStart);
-  const visibleSectionWindowFraction = (visibleBackboneSectionLength) / (backboneWindowStop - backboneWindowStart);
-  const backboneBinSize = Math.max(Math.round((backboneWindowStop - backboneWindowStart) / NUM_BINS), MIN_BIN_SIZE);
-  const visibleNumBins = Math.round(NUM_BINS * visibleSectionWindowFraction);
-  const binSize = Math.max(speciesWindowSequenceLength / visibleNumBins, MIN_BIN_SIZE);
-  const numBinsForSection = Math.round(seqLength / binSize);
+  // Ensure at least one bin for every section
+  const numBinsForSection = Math.max(Math.round(seqLength / binSize), 1);
   const variantCounts: number[] = new Array(numBinsForSection).fill(0);
   let binStart = sequenceStart;
 
@@ -62,10 +45,13 @@ export function createVariantDatatracks(factory: GenomicSectionFactory, position
     {
       const binStop = Math.min(binStart + binSize, sequenceStop);
       const backboneBinStart = Math.max(backboneBinStop - backboneBinSize, backboneStart);
-      const backboneAlignment: BackboneAlignment = { start: backboneBinStart, stop: backboneBinStop };
-      const newVariant = factory.createVariantDensitySection(variantCounts[i], maxCount, binStart, binStop, backboneAlignment);
-      newVariant.adjustYPositionsBasedOnVisibleStartAndStop(factory.windowBasePairRange);
-      variantDatatracks.push(newVariant);
+      if (isSectionInView(backboneBinStart, backboneBinStop, backboneWindowStart, backboneWindowStop))
+      {
+        const backboneAlignment: BackboneAlignment = { start: backboneBinStart, stop: backboneBinStop };
+        const newVariant = factory.createVariantDensitySection(variantCounts[i], maxCount, binStart, binStop, backboneAlignment);
+        newVariant.adjustYPositionsBasedOnVisibleStartAndStop(factory.windowBasePairRange);
+        variantDatatracks.push(newVariant);
+      }
       binStart += binSize;
       backboneBinStop -= backboneBinSize;
     }
@@ -76,15 +62,19 @@ export function createVariantDatatracks(factory: GenomicSectionFactory, position
     {
       const binStop = Math.min(binStart + binSize, sequenceStop);
       const backboneBinStop = Math.min(backboneBinStart + backboneBinSize, backboneStop);
-      const backboneAlignment: BackboneAlignment = { start: backboneBinStart, stop: backboneBinStop };
-      const newVariant = factory.createVariantDensitySection(variantCounts[i], maxCount, binStart, binStop, backboneAlignment);
-      newVariant.adjustYPositionsBasedOnVisibleStartAndStop(factory.windowBasePairRange);
-      variantDatatracks.push(newVariant);
+      if (isSectionInView(backboneBinStart, backboneBinStop, backboneWindowStart, backboneWindowStop))
+      {
+        const backboneAlignment: BackboneAlignment = { start: backboneBinStart, stop: backboneBinStop };
+        const newVariant = factory.createVariantDensitySection(variantCounts[i], maxCount, binStart, binStop, backboneAlignment);
+        newVariant.adjustYPositionsBasedOnVisibleStartAndStop(factory.windowBasePairRange);
+        variantDatatracks.push(newVariant);
+      }
       binStart += binSize;
       backboneBinStart += backboneBinSize;
     }
   }
-  return variantDatatracks;
+
+  return {datatracks: variantDatatracks, maxCount: maxCount, binSize: binSize};
 }
 
 
@@ -139,4 +129,11 @@ export function getMaxVariantCount(counts: number[]) {
   }
 
   return max;
+}
+
+function isSectionInView(start: number, stop: number, backboneStart: number, backboneStop: number)
+{
+  return (start > backboneStart && start < backboneStop)
+    || (stop < backboneStop && stop > backboneStart)
+    || (start < backboneStart && stop > backboneStop);
 }

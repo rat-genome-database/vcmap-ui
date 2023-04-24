@@ -139,21 +139,23 @@
   />
   <LoadingSpinnerMask v-if="arePanelsLoading" :style="getDetailedPosition()"></LoadingSpinnerMask>
   <template v-if="displayVariantLegend">
-    <div><b>Variant counts (per 1.0 Mbp)</b></div>
+    <div><b>Variant counts</b></div>
     <!--Backbone-->
-    <template v-if="detailedBackboneSet && detailedBackboneSet.maxVariantCount && detailedBackboneSet.maxVariantCount > 0">
+    <template v-if="detailedBackboneSet && detailedBackboneSet.maxVariantCount && detailedBackboneSet.variantBinSize && detailedBackboneSet.maxVariantCount > 0">
       <GradientLegend
         :species-name="detailedBackboneSet?.speciesName || ''"
         :min-value="0" :max-value="detailedBackboneSet?.maxVariantCount || 0"
+        :bin-size="detailedBackboneSet.variantBinSize"
         min-color="#0000FF" max-color="#FF0000">
       </GradientLegend>
     </template>
     <!--Synteny-->
     <template v-for="(set, index) in detailedSyntenySets" :key="index">
-      <template v-if="set.maxVariantCount && set.maxVariantCount > 0">
+      <template v-if="set.variantBinSize && set.maxVariantCount && set.maxVariantCount > 0">
         <GradientLegend
           :species-name="set.speciesName"
           :min-value="0" :max-value="set.maxVariantCount"
+          :bin-size="set.variantBinSize"
           min-color="#0000FF" max-color="#FF0000">
         </GradientLegend>
       </template>
@@ -692,12 +694,12 @@ const loadBackboneQtls = async () => {
 };
 
 const updateBackboneVariants = (backboneSpecies: Species, variantPositions: VariantPositions, detailedBackbone: BackboneSection) => {
-  const variantDatatracks = backboneVariantTrackBuilder(backboneSpecies, variantPositions, detailedBackbone);
-  const setMaxCount = Math.max(...variantDatatracks.map((track) => track.variantCount));
+  const variantDatatrackInfo = backboneVariantTrackBuilder(backboneSpecies, variantPositions, detailedBackbone);
   if (detailedBackboneSet.value)
   {
-    detailedBackboneSet.value?.addNewDatatrackSetToStart(variantDatatracks, 'variant');
-    detailedBackboneSet.value.maxVariantCount = setMaxCount;
+    detailedBackboneSet.value?.addNewDatatrackSetToStart(variantDatatrackInfo.datatracks, 'variant');
+    detailedBackboneSet.value.maxVariantCount = variantDatatrackInfo.maxCount;
+    detailedBackboneSet.value.variantBinSize = variantDatatrackInfo.binSize;
 
     // NOTE: we can do this because we always know the variant track is first and then the genes
     // When variants are displayed, lines should start two gaps and two track widths from the right of the backbone
