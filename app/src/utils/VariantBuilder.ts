@@ -10,97 +10,71 @@ const NUM_BINS = 100; // For whole window per species
 const MIN_BIN_SIZE = 10000; // Smallest size for a variant density datatrack (in species base pairs)
 
 export function createVariantDatatracks(factory: GenomicSectionFactory, positions: number[],
-  sequenceStart: number, sequenceStop: number, backboneStart: number, backboneStop: number, invertedBlock: boolean): VariantDensity[]
+  sequenceStart: number, sequenceStop: number, backboneStart: number, backboneStop: number,
+  invertedBlock: boolean): {datatracks: VariantDensity[], maxCount: number, binSize: number}
 {
   const seqLength = sequenceStop - sequenceStart;
   const backboneWindowStart = factory.windowBasePairRange.start;
   const backboneWindowStop = factory.windowBasePairRange.stop;
-  let speciesWindowStart;
-  let speciesWindowStop;
-  if (invertedBlock)
-  {
-    speciesWindowStart = backboneStart > backboneWindowStart ? sequenceStop
-      : Math.round(sequenceStop - (seqLength / (backboneStop - backboneStart)) * (backboneWindowStart - backboneStart));
-    speciesWindowStop = backboneStop < backboneWindowStop ? sequenceStart
-      : Math.round(sequenceStart + (seqLength / (backboneStop - backboneStart)) * (backboneStop - backboneWindowStop));
-  }
-  else
-  {
-    speciesWindowStart = backboneStart > backboneWindowStart ? sequenceStart
-      : Math.round(sequenceStart + (seqLength / (backboneStop - backboneStart)) * (backboneWindowStart - backboneStart));
-    speciesWindowStop = backboneStop < backboneWindowStop ? sequenceStop
-      : Math.round(sequenceStop - (seqLength / (backboneStop - backboneStart)) * (backboneStop - backboneWindowStop));
-  }
 
-  const speciesWindowSequenceLength = Math.abs(speciesWindowStop - speciesWindowStart);
-  const visibleBackboneSectionLength = Math.min(backboneStop, backboneWindowStop) - Math.max(backboneStart, backboneWindowStart);
-  const visibleSectionWindowFraction = (visibleBackboneSectionLength) / (backboneWindowStop - backboneWindowStart);
-  const estBinsForSection = Math.ceil(NUM_BINS * visibleSectionWindowFraction);
-  const binSize = Math.max(Math.round(speciesWindowSequenceLength / estBinsForSection), MIN_BIN_SIZE);
-  const numBinsForSection = Math.round(speciesWindowSequenceLength / binSize);
-  // Preallocate counts array with number of bins we'll have
+  // NOTE: to make sure counts are consistent within an off-backbone species, just go off the backbone size
+  const binSize = Math.max(Math.round((backboneWindowStop - backboneWindowStart) / NUM_BINS), MIN_BIN_SIZE);
+  // But then need to translate this "binSize" to what it would be for the backbone to increment backbone alignments
+  const backboneBinSize = Math.round(((backboneStop - backboneStart) / seqLength) * binSize);
+
+  // Ensure at least one bin for every section
+  const numBinsForSection = Math.max(Math.round(seqLength / binSize), 1);
   const variantCounts: number[] = new Array(numBinsForSection).fill(0);
-  let binStart = invertedBlock ? speciesWindowStop : speciesWindowStart;
-  const backboneBinSize = Math.round(binSize * (visibleBackboneSectionLength) / speciesWindowSequenceLength);
-  // Only loop through positions array once and count based on what bin it should be in
-  // NOTE: this assumes we have bins of equal size, if we ever want different bin sizes
-  // in the same rendered view we'll need to adjust this
+  let binStart = sequenceStart;
+
   for (let i = 0; i < positions.length; i++)
   {
-    if (invertedBlock)
-    {
-      if (positions[i] >= speciesWindowStop && positions[i] <= speciesWindowStart)
-      {
-        const binIdx = Math.min(Math.floor((positions[i] - speciesWindowStop) / binSize), numBinsForSection - 1);
-        variantCounts[binIdx]++;
-      }
-    }
-    else
-    {
-      if (positions[i] >= speciesWindowStart && positions[i] <= speciesWindowStop)
-      {
-        const binIdx = Math.min(Math.floor((positions[i] - speciesWindowStart) / binSize), numBinsForSection - 1);
-        variantCounts[binIdx]++;
-      }
-    }
+    const binIdx = Math.min(Math.floor((positions[i] - sequenceStart) / binSize), numBinsForSection - 1);
+    variantCounts[binIdx]++;
   }
-
-  const maxCount = Math.max(...variantCounts);
-  const maxDensity = (maxCount / binSize) * 1000000; // number of variants per 1.0 Mbp
+  const maxCount = getMaxVariantCount(variantCounts);
   const variantDatatracks = [];
+  let backboneBinStart = backboneStart;
+  binStart = sequenceStart;
+  // NOTE: building the datatrack sections is really slow when zoomed in, so I should only build
+  // tracks for visible portions, and then keep track of the max counts for the overall color scale
   if (invertedBlock)
   {
-    let backboneBinStop = Math.min(backboneStop, backboneWindowStop);
-    binStart = speciesWindowStop;
+    let backboneBinStop = backboneStop;
     for (let i = 0; i < variantCounts.length; i++)
     {
-      const binStop = Math.min(binStart + binSize, speciesWindowStart);
+      const binStop = Math.min(binStart + binSize, sequenceStop);
       const backboneBinStart = Math.max(backboneBinStop - backboneBinSize, backboneStart);
-      const backboneAlignment: BackboneAlignment = { start: backboneBinStart, stop: backboneBinStop };
-      const newVariant = factory.createVariantDensitySection(variantCounts[i], maxDensity, binStart, binStop, backboneAlignment);
-      newVariant.adjustYPositionsBasedOnVisibleStartAndStop(factory.windowBasePairRange);
-      variantDatatracks.push(newVariant);
+      if (isSectionInView(backboneBinStart, backboneBinStop, backboneWindowStart, backboneWindowStop))
+      {
+        const backboneAlignment: BackboneAlignment = { start: backboneBinStart, stop: backboneBinStop };
+        const newVariant = factory.createVariantDensitySection(variantCounts[i], maxCount, binStart, binStop, backboneAlignment);
+        newVariant.adjustYPositionsBasedOnVisibleStartAndStop(factory.windowBasePairRange);
+        variantDatatracks.push(newVariant);
+      }
       binStart += binSize;
       backboneBinStop -= backboneBinSize;
     }
   }
   else
   {
-    let backboneBinStart = Math.max(backboneStart, backboneWindowStart);
-    binStart = speciesWindowStart;
     for (let i = 0; i < variantCounts.length; i++)
     {
-      const binStop = Math.min(binStart + binSize, speciesWindowStop);
+      const binStop = Math.min(binStart + binSize, sequenceStop);
       const backboneBinStop = Math.min(backboneBinStart + backboneBinSize, backboneStop);
-      const backboneAlignment: BackboneAlignment = { start: backboneBinStart, stop: backboneBinStop };
-      const newVariant = factory.createVariantDensitySection(variantCounts[i], maxDensity, binStart, binStop, backboneAlignment);
-      newVariant.adjustYPositionsBasedOnVisibleStartAndStop(factory.windowBasePairRange);
-      variantDatatracks.push(newVariant);
+      if (isSectionInView(backboneBinStart, backboneBinStop, backboneWindowStart, backboneWindowStop))
+      {
+        const backboneAlignment: BackboneAlignment = { start: backboneBinStart, stop: backboneBinStop };
+        const newVariant = factory.createVariantDensitySection(variantCounts[i], maxCount, binStart, binStop, backboneAlignment);
+        newVariant.adjustYPositionsBasedOnVisibleStartAndStop(factory.windowBasePairRange);
+        variantDatatracks.push(newVariant);
+      }
       binStart += binSize;
       backboneBinStart += backboneBinSize;
     }
   }
-  return variantDatatracks;
+
+  return {datatracks: variantDatatracks, maxCount: maxCount, binSize: binSize};
 }
 
 
@@ -132,12 +106,34 @@ export function backboneVariantTrackBuilder(species: Species, variantPositions: 
   const variantDatatracks = createVariantDatatracks(
     factory,
     variantPositions.positions,
-    backboneSection.windowBasePairRange.start,
-    backboneSection.windowBasePairRange.stop,
-    backboneSection.windowBasePairRange.start,
-    backboneSection.windowBasePairRange.stop,
+    variantPositions.backboneStart,
+    variantPositions.backboneStop,
+    variantPositions.backboneStart,
+    variantPositions.backboneStop,
     false
   );
 
   return variantDatatracks;
+}
+
+// NOTE: variant counts arrays can be really big so Math.max doesn't work
+export function getMaxVariantCount(counts: number[]) {
+  // NOTE variants counts won't be negative, so setting initial max to 0 instead of -Infinity
+  let max = 0;
+  for (let i = 0; i < counts.length; i++)
+  {
+    if (counts[i] > max)
+    {
+      max = counts[i];
+    }
+  }
+
+  return max;
+}
+
+function isSectionInView(start: number, stop: number, backboneStart: number, backboneStop: number)
+{
+  return (start > backboneStart && start < backboneStop)
+    || (stop < backboneStop && stop > backboneStart)
+    || (start < backboneStart && stop > backboneStop);
 }

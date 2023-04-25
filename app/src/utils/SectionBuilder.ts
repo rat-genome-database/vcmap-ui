@@ -1,7 +1,7 @@
 import Species from '@/models/Species';
 import Chromosome from '@/models/Chromosome';
 import SyntenyRegion from '@/models/SyntenyRegion';
-import { GeneDatatrack, VariantDensity } from '@/models/DatatrackSection';
+import { GeneDatatrack } from '@/models/DatatrackSection';
 import Gene from '@/models/Gene';
 import SyntenyRegionSet from '@/models/SyntenyRegionSet';
 import { GenomicSectionFactory } from '@/models/GenomicSectionFactory';
@@ -169,6 +169,8 @@ function syntenicSectionBuilder(speciesSyntenyData: Block[], species: Species, s
   const currSpecies = species.name;
   const currMapName = species.activeMap.name;
   const processVariantDensity = speciesSyntenyData.some((block) => block.variantPositions && block.variantPositions.positions.length > 0);
+  let regionMaxCount = 0;
+  let regionBinSize = 0;
   // const allGeneLabels: Label[] = [];
 
 console.debug(`About to loop over ${speciesSyntenyData.length} Blocks...`);
@@ -222,16 +224,13 @@ console.timeEnd("splitBlockWithGaps");
     // Check if there are variants and build those data tracks
     if (blockVariantPositions && processVariantDensity)
     {
-      // NOTE: only process blocks that are at least partially contained in the view
-      if (isGenomicDataInViewport(blockInfo, factory.windowBasePairRange.start, factory.windowBasePairRange.stop))
+      const variantDatatracks = createVariantDatatracks(factory, blockVariantPositions.positions,
+        blockInfo.start, blockInfo.stop, blockInfo.backboneStart, blockInfo.backboneStop, blockInfo.isBlockInverted());
+      currSyntenicRegion.addDatatrackSections(variantDatatracks.datatracks, 0, 'variant');
+      regionBinSize = variantDatatracks.binSize;
+      if (variantDatatracks.maxCount > regionMaxCount)
       {
-        const variantDatatracks = createVariantDatatracks(factory, blockVariantPositions.positions,
-          blockInfo.start, blockInfo.stop, blockInfo.backboneStart, blockInfo.backboneStop, blockInfo.isBlockInverted());
-        currSyntenicRegion.addDatatrackSections(variantDatatracks, 0, 'variant');
-      }
-      else
-      {
-        currSyntenicRegion.addDatatrackSections([], 0, 'variant');
+        regionMaxCount = variantDatatracks.maxCount;
       }
     }
 
@@ -283,33 +282,26 @@ console.timeEnd(timerLabel);
     processedSyntenicRegions.push(currSyntenicRegion);
   }
 
-  let regionSetMaxDensity = 0;
   // Adjust variant datatrack colors now that all are processed
-  if (processVariantDensity)
+  if (processVariantDensity && regionMaxCount > 0)
   {
-    const datatracks: VariantDensity[] = [];
     for (let i = 0; i < processedSyntenicRegions.length; i++)
     {
       const variantIdx = processedSyntenicRegions[i].datatrackSets.findIndex((set) => set.type === 'variant');
       if (variantIdx !== -1)
       {
-        datatracks.push(...processedSyntenicRegions[i].datatrackSets[variantIdx].datatracks as VariantDensity[]);
-        datatracks.forEach((track) => {
-          const trackDensity = track.calculateVariantDensity();
-          regionSetMaxDensity = trackDensity > regionSetMaxDensity ? trackDensity : regionSetMaxDensity;
+        processedSyntenicRegions[i].datatrackSets[variantIdx].datatracks.forEach((track: any) =>{
+            track.setSectionColor(regionMaxCount);
         });
       }
-    }
-    if (regionSetMaxDensity > 0)
-    {
-      datatracks.forEach((track) => track.setDensityColor(regionSetMaxDensity));
     }
   }
 
   // Finished creating this Set:
 console.time("createSyntenyRegionSet");
   const regionSet = new SyntenyRegionSet(currSpecies, currMapName, processedSyntenicRegions, setOrder, renderType);
-  regionSet.maxVariantDensity = regionSetMaxDensity;
+  regionSet.maxVariantCount = regionMaxCount;
+  regionSet.variantBinSize = regionBinSize;
 console.timeEnd("createSyntenyRegionSet");
   return regionSet;
 }

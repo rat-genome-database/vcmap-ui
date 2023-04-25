@@ -7,7 +7,7 @@
     <div class="color-legend">
     </div>
     <div>
-      {{ parseFloat(maxValue.toPrecision(3)).toLocaleString() }}
+      {{ parseFloat(maxValue.toPrecision(3)).toLocaleString() }} per {{ parseFloat(binSize.toPrecision(3)).toLocaleString() }} bp
     </div>
   </div>
 
@@ -18,6 +18,7 @@
 interface Props {
   minValue: number;
   maxValue: number;
+  binSize: number;
   minColor: string;
   maxColor: string;
   speciesName: string;

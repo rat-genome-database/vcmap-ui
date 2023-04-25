@@ -4,17 +4,6 @@
     label="INSPECT (Main)"
     @click="onInspectPressed"
   /> -->
-  <!-- <Button
-    class="p-button-info"
-    label="Load Backbone Variants"
-    @click="loadBackboneVariants"
-  /> -->
-  <!-- <Button
-    class="p-button-info"
-    label="Load Synteny Variants"
-    @click="loadSyntenyVariants"
-  /> -->
- 
   <div class="grid">
     <div class="col-9">
       <SVGViewbox
@@ -715,8 +704,7 @@ async function queryAndProcessSyntenyForBasePairRange(backboneChromosome: Chromo
     const speciesData = syntenyTree.value.get(key);
     if (speciesData && speciesData.some((block) => block.variantPositions))
     {
-      // TODO: this function should eventually only load for on mapKey at a time
-      loadSyntenyVariants();
+      loadSyntenyVariants([key]);
     }
   }
 }
@@ -816,8 +804,6 @@ function showToast(severity: string, title: string, details: string, duration: n
   toast.add({severity: severity, summary: title, detail: details, life: duration });
 }
 
-// TODO: temp ignore here, should remove once this method is actively being used
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function loadBackboneVariants() {
   isLoading.value = true;
   const chromosome = store.state.chromosome;
@@ -854,8 +840,6 @@ async function loadBackboneVariants() {
   // isLoading.value = false;
 }
 
-// TODO: temp ignore here, should remove once this method is actively being used
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function loadSyntenyVariants(mapKeys: number[]) {
   // Ensure isUpdatingVariants is false
   store.dispatch('setIsUpdatingVariants', false);
@@ -875,38 +859,39 @@ async function loadSyntenyVariants(mapKeys: number[]) {
       let currentBlockSet = syntenyTree.value.get(mapKey);
       if (currentBlockSet) {
         variantPromises.push(...currentBlockSet.map( async (block) => {
-        // If this block already has positions loaded, don't load again
-        if (block.variantPositions)
-        {
-          foundSomeVariants = true; // some variants exist so we don't need to warn the user
-          return;
-        }
-        else
-        {
-          const variantRes = await buildVariantPositions(
-            block.chromosome.chromosome,
-            block.start,
-            block.stop,
-            block.backboneStart,
-            block.backboneStop,
-            block.chromosome.mapKey
-          );
-          if (variantRes)
+          // If this block already has positions loaded, don't load again
+          if (block.variantPositions)
           {
-            if (!foundSomeVariants && variantRes.positions.length > 0)
-            {
-              foundSomeVariants = true;
-            }
-            block.variantPositions = variantRes;
-            // NOTE: adding to variantPositionList is how we tell SVGViewbox to update
-            // the backbone variants, but if we push the responses here SVGViewbox will
-            // update everytime a request completes
-            // So we need a better way to tell SVGViewbox to update
-            // variantPositionsList.value.push(variantRes);
+            foundSomeVariants = true; // some variants exist so we don't need to warn the user
+            return;
           }
+          else if (block.chainLevel === 1)
+          {
+            const variantRes = await buildVariantPositions(
+              block.chromosome.chromosome,
+              block.start,
+              block.stop,
+              block.backboneStart,
+              block.backboneStop,
+              block.chromosome.mapKey
+            );
+            if (variantRes)
+            {
+              if (!foundSomeVariants && variantRes.positions.length > 0)
+              {
+                foundSomeVariants = true;
+              }
+              block.variantPositions = variantRes;
+              // NOTE: adding to variantPositionList is how we tell SVGViewbox to update
+              // the backbone variants, but if we push the responses here SVGViewbox will
+              // update everytime a request completes
+              // So we need a better way to tell SVGViewbox to update
+              // variantPositionsList.value.push(variantRes);
+            }
+            return;
+          }
+        }));
       }
-    }));
-    }
     }
   });
   await Promise.allSettled(variantPromises);
