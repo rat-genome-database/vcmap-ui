@@ -67,7 +67,7 @@ const openLoadDataTrackModal = () => {
 
 const onLoadSyntenyVariants = (mapKeys: number[] | null) => {
   props.onLoadSyntenyVariants(mapKeys);
-}
+};
 
 const closeLoadDataTrackModal = () => {
   showLoadDataTrackModal.value = false;

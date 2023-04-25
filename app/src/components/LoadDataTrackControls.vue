@@ -33,7 +33,7 @@
       </div>
     </template>
     <div class="content-container">
-      <Button label="Add Data Track" icon="pi pi-plus" class="p-button-secondary p-button-sm add-track-btn" @click="onAddDataTrack" />
+      <Button label="Add Variants" icon="pi pi-plus" class="p-button-secondary p-button-sm add-track-btn" @click="onAddDataTrack" />
       <!-- <Button label="Debug" icon="pi pi-circle" class="p-button-info p-button-sm add-track-btn" @click="onDebugClick" /> -->
       <div class="track-item-container">
         <div class="grid track-item" v-for="(item, index) in dataTrackItems" :key="index">
@@ -129,7 +129,7 @@ const onDebugClick = () => {
   dataTrackItems.value.forEach((item) => {
     console.log(item.species?.key === store.state.chromosome.mapKey);
   });
-}
+};
 
 const onConfirmLoadDataTrack = () => {
   const selectedMapKeys: number[] = [];
@@ -156,9 +156,9 @@ const onAddDataTrack = () => {
   }
   else {
     // todo: Error Handling
-    console.log("Item Limit Reached")
+    console.log("Item Limit Reached");
   }
-}
+};
 
 const close = () => {
   dataTrackItems.value.length = 0;
@@ -190,7 +190,7 @@ function prepopulateConfigOptions()
   {
     let loadedBackbone = store.state.species;
     loadedBackbone.label = loadedBackbone.name + ": " + loadedBackbone.activeMap.name;
-    loadedSpecies.push(loadedBackbone)
+    loadedSpecies.push(loadedBackbone);
     store.state.comparativeSpecies.forEach((entry) => {
       entry.label = entry.name + ": " + entry.activeMap.name;
       loadedSpecies.push(entry);
