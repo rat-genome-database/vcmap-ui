@@ -27,16 +27,16 @@
     </template>
 
     <template v-if="overviewBackboneSet">
-      <BackboneSetSVG show-data-on-hover :backbone-set="overviewBackboneSet"/>
+      <BackboneSetSVG show-data-on-hover :gene-list="geneList" :backbone-set="overviewBackboneSet"/>
     </template>
 
     <!-- Detail panel SVGs ----------------------------------------->
     <template v-if="detailedBackboneSet">
       <BackboneSetSVG 
-        show-data-on-hover 
+        show-data-on-hover
         :backbone-set="detailedBackboneSet" 
         :synteny-hover-svg-y="detailedSyntenySvgYPosition"
-        @synteny-hover="onDetailedSyntenyHover" />
+        @synteny-hover="onDetailedSyntenyHover" :gene-list="geneList" />
       <template v-if="detailedBackboneSet.geneLabels">
         <template v-for="(label, index) in detailedBackboneSet.geneLabels" :key="index">
           <template v-if="(label.isVisible)">
@@ -50,7 +50,7 @@
       <template v-for="(syntenySet, index) in detailedSyntenySets" :key="index">
         <template v-for="(syntenicRegion, index) in syntenySet.regions" :key="index">
           <SectionSVG 
-            show-chromosome 
+            show-chromosome
             :region="(syntenicRegion as SyntenyRegion)" 
             :synteny-hover-svg-y="detailedSyntenySvgYPosition" 
             @synteny-hover="onDetailedSyntenyHover" />

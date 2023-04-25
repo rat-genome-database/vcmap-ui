@@ -166,6 +166,7 @@ interface Props
   region: SyntenyRegion;
   syntenyHoverSvgY?: number | null;
 }
+
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
@@ -369,10 +370,21 @@ const onDatatrackSectionClick = (event: any, section: GeneDatatrack) => {
     const geneList = geneLabel ? geneLabel.genes.filter(g => g.rgdId !== geneLabel.mainGene.rgdId) : [];
     sortGeneList(geneList);
     [mainGene, ...geneList].forEach((gene: Gene) => {
-      // FIXME (orthologs): TEMP
       newSelectedData.push(new SelectedData(gene.clone(), 'Gene'));
       geneIds.push(gene.rgdId);
-      // endTEMP
+
+      // let geneData = props.geneList.get(gene.rgdId);
+
+    //   if (geneData?.orthologs && geneData.orthologs?.length > 0) {
+    //     const orthoIds = geneData.orthologs;
+    //     geneIds.push(...orthoIds);
+      
+    //     const orthoData = orthoIds.map((id: number) => {
+    //       return props.geneList.get(id);
+    //     });
+    //   orthoData.forEach(data => newSelectedData.push(new SelectedData(data?.clone(), 'Gene')));
+    // }
+
     });
   }
 
