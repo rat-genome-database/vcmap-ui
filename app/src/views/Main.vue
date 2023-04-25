@@ -847,18 +847,15 @@ async function loadSyntenyVariants(mapKeys: number[]) {
   let loadingBackbone = false;
   let foundSomeVariants = false;
   let variantPromises: Promise<void>[] = [];
-  // TODO maybe should use forEach here. Either way, this method should
-  // eventually only need to load for one species at a time so we won't need
-  // to iterate over the syntenyTree
-  mapKeys.forEach( async (mapKey) => {
-  // syntenyTree.value.forEach( async (blockSet) => {
+  variantPromises.push(...mapKeys.map( async (mapKey) => {
     if (mapKey === store.state.chromosome.mapKey) {
       loadingBackbone = true;
-      loadBackboneVariants();
+      await loadBackboneVariants();
+      return;
     } else {
       let currentBlockSet = syntenyTree.value.get(mapKey);
       if (currentBlockSet) {
-        variantPromises.push(...currentBlockSet.map( async (block) => {
+        const promises = currentBlockSet.map( async (block) => {
           // If this block already has positions loaded, don't load again
           if (block.variantPositions)
           {
@@ -890,10 +887,12 @@ async function loadSyntenyVariants(mapKeys: number[]) {
             }
             return;
           }
-        }));
+        });
+        await Promise.allSettled(promises);
+        return;
       }
     }
-  });
+  }));
   await Promise.allSettled(variantPromises);
   isLoading.value = false;
   if (!foundSomeVariants && !loadingBackbone)
