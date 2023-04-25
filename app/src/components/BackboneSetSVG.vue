@@ -109,6 +109,7 @@ import { key } from '@/store';
 import { Formatter } from '@/utils/Formatter';
 import BackboneSection from '@/models/BackboneSection';
 import BackboneSet from '@/models/BackboneSet';
+import Gene from '@/models/Gene';
 import DatatrackSection, { GeneDatatrack } from '@/models/DatatrackSection';
 import DatatrackSet from '@/models/DatatrackSet';
 import { VCMapSVGElement } from '@/models/VCMapSVGElement';
@@ -127,6 +128,8 @@ interface Props
   showDataOnHover?: boolean;
   backboneSet: BackboneSet;
   syntenyHoverSvgY?: number | null;
+  geneList: Map<number, Gene>;
+  
 }
 
 const props = defineProps<Props>();
@@ -172,7 +175,7 @@ watch(() => store.state.selectedBackboneRegion, (newVal: BackboneSelection | nul
   }
 }, { deep: true });
 
-watch(() => store.state.selectedGeneIds, () => {
+watch([() => store.state.selectedGeneIds, () => props.backboneSet], () => {
   highlightSelections(store.state.selectedGeneIds);
 });
 
@@ -257,6 +260,19 @@ const onDatatrackSectionClick = (event: any, section: GeneDatatrack) => {
   if (section.gene) {
     newSelectedData.push(new SelectedData(section.gene.clone(), 'Gene'));
     geneIds.push(section.gene?.rgdId);
+
+    let geneData = props.geneList.get(section.gene.rgdId);
+
+    if (geneData?.orthologs && geneData.orthologs?.length > 0) {
+      const orthoIds = geneData.orthologs;
+      geneIds.push(...orthoIds);
+      
+      const orthoData = orthoIds.map((id: number) => {
+        return props.geneList.get(id);
+      });
+
+      orthoData.forEach(data => newSelectedData.push(new SelectedData(data?.clone(), 'Gene')));
+    }
   }
 
   store.dispatch('setSelectedGeneIds', geneIds || []);
