@@ -268,7 +268,7 @@ import Block from "@/models/Block";
 
 import { GeneLabel } from '@/models/Label';
 import SyntenyRegion from '@/models/SyntenyRegion';
-import { createOrthologLines } from '@/utils/OrthologHandler';
+import { createOrthologLines, createOrthologLinesV2 } from '@/utils/OrthologHandler';
 import { GeneDatatrack } from '@/models/DatatrackSection';
 import VariantPositions from '@/models/VariantPositions';
 import Species from '@/models/Species';
@@ -431,7 +431,7 @@ const updateOverviewPanel = async () => {
   // Build backbone set
   overviewSyntenySets.value = [];
   const overviewBackbone = createBackboneSection(backboneSpecies, backboneChromosome, 0, backboneChromosome.seqLength, 'overview');
-  overviewBackboneSet.value = createBackboneSet(overviewBackbone);
+  overviewBackboneSet.value = createBackboneSet(overviewBackbone, backboneSpecies.activeMap);
 
   const overviewBackboneCreationTime = Date.now();
 
@@ -512,7 +512,7 @@ const updateDetailsPanel = async () => {
   const backboneDatatrackInfo = backboneDatatrackBuilder(backboneSpecies, backboneGenes, detailedBackbone);
   timeCreateBackboneDatatracks = Date.now() - backboneDatatracksStart;
   const backboneSetStart = Date.now();
-  detailedBackboneSet.value = createBackboneSet(detailedBackbone, backboneDatatrackInfo.processedGenomicData);
+  detailedBackboneSet.value = createBackboneSet(detailedBackbone, backboneSpecies.activeMap, backboneDatatrackInfo.processedGenomicData);
 
   // Now check for other potential datatracks to add to the backbone (like variant positions)
   props.variantPositionsList.forEach((variantPositions) => {
@@ -540,7 +540,7 @@ const updateDetailsPanel = async () => {
   // NOTE: Casting the type here since .value can't "unpack" the private methods on the object and thus,
   //  doesn't see it as equaling the SyntenyRegionSet type
   orthologLines.value = createOrthologLines(props.orthologs, detailedBackboneSet.value, (detailedSyntenySets.value as SyntenyRegionSet[]));
-
+  createOrthologLinesV2(detailedBackboneSet.value, detailedSyntenySets.value as SyntenyRegionSet[]);
   // Report timing data
   const timeDetailedUpdate= Date.now() - detailedUpdateStart;
   const timeDetailedUpdateOther = timeDetailedUpdate - (

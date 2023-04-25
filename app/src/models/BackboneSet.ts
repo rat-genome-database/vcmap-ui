@@ -7,6 +7,7 @@ import DatatrackSet from "./DatatrackSet";
 import { GenomicSet } from "./GenomicSet";
 import Label, { GeneLabel, IntermediateGeneLabel } from "./Label";
 import { calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment, getDetailedPanelXPositionForBackboneDatatracks, isGenomicDataInViewport } from "@/utils/Shared";
+import SpeciesMap from "./SpeciesMap";
 
 /**
  * Model for representing a set of Backbone sections and its datatrack sections
@@ -21,9 +22,9 @@ export default class BackboneSet extends GenomicSet
   maxVariantCount?: number;
   variantBinSize?: number;
 
-  constructor(backboneSection: BackboneSection, processedGenomicData?: ProcessedGenomicData)
+  constructor(backboneSection: BackboneSection, map: SpeciesMap, processedGenomicData?: ProcessedGenomicData)
   {
-    super(backboneSection.speciesName, backboneSection.mapName);
+    super(backboneSection.speciesName, map);
 
     this.backbone = backboneSection;
     if (processedGenomicData?.datatracks)

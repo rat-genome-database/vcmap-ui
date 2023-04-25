@@ -35,7 +35,7 @@ import HeaderPanel from '@/components/HeaderPanel.vue';
 import SelectedDataPanel from '@/components/SelectedDataPanel.vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
-import {nextTick, onMounted, ref, watch} from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 import Gene from "@/models/Gene";
