@@ -9,7 +9,7 @@ import Block from "@/models/Block";
 import {useLogger} from "vue-logger-plugin";
 import { RenderType } from '@/models/GenomicSection';
 import { Orientation } from '@/models/SyntenySection';
-import { getThreshold, isGenomicDataInViewport } from './Shared';
+import { getThreshold } from './Shared';
 import { createVariantDatatracks } from './VariantBuilder';
 
 // FIXME: I don't think we can use the logger here...

@@ -704,7 +704,8 @@ async function queryAndProcessSyntenyForBasePairRange(backboneChromosome: Chromo
     const speciesData = syntenyTree.value.get(key);
     if (speciesData && speciesData.some((block) => block.variantPositions))
     {
-      loadSyntenyVariants([key]);
+      // Don't trigger an update when requerying synteny, because variant tracks will get built anyway
+      loadSyntenyVariants([key], false /* don't trigger update */);
     }
   }
 }
@@ -840,7 +841,8 @@ async function loadBackboneVariants() {
   // isLoading.value = false;
 }
 
-async function loadSyntenyVariants(mapKeys: number[]) {
+async function loadSyntenyVariants(mapKeys: number[] | null, triggerUpdate: boolean) {
+  if (!mapKeys) return;
   // Ensure isUpdatingVariants is false
   store.dispatch('setIsUpdatingVariants', false);
   isLoading.value = true;
@@ -899,6 +901,9 @@ async function loadSyntenyVariants(mapKeys: number[]) {
   {
     showToast('warn', 'No Variants Found', 'There were no variants found for the given regions.', 5000);
   }
-  store.dispatch('setIsUpdatingVariants', true);
+  if (triggerUpdate)
+  {
+    store.dispatch('setIsUpdatingVariants', true);
+  }
 }
 </script>
