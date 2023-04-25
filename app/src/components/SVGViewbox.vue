@@ -129,6 +129,33 @@
       :x="0" :y="startOverviewSelectionY"
       :width="SVGConstants.overviewPanelWidth" :height="stopOverviewSelectionY - startOverviewSelectionY" />
   </svg>
+  <template v-if="displayVariantLegend">
+    <div class="grid">
+      <div class="col-4 legend-title"><b>Variant counts (per {{ parseFloat(variantBinSize.toPrecision(3)).toLocaleString() }})</b></div>
+      <div class="col-2 legend-container">
+        <template v-if="detailedBackboneSet && detailedBackboneSet.maxVariantCount && detailedBackboneSet.variantBinSize && detailedBackboneSet.maxVariantCount > 0">
+          <GradientLegend
+            :species-name="detailedBackboneSet?.speciesName || ''"
+            :min-value="0" :max-value="detailedBackboneSet?.maxVariantCount || 0"
+            :bin-size="detailedBackboneSet.variantBinSize"
+            min-color="#0000FF" max-color="#FF0000">
+          </GradientLegend>
+        </template>
+      </div>
+      <div class="col-2 legend-container">
+        <template v-for="(set, index) in detailedSyntenySets" :key="index">
+          <template v-if="set.variantBinSize && set.maxVariantCount && set.maxVariantCount > 0">
+            <GradientLegend
+              :species-name="set.speciesName"
+              :min-value="0" :max-value="set.maxVariantCount"
+              :bin-size="set.variantBinSize"
+              min-color="#0000FF" max-color="#FF0000">
+            </GradientLegend>
+          </template>
+        </template>
+      </div>
+    </div>
+  </template>
 
   <VCMapDialog 
     v-model:show="showDialog" 
@@ -138,29 +165,6 @@
     :show-back-button="showDialogBackButton"
   />
   <LoadingSpinnerMask v-if="arePanelsLoading" :style="getDetailedPosition()"></LoadingSpinnerMask>
-  <template v-if="displayVariantLegend">
-    <div><b>Variant counts</b></div>
-    <!--Backbone-->
-    <template v-if="detailedBackboneSet && detailedBackboneSet.maxVariantCount && detailedBackboneSet.variantBinSize && detailedBackboneSet.maxVariantCount > 0">
-      <GradientLegend
-        :species-name="detailedBackboneSet?.speciesName || ''"
-        :min-value="0" :max-value="detailedBackboneSet?.maxVariantCount || 0"
-        :bin-size="detailedBackboneSet.variantBinSize"
-        min-color="#0000FF" max-color="#FF0000">
-      </GradientLegend>
-    </template>
-    <!--Synteny-->
-    <template v-for="(set, index) in detailedSyntenySets" :key="index">
-      <template v-if="set.variantBinSize && set.maxVariantCount && set.maxVariantCount > 0">
-        <GradientLegend
-          :species-name="set.speciesName"
-          :min-value="0" :max-value="set.maxVariantCount"
-          :bin-size="set.variantBinSize"
-          min-color="#0000FF" max-color="#FF0000">
-        </GradientLegend>
-      </template>
-    </template>
-  </template>
   <!--
   <Button
     style="margin-right: 20px;"
@@ -406,6 +410,19 @@ const displayVariantLegend = computed(() => {
     }
   }
   return false;
+});
+
+const variantBinSize = computed(() => {
+  if (detailedBackboneSet.value?.variantBinSize)
+  {
+    return detailedBackboneSet.value.variantBinSize;
+  }
+  else if (detailedSyntenySets.value.some((set) => set.variantBinSize))
+  {
+    const setWithVariants = detailedSyntenySets.value.find((set) => set.variantBinSize && set.variantBinSize > 0);
+    return setWithVariants?.variantBinSize ?? 0;
+  }
+  return 0;
 });
 
 const currentlySelectingRegion = () => {
@@ -844,5 +861,14 @@ rect.navigation-btn
 {
   cursor: pointer;
   pointer-events: none;
+}
+.legend-title
+{
+  text-align: right;
+  margin-right: 5%;
+}
+.legend-container
+{
+  margin-left: 1%;
 }
 </style>
