@@ -175,7 +175,7 @@ watch(() => store.state.selectedBackboneRegion, (newVal: BackboneSelection | nul
   }
 }, { deep: true });
 
-watch(() => store.state.selectedGeneIds, () => {
+watch([() => store.state.selectedGeneIds, () => props.backboneSet], () => {
   highlightSelections(store.state.selectedGeneIds);
 });
 
