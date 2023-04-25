@@ -82,7 +82,7 @@ interface Props
   theme?: 'error' | 'normal';
   showBackButton?: boolean;
   onConfirmCallback?: () => void;
-  onLoadSyntenyVariants: (mapKeys: number[] | null) => void;
+  onLoadSyntenyVariants: (mapKeys: number[] | null, triggerUpdate: boolean) => Promise<void>;
   onCloseLoadDataTrackModal: () => void;
 }
 
@@ -141,7 +141,7 @@ const onConfirmLoadDataTrack = () => {
 
   if (selectedMapKeys.length > 0) {
     props.onCloseLoadDataTrackModal();
-    props.onLoadSyntenyVariants(selectedMapKeys);
+    props.onLoadSyntenyVariants(selectedMapKeys, true /* trigger update */);
     dataTrackItems.value.length = 0;
   }
 };

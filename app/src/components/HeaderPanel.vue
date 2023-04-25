@@ -52,7 +52,7 @@ import LoadDataTrackControls from '@/components/LoadDataTrackControls.vue';
 
 interface Props 
 {
-  onLoadSyntenyVariants: (mapKeys: number[] | null) => void;
+  onLoadSyntenyVariants: (mapKeys: number[] | null, triggerUpdate: boolean) => Promise<void>;
 }
 
 const props = defineProps<Props>();
@@ -65,8 +65,8 @@ const openLoadDataTrackModal = () => {
   showLoadDataTrackModal.value = true;
 };
 
-const onLoadSyntenyVariants = (mapKeys: number[] | null) => {
-  props.onLoadSyntenyVariants(mapKeys);
+const onLoadSyntenyVariants = async (mapKeys: number[] | null, triggerUpdate: boolean) => {
+  props.onLoadSyntenyVariants(mapKeys, triggerUpdate);
 };
 
 const closeLoadDataTrackModal = () => {
