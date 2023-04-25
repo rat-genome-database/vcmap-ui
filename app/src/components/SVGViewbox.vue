@@ -22,7 +22,7 @@
     <!-- Overview panel SVGs ------------------------------------------->
     <template v-for="(syntenySet, index) in overviewSyntenySets" :key="index">
       <template v-for="(region, index) in syntenySet.regions" :key="index">
-        <SectionSVG show-chromosome show-synteny-on-hover show-start-stop select-on-click :region="region as SyntenyRegion" />
+        <SectionSVG show-chromosome show-synteny-on-hover :gene-list="geneList" show-start-stop select-on-click :region="region as SyntenyRegion" />
       </template>
     </template>
 
@@ -53,6 +53,7 @@
             show-chromosome
             :region="(syntenicRegion as SyntenyRegion)" 
             :synteny-hover-svg-y="detailedSyntenySvgYPosition" 
+            :gene-list="geneList"
             @synteny-hover="onDetailedSyntenyHover" />
         </template>
         <template v-for="(label, index) in syntenySet.geneLabels" :key="index">

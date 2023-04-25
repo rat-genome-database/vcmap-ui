@@ -165,6 +165,7 @@ interface Props
   selectOnClick?: boolean;
   region: SyntenyRegion;
   syntenyHoverSvgY?: number | null;
+  geneList: Map<number, Gene>;
 }
 
 const props = defineProps<Props>();
@@ -373,17 +374,17 @@ const onDatatrackSectionClick = (event: any, section: GeneDatatrack) => {
       newSelectedData.push(new SelectedData(gene.clone(), 'Gene'));
       geneIds.push(gene.rgdId);
 
-      // let geneData = props.geneList.get(gene.rgdId);
+      let geneData = props.geneList.get(gene.rgdId);
 
-    //   if (geneData?.orthologs && geneData.orthologs?.length > 0) {
-    //     const orthoIds = geneData.orthologs;
-    //     geneIds.push(...orthoIds);
+      if (geneData?.orthologs && geneData.orthologs?.length > 0) {
+        const orthoIds = geneData.orthologs;
+        geneIds.push(...orthoIds);
       
-    //     const orthoData = orthoIds.map((id: number) => {
-    //       return props.geneList.get(id);
-    //     });
-    //   orthoData.forEach(data => newSelectedData.push(new SelectedData(data?.clone(), 'Gene')));
-    // }
+        const orthoData = orthoIds.map((id: number) => {
+          return props.geneList.get(id);
+        });
+      orthoData.forEach(data => newSelectedData.push(new SelectedData(data?.clone(), 'Gene')));
+    }
 
     });
   }
