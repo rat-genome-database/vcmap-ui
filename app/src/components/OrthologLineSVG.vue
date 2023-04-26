@@ -15,7 +15,7 @@ import OrthologLine from '@/models/OrthologLine';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import SelectedData from '@/models/SelectedData';
-import { isStaticPropertyKey } from '@vue/compiler-core';
+import Gene from '@/models/Gene';
 
 const store = useStore(key);
 
@@ -32,17 +32,15 @@ defineProps<Props>();
 const onMouseEnter = (line: OrthologLine) => {
 
   if (!line.isSelected) {
-    line.isHovered = true;
-    if (line.offBackboneGeneDatatrack) line.offBackboneGeneDatatrack.elementColor = HOVER_HIGHLIGHT_COLOR;
-    if (line.backboneGeneDatatrack) line.backboneGeneDatatrack.elementColor = HOVER_HIGHLIGHT_COLOR;
+    changeHoverStatusOnOrthologLines(line, true);
+    changeDatatrackColors(line, HOVER_HIGHLIGHT_COLOR);
   }
 
   // If there are selected genes, don't update the selected data panel
   if (store.state.selectedGeneIds.length === 0) {
-    const selectedOrthologs = [
-      new SelectedData(line.offBackboneGene, 'Gene'),
-      new SelectedData(line.backboneGene, 'Gene'),
-    ];
+    const orthologGenesMap = getOrthologLineGenes(line);
+    const selectedOrthologs = Array.from(orthologGenesMap.values())
+      .map(g => new SelectedData(g, 'Gene'));
     store.dispatch('setSelectedData', selectedOrthologs);
   }
 
@@ -50,9 +48,8 @@ const onMouseEnter = (line: OrthologLine) => {
 
 const onMouseLeave = (line: OrthologLine) => {
   if (!line.isSelected) {
-    line.isHovered = false;
-    if (line.offBackboneGeneDatatrack) line.offBackboneGeneDatatrack.elementColor = '#000000';
-    if (line.backboneGeneDatatrack) line.backboneGeneDatatrack.elementColor = '#000000';
+    changeHoverStatusOnOrthologLines(line, false);
+    changeDatatrackColors(line, '#000000');
   }
 
   // Only reset data onMouseLeave if there isn't a selected gene
@@ -64,7 +61,7 @@ const onMouseLeave = (line: OrthologLine) => {
 
 const onClick = (event: any, line: OrthologLine) => {
 
-  const isSelected = store.state.selectedGeneIds.includes(line.offBackboneGene.rgdId || line.backboneGene.rgdId || -1);
+  const isSelected = store.state.selectedGeneIds.includes(line.endGene.rgdId || line.startGene.rgdId || -1);
 
   // If clicked section already selected, just reset the selectedGeneId state
   if (line.isSelected || isSelected) {
@@ -75,24 +72,20 @@ const onClick = (event: any, line: OrthologLine) => {
     return;
   }
 
-  // line.isSelected = true;
-  if (line.offBackboneGeneDatatrack) line.offBackboneGeneDatatrack.elementColor = SELECTED_HIGHLIGHT_COLOR;
-  if (line.backboneGeneDatatrack) line.backboneGeneDatatrack.elementColor = SELECTED_HIGHLIGHT_COLOR;
-
+  changeDatatrackColors(line, SELECTED_HIGHLIGHT_COLOR);
 
   // If shift key is held, we'll just add to the selections, otherwise, reset first
   let geneIds: number[] = event.shiftKey ? [...store.state.selectedGeneIds] : [];
 
   let newSelectedData: SelectedData[] = [];
 
-  let selectedOrthologs = [
-    new SelectedData(line.offBackboneGene, 'Gene'),
-    new SelectedData(line.backboneGene, 'Gene'),
-  ];
+  const orthologGenesMap = getOrthologLineGenes(line);
+
+  let selectedOrthologs = Array.from(orthologGenesMap.values())
+    .map(g => new SelectedData(g, 'Gene'));
   
   newSelectedData.push(...selectedOrthologs);
-  const orthoIds = selectedOrthologs.map(ortho => ortho.genomicSection.rgdId);
-  geneIds.push(...orthoIds);
+  geneIds.push(...Array.from(orthologGenesMap.keys()));
 
   store.dispatch('setSelectedGeneIds', geneIds || []);
   if (event.shiftKey) {
@@ -105,12 +98,39 @@ const onClick = (event: any, line: OrthologLine) => {
 
 const lineColor = (line: OrthologLine) => {
   const selectedGeneIds = store.state.selectedGeneIds;
-  if (selectedGeneIds.includes(line.offBackboneGene.rgdId || line.backboneGene.rgdId || -1)) {
+  if (selectedGeneIds.includes(line.endGene.rgdId || line.startGene.rgdId || -1)) {
     return SELECTED_HIGHLIGHT_COLOR;
   }
-  // if (line.isSelected) {return SELECTED_HIGHLIGHT_COLOR;}
-  if (line.isHovered) {return HOVER_HIGHLIGHT_COLOR;}
+
+  if (line.isHovered) {
+    return HOVER_HIGHLIGHT_COLOR;
+  }
+  
   return 'lightgray';
 };
 
+const changeDatatrackColors = (line: OrthologLine, colorHex: string) => {
+  [line, ...line.chainedOrthologLines].forEach(l => {
+    if (l.startGeneDatatrack)
+      l.startGeneDatatrack.elementColor = colorHex;
+    if (l.endGeneDatatrack)
+      l.endGeneDatatrack.elementColor = colorHex;
+  });
+};
+
+const changeHoverStatusOnOrthologLines = (line: OrthologLine, isHovered: boolean) => {
+  [line, ...line.chainedOrthologLines].forEach(l => {
+    l.isHovered = isHovered;
+  });
+};
+
+const getOrthologLineGenes = (line: OrthologLine) => {
+  const genes: Map<number, Gene> = new Map();
+  [line, ...line.chainedOrthologLines].forEach(l => {
+    genes.set(l.startGene.rgdId, l.startGene);
+    genes.set(l.endGene.rgdId, l.endGene);
+  });
+
+  return genes;
+};
 </script>

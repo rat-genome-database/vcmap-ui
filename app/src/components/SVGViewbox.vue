@@ -245,7 +245,7 @@ import VCMapDialog from '@/components/VCMapDialog.vue';
 import GeneLabelSVG from '@/components/GeneLabelSVG.vue';
 import useDialog from '@/composables/useDialog';
 import Gene from '@/models/Gene';
-import OrthologLine, { OrthologPair } from '@/models/OrthologLine';
+import OrthologLine from '@/models/OrthologLine';
 import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
 import { key } from '@/store';
 import { createSyntenicRegionSets,  } from '@/utils/SectionBuilder';
@@ -268,8 +268,7 @@ import Block from "@/models/Block";
 
 import { GeneLabel } from '@/models/Label';
 import SyntenyRegion from '@/models/SyntenyRegion';
-import { createOrthologLines, createOrthologLinesV2 } from '@/utils/OrthologHandler';
-import { GeneDatatrack } from '@/models/DatatrackSection';
+import { createOrthologLinesV2 } from '@/utils/OrthologHandler';
 import VariantPositions from '@/models/VariantPositions';
 import Species from '@/models/Species';
 import BackboneSection from '@/models/BackboneSection';
@@ -291,7 +290,6 @@ interface Props
 {
   geneList: Map<number, Gene>;
   syntenyTree: Map<number, Block[]>;
-  orthologs: OrthologPair[];
   loading: boolean;
   variantPositionsList: VariantPositions[];
 }
@@ -539,8 +537,8 @@ const updateDetailsPanel = async () => {
   // Create ortholog lines
   // NOTE: Casting the type here since .value can't "unpack" the private methods on the object and thus,
   //  doesn't see it as equaling the SyntenyRegionSet type
-  orthologLines.value = createOrthologLines(props.orthologs, detailedBackboneSet.value, (detailedSyntenySets.value as SyntenyRegionSet[]));
-  createOrthologLinesV2(detailedBackboneSet.value, detailedSyntenySets.value as SyntenyRegionSet[]);
+  orthologLines.value = createOrthologLinesV2(props.geneList, detailedBackboneSet.value, detailedSyntenySets.value as SyntenyRegionSet[]);
+  
   // Report timing data
   const timeDetailedUpdate= Date.now() - detailedUpdateStart;
   const timeDetailedUpdateOther = timeDetailedUpdate - (
@@ -705,7 +703,12 @@ const updateBackboneVariants = (backboneSpecies: Species, variantPositions: Vari
     // NOTE: we can do this because we always know the variant track is first and then the genes
     // When variants are displayed, lines should start two gaps and two track widths from the right of the backbone
     const xPos = detailedBackboneSet.value.backbone.posX2 + SVGConstants.backboneDatatrackXOffset * 2 + SVGConstants.dataTrackWidth * 2;
-    orthologLines.value?.forEach((line) => line.setBackboneSVGPosition(xPos, line.posY1));
+    orthologLines.value?.forEach((line) => {
+      if (line.startGene.mapKey === detailedBackboneSet.value?.mapKey)
+      {
+        line.posX1 = xPos;
+      }
+    });
   }
 };
 

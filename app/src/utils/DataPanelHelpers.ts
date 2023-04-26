@@ -2,9 +2,6 @@ import Gene from '@/models/Gene';
 import SelectedData from '@/models/SelectedData';
 import { Store } from "vuex";
 import { VCMapState } from "@/store";
-import { GeneDatatrack } from '@/models/DatatrackSection';
-import { OrthologPair } from '@/models/OrthologLine';
-
 
 const SEARCHED_GENE_WINDOW_FACTOR = 6;
 
