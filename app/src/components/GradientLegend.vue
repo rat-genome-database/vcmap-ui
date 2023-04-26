@@ -1,13 +1,15 @@
 <template>
-  <div class="legend-label">{{ speciesName }}</div>
-  <div class="legend-container">
-    <div>
-      {{ parseFloat(minValue.toPrecision(3)).toLocaleString() }}
-    </div>
-    <div class="color-legend">
-    </div>
-    <div>
-      {{ parseFloat(maxValue.toPrecision(3)).toLocaleString() }} per {{ parseFloat(binSize.toPrecision(3)).toLocaleString() }} bp
+  <div>
+    <div class="legend-label">{{ speciesName }} ({{ mapName }})</div>
+    <div class="legend-container">
+      <div>
+        {{ parseFloat(minValue.toPrecision(3)).toLocaleString() }}
+      </div>
+      <div class="color-legend">
+      </div>
+      <div>
+        {{ parseFloat(maxValue.toPrecision(3)).toLocaleString() }}
+      </div>
     </div>
   </div>
 
@@ -22,6 +24,7 @@ interface Props {
   minColor: string;
   maxColor: string;
   speciesName: string;
+  mapName: string;
 }
 
 
@@ -47,7 +50,7 @@ const props = defineProps<Props>();
 .legend-label
 {
   font-weight: bold;
-  padding-top: 10px;
+  padding-top: 5px;
   padding-bottom: 5px;
 }
 </style>

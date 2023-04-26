@@ -64,35 +64,10 @@
       </template>
     </template>
 
-    <!-- Title panels -->
-    <rect class="panel" x="0" :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.panelTitleHeight" />
-    <rect class="panel" :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.panelTitleHeight" />
-    <text class="label medium bold" :x="SVGConstants.overviewTitleXPosition" :y="SVGConstants.panelTitleYPosition">Overview</text>
-    <text class="label medium bold" :x="SVGConstants.selectedBackboneXPosition" :y="SVGConstants.panelTitleYPosition">Detailed</text>
-
-    <!-- SyntenyRegionSet Title Labels -->
-    <template v-for="(syntenySet, index) in overviewSyntenySets" :key="index">
-      <template v-for="(label, index) in syntenySet.titleLabels" :key="index">
-        <text :class="`label small ${label.addClass}`" :x="label.posX" :y="label.posY">{{label.text}}</text>
-      </template>
-    </template>
-    <template v-if="overviewBackboneSet">
-      <template v-for="(label, index) in overviewBackboneSet.titleLabels" :key="index">
-        <text :class="`label small ${label.addClass}`" :x="label.posX" :y="label.posY">{{label.text}}</text>
-      </template>
-    </template>
-    <template v-if="detailedBackboneSet">
-      <template v-for="(label, index) in detailedBackboneSet.titleLabels" :key="index">
-        <text :class="`label small ${label.addClass}`" :x="label.posX" :y="label.posY">{{label.text}}</text>
-      </template>
-    </template>
-    <template v-if="detailedSyntenySets.length">
-      <template v-for="(syntenySet, index) in detailedSyntenySets" :key="index">
-        <template v-for="(label, index) in syntenySet.titleLabels" :key="index">
-          <text :class="`label small ${label.addClass}`" :x="label.posX" :y="label.posY">{{label.text}}</text>
-        </template>
-      </template>
-    </template>
+    <ViewboxTitlesSVG
+      :overview-backbone-set="overviewBackboneSet" :overview-synteny-sets="overviewSyntenySets"
+      :detailed-backbone-set="detailedBackboneSet" :detailed-synteny-sets="detailedSyntenySets"
+    />
 
     <!-- Navigation buttons -->
     <rect class="navigation-btn" :class="{'disabled': isNavigationUpDisabled }" @click="navigateUp" :x="SVGConstants.overviewPanelWidth" :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
@@ -130,7 +105,33 @@
       :x="0" :y="startOverviewSelectionY"
       :width="SVGConstants.overviewPanelWidth" :height="stopOverviewSelectionY - startOverviewSelectionY" />
   </svg>
-
+  <template v-if="displayVariantLegend">
+    <div class="grid">
+      <div class="col-4 plus-half legend-title"><b>Variant counts (per {{ parseFloat(variantBinSize.toPrecision(3)).toLocaleString() }}bp)</b></div>
+      <div class="col-2 legend-container">
+        <template v-if="detailedBackboneSet && detailedBackboneSet.maxVariantCount && detailedBackboneSet.variantBinSize && detailedBackboneSet.maxVariantCount > 0">
+          <GradientLegend
+            :species-name="detailedBackboneSet?.speciesName || ''" :map-name="detailedBackboneSet?.mapName"
+            :min-value="0" :max-value="detailedBackboneSet?.maxVariantCount || 0"
+            :bin-size="detailedBackboneSet.variantBinSize"
+            min-color="#0000FF" max-color="#FF0000">
+          </GradientLegend>
+        </template>
+      </div>
+      <template v-for="(set, index) in detailedSyntenySets" :key="index">
+        <div class="col-2 legend-container">
+          <template v-if="set.variantBinSize && set.maxVariantCount && set.maxVariantCount > 0">
+            <GradientLegend
+              :species-name="set.speciesName" :map-name="set.mapName"
+              :min-value="0" :max-value="set.maxVariantCount"
+              :bin-size="set.variantBinSize"
+              min-color="#0000FF" max-color="#FF0000">
+            </GradientLegend>
+          </template>
+        </div>
+      </template>
+    </div>
+  </template>
   <VCMapDialog 
     v-model:show="showDialog" 
     :header="dialogHeader" 
@@ -139,29 +140,6 @@
     :show-back-button="showDialogBackButton"
   />
   <LoadingSpinnerMask v-if="arePanelsLoading" :style="getDetailedPosition()"></LoadingSpinnerMask>
-  <template v-if="displayVariantLegend">
-    <div><b>Variant counts</b></div>
-    <!--Backbone-->
-    <template v-if="detailedBackboneSet && detailedBackboneSet.maxVariantCount && detailedBackboneSet.variantBinSize && detailedBackboneSet.maxVariantCount > 0">
-      <GradientLegend
-        :species-name="detailedBackboneSet?.speciesName || ''"
-        :min-value="0" :max-value="detailedBackboneSet?.maxVariantCount || 0"
-        :bin-size="detailedBackboneSet.variantBinSize"
-        min-color="#0000FF" max-color="#FF0000">
-      </GradientLegend>
-    </template>
-    <!--Synteny-->
-    <template v-for="(set, index) in detailedSyntenySets" :key="index">
-      <template v-if="set.variantBinSize && set.maxVariantCount && set.maxVariantCount > 0">
-        <GradientLegend
-          :species-name="set.speciesName"
-          :min-value="0" :max-value="set.maxVariantCount"
-          :bin-size="set.variantBinSize"
-          min-color="#0000FF" max-color="#FF0000">
-        </GradientLegend>
-      </template>
-    </template>
-  </template>
   <!--
   <Button
     style="margin-right: 20px;"
@@ -243,6 +221,7 @@ import SectionSVG from './SectionSVG.vue';
 import SVGConstants from '@/utils/SVGConstants';
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import GeneLabelSVG from '@/components/GeneLabelSVG.vue';
+import ViewboxTitlesSVG from './ViewboxTitlesSVG.vue';
 import useDialog from '@/composables/useDialog';
 import Gene from '@/models/Gene';
 import OrthologLine, { OrthologPair } from '@/models/OrthologLine';
@@ -407,6 +386,19 @@ const displayVariantLegend = computed(() => {
     }
   }
   return false;
+});
+
+const variantBinSize = computed(() => {
+  if (detailedBackboneSet.value?.variantBinSize)
+  {
+    return detailedBackboneSet.value.variantBinSize;
+  }
+  else if (detailedSyntenySets.value.some((set) => set.variantBinSize))
+  {
+    const setWithVariants = detailedSyntenySets.value.find((set) => set.variantBinSize && set.variantBinSize > 0);
+    return setWithVariants?.variantBinSize ?? 0;
+  }
+  return 0;
 });
 
 const currentlySelectingRegion = () => {
@@ -778,10 +770,6 @@ function logPerformanceReport(title: string, totalTimeMillis: number, detailedTi
   z-index: -1;
 }
 
-.label.small.smaller
-{
-  font-size: 7px;
-}
 
 rect.panel
 {
@@ -845,5 +833,21 @@ rect.navigation-btn
 {
   cursor: pointer;
   pointer-events: none;
+}
+.legend-title
+{
+  text-align: right;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+.legend-container
+{
+  margin-left: 1%;
+}
+.col-4
+{
+  &.plus-half{
+    width: 37.5%;
+  }
 }
 </style>
