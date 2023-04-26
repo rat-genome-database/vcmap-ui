@@ -26,14 +26,14 @@ export function createOrthologLinesV2(geneList: Map<number, Gene>, backboneSet: 
   //
   // Keep track of species order and gene datatrack positional values by map key:
   const speciesPositionMap: Map<number, OrthologPositionInfo> = new Map();
-  const backboneGeneStartX = getDetailedPanelXPositionForBackboneDatatracks(backboneSet.backbone.posX2, 0);
+  const backboneGeneStartX = getDetailedPanelXPositionForBackboneDatatracks(backboneSet.backbone.posX2, backboneSet.geneDatatrackSetIndex);
   speciesPositionMap.set(backboneSet.mapKey, {
     order: 0,
     startX: backboneGeneStartX,
     endX: backboneGeneStartX + SVGConstants.dataTrackWidth,
   });
   offBackboneSyntenyRegionSets.forEach(set => {
-    const geneStartX = getDetailedPanelXPositionForDatatracks(set.order, 0);
+    const geneStartX = getDetailedPanelXPositionForDatatracks(set.order, set.geneDatatrackSetIndex);
     const geneEndX = geneStartX + SVGConstants.dataTrackWidth;
     speciesPositionMap.set(set.mapKey, {
       order: set.order,

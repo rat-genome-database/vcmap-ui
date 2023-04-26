@@ -204,4 +204,17 @@ export default class BackboneSet extends GenomicSet
       this.geneLabels[i].posX = xPos;
     }
   }
+
+  public get geneDatatrackSetIndex()
+  {
+    for (let i = 0; i < this.datatrackSets.length; i++)
+    {
+      if (this.datatrackSets[i].type === 'gene')
+      {
+        return i;
+      }
+    }
+
+    return 0;
+  }
 }

@@ -252,4 +252,20 @@ export default class SyntenyRegionSet extends GenomicSet
       }
     }
   }
+
+  public get geneDatatrackSetIndex()
+  {
+    for (let i = 0; i < this.regions.length; i++)
+    {
+      for (let j = 0; j < this.regions[i].datatrackSets.length; j++)
+      {
+        if (this.regions[i].datatrackSets[j].type === 'gene')
+        {
+          return j;
+        }
+      }
+    }
+
+    return 0;
+  }
 }

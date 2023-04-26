@@ -363,6 +363,8 @@ watch(() => store.state.detailedBasePairRange, () => {
   }
 });
 
+// TODO: I think every time the variantPositionsList is changed, the updateSyntenyVariants() method
+//   is called - which triggers a detailed panel update. This watch may no longer be needed?
 // TODO: not sure if watch is the best thing for this
 watch(() => props.variantPositionsList, () => {
   const backboneSpecies = store.state.species;
@@ -700,12 +702,14 @@ const updateBackboneVariants = (backboneSpecies: Species, variantPositions: Vari
     detailedBackboneSet.value.maxVariantCount = variantDatatrackInfo.maxCount;
     detailedBackboneSet.value.variantBinSize = variantDatatrackInfo.binSize;
 
+    // TODO: I believe this code is no longer needed since ortholog lines get rebuilt every time the details panel is updated
     // NOTE: we can do this because we always know the variant track is first and then the genes
     // When variants are displayed, lines should start two gaps and two track widths from the right of the backbone
     const xPos = detailedBackboneSet.value.backbone.posX2 + SVGConstants.backboneDatatrackXOffset * 2 + SVGConstants.dataTrackWidth * 2;
     orthologLines.value?.forEach((line) => {
       if (line.startGene.mapKey === detailedBackboneSet.value?.mapKey)
       {
+        console.log('updating', line.posX1, xPos);
         line.posX1 = xPos;
       }
     });
@@ -723,7 +727,7 @@ document.addEventListener('scroll' , getDetailedPosition);
 router.beforeEach((to, from, next) => {
   if (window && window.event && window.event.type == 'popstate')
   {  
-    const response = confirm('Are you sure you want to leave this page? You may progress');
+    const response = confirm('Are you sure you want to leave this page? You may lose progress.');
     if (response == true)
     {
       next();
