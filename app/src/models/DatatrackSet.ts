@@ -20,5 +20,16 @@ export default class DatatrackSet
   {
     this.datatracks.splice(0, this.datatracks.length);
   }
+
+  public getTrackTypeDisplayName()
+  {
+    switch (this.type)
+    {
+      case 'gene':
+        return 'Genes';
+      case 'variant':
+        return 'Variants';
+    }
+  }
 }
 

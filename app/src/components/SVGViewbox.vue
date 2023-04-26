@@ -63,35 +63,10 @@
       </template>
     </template>
 
-    <!-- Title panels -->
-    <rect class="panel" x="0" :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.panelTitleHeight" />
-    <rect class="panel" :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.panelTitleHeight" />
-    <text class="label medium bold" :x="SVGConstants.overviewTitleXPosition" :y="SVGConstants.panelTitleYPosition">Overview</text>
-    <text class="label medium bold" :x="SVGConstants.selectedBackboneXPosition" :y="SVGConstants.panelTitleYPosition">Detailed</text>
-
-    <!-- SyntenyRegionSet Title Labels -->
-    <template v-for="(syntenySet, index) in overviewSyntenySets" :key="index">
-      <template v-for="(label, index) in syntenySet.titleLabels" :key="index">
-        <text :class="`label small ${label.addClass}`" :x="label.posX" :y="label.posY">{{label.text}}</text>
-      </template>
-    </template>
-    <template v-if="overviewBackboneSet">
-      <template v-for="(label, index) in overviewBackboneSet.titleLabels" :key="index">
-        <text :class="`label small ${label.addClass}`" :x="label.posX" :y="label.posY">{{label.text}}</text>
-      </template>
-    </template>
-    <template v-if="detailedBackboneSet">
-      <template v-for="(label, index) in detailedBackboneSet.titleLabels" :key="index">
-        <text :class="`label small ${label.addClass}`" :x="label.posX" :y="label.posY">{{label.text}}</text>
-      </template>
-    </template>
-    <template v-if="detailedSyntenySets.length">
-      <template v-for="(syntenySet, index) in detailedSyntenySets" :key="index">
-        <template v-for="(label, index) in syntenySet.titleLabels" :key="index">
-          <text :class="`label small ${label.addClass}`" :x="label.posX" :y="label.posY">{{label.text}}</text>
-        </template>
-      </template>
-    </template>
+    <ViewboxTitlesSVG
+      :overview-backbone-set="overviewBackboneSet" :overview-synteny-sets="overviewSyntenySets"
+      :detailed-backbone-set="detailedBackboneSet" :detailed-synteny-sets="detailedSyntenySets"
+    />
 
     <!-- Navigation buttons -->
     <rect class="navigation-btn" :class="{'disabled': isNavigationUpDisabled }" @click="navigateUp" :x="SVGConstants.overviewPanelWidth" :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
@@ -156,7 +131,6 @@
       </div>
     </div>
   </template>
-
   <VCMapDialog 
     v-model:show="showDialog" 
     :header="dialogHeader" 
@@ -246,6 +220,7 @@ import SectionSVG from './SectionSVG.vue';
 import SVGConstants from '@/utils/SVGConstants';
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import GeneLabelSVG from '@/components/GeneLabelSVG.vue';
+import ViewboxTitlesSVG from './ViewboxTitlesSVG.vue';
 import useDialog from '@/composables/useDialog';
 import Gene from '@/models/Gene';
 import OrthologLine, { OrthologPair } from '@/models/OrthologLine';
@@ -794,10 +769,6 @@ function logPerformanceReport(title: string, totalTimeMillis: number, detailedTi
   z-index: -1;
 }
 
-.label.small.smaller
-{
-  font-size: 7px;
-}
 
 rect.panel
 {
