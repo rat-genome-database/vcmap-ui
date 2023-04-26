@@ -1,6 +1,6 @@
 <template>
   <text
-    @click="onGeneLabelClick($event, label)"
+    @click="onGeneLabelClick($event, label, geneList, orthologLines)"
     @mouseenter="onMouseEnter(label)"
     @mouseleave="onMouseLeave(label)"
     :class="(isLabelSelected(label) ? 'bold-label' : 'label small')"
@@ -19,7 +19,8 @@ import { key } from '@/store';
 import { GeneLabel } from '@/models/Label';
 import Gene from '@/models/Gene';
 import SelectedData from '@/models/SelectedData';
-import { sortGeneList } from '@/utils/DataPanelHelpers';
+import useSyntenyAndDataInteraction from '@/composables/useSyntenyAndDataInteraction';
+import OrthologLine from '@/models/OrthologLine';
 
 const store = useStore(key);
 
@@ -27,8 +28,11 @@ interface Props
 {
   label: GeneLabel;
   geneList: Map<number, Gene>;
+  orthologLines: OrthologLine[];
 }
-const props = defineProps<Props>();
+defineProps<Props>();
+
+const { onGeneLabelClick } = useSyntenyAndDataInteraction(store);
 
 /**
  * TODO: Documenting a situation that results in some slightly confusing UX that we should
@@ -88,51 +92,6 @@ const getLabelText = (label: GeneLabel) => {
     }
   }
   return labelText;
-};
-
-const onGeneLabelClick = (event: any, label: GeneLabel) => {
-  if (store.state.selectedGeneIds.includes(label.mainGene.rgdId))
-  {
-    store.dispatch('setSelectedGeneIds', []);
-    store.dispatch('setSelectedData', null);
-  }
-  const geneIds: number[] = event.shiftKey ? [...store.state.selectedGeneIds] : [];
-
-  
-  // Keep the main gene of the label at the top of the list
-  const mainGene = label.mainGene;
-  const geneList = label.genes.filter(g => g.rgdId !== label.mainGene.rgdId);
-
-  let newSelectedData: SelectedData[] = [];
-  sortGeneList(geneList);
-  [mainGene, ...geneList].forEach((gene: Gene) => {
-    newSelectedData.push(new SelectedData(gene.clone(), 'Gene'));
-    geneIds.push(gene.rgdId);
-
-    // Retrieve ortholog data
-    let geneData = props.geneList.get(gene.rgdId);
-
-    if (geneData?.orthologs && geneData.orthologs?.length > 0) {
-      const orthoIds = geneData.orthologs;
-      geneIds.push(...orthoIds);
-      
-      const orthoData = orthoIds.map((id: number) => {
-        return props.geneList.get(id);
-      });
-
-      orthoData.forEach(data => newSelectedData.push(new SelectedData(data?.clone(), 'Gene')));
-    }
- 
-  });
-
-  store.dispatch('setSelectedGeneIds', geneIds || []);
-  if (event.shiftKey)
-  {
-    const selectedDataArray = [...(store.state.selectedData || []), ...newSelectedData];
-    store.dispatch('setSelectedData', selectedDataArray);
-  } else {
-    store.dispatch('setSelectedData', newSelectedData);
-  }
 };
 
 const onMouseEnter = (label: GeneLabel) => {

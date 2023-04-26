@@ -40,7 +40,7 @@
       <template v-if="detailedBackboneSet.geneLabels">
         <template v-for="(label, index) in detailedBackboneSet.geneLabels" :key="index">
           <template v-if="(label.isVisible)">
-            <GeneLabelSVG :label="(label as GeneLabel)" :gene-list="geneList"/>
+            <GeneLabelSVG :label="(label as GeneLabel)" :gene-list="geneList" :ortholog-lines="orthologLines ?? []"/>
           </template>
         </template>
       </template>
@@ -58,7 +58,7 @@
         </template>
         <template v-for="(label, index) in syntenySet.geneLabels" :key="index">
           <template v-if="label.isVisible">
-            <GeneLabelSVG :label="label" :gene-list="geneList"/>
+            <GeneLabelSVG :label="label" :gene-list="geneList" :ortholog-lines="orthologLines ?? []" />
           </template>
         </template>
       </template>
@@ -709,7 +709,6 @@ const updateBackboneVariants = (backboneSpecies: Species, variantPositions: Vari
     orthologLines.value?.forEach((line) => {
       if (line.startGene.mapKey === detailedBackboneSet.value?.mapKey)
       {
-        console.log('updating', line.posX1, xPos);
         line.posX1 = xPos;
       }
     });

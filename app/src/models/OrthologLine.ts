@@ -44,5 +44,9 @@ export default class OrthologLine implements VCMapSVGElement
     this.posY2 = params.y2;
     this.startGeneDatatrack = params.startGeneDatatrack ?? null;
     this.endGeneDatatrack = params.endGeneDatatrack ?? null;
+
+    // Associate this line with its gene datatracks if possible
+    this.startGeneDatatrack?.lines.push(this);
+    this.endGeneDatatrack?.lines.push(this);
   }
 }

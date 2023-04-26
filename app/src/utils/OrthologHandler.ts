@@ -2,6 +2,7 @@ import BackboneSet from "@/models/BackboneSet";
 import { GeneDatatrack } from "@/models/DatatrackSection";
 import Gene from "@/models/Gene";
 import OrthologLine from "@/models/OrthologLine";
+import SelectedData from "@/models/SelectedData";
 import SyntenyRegionSet from "@/models/SyntenyRegionSet";
 import { calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment, getDetailedPanelXPositionForBackboneDatatracks, getDetailedPanelXPositionForDatatracks, getThreshold } from "./Shared";
 import SVGConstants from "./SVGConstants";
@@ -214,4 +215,30 @@ export function isOrthologLineInView(geneA: Gene, geneB: Gene, visibleBackboneSt
 function isInBPRange(testBP: number, visibleBackboneStart: number, visibleBackboneStop: number)
 {
   return testBP >= visibleBackboneStart && testBP <= visibleBackboneStop;
+}
+
+export function getOrthologLineGenes(line: OrthologLine)
+{
+  const genes: Map<number, Gene> = new Map();
+  [line, ...line.chainedOrthologLines].forEach(l => {
+    genes.set(l.startGene.rgdId, l.startGene);
+    genes.set(l.endGene.rgdId, l.endGene);
+  });
+
+  return genes;
+}
+
+export function getSelectedDataAndGeneIdsFromOrthologLine(line: OrthologLine)
+{
+  const orthologGenesMap = getOrthologLineGenes(line);
+
+  const selectedData = Array.from(orthologGenesMap.values())
+    .map(g => new SelectedData(g, 'Gene'));
+
+  const selectedGeneIds = Array.from(orthologGenesMap.keys());
+
+  return {
+    selectedData,
+    selectedGeneIds,
+  };
 }
