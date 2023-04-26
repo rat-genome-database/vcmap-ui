@@ -131,11 +131,11 @@
   </svg>
   <template v-if="displayVariantLegend">
     <div class="grid">
-      <div class="col-4 legend-title"><b>Variant counts (per {{ parseFloat(variantBinSize.toPrecision(3)).toLocaleString() }})</b></div>
+      <div class="col-4 plus-half legend-title"><b>Variant counts (per {{ parseFloat(variantBinSize.toPrecision(3)).toLocaleString() }}bp)</b></div>
       <div class="col-2 legend-container">
         <template v-if="detailedBackboneSet && detailedBackboneSet.maxVariantCount && detailedBackboneSet.variantBinSize && detailedBackboneSet.maxVariantCount > 0">
           <GradientLegend
-            :species-name="detailedBackboneSet?.speciesName || ''"
+            :species-name="detailedBackboneSet?.speciesName || ''" :map-name="detailedBackboneSet?.mapName"
             :min-value="0" :max-value="detailedBackboneSet?.maxVariantCount || 0"
             :bin-size="detailedBackboneSet.variantBinSize"
             min-color="#0000FF" max-color="#FF0000">
@@ -146,7 +146,7 @@
         <template v-for="(set, index) in detailedSyntenySets" :key="index">
           <template v-if="set.variantBinSize && set.maxVariantCount && set.maxVariantCount > 0">
             <GradientLegend
-              :species-name="set.speciesName"
+              :species-name="set.speciesName" :map-name="set.mapName"
               :min-value="0" :max-value="set.maxVariantCount"
               :bin-size="set.variantBinSize"
               min-color="#0000FF" max-color="#FF0000">
@@ -865,10 +865,17 @@ rect.navigation-btn
 .legend-title
 {
   text-align: right;
-  margin-right: 5%;
+  margin-top: auto;
+  margin-bottom: auto;
 }
 .legend-container
 {
   margin-left: 1%;
+}
+.col-4
+{
+  &.plus-half{
+    width: 37.5%;
+  }
 }
 </style>

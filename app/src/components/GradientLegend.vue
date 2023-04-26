@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="legend-label">{{ speciesName }}</div>
+    <div class="legend-label">{{ speciesName }} ({{ mapName }})</div>
     <div class="legend-container">
       <div>
         {{ parseFloat(minValue.toPrecision(3)).toLocaleString() }}
@@ -24,6 +24,7 @@ interface Props {
   minColor: string;
   maxColor: string;
   speciesName: string;
+  mapName: string;
 }
 
 
@@ -49,7 +50,7 @@ const props = defineProps<Props>();
 .legend-label
 {
   font-weight: bold;
-  padding-top: 10px;
+  padding-top: 5px;
   padding-bottom: 5px;
 }
 </style>
