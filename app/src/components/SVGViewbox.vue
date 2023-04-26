@@ -117,8 +117,8 @@
           </GradientLegend>
         </template>
       </div>
-      <div class="col-2 legend-container">
-        <template v-for="(set, index) in detailedSyntenySets" :key="index">
+      <template v-for="(set, index) in detailedSyntenySets" :key="index">
+        <div class="col-2 legend-container">
           <template v-if="set.variantBinSize && set.maxVariantCount && set.maxVariantCount > 0">
             <GradientLegend
               :species-name="set.speciesName" :map-name="set.mapName"
@@ -127,8 +127,8 @@
               min-color="#0000FF" max-color="#FF0000">
             </GradientLegend>
           </template>
-        </template>
-      </div>
+        </div>
+      </template>
     </div>
   </template>
   <VCMapDialog 
