@@ -7,6 +7,7 @@ import BackboneSet from "@/models/BackboneSet";
 import { RenderType } from "@/models/GenomicSection";
 import { GenomicSectionFactory } from "@/models/GenomicSectionFactory";
 import { getThreshold } from "./Shared";
+import SpeciesMap from "@/models/SpeciesMap";
 
 export interface ProcessedGenomicData
 {
@@ -78,7 +79,7 @@ export function backboneDatatrackBuilder(species: Species, genomicData: Gene[], 
   return { backboneSection, processedGenomicData };
 }
 
-export function createBackboneSet(backbone: BackboneSection, genomicData?: ProcessedGenomicData)
+export function createBackboneSet(backbone: BackboneSection, backboneMap: SpeciesMap, genomicData?: ProcessedGenomicData)
 {
-  return new BackboneSet(backbone, genomicData);
+  return new BackboneSet(backbone, backboneMap, genomicData);
 }

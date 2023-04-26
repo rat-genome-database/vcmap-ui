@@ -40,8 +40,7 @@
         :class="getSectionClass(datatrackSet)"
         @mouseenter="() => onMouseEnter(datatrack, 'Gene')"
         @mouseleave="() => onMouseLeave(datatrack)"
-        @click="onDatatrackSectionClick($event, datatrack)"
-
+        @click="onDatatrackSectionClick($event, datatrack, geneList)"
         :y="datatrack.posY1"
         :x="datatrack.posX1"
         :width="datatrack.width"
@@ -114,6 +113,8 @@ import DatatrackSection, { GeneDatatrack } from '@/models/DatatrackSection';
 import DatatrackSet from '@/models/DatatrackSet';
 import { VCMapSVGElement } from '@/models/VCMapSVGElement';
 import useMouseBasePairPos from '@/composables/useMouseBasePairPos';
+import { getSelectedDataAndGeneIdsFromOrthologLine } from '@/utils/OrthologHandler';
+import useSyntenyAndDataInteraction from '@/composables/useSyntenyAndDataInteraction';
 
 const INNER_SELECTION_EXTRA_WIDTH = 4;
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
@@ -122,6 +123,7 @@ const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
 const store = useStore(key);
 
 const { getBasePairPositionFromMouseEvent, getBasePairPositionFromSVG, mouseYPos, } = useMouseBasePairPos();
+const { setHoverOnGeneLinesAndDatatrackSections, onDatatrackSectionClick } = useSyntenyAndDataInteraction(store);
 
 interface Props
 {
@@ -199,10 +201,36 @@ const onMouseEnter = (section: BackboneSection | DatatrackSection, type: Selecte
     section.isHovered = true;
   }
 
-  // Only set selected data if there are no selected genes
   // NOTE: disable selected data for qtls and variants for now
-  if (store.state.selectedGeneIds.length === 0 && section.type !== 'qtl' && section.type !== 'variant')
+  if (section.type === 'qtl' || section.type === 'variant')
   {
+    return;
+  }
+
+  // Only set selected data if there are no selected genes
+  if (store.state.selectedGeneIds.length === 0 && section.type === 'gene')
+  {
+    const selectedDataList: SelectedData[] = [];
+    const geneSection = section as GeneDatatrack;
+    setHoverOnGeneLinesAndDatatrackSections(geneSection?.lines, true);
+
+    if (geneSection.lines.length > 0)
+    {
+      const {
+        selectedData: selectedOrthologs,
+      } = getSelectedDataAndGeneIdsFromOrthologLine(geneSection.lines[0]);
+      selectedDataList.push(...selectedOrthologs);
+    }
+    else
+    {
+      selectedDataList.push(new SelectedData(geneSection.gene.clone(), 'Gene'));
+    }
+
+    store.dispatch('setSelectedData', selectedDataList);
+  }
+  else if (store.state.selectedGeneIds.length === 0)
+  {
+    // BackboneSection
     const selectedData = new SelectedData(section, type);
     store.dispatch('setSelectedData', [selectedData]);
   }
@@ -216,8 +244,21 @@ const onMouseLeave = (section: BackboneSection | DatatrackSection) => {
     section.isHovered = false;
   }
 
+  // NOTE: disable selected data for qtls and variants for now
+  if (section.type === 'qtl' || section.type === 'variant')
+  {
+    return;
+  }
+
+  if (section.type === 'gene')
+  {
+    const geneSection = section as GeneDatatrack;
+    setHoverOnGeneLinesAndDatatrackSections(geneSection?.lines, false);
+  }
+
   // Only reset selected data if there are no selected genes
-  if (store.state.selectedGeneIds.length === 0) {
+  if (store.state.selectedGeneIds.length === 0)
+  {
     store.dispatch('setSelectedData', null);
   }
 };
@@ -239,50 +280,50 @@ const getSectionClass = (datatrackSet: DatatrackSet) => {
   }
 };
 
-const onDatatrackSectionClick = (event: any, section: GeneDatatrack) => {
-  // NOTE: disable selected data for qtls for now
-  if (!section.gene?.rgdId || section.type === 'qtl' || section.type === 'variant') {
-    return;
-  }
+// const onDatatrackSectionClick = (event: any, section: GeneDatatrack) => {
+//   // NOTE: disable selected data for qtls for now
+//   if (!section.gene?.rgdId || section.type === 'qtl' || section.type === 'variant') {
+//     return;
+//   }
 
-  // TODO: This behavior needs to be mimicked in the GeneLabels as well:
-  // If clicked section already selected, just reset the selectedGeneId state
-  if (store.state.selectedGeneIds.includes(section.gene?.rgdId || -1)) {
-    store.dispatch('setSelectedGeneIds', []);
-    store.dispatch('setSelectedData', null);
-    return;
-  }
+//   // TODO: This behavior needs to be mimicked in the GeneLabels as well:
+//   // If clicked section already selected, just reset the selectedGeneId state
+//   if (store.state.selectedGeneIds.includes(section.gene?.rgdId || -1)) {
+//     store.dispatch('setSelectedGeneIds', []);
+//     store.dispatch('setSelectedData', null);
+//     return;
+//   }
 
-  // If shift key is held, we'll just add to the selections, otherwise, reset first
-  let geneIds: number[] = event.shiftKey ? [...store.state.selectedGeneIds] : [];
+//   // If shift key is held, we'll just add to the selections, otherwise, reset first
+//   let geneIds: number[] = event.shiftKey ? [...store.state.selectedGeneIds] : [];
 
-  let newSelectedData: SelectedData[] = [];
-  if (section.gene) {
-    newSelectedData.push(new SelectedData(section.gene.clone(), 'Gene'));
-    geneIds.push(section.gene?.rgdId);
+//   let newSelectedData: SelectedData[] = [];
+//   if (section.gene) {
+//     newSelectedData.push(new SelectedData(section.gene.clone(), 'Gene'));
+//     geneIds.push(section.gene?.rgdId);
 
-    let geneData = props.geneList.get(section.gene.rgdId);
+//     let geneData = props.geneList.get(section.gene.rgdId);
 
-    if (geneData?.orthologs && geneData.orthologs?.length > 0) {
-      const orthoIds = geneData.orthologs;
-      geneIds.push(...orthoIds);
+//     if (geneData?.orthologs && geneData.orthologs?.length > 0) {
+//       const orthoIds = geneData.orthologs;
+//       geneIds.push(...orthoIds);
       
-      const orthoData = orthoIds.map((id: number) => {
-        return props.geneList.get(id);
-      });
+//       const orthoData = orthoIds.map((id: number) => {
+//         return props.geneList.get(id);
+//       });
 
-      orthoData.forEach(data => newSelectedData.push(new SelectedData(data?.clone(), 'Gene')));
-    }
-  }
+//       orthoData.forEach(data => newSelectedData.push(new SelectedData(data?.clone(), 'Gene')));
+//     }
+//   }
 
-  store.dispatch('setSelectedGeneIds', geneIds || []);
-  if (event.shiftKey) {
-    const selectedDataArray = [...(store.state.selectedData || []), ...newSelectedData];
-    store.dispatch('setSelectedData', selectedDataArray);
-  } else {
-    store.dispatch('setSelectedData', newSelectedData);
-  }
-};
+//   store.dispatch('setSelectedGeneIds', geneIds || []);
+//   if (event.shiftKey) {
+//     const selectedDataArray = [...(store.state.selectedData || []), ...newSelectedData];
+//     store.dispatch('setSelectedData', selectedDataArray);
+//   } else {
+//     store.dispatch('setSelectedData', newSelectedData);
+//   }
+// };
 
 const highlightSelections = (selectedGeneIds: number[]) => {
   // Look through the sections and highlight based on selected genes

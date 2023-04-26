@@ -42,7 +42,6 @@ export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, 
     if (!currSpecies) return;
 
     const processedSyntenicRegions: SyntenyRegion[] = [];
-    const currMapName = currSpecies.activeMap.name ?? '';
     for (let blockIdx = 0; blockIdx < blocks.length; blockIdx++)
     {
       const blockInfo = blocks[blockIdx];
@@ -51,7 +50,7 @@ export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, 
 
 
       // Create a factory for the creation of our "Regions" (Blocks, Gaps, etc)
-      const factory = new GenomicSectionFactory(currSpecies.name, currMapName, blockChrStr,
+      const factory = new GenomicSectionFactory(currSpecies.name, currSpecies.activeMap.name, blockChrStr,
         {start: 0, stop: backboneChr.seqLength}, 'overview'
       );
 
@@ -75,7 +74,7 @@ export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, 
       //   that will ultimately be added to the DOM via the SVG.
       const currSyntenicRegion = new SyntenyRegion({
         species: currSpecies.name,
-        mapName: currMapName,
+        mapName: currSpecies.activeMap.name,
         gaplessBlock: gaplessBlockSection,
       });
       // FIXME: Create a single visible block (ignoring gap data)
@@ -83,7 +82,7 @@ export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, 
 
       processedSyntenicRegions.push(currSyntenicRegion);
     }
-    syntenyRegionSets.push(new SyntenyRegionSet(currSpecies.name, currMapName, processedSyntenicRegions, setOrder, 'overview'));
+    syntenyRegionSets.push(new SyntenyRegionSet(currSpecies.name, currSpecies.activeMap, processedSyntenicRegions, setOrder, 'overview'));
     setOrder++;
   });
 
@@ -166,8 +165,7 @@ function syntenicSectionBuilder(speciesSyntenyData: Block[], species: Species, s
 {
   const processedSyntenicRegions: SyntenyRegion[] = [];
 
-  const currSpecies = species.name;
-  const currMapName = species.activeMap.name;
+  const currSpecies = species;
   const processVariantDensity = speciesSyntenyData.some((block) => block.variantPositions && block.variantPositions.positions.length > 0);
   let regionMaxCount = 0;
   let regionBinSize = 0;
@@ -184,7 +182,7 @@ console.debug(`About to loop over ${speciesSyntenyData.length} Blocks...`);
     const blockVariantPositions = blockInfo.variantPositions;
 
     // Create a factory for the creation of our "Regions" (Blocks, Gaps, etc)
-    const factory = new GenomicSectionFactory(currSpecies, currMapName, blockChrStr,
+    const factory = new GenomicSectionFactory(currSpecies.name, currSpecies.activeMap.name, blockChrStr,
         { start: viewportStart, stop: viewportStop }, renderType
     );
 
@@ -208,8 +206,8 @@ console.time('createSyntenySectionAndRegion');
     //   any "gappy" GenomicSection blocks within the visible range to minimize DOM nodes
     //   that will ultimately be added to the DOM via the SVG.
     const currSyntenicRegion = new SyntenyRegion({
-      species: currSpecies,
-      mapName: currMapName,
+      species: currSpecies.name,
+      mapName: currSpecies.activeMap.name,
       gaplessBlock: gaplessBlockSection,
       genes: blockGenes,
     });
@@ -299,7 +297,7 @@ console.timeEnd(timerLabel);
 
   // Finished creating this Set:
 console.time("createSyntenyRegionSet");
-  const regionSet = new SyntenyRegionSet(currSpecies, currMapName, processedSyntenicRegions, setOrder, renderType);
+  const regionSet = new SyntenyRegionSet(currSpecies.name, currSpecies.activeMap, processedSyntenicRegions, setOrder, renderType);
   regionSet.maxVariantCount = regionMaxCount;
   regionSet.variantBinSize = regionBinSize;
 console.timeEnd("createSyntenyRegionSet");

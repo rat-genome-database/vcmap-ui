@@ -195,27 +195,4 @@ export default class SyntenyRegion
       this.syntenyBlocks.push(blockSyntenicSection);
     }
   }
-
-  // TODO: Is only being used in currently commented out code. Can remove if other code is deleted.
-  // public get sortedSyntenicBlocksAndGaps()
-  // {
-  //   let blocksAndGaps: SyntenySection[] = this.syntenyBlocks;
-  //   blocksAndGaps = blocksAndGaps.concat(this.syntenyGaps);
-  //   blocksAndGaps.sort((a, b) => {
-  //     // If inverted, sections with largest speciesStart should be at the front of the array
-  //     return (this.gaplessBlock.isInverted) ? (a.speciesStart - b.speciesStart) * -1 : (a.speciesStart - b.speciesStart);
-  //   });
-
-  //   return blocksAndGaps;
-  // }
-
-  // TODO: Is only being used in currently commented out code. Can remove if other code is deleted.
-  // private get genomicSections()
-  // {
-  //   let genomicSections: GenomicSection[] = [this.gaplessBlock];
-  //   const allDatatracks = this.datatrackSets.flatMap((set) => set.datatracks);
-  //   // TODO: need to make sure that this properly gives the correct information
-  //   genomicSections = genomicSections.concat(this.syntenyBlocks).concat(this.syntenyGaps).concat(allDatatracks);
-  //   return genomicSections;
-  // }
 }

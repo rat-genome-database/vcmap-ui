@@ -40,7 +40,7 @@
       <template v-if="detailedBackboneSet.geneLabels">
         <template v-for="(label, index) in detailedBackboneSet.geneLabels" :key="index">
           <template v-if="(label.isVisible)">
-            <GeneLabelSVG :label="(label as GeneLabel)" :gene-list="geneList"/>
+            <GeneLabelSVG :label="(label as GeneLabel)" :gene-list="geneList" :ortholog-lines="orthologLines ?? []"/>
           </template>
         </template>
       </template>
@@ -58,7 +58,7 @@
         </template>
         <template v-for="(label, index) in syntenySet.geneLabels" :key="index">
           <template v-if="label.isVisible">
-            <GeneLabelSVG :label="label" :gene-list="geneList"/>
+            <GeneLabelSVG :label="label" :gene-list="geneList" :ortholog-lines="orthologLines ?? []" />
           </template>
         </template>
       </template>
@@ -224,7 +224,7 @@ import GeneLabelSVG from '@/components/GeneLabelSVG.vue';
 import ViewboxTitlesSVG from './ViewboxTitlesSVG.vue';
 import useDialog from '@/composables/useDialog';
 import Gene from '@/models/Gene';
-import OrthologLine, { OrthologPair } from '@/models/OrthologLine';
+import OrthologLine from '@/models/OrthologLine';
 import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
 import { key } from '@/store';
 import { createSyntenicRegionSets,  } from '@/utils/SectionBuilder';
@@ -247,8 +247,7 @@ import Block from "@/models/Block";
 
 import { GeneLabel } from '@/models/Label';
 import SyntenyRegion from '@/models/SyntenyRegion';
-import { createOrthologLines } from '@/utils/OrthologHandler';
-import { GeneDatatrack } from '@/models/DatatrackSection';
+import { createOrthologLinesV2 } from '@/utils/OrthologHandler';
 import VariantPositions from '@/models/VariantPositions';
 import Species from '@/models/Species';
 import BackboneSection from '@/models/BackboneSection';
@@ -270,7 +269,6 @@ interface Props
 {
   geneList: Map<number, Gene>;
   syntenyTree: Map<number, Block[]>;
-  orthologs: OrthologPair[];
   loading: boolean;
   variantPositionsList: VariantPositions[];
 }
@@ -344,6 +342,8 @@ watch(() => store.state.detailedBasePairRange, () => {
   }
 });
 
+// TODO: I think every time the variantPositionsList is changed, the updateSyntenyVariants() method
+//   is called - which triggers a detailed panel update. This watch may no longer be needed?
 // TODO: not sure if watch is the best thing for this
 watch(() => props.variantPositionsList, () => {
   const backboneSpecies = store.state.species;
@@ -423,7 +423,7 @@ const updateOverviewPanel = async () => {
   // Build backbone set
   overviewSyntenySets.value = [];
   const overviewBackbone = createBackboneSection(backboneSpecies, backboneChromosome, 0, backboneChromosome.seqLength, 'overview');
-  overviewBackboneSet.value = createBackboneSet(overviewBackbone);
+  overviewBackboneSet.value = createBackboneSet(overviewBackbone, backboneSpecies.activeMap);
 
   const overviewBackboneCreationTime = Date.now();
 
@@ -504,7 +504,7 @@ const updateDetailsPanel = async () => {
   const backboneDatatrackInfo = backboneDatatrackBuilder(backboneSpecies, backboneGenes, detailedBackbone);
   timeCreateBackboneDatatracks = Date.now() - backboneDatatracksStart;
   const backboneSetStart = Date.now();
-  detailedBackboneSet.value = createBackboneSet(detailedBackbone, backboneDatatrackInfo.processedGenomicData);
+  detailedBackboneSet.value = createBackboneSet(detailedBackbone, backboneSpecies.activeMap, backboneDatatrackInfo.processedGenomicData);
 
   // Now check for other potential datatracks to add to the backbone (like variant positions)
   props.variantPositionsList.forEach((variantPositions) => {
@@ -531,8 +531,8 @@ const updateDetailsPanel = async () => {
   // Create ortholog lines
   // NOTE: Casting the type here since .value can't "unpack" the private methods on the object and thus,
   //  doesn't see it as equaling the SyntenyRegionSet type
-  orthologLines.value = createOrthologLines(props.orthologs, detailedBackboneSet.value, (detailedSyntenySets.value as SyntenyRegionSet[]));
-
+  orthologLines.value = createOrthologLinesV2(props.geneList, detailedBackboneSet.value, detailedSyntenySets.value as SyntenyRegionSet[]);
+  
   // Report timing data
   const timeDetailedUpdate= Date.now() - detailedUpdateStart;
   const timeDetailedUpdateOther = timeDetailedUpdate - (
@@ -694,10 +694,16 @@ const updateBackboneVariants = (backboneSpecies: Species, variantPositions: Vari
     detailedBackboneSet.value.maxVariantCount = variantDatatrackInfo.maxCount;
     detailedBackboneSet.value.variantBinSize = variantDatatrackInfo.binSize;
 
+    // TODO: I believe this code is no longer needed since ortholog lines get rebuilt every time the details panel is updated
     // NOTE: we can do this because we always know the variant track is first and then the genes
     // When variants are displayed, lines should start two gaps and two track widths from the right of the backbone
     const xPos = detailedBackboneSet.value.backbone.posX2 + SVGConstants.backboneDatatrackXOffset * 2 + SVGConstants.dataTrackWidth * 2;
-    orthologLines.value?.forEach((line) => line.setBackboneSVGPosition(xPos, line.posY1));
+    orthologLines.value?.forEach((line) => {
+      if (line.startGene.mapKey === detailedBackboneSet.value?.mapKey)
+      {
+        line.posX1 = xPos;
+      }
+    });
   }
 };
 
@@ -712,7 +718,7 @@ document.addEventListener('scroll' , getDetailedPosition);
 router.beforeEach((to, from, next) => {
   if (window && window.event && window.event.type == 'popstate')
   {  
-    const response = confirm('Are you sure you want to leave this page? You may progress');
+    const response = confirm('Are you sure you want to leave this page? You may lose progress.');
     if (response == true)
     {
       next();

@@ -1,6 +1,7 @@
 import Gene from './Gene';
 import Label, { GeneLabel } from './Label';
 import GenomicSection, { BackboneAlignment, GenomicSectionParams, RenderType, WindowBasePairRange } from "./GenomicSection";
+import OrthologLine from './OrthologLine';
 
 export type DatatrackSectionType = 'gene' | 'block' | 'qtl' | 'variant';
 
@@ -27,6 +28,7 @@ export default class DatatrackSection extends GenomicSection
 export class GeneDatatrack extends DatatrackSection
 {
   gene: Gene; // gene that this datatrack represents
+  lines: OrthologLine[] = [];
 
   constructor(gene: Gene, start: number, stop: number, backboneAlignment: BackboneAlignment, speciesName: string,
               mapName: string, chromosome: string, windowBasePairRange: WindowBasePairRange, renderType: RenderType)
@@ -46,21 +48,7 @@ export class GeneDatatrack extends DatatrackSection
 
     this.gene = gene.clone();
     this.opacity = 0.7;
-    //this.createGeneLabel();
   }
-
-  // private createGeneLabel()
-  // {
-  //   this.label = new GeneLabel(
-  //     {
-  //       posX: 0, 
-  //       posY: (this.posY1 + this.posY2) / 2, 
-  //       text: this.gene.symbol,
-  //       isVisible: false,
-  //     },
-  //     [this.gene]
-  //   );
-  // }
 }
 
 export class VariantDensity extends DatatrackSection

@@ -111,7 +111,7 @@
         :class="getDatatrackClass(datatrackSet)"
         @mouseenter="onMouseEnter(datatrack, 'Gene')"
         @mouseleave="onMouseLeave(datatrack, 'Gene')"
-        @click="onDatatrackSectionClick($event, datatrack)"
+        @click="onDatatrackSectionClick($event, datatrack, geneList)"
         :y="datatrack.posY1"
         :x="datatrack.posX1"
         :width="datatrack.width"
@@ -135,7 +135,6 @@ import { computed, toRefs } from '@vue/reactivity';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import { Formatter } from '@/utils/Formatter';
-import { sortGeneList } from '@/utils/DataPanelHelpers';
 import { VCMapSVGElement } from '@/models/VCMapSVGElement';
 import ChromosomeLabelSVG from './ChromosomeLabelSVG.vue';
 import SyntenyLinesSVG from './SyntenyLinesSVG.vue';
@@ -145,9 +144,10 @@ import OverviewSyntenyLabelsSVG from './OverviewSyntenyLabelsSVG.vue';
 import { PANEL_SVG_START, PANEL_SVG_STOP } from '@/utils/SVGConstants';
 import useMouseBasePairPos from '@/composables/useMouseBasePairPos';
 import GenomicSection from '@/models/GenomicSection';
-import { GeneLabel } from '@/models/Label';
 import Gene from '@/models/Gene';
 import DatatrackSet from '@/models/DatatrackSet';
+import { getSelectedDataAndGeneIdsFromOrthologLine } from '@/utils/OrthologHandler';
+import useSyntenyAndDataInteraction from '@/composables/useSyntenyAndDataInteraction';
 
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
 const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
@@ -156,6 +156,7 @@ const SYNTENY_LABEL_SHIFT = 10;
 const store = useStore(key);
 
 const { getBasePairPositionFromMouseEvent, getBasePairPositionFromSVG, mouseYPos } = useMouseBasePairPos();
+const { setHoverOnGeneLinesAndDatatrackSections, onDatatrackSectionClick } = useSyntenyAndDataInteraction(store);
 
 interface Props
 {
@@ -229,21 +230,30 @@ const onMouseEnter = (section: SyntenySection | GeneDatatrack, type: SelectedDat
   // Only update the selected data panel if no Genes are already selected
   if (store.state.selectedGeneIds.length === 0)
   {
-    let selectedData;
+    let selectedDataList: SelectedData[] = [];
     if (type === 'Gene')
     {
       const geneSection = section as GeneDatatrack;
-      if (geneSection?.gene)
+      setHoverOnGeneLinesAndDatatrackSections(geneSection?.lines, true);
+
+      if (geneSection.lines.length > 0)
       {
-        highlightGeneLines(geneSection?.gene.rgdId, 'enter');
+        const {
+          selectedData: selectedOrthologs,
+        } = getSelectedDataAndGeneIdsFromOrthologLine(geneSection.lines[0]);
+        selectedDataList.push(...selectedOrthologs);
       }
-      selectedData = new SelectedData(geneSection.gene.clone(), 'Gene');
+      else
+      {
+        selectedDataList.push(new SelectedData(geneSection.gene.clone(), 'Gene'));
+      }
     }
     else
     {
-      selectedData = new SelectedData(section, type);
+      selectedDataList.push(new SelectedData(section, type));
     }
-    store.dispatch('setSelectedData', [selectedData]);
+
+    store.dispatch('setSelectedData', selectedDataList);
   }
 };
 
@@ -264,10 +274,7 @@ const onMouseLeave = (section: VCMapSVGElement, type: SelectedDataType) => {
   if (type === 'Gene') 
   {
     const geneSection = section as GeneDatatrack;
-    if (geneSection?.gene)
-    {
-      highlightGeneLines(geneSection.gene.rgdId, 'exit');
-    }
+    setHoverOnGeneLinesAndDatatrackSections(geneSection.lines, false);
   }
 };
 
@@ -280,7 +287,6 @@ const onSyntenyBlockClick = (section: GenomicSection) => {
     const basePairStop = section.backboneAlignment.stop;
     selectedBackboneRegion.setViewportSelection(basePairStart, basePairStop);
     store.dispatch('setDetailedBasePairRequest', { start: basePairStart, stop: basePairStop });
-    // store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: basePairStop });
   }
 };
 
@@ -341,81 +347,6 @@ const highlightSelections = (selectedGeneIds: number[]) => {
     {
       line.isSelected = false;
     }
-  });
-};
-
-const onDatatrackSectionClick = (event: any, section: GeneDatatrack) => {
-  // NOTE: ignore variant datatrack sections for now
-  if (!section.gene?.rgdId || section.type === 'variant') return;
-
-  // If clicked section already selected, just reset the selectedGeneId state
-  if (store.state.selectedGeneIds.includes(section.gene?.rgdId || -1))
-  {
-    store.dispatch('setSelectedGeneIds', []);
-    store.dispatch('setSelectedData', null);
-    return;
-  }
-
-  // TODO: This behavior needs to be mimicked in the GeneLabels as well:
-  // If shift key is held, we'll just add to the selections, otherwise, reset first
-  let geneIds: number[] = event.shiftKey ? [...store.state.selectedGeneIds] : [];
-
-  let newSelectedData: SelectedData[] = [];
-
-  // TODO: Duplicate logic in GeneLabelSVG.vue, should refactor at some point
-  if (section.gene)
-  {
-    // Keep the main gene of the label at the top of the list
-    const geneLabel = section.label ? section.label as GeneLabel : undefined;
-    const mainGene = geneLabel ? geneLabel.mainGene : section.gene;
-    const geneList = geneLabel ? geneLabel.genes.filter(g => g.rgdId !== geneLabel.mainGene.rgdId) : [];
-    sortGeneList(geneList);
-    [mainGene, ...geneList].forEach((gene: Gene) => {
-      newSelectedData.push(new SelectedData(gene.clone(), 'Gene'));
-      geneIds.push(gene.rgdId);
-
-      let geneData = props.geneList.get(gene.rgdId);
-
-      if (geneData?.orthologs && geneData.orthologs?.length > 0) {
-        const orthoIds = geneData.orthologs;
-        geneIds.push(...orthoIds);
-      
-        const orthoData = orthoIds.map((id: number) => {
-          return props.geneList.get(id);
-        });
-      orthoData.forEach(data => newSelectedData.push(new SelectedData(data?.clone(), 'Gene')));
-    }
-
-    });
-  }
-
-  store.dispatch('setSelectedGeneIds', geneIds || []);
-  if (event.shiftKey)
-  {
-    const selectedDataArray = [...(store.state.selectedData || []), ...newSelectedData];
-    store.dispatch('setSelectedData', selectedDataArray);
-  }
-  else
-  {
-    store.dispatch('setSelectedData', newSelectedData);
-  }
-};
-
-const highlightGeneLines = (sectionId: number, type: string) => {
-  const dataPanelSelected = store.state.selectedGeneIds.includes(sectionId);
-  props.region.orthologLines.forEach((line) => {
-    if (line.offBackboneGene.rgdId == sectionId ||
-        line.backboneGene.rgdId == sectionId)
-    {
-      if (type == 'enter')
-      {
-        line.isSelected = true;
-      }
-      else if (type == 'exit' && !dataPanelSelected)
-      {
-        line.isSelected = false;
-      }
-    } 
   });
 };
 

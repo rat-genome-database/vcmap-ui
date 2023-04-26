@@ -3,15 +3,14 @@ import Gene from './Gene';
 import { SVGShape, VCMapSVGElement } from "./VCMapSVGElement";
 
 type OrthologLineParams = {
-  backboneGene: Gene;
-  offBackboneGene: Gene;
-  backboneGeneDatatrack?: GeneDatatrack;
-  offBackboneGeneDatatrack?: GeneDatatrack;
-};
-
-export type OrthologPair = {
-  backboneGene: Gene;
-  offBackboneGene: Gene;
+  startGene: Gene;
+  endGene: Gene;
+  x1: number;
+  x2: number;
+  y1: number;
+  y2: number;
+  startGeneDatatrack?: GeneDatatrack;
+  endGeneDatatrack?: GeneDatatrack;
 };
 
 export default class OrthologLine implements VCMapSVGElement
@@ -28,28 +27,26 @@ export default class OrthologLine implements VCMapSVGElement
   isSelected: boolean = false;
   elementColor: string = '';
 
-  backboneGene: Gene;
-  offBackboneGene: Gene;
-  backboneGeneDatatrack: GeneDatatrack | null = null;
-  offBackboneGeneDatatrack: GeneDatatrack | null = null;
+  startGene: Gene;
+  endGene: Gene;
+  startGeneDatatrack: GeneDatatrack | null = null;
+  endGeneDatatrack: GeneDatatrack | null = null;
+
+  chainedOrthologLines: OrthologLine[] = []; // Other ortholog lines that are "chained" to this one
 
   constructor(params: OrthologLineParams)
   {
-    this.backboneGene = params.backboneGene;
-    this.offBackboneGene = params.offBackboneGene;
-    this.backboneGeneDatatrack = params.backboneGeneDatatrack ?? null;
-    this.offBackboneGeneDatatrack = params.offBackboneGeneDatatrack ?? null;
-  }
+    this.startGene = params.startGene;
+    this.endGene = params.endGene;
+    this.posX1 = params.x1;
+    this.posX2 = params.x2;
+    this.posY1 = params.y1;
+    this.posY2 = params.y2;
+    this.startGeneDatatrack = params.startGeneDatatrack ?? null;
+    this.endGeneDatatrack = params.endGeneDatatrack ?? null;
 
-  public setBackboneSVGPosition(x1: number, y1: number)
-  {
-    this.posX1 = x1;
-    this.posY1 = y1;
-  }
-
-  public setOffBackboneSVGPositions(x2: number, y2: number)
-  {
-    this.posX2 = x2;
-    this.posY2 = y2;
+    // Associate this line with its gene datatracks if possible
+    this.startGeneDatatrack?.lines.push(this);
+    this.endGeneDatatrack?.lines.push(this);
   }
 }

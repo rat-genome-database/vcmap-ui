@@ -9,14 +9,13 @@
       <SVGViewbox
         :geneList="geneList"
         :synteny-tree="syntenyTree"
-        :orthologs="orthologs"
         :loading="isLoading"
         :variant-positions-list="variantPositionsList"
       />
       <Toast />
     </div>
     <div class="col-3">
-      <SelectedDataPanel :selected-data="store.state.selectedData" :gene-list="geneList" :orthologs="orthologs"/>
+      <SelectedDataPanel :selected-data="store.state.selectedData" :gene-list="geneList" />
     </div>
   </div>
   <VCMapDialog 
@@ -35,7 +34,7 @@ import HeaderPanel from '@/components/HeaderPanel.vue';
 import SelectedDataPanel from '@/components/SelectedDataPanel.vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
-import {nextTick, onMounted, ref, watch} from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 import Gene from "@/models/Gene";
@@ -50,8 +49,6 @@ import useDialog from '@/composables/useDialog';
 import { adjustSelectionWindow } from '@/utils/DataPanelHelpers';
 import { backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError, noSyntenyFoundError } from '@/utils/VCMapErrors';
 import { isGenomicDataInViewport, getThreshold } from '@/utils/Shared';
-import { OrthologPair } from '@/models/OrthologLine';
-import { isOrthologLineInView } from '@/utils/OrthologHandler';
 import { buildVariantPositions } from '@/utils/VariantBuilder';
 import VariantPositions from '@/models/VariantPositions';
 
@@ -94,8 +91,6 @@ const geneList = ref(new Map<number, Gene>());
 
 // Our list of variantPositions that have been loaded/generated
 const variantPositionsList = ref<VariantPositions[]>([]);
-
-const orthologs = ref<OrthologPair[]>([]);
 
 // TODO TEMP
 // TODO: temp ignore here, should remove once this method is actively being used
@@ -291,7 +286,7 @@ async function initVCMapProcessing()
 }
 
 /**
- * Process a synteny block response (with genes, gaps, and orthologs) from the API.
+ * Process a synteny block response (with genes, gaps) from the API.
  * TODO: We might need to control the number of chainLevel >= 2 we add, these are excessive...
  */
 function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefined, backboneStart: number, backboneStop: number, backboneMapKey: number)
@@ -440,10 +435,6 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
       console.timeEnd(`ProcessGenesForBlock`);
     }
   }
-
-  console.time(`ProcessOrthologs`);
-  processOrthologs(geneList.value, backboneMapKey, backboneStart, backboneStop);
-  console.timeEnd(`ProcessOrthologs`);
 }
 
 /**
@@ -619,56 +610,6 @@ function processAlignmentsOfGeneInsideOfViewport(gene: Gene, targetBlock: Block)
   // NOTE: This is very important for small block sections near break points
   if (gene.backboneStart < targetBlock.backboneStart) gene.backboneStart = targetBlock.backboneStart;
   if (gene.backboneStop > targetBlock.backboneStop) gene.backboneStop = targetBlock.backboneStop;
-}
-
-/**
- * Iterates through the gene list and pairs up off-backbone genes with their backbone orthologs
- * 
- * @param geneList
- *   list of all genes loaded in memory
- * @param backboneMapKey
- *   the map key of the backbone (used to determine which genes are backbone genes)
- * @param visibleBackboneStart
- *   backbone start basepair of the viewport
- * @param visibleBackboneStop
- *   backbone stop basepair of the viewport
- */
-function processOrthologs(geneList: Map<number, Gene>, backboneMapKey: number, visibleBackboneStart: number, visibleBackboneStop: number)
-{
-  const threshold = getThreshold(visibleBackboneStop - visibleBackboneStart);
-
-  $log.debug(`Process orthologs for visible range: ${visibleBackboneStart} - ${visibleBackboneStop} [threshold: ${threshold}]`);
-  const offBackboneGenesWithOrthologs = Array.from(geneList.values()).filter(g => {
-    if (g.backboneStart == null || g.backboneStop == null)
-    {
-      return false;
-    }
-
-    return g.mapKey !== backboneMapKey && g.orthologs != null && g.orthologs.length > 0;
-  });
-
-  const orthologPairs: OrthologPair[] = [];
-  for (let i = 0; i < offBackboneGenesWithOrthologs.length; i++)
-  {
-    const offBackboneGene = offBackboneGenesWithOrthologs[i];
-    const orthologs = offBackboneGenesWithOrthologs[i].orthologs;
-    for (let j = 0; j < orthologs.length; j++)
-    {
-      const potentialBackboneGene = geneList.get(orthologs[j]);
-      if (potentialBackboneGene != undefined && potentialBackboneGene.mapKey === backboneMapKey 
-        && isOrthologLineInView(potentialBackboneGene, offBackboneGene, visibleBackboneStart, visibleBackboneStop)
-      )
-      {
-        orthologPairs.push({
-          backboneGene: potentialBackboneGene.clone(),
-          offBackboneGene: offBackboneGene.clone(),
-        });
-      }
-    }
-  }
-
-  $log.debug(`Ortholog pairs (determined be visible): ${orthologPairs.length}`);
-  orthologs.value = orthologPairs;
 }
 
 async function queryAndProcessSyntenyForBasePairRange(backboneChromosome: Chromosome, start: number, stop: number, backboneMapKey: number)
@@ -850,7 +791,7 @@ async function loadSyntenyVariants(mapKeys: number[] | null, triggerUpdate: bool
   let foundSomeVariants = false;
   let variantPromises: Promise<void>[] = [];
   variantPromises.push(...mapKeys.map( async (mapKey) => {
-    if (mapKey === store.state.chromosome.mapKey) {
+    if (mapKey === store.state.chromosome?.mapKey) {
       loadingBackbone = true;
       await loadBackboneVariants();
       return;

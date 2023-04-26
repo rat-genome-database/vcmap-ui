@@ -6,6 +6,7 @@ import SyntenySection from "./SyntenySection";
 import DatatrackSet from "./DatatrackSet";
 import { mergeAndCreateGeneLabels } from "@/utils/GeneLabelMerger";
 import { calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment, getDetailedPanelXPositionForDatatracks, getDetailedPanelXPositionForSynteny, isGenomicDataInViewport } from "@/utils/Shared";
+import SpeciesMap from "./SpeciesMap";
 
 const LEVEL_2_WIDTH_MULTIPLIER = 0.75;
 
@@ -28,9 +29,9 @@ export default class SyntenyRegionSet extends GenomicSet
   maxVariantCount?: number;
   variantBinSize?: number;
 
-  constructor(speciesName: string, mapName: string, regions: SyntenyRegion[], order: number, renderType: 'overview' | 'detailed')
+  constructor(speciesName: string, map: SpeciesMap, regions: SyntenyRegion[], order: number, renderType: 'overview' | 'detailed')
   {
-    super(speciesName, mapName);
+    super(speciesName, map);
     this.regions = regions;
     this.order = order;
     this.renderType = renderType;
@@ -250,5 +251,21 @@ export default class SyntenyRegionSet extends GenomicSet
         continue;
       }
     }
+  }
+
+  public get geneDatatrackSetIndex()
+  {
+    for (let i = 0; i < this.regions.length; i++)
+    {
+      for (let j = 0; j < this.regions[i].datatrackSets.length; j++)
+      {
+        if (this.regions[i].datatrackSets[j].type === 'gene')
+        {
+          return j;
+        }
+      }
+    }
+
+    return 0;
   }
 }

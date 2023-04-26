@@ -1,34 +1,48 @@
 import BackboneSet from "@/models/BackboneSet";
 import { GeneDatatrack } from "@/models/DatatrackSection";
 import Gene from "@/models/Gene";
-import OrthologLine, { OrthologPair } from "@/models/OrthologLine";
+import OrthologLine from "@/models/OrthologLine";
+import SelectedData from "@/models/SelectedData";
 import SyntenyRegionSet from "@/models/SyntenyRegionSet";
-import { calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment, getDetailedPanelXPositionForDatatracks, getThreshold } from "./Shared";
+import { calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment, getDetailedPanelXPositionForBackboneDatatracks, getDetailedPanelXPositionForDatatracks, getThreshold } from "./Shared";
 import SVGConstants from "./SVGConstants";
 
-type GeneDetails = {
-  posX1: number;
-  gene: Gene;
-  datatrack?: GeneDatatrack;
+type OrthologPositionInfo = {
+  order: number;
+  startX: number;
+  endX: number;
 };
 
-/**
- * Creates ortholog lines and associates them with the off-backbone SyntenyRegionSets
- * 
- * @param orthologs
- *   list of ortholog pairs
- * @param backboneSet
- *   backbone set
- * @param offBackboneSyntenyRegionSets
- *   array of the off-backbone synteny region sets
- */
-export function createOrthologLines(orthologs: OrthologPair[], backboneSet: BackboneSet, offBackboneSyntenyRegionSets: SyntenyRegionSet[])
-{
-  console.time(`CreateOrthologLines`);
-  //
-  // Prep and reorganize some of our data structures TODO: There can probably be some improvement either here or with our data models
+export function createOrthologLinesV2(geneList: Map<number, Gene>, backboneSet: BackboneSet, offBackboneSyntenyRegionSets: SyntenyRegionSet[])
+{ 
+  console.time(`CreateOrthologLinesV2`);
 
+  console.time(`Ortholog Line Data Prep`);
+  //
+  // Draw ortholog lines for backbone genes that are large enough to be rendered
   const threshold = getThreshold(backboneSet.backbone.windowStop - backboneSet.backbone.windowStart);
+  const visibleBackboneGenesWithOrthologs = Array.from(geneList.values())
+    .filter(g => g.mapKey === backboneSet.mapKey && g.orthologs.length > 0 && (g.backboneStop - g.backboneStart) >= threshold);
+
+  //
+  // Keep track of species order and gene datatrack positional values by map key:
+  const speciesPositionMap: Map<number, OrthologPositionInfo> = new Map();
+  const backboneGeneStartX = getDetailedPanelXPositionForBackboneDatatracks(backboneSet.backbone.posX2, backboneSet.geneDatatrackSetIndex);
+  speciesPositionMap.set(backboneSet.mapKey, {
+    order: 0,
+    startX: backboneGeneStartX,
+    endX: backboneGeneStartX + SVGConstants.dataTrackWidth,
+  });
+  offBackboneSyntenyRegionSets.forEach(set => {
+    const geneStartX = getDetailedPanelXPositionForDatatracks(set.order, set.geneDatatrackSetIndex);
+    const geneEndX = geneStartX + SVGConstants.dataTrackWidth;
+    speciesPositionMap.set(set.mapKey, {
+      order: set.order,
+      startX: geneStartX,
+      endX: geneEndX,
+    });
+  });
+
   // Get the "on-screen" gene datatracks for the backbone
   const backboneGeneDatatracks = backboneSet.datatrackSets
     .filter(datatrackSet => datatrackSet.datatracks[0]?.type === 'gene')
@@ -36,88 +50,11 @@ export function createOrthologLines(orthologs: OrthologPair[], backboneSet: Back
     .map(geneSet => (geneSet.datatracks as GeneDatatrack[]))
     .flat();
 
-  // Create of map of backbone gene rgdId to its datatrack section (these are visible genes in the viewport)
-  const backboneDatatrackMap = new Map<number, GeneDatatrack>();
+  // Create of map of gene RGD ID to GeneDatatrack models (not all genes will have these -- only visible genes in the viewport)
+  const geneDatatrackMap = new Map<number, GeneDatatrack>();
   backboneGeneDatatracks.forEach(d => {
-    backboneDatatrackMap.set(d.gene.rgdId, d);
+    geneDatatrackMap.set(d.gene.rgdId, d);
   });
-
-  const offBackboneGeneMap = getOffbackboneGeneDetails(offBackboneSyntenyRegionSets);
-
-  const orthologLines: OrthologLine[] = [];
-  for (let i = 0; i < orthologs.length; i++)
-  {
-    const pair = orthologs[i];
-    if ( ( pair.offBackboneGene.backboneStop - pair.offBackboneGene.backboneStart) < threshold || pair.backboneGene.backboneStop - pair.backboneGene.backboneStart < threshold ) 
-    {
-      continue;
-    }
-
-    const backboneGeneDatatrack = backboneDatatrackMap.get(pair.backboneGene.rgdId);
-    const offBackboneGeneDetails = offBackboneGeneMap.get(pair.offBackboneGene.rgdId);
-    const offBackboneGeneDatatrack = offBackboneGeneDetails?.datatrack;
-
-  
-    const line = new OrthologLine({
-      backboneGene: pair.backboneGene,
-      backboneGeneDatatrack: backboneGeneDatatrack,
-      offBackboneGene: pair.offBackboneGene,
-      offBackboneGeneDatatrack: offBackboneGeneDatatrack,
-    });
-  
-
-    try
-    {
-      //
-      // Use gene datatrack to calculate most accurate position if available, otherwise use other methods to get the approx positions
-      const x1 = (backboneGeneDatatrack) ? backboneGeneDatatrack.posX2 : backboneSet.backbone.posX2 + SVGConstants.backboneDatatrackXOffset;
-
-      const y1 = (backboneGeneDatatrack) 
-        ? backboneGeneDatatrack.posY1 + (backboneGeneDatatrack.height / 2)
-        : calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment(pair.backboneGene.start, pair.backboneGene.stop, backboneSet.backbone.windowStart, backboneSet.backbone.windowStop);
-      
-      const x2 = (offBackboneGeneDatatrack) ? offBackboneGeneDatatrack.posX1 : offBackboneGeneDetails?.posX1;
-
-      let y2 = null;
-      if (offBackboneGeneDatatrack)
-      {
-        y2 = offBackboneGeneDatatrack.posY1 + (offBackboneGeneDatatrack.height / 2);
-      }
-      else
-      {
-        if (pair.offBackboneGene.backboneStart == null || pair.offBackboneGene.backboneStop == null)
-        {
-          throw new Error(`Off-backbone gene is missing backboneStart and backboneStop properties`);
-        }
-        y2 = calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment(pair.offBackboneGene.backboneStart, pair.offBackboneGene.backboneStop, backboneSet.backbone.windowStart, backboneSet.backbone.windowStop);
-      }
-      
-      // Throw error if any possible null positions are null...
-      if (y1 == null || x2 == null || y2 == null)
-      {
-        throw new Error(`Error: y1, x2, or y2 positions are null`);
-      }
-      
-      line.setBackboneSVGPosition(x1, y1);
-      line.setOffBackboneSVGPositions(x2, y2);
-    }
-    catch (err)
-    {
-      console.error(`An error occurred while calculating ortholog line position. See debug logs.`, err);
-      console.debug(`Ortholog Line at time of error`, line);
-      continue;
-    }
-
-    orthologLines.push(line);
-  }
-
-  console.timeEnd(`CreateOrthologLines`);
-  return orthologLines;
-}
-
-function getOffbackboneGeneDetails(offBackboneSyntenyRegionSets: SyntenyRegionSet[])
-{
-  const offBackboneGeneMap = new Map<number, GeneDetails>();
 
   offBackboneSyntenyRegionSets.forEach(set => {
     for (let regionIdx = 0; regionIdx < set.regions.length; regionIdx++)
@@ -128,34 +65,121 @@ function getOffbackboneGeneDetails(offBackboneSyntenyRegionSets: SyntenyRegionSe
         .map(geneSet => (geneSet.datatracks as GeneDatatrack[]))
         .flat();
 
-      // Get the x position of the off-backbone gene based on the order of the SyntenyRegionSet it belongs to
-      // TODO: The second arg is always "0" b/c the first DatatrackSet is always genes. This will need to be adjusted
-      //   if this becomes more flexible in the future.
-      const posX1 = getDetailedPanelXPositionForDatatracks(set.order, 0);
-
       // Get all genes with datatrack sections (these are visible in the detailed panel)
       regionGeneDatatracks.forEach(dt => {
-        offBackboneGeneMap.set(dt.gene.rgdId, {
-          posX1: posX1,
-          gene: dt.gene.clone(),
-          datatrack: dt,
-        });
-      });
-
-      // Get all genes whether they have a datatrack section or not and set them in the map if they haven't been already
-      region.genes.forEach(g => {
-        if (!offBackboneGeneMap.has(g.rgdId))
-        {
-          offBackboneGeneMap.set(g.rgdId, {
-            posX1: posX1,
-            gene: g.clone(),
-          });
-        }
+        geneDatatrackMap.set(dt.gene.rgdId, dt);
       });
     }
   });
+  console.timeEnd(`Ortholog Line Data Prep`);
 
-  return offBackboneGeneMap;
+  console.time(`Ortholog Line Creation`);
+  //
+  // Loop through backbone genes with orthologs and create lines
+  const orthologLines: OrthologLine[] = [];
+  const orthologChains: Array<Map<number, Gene[]>> = [];
+  visibleBackboneGenesWithOrthologs.forEach(backboneGene => {
+    const orthologs: Gene[] = [];
+    backboneGene.orthologs.forEach(rgdId => {
+      const ortholog = geneList.get(rgdId);
+      if (ortholog)
+        orthologs.push(ortholog);
+    });
+
+    // Place the orthologs in this map according to what "order" they appear in
+    const orthologOrderMap: Map<number, Gene[]> = new Map();
+    orthologOrderMap.set(0, [backboneGene]);
+    // Sort orthologs by species set order
+    orthologs.sort((a, b) => {
+      const positionInfoA = speciesPositionMap.get(a.mapKey);
+      const positionInfoB = speciesPositionMap.get(b.mapKey);
+      if (!positionInfoA || !positionInfoB)
+      {
+        return 0;
+      }
+
+      return positionInfoA.order - positionInfoB.order;
+    })
+    .forEach(o => {
+      const order = speciesPositionMap.get(o.mapKey)?.order;
+      
+      if (order == null)
+      {
+        console.error(`No order was returned from speciesPositionMap for ortholog gene rgdId: ${o.rgdId}`);
+        return;
+      }
+
+      if (!orthologOrderMap.has(order))
+      {
+        orthologOrderMap.set(order, [o]);
+      }
+      else
+      {
+        orthologOrderMap.get(order)?.push(o);
+      }
+    });
+
+    if (orthologOrderMap.size > 1)
+    {
+      orthologChains.push(orthologOrderMap);
+    }
+  });
+
+  const MAX_ORDER = offBackboneSyntenyRegionSets.length;
+  const WINDOW_START = backboneSet.backbone.windowStart;
+  const WINDOW_STOP = backboneSet.backbone.windowStop;
+  orthologChains.forEach(chain => {
+    let prevGenes: Gene[] = [];
+    const chainLines: OrthologLine[] = [];
+    for (let i = 0; i <= MAX_ORDER; i++)
+    {
+      const genes = chain.get(i);
+      if (genes == null)
+      {
+        continue;
+      }
+
+      if (prevGenes.length === 0)
+      {
+        prevGenes.push(...genes);
+        continue;
+      }
+
+      // Create ortholog lines from prevGenes to current genes
+      prevGenes.forEach(prevGene => {
+        genes.forEach(currGene => {
+          if (isOrthologLineInView(prevGene, currGene, WINDOW_START, WINDOW_STOP))
+          {
+            chainLines.push(new OrthologLine({
+              startGene: prevGene.clone(),
+              endGene: currGene.clone(),
+              x1: speciesPositionMap.get(prevGene.mapKey)?.endX ?? 0,
+              x2: speciesPositionMap.get(currGene.mapKey)?.startX ?? 0,
+              y1: calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment(prevGene.backboneStart, prevGene.backboneStop, WINDOW_START, WINDOW_STOP),
+              y2: calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment(currGene.backboneStart, currGene.backboneStop, WINDOW_START, WINDOW_STOP),
+              startGeneDatatrack: geneDatatrackMap.get(prevGene.rgdId),
+              endGeneDatatrack: geneDatatrackMap.get(currGene.rgdId),
+            }));
+          }
+        });
+      });
+
+      prevGenes = genes;
+    }
+
+    // Add associations to all other ortholog lines in the same chain
+    for (let i = 0; i < chainLines.length; i++)
+    {
+      chainLines[i].chainedOrthologLines = chainLines
+        .filter(l => l.startGene.rgdId !== chainLines[i].startGene.rgdId || l.endGene.rgdId !== chainLines[i].endGene.rgdId);
+    }
+    
+    orthologLines.push(...chainLines);
+  });
+  console.timeEnd(`Ortholog Line Creation`);
+  console.timeEnd(`CreateOrthologLinesV2`);
+
+  return orthologLines;
 }
 
 export function isOrthologLineInView(geneA: Gene, geneB: Gene, visibleBackboneStart: number, visibleBackboneStop: number)
@@ -191,4 +215,30 @@ export function isOrthologLineInView(geneA: Gene, geneB: Gene, visibleBackboneSt
 function isInBPRange(testBP: number, visibleBackboneStart: number, visibleBackboneStop: number)
 {
   return testBP >= visibleBackboneStart && testBP <= visibleBackboneStop;
+}
+
+export function getOrthologLineGenes(line: OrthologLine)
+{
+  const genes: Map<number, Gene> = new Map();
+  [line, ...line.chainedOrthologLines].forEach(l => {
+    genes.set(l.startGene.rgdId, l.startGene);
+    genes.set(l.endGene.rgdId, l.endGene);
+  });
+
+  return genes;
+}
+
+export function getSelectedDataAndGeneIdsFromOrthologLine(line: OrthologLine)
+{
+  const orthologGenesMap = getOrthologLineGenes(line);
+
+  const selectedData = Array.from(orthologGenesMap.values())
+    .map(g => new SelectedData(g, 'Gene'));
+
+  const selectedGeneIds = Array.from(orthologGenesMap.keys());
+
+  return {
+    selectedData,
+    selectedGeneIds,
+  };
 }

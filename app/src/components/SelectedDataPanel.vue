@@ -135,7 +135,6 @@
 import SelectedData from '@/models/SelectedData';
 import Gene from '@/models/Gene';
 import GeneInfo from '@/components/GeneInfo.vue';
-import { OrthologPair } from '@/models/OrthologLine';
 import { Formatter } from '@/utils/Formatter';
 import { ref, watch} from 'vue';
 import { useStore } from 'vuex';
@@ -153,7 +152,6 @@ interface Props
 {
   selectedData: SelectedData[] | null;
   geneList: Map<number, Gene>;
-  orthologs: OrthologPair[];
 }
 
 const props = defineProps<Props>();
