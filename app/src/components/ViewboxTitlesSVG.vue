@@ -26,7 +26,7 @@
             class="label small"
             :x="(datatrackSet.datatracks[0].posX1 + datatrackSet.datatracks[0].posX2) / 2"
             :y="SVGConstants.panelTitleHeight - 20"
-            :transform="rotateString(-30, (datatrackSet.datatracks[0].posX1 + datatrackSet.datatracks[0].posX2) / 2, SVGConstants.panelTitleHeight - 20)"
+            :transform="rotateString(TITLE_ROTATION, (datatrackSet.datatracks[0].posX1 + datatrackSet.datatracks[0].posX2) / 2, SVGConstants.panelTitleHeight - 20)"
           >
             {{ datatrackSet.getTrackTypeDisplayName() }}
         </text>
@@ -43,7 +43,7 @@
             class="label small"
             :x="getSyntenyDatatrackXPos(syntenySet.order, index)"
             :y="SVGConstants.panelTitleHeight - 20"
-            :transform="rotateString(-30, getSyntenyDatatrackXPos(syntenySet.order, index), SVGConstants.panelTitleHeight - 20)"
+            :transform="rotateString(TITLE_ROTATION, getSyntenyDatatrackXPos(syntenySet.order, index), SVGConstants.panelTitleHeight - 20)"
           >
             {{ datatrackSet.getTrackTypeDisplayName() }}
         </text>
@@ -57,6 +57,8 @@ import SVGConstants from '@/utils/SVGConstants';
 import SyntenyRegionSet from '@/models/SyntenyRegionSet';
 import BackboneSet from '@/models/BackboneSet';
 import { getDetailedPanelXPositionForDatatracks } from '@/utils/Shared';
+
+const TITLE_ROTATION = -30;
 
 interface Props {
   overviewBackboneSet?: BackboneSet;
