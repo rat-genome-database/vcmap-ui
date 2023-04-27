@@ -802,7 +802,7 @@ rect.selecting-panel
   position: absolute;
   z-index: 1;
 
-  &.selectable:not(.is-loading)
+  &:not(.is-loading)
   {
     cursor: crosshair;
   }
