@@ -46,7 +46,7 @@ import {useLogger} from "vue-logger-plugin";
 import BackboneSelection from "@/models/BackboneSelection";
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import useDialog from '@/composables/useDialog';
-import { adjustSelectionWindow } from '@/utils/DataPanelHelpers';
+import { adjustSelectionWindow, getNewSelectedData } from '@/utils/DataPanelHelpers';
 import { backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError, noSyntenyFoundError } from '@/utils/VCMapErrors';
 import { isGenomicDataInViewport, getThreshold } from '@/utils/Shared';
 import { buildVariantPositions } from '@/utils/VariantBuilder';
@@ -260,6 +260,12 @@ async function initVCMapProcessing()
 
     selectionStart = newWindow.start;
     selectionStop = newWindow.stop;
+
+    // Auto-select the gene and its orthologs
+    const { rgdIds, selectedData } = getNewSelectedData(store, loadedGene, geneList.value);
+    $log.debug(`Auto-selecting genes for Load by Gene`, rgdIds);
+    store.dispatch('setSelectedGeneIds', rgdIds);
+    store.dispatch('setSelectedData', selectedData);
   }
   else if (store.getters.isLoadByPosition && store.state.startPos != null && store.state.stopPos != null)
   {
