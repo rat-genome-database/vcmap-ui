@@ -224,35 +224,42 @@ const onMouseEnter = (section: SyntenySection | GeneDatatrack, type: SelectedDat
 
   section.isHovered = true;
 
-  // NOTE: ignore variant datatracks for now
-  if (section.type === 'variant') return;
+  // NOTE: ignore variant/qtl datatracks for now
+  if (section.type === 'variant' || section.type === 'qtl') return;
 
-  // Only update the selected data panel if no Genes are already selected
-  if (store.state.selectedGeneIds.length === 0)
+  const genesAreSelected = store.state.selectedGeneIds.length > 0;
+  let selectedDataList: SelectedData[] = [];
+  if (type === 'Gene')
   {
-    let selectedDataList: SelectedData[] = [];
-    if (type === 'Gene')
-    {
-      const geneSection = section as GeneDatatrack;
-      setHoverOnGeneLinesAndDatatrackSections(geneSection?.lines, true);
+    //
+    // Gene datatrack section
+    const geneSection = section as GeneDatatrack;
+    setHoverOnGeneLinesAndDatatrackSections(geneSection?.lines, true);
 
-      if (geneSection.lines.length > 0)
-      {
+    // Only update the selected data panel if no Genes are already selected
+    if (!genesAreSelected)
+    {
+      if (geneSection.lines.length > 0) {
         const {
           selectedData: selectedOrthologs,
         } = getSelectedDataAndGeneIdsFromOrthologLine(geneSection.lines[0]);
         selectedDataList.push(...selectedOrthologs);
       }
-      else
-      {
+      else {
         selectedDataList.push(new SelectedData(geneSection.gene.clone(), 'Gene'));
       }
     }
-    else
-    {
+  }
+  else
+  {
+    //
+    // Synteny section
+    if (!genesAreSelected)
       selectedDataList.push(new SelectedData(section, type));
-    }
+  }
 
+  if (selectedDataList.length > 0)
+  {
     store.dispatch('setSelectedData', selectedDataList);
   }
 };
