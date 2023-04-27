@@ -242,3 +242,30 @@ export function getSelectedDataAndGeneIdsFromOrthologLine(line: OrthologLine)
     selectedGeneIds,
   };
 }
+
+
+/**
+ * Gets all ortholog RGD Ids for a gene and adds them to the rgdIds array
+ */
+export function collectAllOrthologIds(gene: Gene, geneList: Map<number, Gene>, rgdIds: number[])
+{
+  // Needed for 1st iteration of this function -> add current gene to rgdId list
+  if (!rgdIds.includes(gene.rgdId))
+  {
+    rgdIds.push(gene.rgdId);
+  }
+  
+  gene.orthologs.forEach(orthoId => {
+    if (rgdIds.includes(orthoId))
+    {
+      return;
+    }
+
+    const orthologGene = geneList.get(orthoId);
+    if (orthologGene != null)
+    {
+      rgdIds.push(orthoId);
+      collectAllOrthologIds(orthologGene, geneList, rgdIds);
+    }
+  });
+}

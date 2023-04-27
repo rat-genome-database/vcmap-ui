@@ -326,7 +326,7 @@ onMounted(async () => {
 });
 
 watch(() => store.state.configurationLoaded, () => {
-  if (store.state.configurationLoaded === true)
+  if (store.state.configurationLoaded)
   {
     attachToProgressLoader('setIsOverviewPanelUpdating', updateOverviewPanel);
   }
@@ -802,7 +802,7 @@ rect.selecting-panel
   position: absolute;
   z-index: 1;
 
-  &.selectable:not(.is-loading)
+  &:not(.is-loading)
   {
     cursor: crosshair;
   }
