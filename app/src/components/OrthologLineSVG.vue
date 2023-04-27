@@ -123,3 +123,14 @@ const changeHoverStatusOnOrthologLines = (line: OrthologLine, isHovered: boolean
   });
 };
 </script>
+
+<style lang="scss" scoped>
+.ortholog-line
+{
+  stroke-width: 1;
+  &:hover
+  {
+    cursor: pointer;
+  }
+}
+</style>

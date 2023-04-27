@@ -421,15 +421,6 @@ const updatePositionLabelFromSVG = (svgY: number) => {
   pointer-events: none;
 }
 
-.ortholog-line
-{
-  stroke-width: 1;
-  &:hover
-  {
-    stroke-width: 2.5;
-  }
-}
-
 .level-2
 {
   filter: brightness(60%);
