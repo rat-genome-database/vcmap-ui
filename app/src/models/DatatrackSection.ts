@@ -1,5 +1,5 @@
 import Gene from './Gene';
-import Label, { GeneLabel } from './Label';
+import Label from './Label';
 import GenomicSection, { BackboneAlignment, GenomicSectionParams, RenderType, WindowBasePairRange } from "./GenomicSection";
 import OrthologLine from './OrthologLine';
 

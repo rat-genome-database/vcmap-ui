@@ -67,7 +67,7 @@ interface Props {
   detailedSyntenySets: SyntenyRegionSet[];
 }
 
-const props = defineProps<Props>();
+defineProps<Props>();
 
 function rotateString(degree: number, x: number, y: number): string
 {

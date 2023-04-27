@@ -72,7 +72,7 @@ export default function useSyntenyAndDataInteraction(store: Store<VCMapState>) {
           });
           orthoData.forEach(data => {
             if (data != null)
-              newSelectedData.push(new SelectedData(data.clone(), 'Gene'))
+              newSelectedData.push(new SelectedData(data.clone(), 'Gene'));
           });
         }
 
