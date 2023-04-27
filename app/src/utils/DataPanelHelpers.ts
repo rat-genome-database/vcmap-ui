@@ -2,9 +2,13 @@ import Gene from '@/models/Gene';
 import SelectedData from '@/models/SelectedData';
 import { Store } from "vuex";
 import { VCMapState } from "@/store";
+import { collectAllOrthologIds } from './OrthologHandler';
 
 const SEARCHED_GENE_WINDOW_FACTOR = 6;
 
+/**
+ * Generates selectedData and a list of gene Ids of all orthologs associated with the gene
+ */
 export function getNewSelectedData(store: Store<VCMapState>, gene: Gene, geneList: Map<number, Gene>): { rgdIds: number[], selectedData: SelectedData[] } {
   const comparativeSpecies = store.state.comparativeSpecies;
   const compSpeciesNameMap = new Map<Number, string>();
@@ -12,26 +16,26 @@ export function getNewSelectedData(store: Store<VCMapState>, gene: Gene, geneLis
   comparativeSpecies.forEach(species => compSpeciesNameMap.set(species.activeMap.key, species.name));
 
   const rgdIds: number[] = [];
-  const selectedData: SelectedData[] = [];
+  const selectedDataList: SelectedData[] = [];
 
   const data = geneList.get(gene.rgdId);
   if (data) {
-    rgdIds.push(data.rgdId);
-    selectedData.push(new SelectedData(data.clone(), 'Gene'));
-
-    if (data.orthologs && data.orthologs.length > 0) {
-      const orthoIds = data.orthologs;
-      rgdIds.push(...orthoIds);
-
-      const orthoData = orthoIds.map((id: number) => geneList.get(id));
-      orthoData.forEach((data => {
-        if (data)
-        selectedData.push(new SelectedData(data?.clone(), 'Gene'));
-      }
-      ));
+    collectAllOrthologIds(data, geneList, rgdIds);
+    
+    if (rgdIds.length > 0)
+    {
+      rgdIds.forEach(id => {
+        const gene = geneList.get(id);
+        if (gene)
+          selectedDataList.push(new SelectedData(gene.clone(), 'Gene'));
+      });
     }
   }
-  return {rgdIds, selectedData};
+
+  return {
+    rgdIds, 
+    selectedData: selectedDataList
+  };
 }
 
 export function sortGeneList(geneList: Gene[]) {

@@ -280,80 +280,24 @@ const getSectionClass = (datatrackSet: DatatrackSet) => {
   }
 };
 
-// const onDatatrackSectionClick = (event: any, section: GeneDatatrack) => {
-//   // NOTE: disable selected data for qtls for now
-//   if (!section.gene?.rgdId || section.type === 'qtl' || section.type === 'variant') {
-//     return;
-//   }
-
-//   // TODO: This behavior needs to be mimicked in the GeneLabels as well:
-//   // If clicked section already selected, just reset the selectedGeneId state
-//   if (store.state.selectedGeneIds.includes(section.gene?.rgdId || -1)) {
-//     store.dispatch('setSelectedGeneIds', []);
-//     store.dispatch('setSelectedData', null);
-//     return;
-//   }
-
-//   // If shift key is held, we'll just add to the selections, otherwise, reset first
-//   let geneIds: number[] = event.shiftKey ? [...store.state.selectedGeneIds] : [];
-
-//   let newSelectedData: SelectedData[] = [];
-//   if (section.gene) {
-//     newSelectedData.push(new SelectedData(section.gene.clone(), 'Gene'));
-//     geneIds.push(section.gene?.rgdId);
-
-//     let geneData = props.geneList.get(section.gene.rgdId);
-
-//     if (geneData?.orthologs && geneData.orthologs?.length > 0) {
-//       const orthoIds = geneData.orthologs;
-//       geneIds.push(...orthoIds);
-      
-//       const orthoData = orthoIds.map((id: number) => {
-//         return props.geneList.get(id);
-//       });
-
-//       orthoData.forEach(data => newSelectedData.push(new SelectedData(data?.clone(), 'Gene')));
-//     }
-//   }
-
-//   store.dispatch('setSelectedGeneIds', geneIds || []);
-//   if (event.shiftKey) {
-//     const selectedDataArray = [...(store.state.selectedData || []), ...newSelectedData];
-//     store.dispatch('setSelectedData', selectedDataArray);
-//   } else {
-//     store.dispatch('setSelectedData', newSelectedData);
-//   }
-// };
-
 const highlightSelections = (selectedGeneIds: number[]) => {
-  // Look through the sections and highlight based on selected genes
-  datatrackSets.value.forEach((set) => {
-    // TODO (SGD): Why the magic number "0" here?
-    //  If the DatatrackSet is intended to have only one type of Datatrack, we should expand that model.
-    //  Otherwise this is a fragile way to do this (datatracks could be empty)
-    if (set.datatracks.length > 0 && set.datatracks[0].type === 'gene')
-    {
-      // TODO: Feels a bit fragile to tell the type-checker to treat this as GeneDatatrack[]. Maybe there
-      // is a better way to organize our different types of DatatrackSection models to allow Typescript to
-      // "know" that this is a GeneDatatrack[] type. We should be aware that "as" will not throw an error if
-      // set.datatracks is not of type GeneDatatrack[].
-      (set.datatracks as GeneDatatrack[]).forEach((section) => {
-        if (section.gene == null)
-        {
-          return;
-        }
+  // Look through the backbone gene datatracks and highlight based on selected genes
+  (datatrackSets.value[props.backboneSet.geneDatatrackSetIndex]?.datatracks as GeneDatatrack[])
+    .forEach(section => {
+      if (section.gene == null)
+      {
+        return;
+      }
 
-        if (selectedGeneIds.includes(section.gene.rgdId)) 
-        {
-          section.isSelected = true;
-        } 
-        else 
-        {
-          section.isSelected = false;
-        }
-      });
-    }
-  });
+      if (selectedGeneIds.includes(section.gene.rgdId)) 
+      {
+        section.isSelected = true;
+      } 
+      else 
+      {
+        section.isSelected = false;
+      }
+    });
 };
 
 const updatePositionLabelFromMouseEvent = (event: MouseEvent) => {
