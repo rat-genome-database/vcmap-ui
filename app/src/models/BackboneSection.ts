@@ -1,4 +1,4 @@
-import Label, { GeneLabel } from './Label';
+import Label from './Label';
 import SVGConstants from '@/utils/SVGConstants';
 import { Formatter } from '@/utils/Formatter';
 import Chromosome from './Chromosome';

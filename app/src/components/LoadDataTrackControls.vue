@@ -63,11 +63,9 @@
   
 <script setup lang="ts">
   import { computed, ref, onMounted } from 'vue';
-  import { useRouter } from 'vue-router';
   import { useStore } from 'vuex';
   import { key } from '@/store';
   import Species from '@/models/Species';
-  import SpeciesApi from '@/api/SpeciesApi';
   // import SpeciesApi from '@/api/SpeciesApi';
   import SpeciesMap from '@/models/SpeciesMap';
 
@@ -99,7 +97,6 @@ interface DataTrackItem
 
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
-const router = useRouter();
 const store = useStore(key);
 
 // refs
@@ -164,11 +161,6 @@ const close = () => {
   dataTrackItems.value.length = 0;
   props.onCloseLoadDataTrackModal();
 };
-
-// const goToConfiguration = () => {
-//   close();
-//   router.push('/');
-// };
 
 const onConfirm = () => {
   close();

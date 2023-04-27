@@ -137,7 +137,7 @@ watch(() => store.state.detailedBasePairRequest, async () => {
     $log.debug(`Detailed Base Pair range change request detected (${store.state.detailedBasePairRequest?.start},
        ${store.state.detailedBasePairRequest?.stop}).`);
 
-    await queryAndProcessSyntenyForBasePairRange(store.state.chromosome, store.state.detailedBasePairRequest.start, store.state.detailedBasePairRequest.stop, store.state.species.activeMap.key);
+    await queryAndProcessSyntenyForBasePairRange(store.state.chromosome, store.state.detailedBasePairRequest.start, store.state.detailedBasePairRequest.stop);
 
     triggerDetailedPanelProcessing(store.state.chromosome, store.state.detailedBasePairRequest.start, store.state.detailedBasePairRequest.stop);
     // Data processing done, ready to complete request
@@ -246,7 +246,7 @@ async function initVCMapProcessing()
     showToast('warn', 'Loading Impact', message, 5000);
   }, 3000);
 
-  processSynteny(speciesSyntenyDataArray, 0, store.state.chromosome.seqLength, store.state.species.activeMap.key);
+  processSynteny(speciesSyntenyDataArray, 0, store.state.chromosome.seqLength);
 
   //
   // Adjust the selected start and stop based on our configuration mode (load by gene vs load by position)
@@ -279,7 +279,7 @@ async function initVCMapProcessing()
   if (selectionStart !== 0 || selectionStop !== store.state.chromosome.seqLength)
   {
     // Query synteny at threshold determined by selected base pair range (for detailed panel)
-    await queryAndProcessSyntenyForBasePairRange(store.state.chromosome, selectionStart, selectionStop, store.state.species.activeMap.key);
+    await queryAndProcessSyntenyForBasePairRange(store.state.chromosome, selectionStart, selectionStop);
   }
 
   // Kick off the OverviewPanel load
@@ -295,7 +295,7 @@ async function initVCMapProcessing()
  * Process a synteny block response (with genes, gaps) from the API.
  * TODO: We might need to control the number of chainLevel >= 2 we add, these are excessive...
  */
-function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefined, backboneStart: number, backboneStop: number, backboneMapKey: number)
+function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefined, backboneStart: number, backboneStop: number)
 {
   // Make sure we have something to do
   if (!speciesSyntenyDataArray)
@@ -618,7 +618,7 @@ function processAlignmentsOfGeneInsideOfViewport(gene: Gene, targetBlock: Block)
   if (gene.backboneStop > targetBlock.backboneStop) gene.backboneStop = targetBlock.backboneStop;
 }
 
-async function queryAndProcessSyntenyForBasePairRange(backboneChromosome: Chromosome, start: number, stop: number, backboneMapKey: number)
+async function queryAndProcessSyntenyForBasePairRange(backboneChromosome: Chromosome, start: number, stop: number)
 {
   $log.debug(`Querying for specific base pair range: ${start} - ${stop}`);
   const slowAPI = setTimeout(() => {
@@ -642,7 +642,7 @@ async function queryAndProcessSyntenyForBasePairRange(backboneChromosome: Chromo
   clearTimeout(slowAPI);
 
   // Process response
-  processSynteny(speciesSyntenyDataArray, start, stop, backboneMapKey);
+  processSynteny(speciesSyntenyDataArray, start, stop);
 
   // If any variant data has been loaded, check for new blocks after syntenyTree has been updated
   const syntenyTreeKeys = syntenyTree.value.keys();
