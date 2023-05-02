@@ -14,9 +14,9 @@ type OrthologPositionInfo = {
   endX: number;
 };
 
-export function createOrthologLinesV2(geneList: Map<number, Gene>, backboneSet: BackboneSet, offBackboneSyntenyRegionSets: SyntenyRegionSet[])
+export function createOrthologLines(geneList: Map<number, Gene>, backboneSet: BackboneSet, offBackboneSyntenyRegionSets: SyntenyRegionSet[])
 { 
-  logger.time(`CreateOrthologLinesV2`);
+  logger.time(`CreateOrthologLines`);
 
   logger.time(`Ortholog Line Data Prep`);
   //
@@ -178,7 +178,7 @@ export function createOrthologLinesV2(geneList: Map<number, Gene>, backboneSet: 
     orthologLines.push(...chainLines);
   });
   logger.timeEnd(`Ortholog Line Creation`);
-  logger.timeEnd(`CreateOrthologLinesV2`);
+  logger.timeEnd(`CreateOrthologLines`);
 
   return orthologLines;
 }
