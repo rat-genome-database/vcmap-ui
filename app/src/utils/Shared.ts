@@ -5,9 +5,8 @@
 import Block, { Gap, GenomicPosition } from "@/models/Block";
 import Gene from "@/models/Gene";
 import SVGConstants, { PANEL_SVG_STOP, PANEL_SVG_START, PANEL_HEIGHT } from "./SVGConstants";
-import { useLogger } from "vue-logger-plugin";
 import { BackboneAlignment } from "@/models/GenomicSection";
-const $log = useLogger();
+import logger from "@/logger";
 
 // Don't render anything smaller than this
 const SMALLEST_RENDERABLE_SVG_UNIT = 0.2; // 1/5th of an SVG unit
@@ -187,8 +186,8 @@ export function processAlignmentsOfGeneInsideOfViewport(start: number, stop: num
   if (!startingSection || !endingSection)
   {
     // Something went wrong...
-    $log.error(`Gene backbone alignment could not be determined based on block with gaps. See debug logs.`);
-    $log.debug(start, stop, targetBlock);
+    logger.error(`Gene backbone alignment could not be determined based on block with gaps. See debug logs.`);
+    logger.debug(start, stop, targetBlock);
     // Fallback to processing without accounting for gaps
     return processAlignmentsOfGeneOutsideOfViewport(start, stop, targetBlock);
   }

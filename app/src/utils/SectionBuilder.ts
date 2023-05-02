@@ -6,15 +6,11 @@ import Gene from '@/models/Gene';
 import SyntenyRegionSet from '@/models/SyntenyRegionSet';
 import { GenomicSectionFactory } from '@/models/GenomicSectionFactory';
 import Block from "@/models/Block";
-import {useLogger} from "vue-logger-plugin";
 import { RenderType } from '@/models/GenomicSection';
 import { Orientation } from '@/models/SyntenySection';
 import { getThreshold } from './Shared';
 import { createVariantDatatracks } from './VariantBuilder';
 import logger from '@/logger';
-
-// FIXME: I don't think we can use the logger here...
-const $log = useLogger();
 
 /**
  * Create the off-backbone visual elements representing the large level 1 synteny
@@ -124,7 +120,7 @@ export async function createSyntenicRegionSets(syntenyData: Map<number, Block[]>
       const species = comparativeSpecies.find((species) => { return species.activeMap.key == mapKey; });
       if (!species)
       {
-        $log.error(`Cannot find Species object for mapKey ${mapKey}!!`);
+        logger.error(`Cannot find Species object for mapKey ${mapKey}!!`);
         return;
       }
 
@@ -332,7 +328,7 @@ let createStart = 0, pushStart = 0, createTotal = 0.0, pushTotal = 0.0;
     const genomicElement: Gene = genomicData[idx];
     if (genomicElement.backboneStart === null || genomicElement.backboneStop === null)
     {
-      $log.error(`Genomic Element ${genomicElement.symbol} sent to render without a backbone alignment`);
+      logger.error(`Genomic Element ${genomicElement.symbol} sent to render without a backbone alignment`);
       continue;
     }
 
