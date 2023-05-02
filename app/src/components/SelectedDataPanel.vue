@@ -126,6 +126,18 @@
           <div data-test="chromosome-name">Chromosome: {{dataObject.genomicSection.offBackboneGene.chromosome}}</div>
           <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(dataObject.genomicSection.offBackboneGene.start)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.offBackboneGene.stop)}}</div>
         </template>
+
+        <template v-else-if="dataObject?.type === 'variantDensity'">
+          <div>
+            <span>Chr{{dataObject.genomicSection.chromosome}}: </span>
+            <span>
+              {{Formatter.addCommasToBasePair(dataObject.genomicSection.speciesStart)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.speciesStop)}}
+            </span>
+          </div>
+          <div>
+            <span>Variant Count: {{ Formatter.addCommasToBasePair(dataObject.genomicSection.variantCount) }}</span>
+          </div>
+        </template>
       </template>
     </div>
   </Panel>

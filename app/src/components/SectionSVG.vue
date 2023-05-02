@@ -130,7 +130,7 @@ import { watch, onMounted, ref } from 'vue';
 import SelectedData, { SelectedDataType } from '@/models/SelectedData';
 import SyntenyRegion from '@/models/SyntenyRegion';
 import SyntenySection from '@/models/SyntenySection';
-import { GeneDatatrack } from '@/models/DatatrackSection';
+import DatatrackSection, { GeneDatatrack } from '@/models/DatatrackSection';
 import { computed, toRefs } from '@vue/reactivity';
 import { useStore } from 'vuex';
 import { key } from '@/store';
@@ -220,16 +220,16 @@ const showBasePairLine = computed(() => {
     && (isRegionHovered.value || basePairPositionLabel.value !== '');
 });
 
-const onMouseEnter = (section: SyntenySection | GeneDatatrack, type: SelectedDataType) => {
+const onMouseEnter = (section: SyntenySection | DatatrackSection, type: SelectedDataType) => {
 
   section.isHovered = true;
 
-  // NOTE: ignore variant/qtl datatracks for now
-  if (section.type === 'variant' || section.type === 'qtl') return;
+  // NOTE: ignore qtl datatracks for now
+  if (section.type === 'qtl') return;
 
   const genesAreSelected = store.state.selectedGeneIds.length > 0;
   let selectedDataList: SelectedData[] = [];
-  if (type === 'Gene')
+  if (section.type === 'gene')
   {
     //
     // Gene datatrack section
@@ -255,7 +255,13 @@ const onMouseEnter = (section: SyntenySection | GeneDatatrack, type: SelectedDat
     //
     // Synteny section
     if (!genesAreSelected)
-      selectedDataList.push(new SelectedData(section, type));
+      if (section.type === 'variant')
+      {
+        selectedDataList.push(new SelectedData(section, 'variantDensity'));
+      } else
+      {
+        selectedDataList.push(new SelectedData(section, type));
+      }
   }
 
   if (selectedDataList.length > 0)
@@ -264,7 +270,7 @@ const onMouseEnter = (section: SyntenySection | GeneDatatrack, type: SelectedDat
   }
 };
 
-const onMouseLeave = (section: VCMapSVGElement, type: SelectedDataType) => {
+const onMouseLeave = (section: DatatrackSection | SyntenySection, type: SelectedDataType) => {
   emit('synteny-hover', null);
   basePairPositionLabel.value = '';
 
@@ -278,7 +284,7 @@ const onMouseLeave = (section: VCMapSVGElement, type: SelectedDataType) => {
     store.dispatch('setSelectedData', null);
   }
 
-  if (type === 'Gene') 
+  if (section.type === 'gene')
   {
     const geneSection = section as GeneDatatrack;
     setHoverOnGeneLinesAndDatatrackSections(geneSection.lines, false);
