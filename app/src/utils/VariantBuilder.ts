@@ -5,13 +5,15 @@ import VariantApi from "@/api/VariantApi";
 import Species from "@/models/Species";
 import BackboneSection from "@/models/BackboneSection";
 import { VariantDensity } from "@/models/DatatrackSection";
+import { processAlignmentsOfGeneInsideOfViewport, processAlignmentsOfGeneOutsideOfViewport } from "./Shared";
+import Block from "@/models/Block";
 
 const NUM_BINS = 100; // For whole window per species
 const MIN_BIN_SIZE = 10000; // Smallest size for a variant density datatrack (in species base pairs)
 
 export function createVariantDatatracks(factory: GenomicSectionFactory, positions: number[],
   sequenceStart: number, sequenceStop: number, backboneStart: number, backboneStop: number,
-  invertedBlock: boolean): {datatracks: VariantDensity[], maxCount: number, binSize: number}
+  invertedBlock: boolean, targetBlock?: Block): {datatracks: VariantDensity[], maxCount: number, binSize: number}
 {
   const seqLength = sequenceStop - sequenceStart;
   const backboneWindowStart = factory.windowBasePairRange.start;
@@ -45,9 +47,10 @@ export function createVariantDatatracks(factory: GenomicSectionFactory, position
     {
       const binStop = Math.min(binStart + binSize, sequenceStop);
       const backboneBinStart = Math.max(backboneBinStop - backboneBinSize, backboneStart);
-      if (isSectionInView(backboneBinStart, backboneBinStop, backboneWindowStart, backboneWindowStop))
+      const backboneAlignment = getBackboneAlignment(binStart, binStop, backboneBinStart, backboneBinStop,
+        backboneWindowStart, backboneWindowStop, targetBlock);
+      if (isSectionInView(backboneAlignment.start, backboneAlignment.stop, backboneWindowStart, backboneWindowStop))
       {
-        const backboneAlignment: BackboneAlignment = { start: backboneBinStart, stop: backboneBinStop };
         const newVariant = factory.createVariantDensitySection(variantCounts[i], maxCount, binStart, binStop, backboneAlignment);
         newVariant.adjustYPositionsBasedOnVisibleStartAndStop(factory.windowBasePairRange);
         variantDatatracks.push(newVariant);
@@ -62,9 +65,10 @@ export function createVariantDatatracks(factory: GenomicSectionFactory, position
     {
       const binStop = Math.min(binStart + binSize, sequenceStop);
       const backboneBinStop = Math.min(backboneBinStart + backboneBinSize, backboneStop);
-      if (isSectionInView(backboneBinStart, backboneBinStop, backboneWindowStart, backboneWindowStop))
+      const backboneAlignment = getBackboneAlignment(binStart, binStop, backboneBinStart, backboneBinStop,
+        backboneWindowStart, backboneWindowStop, targetBlock);
+      if (isSectionInView(backboneAlignment.start, backboneAlignment.stop, backboneWindowStart, backboneWindowStop))
       {
-        const backboneAlignment: BackboneAlignment = { start: backboneBinStart, stop: backboneBinStop };
         const newVariant = factory.createVariantDensitySection(variantCounts[i], maxCount, binStart, binStop, backboneAlignment);
         newVariant.adjustYPositionsBasedOnVisibleStartAndStop(factory.windowBasePairRange);
         variantDatatracks.push(newVariant);
@@ -136,4 +140,19 @@ function isSectionInView(start: number, stop: number, backboneStart: number, bac
   return (start > backboneStart && start < backboneStop)
     || (stop < backboneStop && stop > backboneStart)
     || (start < backboneStart && stop > backboneStop);
+}
+
+function getBackboneAlignment(binStart: number, binStop: number,
+  backboneStart: number, backboneStop: number, backboneWindowStart: number,
+  backboneWindowStop: number, targetBlock?: Block): BackboneAlignment
+{
+  if (targetBlock) {
+    if (isSectionInView(targetBlock.backboneStart, targetBlock.backboneStop, backboneWindowStart, backboneWindowStop)) {
+      return processAlignmentsOfGeneInsideOfViewport(binStart, binStop, targetBlock);
+    } else {
+      return processAlignmentsOfGeneOutsideOfViewport(binStart, binStop, targetBlock);
+    }
+  } else {
+    return { start: backboneStart, stop: backboneStop};
+  }
 }

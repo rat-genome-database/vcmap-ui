@@ -223,7 +223,7 @@ console.timeEnd("splitBlockWithGaps");
     if (blockVariantPositions && processVariantDensity)
     {
       const variantDatatracks = createVariantDatatracks(factory, blockVariantPositions.positions,
-        blockInfo.start, blockInfo.stop, blockInfo.backboneStart, blockInfo.backboneStop, blockInfo.isBlockInverted());
+        blockInfo.start, blockInfo.stop, blockInfo.backboneStart, blockInfo.backboneStop, blockInfo.isBlockInverted(), blockInfo);
       currSyntenicRegion.addDatatrackSections(variantDatatracks.datatracks, 0, 'variant');
       regionBinSize = variantDatatracks.binSize;
       if (variantDatatracks.maxCount > regionMaxCount)
