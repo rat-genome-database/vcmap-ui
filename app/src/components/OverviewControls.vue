@@ -4,7 +4,7 @@
       <h4>Overview</h4>
       <div class="grid unpadded">
         <div class="col-5">Backbone:</div>
-        <div class="col-7 bold">{{store.state.species?.name}} chr{{ store.state.chromosome?.chromosome }} ({{ store.state.species?.activeMap.name }})</div>
+        <div class="col-7 bold" data-test="backbone-overview-display">{{store.state.species?.name}} chr{{ store.state.chromosome?.chromosome }} ({{ store.state.species?.activeMap.name }})</div>
         <div class="col-5">Length:</div>
         <div class="col-7 bold">{{backboneLength}}bp</div>
         <div class="p-fluid col-12 bold">

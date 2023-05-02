@@ -37,6 +37,6 @@ describe('OverviewControls', () => {
     });
 
     const speciesText = wrapper.get('[data-test="backbone-overview-display"]');
-    expect(speciesText.text()).toBe('Test Species chr1:0-1,000,000');
+    expect(speciesText.text()).toBe('Test Species chr1 (GRCh38)');
   });
 });
