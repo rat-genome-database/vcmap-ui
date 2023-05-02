@@ -22,8 +22,8 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
     return inSelectMode;
   };
 
-  const detailedSelectionHandler = (event: any) => {
-    if (store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating)
+  const detailedSelectionHandler = (event: any, isOverviewPanelSelecting: boolean) => {
+    if (store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating || isOverviewPanelSelecting)
     {
       // Don't allow zoom until both panels are done updating
       return;
