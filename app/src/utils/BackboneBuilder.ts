@@ -8,6 +8,7 @@ import { RenderType } from "@/models/GenomicSection";
 import { GenomicSectionFactory } from "@/models/GenomicSectionFactory";
 import { getThreshold } from "./Shared";
 import SpeciesMap from "@/models/SpeciesMap";
+import logger from "@/logger";
 
 export interface ProcessedGenomicData
 {
@@ -75,7 +76,7 @@ export function backboneDatatrackBuilder(species: Species, genomicData: Gene[], 
     processedGenomicData.datatracks.push(geneDatatrackSection);
   }
 
-  console.debug(`Filtered out gene count for backbone: ${filteredGeneCount}`);
+  logger.debug(`Filtered out gene count for backbone: ${filteredGeneCount}`);
   return { backboneSection, processedGenomicData };
 }
 

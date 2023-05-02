@@ -26,7 +26,9 @@ import { useStore } from 'vuex';
 import { key } from '@/store';
 import { computed, ref, watch } from 'vue';
 import { SliderSlideEndEvent } from 'primevue/slider';
+import { useLogger } from 'vue-logger-plugin';
 
+const $log = useLogger();
 const store = useStore(key);
 
 const zoomLevel = ref(1.0);
@@ -58,11 +60,11 @@ const onZoomSliderEnd = (event: SliderSlideEndEvent) => {
 const zoom = (newZoomLevel: number) => {
   const backboneChromosome = store.state.chromosome;
 
-  console.debug(`Zoom level: ${newZoomLevel}`);
+  $log.debug(`Zoom level: ${newZoomLevel}`);
 
   if (backboneChromosome == null)
   {
-    console.error('Cannot zoom if selectedRegion, viewportSelection, or backboneChromosome is null');
+    $log.error('Cannot zoom if selectedRegion, viewportSelection, or backboneChromosome is null');
     return;
   }
 
@@ -113,11 +115,11 @@ const zoom = (newZoomLevel: number) => {
 
 const logZoom = (zoomLevel: number) => {
   zoomStep.value = zoomLevel;
-  console.debug(`Zoom Step: ${zoomStep.value}`);
+  $log.debug(`Zoom Step: ${zoomStep.value}`);
   const selectedRegion = store.state.selectedBackboneRegion;
 
   if (selectedRegion == null || selectedRegion.viewportSelection == null) {
-    console.error('ERROR WITH SELECTED REGION');
+    $log.error('ERROR WITH SELECTED REGION');
   } 
   else {
     // check to zoom out to full backbone selection if zoom level is 1
@@ -131,7 +133,7 @@ const logZoom = (zoomLevel: number) => {
       let logZoom = logMinZoom + (logMaxZoom-logMinZoom)*zoomLevel/(100-1);
       let zoomed = Math.exp(logZoom);
 
-      console.debug(`'Zoomed' after logZoom: ${zoomed}`);
+      $log.debug(`'Zoomed' after logZoom: ${zoomed}`);
       zoom(zoomed);
     }
   }

@@ -1,3 +1,4 @@
+import logger from "@/logger";
 import BackboneSet from "@/models/BackboneSet";
 import { GeneDatatrack } from "@/models/DatatrackSection";
 import Gene from "@/models/Gene";
@@ -105,7 +106,7 @@ export function createOrthologLinesV2(geneList: Map<number, Gene>, backboneSet: 
       
       if (order == null)
       {
-        console.error(`No order was returned from speciesPositionMap for ortholog gene rgdId: ${o.rgdId}`);
+        logger.error(`No order was returned from speciesPositionMap for ortholog gene rgdId: ${o.rgdId}`);
         return;
       }
 

@@ -11,6 +11,7 @@ import { RenderType } from '@/models/GenomicSection';
 import { Orientation } from '@/models/SyntenySection';
 import { getThreshold } from './Shared';
 import { createVariantDatatracks } from './VariantBuilder';
+import logger from '@/logger';
 
 // FIXME: I don't think we can use the logger here...
 const $log = useLogger();
@@ -130,7 +131,7 @@ export async function createSyntenicRegionSets(syntenyData: Map<number, Block[]>
       const syntenyRegionSet = syntenicSectionBuilder(speciesSyntenyData, species, pos,
           backboneStart, backboneStop, 'detailed');
 
-      console.log(`Completed build of Synteny for ${syntenyRegionSet?.mapName}, with ${syntenyRegionSet?.regions.length} regions`);
+      logger.log(`Completed build of Synteny for ${syntenyRegionSet?.mapName}, with ${syntenyRegionSet?.regions.length} regions`);
 
       // Add this to our final Array
       if (syntenyRegionSet) syntenyRegionSets.push(syntenyRegionSet);
@@ -171,7 +172,7 @@ function syntenicSectionBuilder(speciesSyntenyData: Block[], species: Species, s
   let regionBinSize = 0;
   // const allGeneLabels: Label[] = [];
 
-console.debug(`About to loop over ${speciesSyntenyData.length} Blocks...`);
+logger.debug(`About to loop over ${speciesSyntenyData.length} Blocks...`);
   // Step 1: Create syntenic sections for each VISIBLE block
   for (let index = 0; index < speciesSyntenyData.length; index++)
   {
@@ -215,7 +216,7 @@ console.timeEnd('createSyntenySectionAndRegion');
 
     // Step 2: Split the gapless Block into multiple GenomicSections based on gaps.
 console.time("splitBlockWithGaps");
-    console.log(`Splitting block w/ ${blockGaps.length} gaps`);
+    logger.log(`Splitting block w/ ${blockGaps.length} gaps`);
     currSyntenicRegion.splitBlockWithGaps(factory, blockGaps);
 console.timeEnd("splitBlockWithGaps");
 
@@ -247,14 +248,14 @@ console.time("  filterVisibleGenes");
       });
 console.timeEnd("  filterVisibleGenes");
 
-// console.debug("Step 3: Create Syntenic Sections for each gene")
+// logger.debug("Step 3: Create Syntenic Sections for each gene")
       // Step 3.1: Pass block data and gene data to gene processing pipeline
       // NOTE: We might want to instead associate block data with gene data, store data in an array, and pass all gene
       //   data at once for processing in order to avoid multiple passes of gene data for initial processing and then finding orthologs
 let timerLabel = `  syntenicDataTrackBuilder(${visibleGenes.length})`;
 console.time(timerLabel);
       // const processedGeneInfo = {genomicData: [], orthologLines: [], geneIds: []};
-// console.log('Visible Gene list: ', visibleGenes);
+// logger.log('Visible Gene list: ', visibleGenes);
       const processedGeneInfo = syntenicDatatrackBuilder(factory, visibleGenes, blockInfo.orientation);
 // FIXME: I have a theory that the "Gene" object used to create the GeneDataTrack may be too heavy and not need references
 //   for things like the Block it is owned by. Would like to explore this next potentially...
@@ -353,8 +354,8 @@ pushStart = performance.now();
 pushTotal += (performance.now() - pushStart);
   }
 
-console.debug(`    Create total: ${createTotal}`);
-console.debug(`    Push total: ${pushTotal}`);
+logger.debug(`    Create total: ${createTotal}`);
+logger.debug(`    Push total: ${pushTotal}`);
 
   return processedGenomicData;
 }

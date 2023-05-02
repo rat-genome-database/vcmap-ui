@@ -62,12 +62,13 @@
 </template>
   
 <script setup lang="ts">
-  import { computed, ref, onMounted } from 'vue';
-  import { useStore } from 'vuex';
-  import { key } from '@/store';
-  import Species from '@/models/Species';
-  // import SpeciesApi from '@/api/SpeciesApi';
-  import SpeciesMap from '@/models/SpeciesMap';
+import { computed, ref, onMounted } from 'vue';
+import { useStore } from 'vuex';
+import { key } from '@/store';
+import Species from '@/models/Species';
+// import SpeciesApi from '@/api/SpeciesApi';
+import SpeciesMap from '@/models/SpeciesMap';
+import logger from '@/logger';
 
 /**
  * Can use v-model:show to do 2 way binding
@@ -144,7 +145,7 @@ const onAddDataTrack = () => {
   }
   else {
     // todo: Error Handling
-    console.log("Item Limit Reached");
+    logger.error("Item Limit Reached");
   }
 };
 
@@ -174,8 +175,8 @@ function prepopulateConfigOptions()
   }
   catch (err: any)
   {
-    console.log('An error occurred while loading available species');
-    console.log(err);
+    logger.error('An error occurred while loading available species');
+    logger.error(err);
   }
 
   // try
@@ -188,7 +189,7 @@ function prepopulateConfigOptions()
   // }
   // catch (err: any)
   // {
-  //   console.log('An error occurred while looking up the available species');
+  //   logger.error('An error occurred while looking up the available species');
   // }
 
   if (speciesOptions.value.length === 0 || store.state.species == null)

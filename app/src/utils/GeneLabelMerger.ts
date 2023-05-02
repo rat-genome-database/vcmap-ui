@@ -1,3 +1,4 @@
+import logger from '@/logger';
 import Gene from '@/models/Gene';
 import { GeneLabel, IntermediateGeneLabel } from '../models/Label';
 import { PANEL_SVG_START } from './SVGConstants';
@@ -9,7 +10,7 @@ export function mergeAndCreateGeneLabels(possibleLabels: IntermediateGeneLabel[]
 {
   const geneLabels: GeneLabel[] = [];
 
-  console.debug(` Merge gene labels [processing ${possibleLabels.length}]`);
+  logger.debug(` Merge gene labels [processing ${possibleLabels.length}]`);
   // Sort the labels by their SVG Y position
   possibleLabels.sort((a, b) => a.posY - b.posY);
 

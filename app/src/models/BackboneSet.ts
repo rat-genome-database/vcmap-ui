@@ -8,6 +8,7 @@ import { GenomicSet } from "./GenomicSet";
 import Label, { GeneLabel, IntermediateGeneLabel } from "./Label";
 import { calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment, getDetailedPanelXPositionForBackboneDatatracks, isGenomicDataInViewport } from "@/utils/Shared";
 import SpeciesMap from "./SpeciesMap";
+import logger from "@/logger";
 
 /**
  * Model for representing a set of Backbone sections and its datatrack sections
@@ -121,7 +122,7 @@ export default class BackboneSet extends GenomicSet
 
     if (xPos == null)
     {
-      console.debug(`(BackboneSet) generateGeneLabels: xPos is null after iterating through DatatrackSets`);
+      logger.debug(`(BackboneSet) generateGeneLabels: xPos is null after iterating through DatatrackSets`);
       return;
     }
 
@@ -195,7 +196,7 @@ export default class BackboneSet extends GenomicSet
 
     if (xPos == null)
     {
-      console.debug(`(BackboneSet) updateGeneLabelXPositions: xPos is null after iterating through DatatrackSets`);
+      logger.debug(`(BackboneSet) updateGeneLabelXPositions: xPos is null after iterating through DatatrackSets`);
       return;
     }
 

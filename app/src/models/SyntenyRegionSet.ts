@@ -7,6 +7,7 @@ import DatatrackSet from "./DatatrackSet";
 import { mergeAndCreateGeneLabels } from "@/utils/GeneLabelMerger";
 import { calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment, getDetailedPanelXPositionForDatatracks, getDetailedPanelXPositionForSynteny, isGenomicDataInViewport } from "@/utils/Shared";
 import SpeciesMap from "./SpeciesMap";
+import logger from "@/logger";
 
 const LEVEL_2_WIDTH_MULTIPLIER = 0.75;
 
@@ -83,8 +84,8 @@ export default class SyntenyRegionSet extends GenomicSet
 
     if (xPos == null || visibleBackboneStart == null || visibleBackboneStop == null)
     {
-      console.debug(`(SyntenyRegionSet) generateGeneLabels: xPos || visibleBackboneStart || visibleBackboneStop is null after iterating through DatatrackSets`);
-      console.debug(`  ${xPos}, ${visibleBackboneStart}, ${visibleBackboneStop}`);
+      logger.debug(`(SyntenyRegionSet) generateGeneLabels: xPos || visibleBackboneStart || visibleBackboneStop is null after iterating through DatatrackSets`);
+      logger.debug(`  ${xPos}, ${visibleBackboneStart}, ${visibleBackboneStop}`);
       return;
     }
 

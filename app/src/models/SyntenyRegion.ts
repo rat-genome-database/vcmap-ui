@@ -7,6 +7,7 @@ import { GenomicSectionFactory } from './GenomicSectionFactory';
 import { Gap } from "@/models/Block";
 import Gene from './Gene';
 import { isGenomicDataInViewport } from '@/utils/Shared';
+import logger from '@/logger';
 
 interface SyntenyRegionParams
 {
@@ -83,7 +84,7 @@ export default class SyntenyRegion
       .sort((a, b) => a.backboneStart - b.backboneStart);
     console.timeEnd(`Sort gaps for splitBlockWithGaps`);
 
-    console.log(` splitBlockWithGaps: filtered ${gaps.length} down gaps to ${sortedGaps.length}`);
+    logger.log(` splitBlockWithGaps: filtered ${gaps.length} down gaps to ${sortedGaps.length}`);
 
     this.syntenyBlocks = [];
     this.syntenyGaps = [];

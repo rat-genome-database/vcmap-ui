@@ -96,24 +96,24 @@ const variantPositionsList = ref<VariantPositions[]>([]);
 // TODO: temp ignore here, should remove once this method is actively being used
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const onInspectPressed = () => {
-  console.debug('Gene List:', geneList);
-  console.debug('Synteny Tree:', syntenyTree);
+  $log.debug('Gene List:', geneList);
+  $log.debug('Synteny Tree:', syntenyTree);
   // NOTE: I cannot seem to get this to force child updates when using a shallowRef???
   //triggerRef(geneList);
 
-  console.debug('Selected Data:', store.state.selectedData);
+  $log.debug('Selected Data:', store.state.selectedData);
 
   // Specific analysis (Mcur1): Compare selectedData after commit to data from this.geneList
   // SelectedData[]
   // store.state.selectedData?.forEach((selectedData) => {
   //   let gene = (selectedData.genomicSection as Gene);
-  //   console.log('Gene data (selectedData):', gene.symbol, gene.rgdId, gene.chromosome, gene.block);
+  //   $log.log('Gene data (selectedData):', gene.symbol, gene.rgdId, gene.chromosome, gene.block);
   // });
   //
   // // this.geneList
   // geneList.value.forEach((gene) => {
   //   if (gene.symbol == 'Mcur1')
-  //     console.log('Gene data (geneList):', gene.symbol, gene.rgdId, gene.chromosome, gene.block);
+  //     $log.log('Gene data (geneList):', gene.symbol, gene.rgdId, gene.chromosome, gene.block);
   // });
 };
 // TODO endTEMP
@@ -394,7 +394,7 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
       if (blockData.block.chainLevel > MAX_CHAINLEVEL_GENES)
       {
         // Skip saving any genes that are above our defined max chainlevel for genes
-        console.log(`Skipping ${blockData.genes.length} genes due to chain level filter`);
+        $log.log(`Skipping ${blockData.genes.length} genes due to chain level filter`);
         continue;
       }
 
@@ -425,7 +425,7 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
           gene.backboneStop = backboneAlignment.stop;
 
           // This gene has no parent block -- assign to target block
-          // console.log(`Gene ${gene.symbol} without parent block, assigning to block ${targetBlock.chromosome.chromosome} (${targetBlock.start}, ${targetBlock.stop})`);
+          // $log.log(`Gene ${gene.symbol} without parent block, assigning to block ${targetBlock.chromosome.chromosome} (${targetBlock.start}, ${targetBlock.stop})`);
           gene.block = targetBlock;
           // TODO: sort OR use addGene() approach here?
           targetBlock.genes.push(gene);
@@ -452,7 +452,7 @@ async function queryAndProcessSyntenyForBasePairRange(backboneChromosome: Chromo
 {
   $log.debug(`Querying for specific base pair range: ${start} - ${stop}`);
   const slowAPI = setTimeout(() => {
-    console.log('API is taking longer than usual to respond...');
+    $log.log('API is taking longer than usual to respond...');
     showToast('warn', 'Loading Impact', 'API is taking a while to respond, please be patient', 5000);
   }, 15000);
 
