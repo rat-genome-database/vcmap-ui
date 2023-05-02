@@ -51,13 +51,14 @@ import { backboneOverviewError, missingComparativeSpeciesError, noRegionLengthEr
 import { isGenomicDataInViewport, getThreshold, processAlignmentsOfGeneInsideOfViewport, processAlignmentsOfGeneOutsideOfViewport } from '@/utils/Shared';
 import { buildVariantPositions } from '@/utils/VariantBuilder';
 import VariantPositions from '@/models/VariantPositions';
+import { VCMapLogger } from '@/logger';
 
 // TODO: Can we figure out a better way to handle blocks with a high chainlevel?
 const MAX_CHAINLEVEL = 2;
 const MAX_CHAINLEVEL_GENES = 1;
 
 const store = useStore(key);
-const $log = useLogger();
+const $log = useLogger() as VCMapLogger;
 const toast = useToast();
 
 const { showDialog, dialogHeader, dialogMessage, showDialogBackButton, dialogTheme, onError } = useDialog();
@@ -365,10 +366,10 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
           stop: blockData.block.stop,
         });
 
-        console.time("AddGapsNewBlock");
+        $log.time("AddGapsNewBlock");
         // Gaps (add ALL)
         newBlock.addGaps(blockData.gaps, backboneStart, backboneStop);
-        console.timeEnd("AddGapsNewBlock");
+        $log.timeEnd("AddGapsNewBlock");
 
         knownSpeciesBlocks.push(newBlock);
         targetBlock = newBlock;
@@ -381,9 +382,9 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
         existingBlockGapCountChanged = (targetBlock.gaps.length !== blockData.gaps.length);
 
         const timerLabel = `AddGapsExistingBlock(${targetBlock.gaps.length}, ${blockData.gaps.length})`;
-        console.time(timerLabel);
+        $log.time(timerLabel);
         targetBlock?.addGaps(blockData.gaps, backboneStart, backboneStop);
-        console.timeEnd(timerLabel);
+        $log.timeEnd(timerLabel);
       }
       else
       {
@@ -399,7 +400,7 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
       }
 
       // Handle genes (we need to inspect all of them even in the case of a new block)
-      console.time(`ProcessGenesForBlock`);
+      $log.time(`ProcessGenesForBlock`);
       for (let geneIdx = 0, numGenes = blockData.genes.length; geneIdx < numGenes; geneIdx++) {
         // Use any existing genes if we have already loaded one
         const geneData = blockData.genes[geneIdx];
@@ -443,7 +444,7 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
         // TODO: sort OR use addGene() approach here?
         if (gene && !geneList.value.get(gene.rgdId)) geneList.value.set(gene.rgdId, gene);
       }
-      console.timeEnd(`ProcessGenesForBlock`);
+      $log.timeEnd(`ProcessGenesForBlock`);
     }
   }
 }

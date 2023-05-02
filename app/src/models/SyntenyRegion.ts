@@ -75,14 +75,14 @@ export default class SyntenyRegion
     //   NOTE: This is really important for inverted blocks. The code below is
     //     is written in a way that expects the gaps to go in order of how they 
     //     align against the backbone
-    console.time(`Sort gaps for splitBlockWithGaps`);
+    logger.time(`Sort gaps for splitBlockWithGaps`);
     const sortedGaps = [...gaps]
       .filter(g => {
         return g.chainLevel === this.gaplessBlock.chainLevel
           && isGenomicDataInViewport(g, this.gaplessBlock.windowBasePairRange.start, this.gaplessBlock.windowBasePairRange.stop);
       })
       .sort((a, b) => a.backboneStart - b.backboneStart);
-    console.timeEnd(`Sort gaps for splitBlockWithGaps`);
+    logger.timeEnd(`Sort gaps for splitBlockWithGaps`);
 
     logger.log(` splitBlockWithGaps: filtered ${gaps.length} down gaps to ${sortedGaps.length}`);
 

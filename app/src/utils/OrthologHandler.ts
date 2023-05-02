@@ -16,9 +16,9 @@ type OrthologPositionInfo = {
 
 export function createOrthologLinesV2(geneList: Map<number, Gene>, backboneSet: BackboneSet, offBackboneSyntenyRegionSets: SyntenyRegionSet[])
 { 
-  console.time(`CreateOrthologLinesV2`);
+  logger.time(`CreateOrthologLinesV2`);
 
-  console.time(`Ortholog Line Data Prep`);
+  logger.time(`Ortholog Line Data Prep`);
   //
   // Draw ortholog lines for backbone genes that are large enough to be rendered
   const threshold = getThreshold(backboneSet.backbone.windowStop - backboneSet.backbone.windowStart);
@@ -72,9 +72,9 @@ export function createOrthologLinesV2(geneList: Map<number, Gene>, backboneSet: 
       });
     }
   });
-  console.timeEnd(`Ortholog Line Data Prep`);
+  logger.timeEnd(`Ortholog Line Data Prep`);
 
-  console.time(`Ortholog Line Creation`);
+  logger.time(`Ortholog Line Creation`);
   //
   // Loop through backbone genes with orthologs and create lines
   const orthologLines: OrthologLine[] = [];
@@ -177,8 +177,8 @@ export function createOrthologLinesV2(geneList: Map<number, Gene>, backboneSet: 
     
     orthologLines.push(...chainLines);
   });
-  console.timeEnd(`Ortholog Line Creation`);
-  console.timeEnd(`CreateOrthologLinesV2`);
+  logger.timeEnd(`Ortholog Line Creation`);
+  logger.timeEnd(`CreateOrthologLinesV2`);
 
   return orthologLines;
 }

@@ -42,9 +42,9 @@ export default class BackboneSet extends GenomicSet
 
     if (this.backbone.renderType === 'detailed')
     {
-      console.time(`Create Backbone Gene Labels`);
+      logger.time(`Create Backbone Gene Labels`);
       this.generateGeneLabels();
-      console.timeEnd(`Create Backbone Gene Labels`);
+      logger.timeEnd(`Create Backbone Gene Labels`);
     }
   }
 
@@ -129,7 +129,7 @@ export default class BackboneSet extends GenomicSet
     const filteredGenes = this.backbone.backboneGenes
       .filter(g => isGenomicDataInViewport(g, this.backbone.windowSVGStart, this.backbone.windowStop));
 
-    console.time(`Create intermediate labels`);
+    logger.time(`Create intermediate labels`);
     // Create intermediate gene labels for all genes in the viewport:
     const intermediateLabels: IntermediateGeneLabel[] = [];
     for (let i = 0; i < filteredGenes.length; i++)
@@ -143,7 +143,7 @@ export default class BackboneSet extends GenomicSet
         posX: xPos,
       });
     }
-    console.timeEnd('Create intermediate labels');
+    logger.timeEnd('Create intermediate labels');
 
     //
     // Create the visible gene labels from our intermediate labels (apply merging logic as appropriate)

@@ -43,9 +43,9 @@ export default class SyntenyRegionSet extends GenomicSet
     
     if (renderType === 'detailed')
     {
-      console.time(`Create Gene Labels`);
+      logger.time(`Create Gene Labels`);
       this.generateGeneLabels();
-      console.timeEnd(`Create Gene Labels`);
+      logger.timeEnd(`Create Gene Labels`);
     }
   }
 
@@ -96,7 +96,7 @@ export default class SyntenyRegionSet extends GenomicSet
       // Typescript seems to not be able to pick this up inside of an anonymous function
       .filter(g => isGenomicDataInViewport(g, visibleBackboneStart!, visibleBackboneStop!));
 
-    console.time(`Create intermediate labels`);
+    logger.time(`Create intermediate labels`);
     // Create intermediate gene labels for all genes in the viewport:
     const intermediateLabels: IntermediateGeneLabel[] = [];
     for (let i = 0; i < filteredGenes.length; i++)
@@ -110,7 +110,7 @@ export default class SyntenyRegionSet extends GenomicSet
         posX: xPos,
       });
     }
-    console.timeEnd(`Create intermediate labels`);
+    logger.timeEnd(`Create intermediate labels`);
 
     this.geneLabels = mergeAndCreateGeneLabels(intermediateLabels);
   }
