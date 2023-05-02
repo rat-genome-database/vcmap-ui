@@ -201,8 +201,8 @@ const onMouseEnter = (section: BackboneSection | DatatrackSection, type: Selecte
     section.isHovered = true;
   }
 
-  // NOTE: disable selected data for qtls and variants for now
-  if (section.type === 'qtl' || section.type === 'variant')
+  // NOTE: disable selected data for qtls for now
+  if (section.type === 'qtl')
   {
     return;
   }
@@ -230,9 +230,17 @@ const onMouseEnter = (section: BackboneSection | DatatrackSection, type: Selecte
   }
   else if (store.state.selectedGeneIds.length === 0)
   {
-    // BackboneSection
-    const selectedData = new SelectedData(section, type);
-    store.dispatch('setSelectedData', [selectedData]);
+    if (section.type === 'variant')
+    {
+      const selectedData = new SelectedData(section, 'variantDensity');
+      store.dispatch('setSelectedData', [selectedData]);
+    }
+    else
+    {
+      // BackboneSection
+      const selectedData = new SelectedData(section, type);
+      store.dispatch('setSelectedData', [selectedData]);
+    }
   }
 };
 
