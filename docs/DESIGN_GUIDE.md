@@ -48,6 +48,36 @@ The philosophy we have taken so far in regards to data flow is the following:
 
 In general, we are making use of the `store` to keep the user's current configuration settings in local storage.
 
+### Logging
+
+We are currently using `vue-logger-plugin` as our logging dependency. The logger itself is configured at `<project_root>/app/src/logger/index.ts`.
+
+If logging inside of a Vue component or composable, use the `useLogger()` hook to get the logger instance:
+```
+const $log = useLogger();
+$log.debug('This is a debug message inside of a Vue component');
+```
+
+If logging outside of a Vue component, import the logger like normal:
+```
+import logger from @/logger;
+logger.debug('This is a debug message inside of a Typescript file');
+```
+
+Aside from the typical, `error`, `warn`, `log`, `debug` methods you'd expect, we've also added support for `time` and `timeEnd` methods for easily measuring execution times. This will work like normal when importing the logger straight from its index file, but if you're using `useLogger()` to access the logger instance, you will need to use a type assertion to avoid Typescript errors.
+
+E.g.
+```
+const $log = useLogger();
+$log.time('time this');                    // Typescript will yell at you!
+$log.timeEnd('time this');                 // Typescript will yell at you!
+
+const $log = useLogger() as VCMapLogger;
+$log.time('time this');                    // This is okay!
+$log.timeEnd('time this');                 // This is okay!
+
+```
+
 ### Writing Components
 
 * When possible, write small, easily testable components. Always try to break down large components into a collection of smaller ones when it makes sense to do so.

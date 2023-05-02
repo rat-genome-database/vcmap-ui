@@ -51,13 +51,14 @@ import { backboneOverviewError, missingComparativeSpeciesError, noRegionLengthEr
 import { isGenomicDataInViewport, getThreshold, processAlignmentsOfGeneInsideOfViewport, processAlignmentsOfGeneOutsideOfViewport } from '@/utils/Shared';
 import { buildVariantPositions } from '@/utils/VariantBuilder';
 import VariantPositions from '@/models/VariantPositions';
+import { VCMapLogger } from '@/logger';
 
 // TODO: Can we figure out a better way to handle blocks with a high chainlevel?
 const MAX_CHAINLEVEL = 2;
 const MAX_CHAINLEVEL_GENES = 1;
 
 const store = useStore(key);
-const $log = useLogger();
+const $log = useLogger() as VCMapLogger;
 const toast = useToast();
 
 const { showDialog, dialogHeader, dialogMessage, showDialogBackButton, dialogTheme, onError } = useDialog();
@@ -96,24 +97,24 @@ const variantPositionsList = ref<VariantPositions[]>([]);
 // TODO: temp ignore here, should remove once this method is actively being used
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const onInspectPressed = () => {
-  console.debug('Gene List:', geneList);
-  console.debug('Synteny Tree:', syntenyTree);
+  $log.debug('Gene List:', geneList);
+  $log.debug('Synteny Tree:', syntenyTree);
   // NOTE: I cannot seem to get this to force child updates when using a shallowRef???
   //triggerRef(geneList);
 
-  console.debug('Selected Data:', store.state.selectedData);
+  $log.debug('Selected Data:', store.state.selectedData);
 
   // Specific analysis (Mcur1): Compare selectedData after commit to data from this.geneList
   // SelectedData[]
   // store.state.selectedData?.forEach((selectedData) => {
   //   let gene = (selectedData.genomicSection as Gene);
-  //   console.log('Gene data (selectedData):', gene.symbol, gene.rgdId, gene.chromosome, gene.block);
+  //   $log.log('Gene data (selectedData):', gene.symbol, gene.rgdId, gene.chromosome, gene.block);
   // });
   //
   // // this.geneList
   // geneList.value.forEach((gene) => {
   //   if (gene.symbol == 'Mcur1')
-  //     console.log('Gene data (geneList):', gene.symbol, gene.rgdId, gene.chromosome, gene.block);
+  //     $log.log('Gene data (geneList):', gene.symbol, gene.rgdId, gene.chromosome, gene.block);
   // });
 };
 // TODO endTEMP
@@ -365,10 +366,10 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
           stop: blockData.block.stop,
         });
 
-        console.time("AddGapsNewBlock");
+        $log.time("AddGapsNewBlock");
         // Gaps (add ALL)
         newBlock.addGaps(blockData.gaps, backboneStart, backboneStop);
-        console.timeEnd("AddGapsNewBlock");
+        $log.timeEnd("AddGapsNewBlock");
 
         knownSpeciesBlocks.push(newBlock);
         targetBlock = newBlock;
@@ -381,9 +382,9 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
         existingBlockGapCountChanged = (targetBlock.gaps.length !== blockData.gaps.length);
 
         const timerLabel = `AddGapsExistingBlock(${targetBlock.gaps.length}, ${blockData.gaps.length})`;
-        console.time(timerLabel);
+        $log.time(timerLabel);
         targetBlock?.addGaps(blockData.gaps, backboneStart, backboneStop);
-        console.timeEnd(timerLabel);
+        $log.timeEnd(timerLabel);
       }
       else
       {
@@ -394,12 +395,12 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
       if (blockData.block.chainLevel > MAX_CHAINLEVEL_GENES)
       {
         // Skip saving any genes that are above our defined max chainlevel for genes
-        console.log(`Skipping ${blockData.genes.length} genes due to chain level filter`);
+        $log.log(`Skipping ${blockData.genes.length} genes due to chain level filter`);
         continue;
       }
 
       // Handle genes (we need to inspect all of them even in the case of a new block)
-      console.time(`ProcessGenesForBlock`);
+      $log.time(`ProcessGenesForBlock`);
       for (let geneIdx = 0, numGenes = blockData.genes.length; geneIdx < numGenes; geneIdx++) {
         // Use any existing genes if we have already loaded one
         const geneData = blockData.genes[geneIdx];
@@ -425,7 +426,7 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
           gene.backboneStop = backboneAlignment.stop;
 
           // This gene has no parent block -- assign to target block
-          // console.log(`Gene ${gene.symbol} without parent block, assigning to block ${targetBlock.chromosome.chromosome} (${targetBlock.start}, ${targetBlock.stop})`);
+          // $log.log(`Gene ${gene.symbol} without parent block, assigning to block ${targetBlock.chromosome.chromosome} (${targetBlock.start}, ${targetBlock.stop})`);
           gene.block = targetBlock;
           // TODO: sort OR use addGene() approach here?
           targetBlock.genes.push(gene);
@@ -443,7 +444,7 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
         // TODO: sort OR use addGene() approach here?
         if (gene && !geneList.value.get(gene.rgdId)) geneList.value.set(gene.rgdId, gene);
       }
-      console.timeEnd(`ProcessGenesForBlock`);
+      $log.timeEnd(`ProcessGenesForBlock`);
     }
   }
 }
@@ -452,7 +453,7 @@ async function queryAndProcessSyntenyForBasePairRange(backboneChromosome: Chromo
 {
   $log.debug(`Querying for specific base pair range: ${start} - ${stop}`);
   const slowAPI = setTimeout(() => {
-    console.log('API is taking longer than usual to respond...');
+    $log.log('API is taking longer than usual to respond...');
     showToast('warn', 'Loading Impact', 'API is taking a while to respond, please be patient', 5000);
   }, 15000);
 

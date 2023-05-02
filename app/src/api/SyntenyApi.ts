@@ -3,6 +3,7 @@ import Chromosome from '@/models/Chromosome';
 import Species from '@/models/Species';
 import Gene from '@/models/Gene';
 import { AxiosResponse } from 'axios';
+import logger from '@/logger';
 
 export interface SyntenyRequestParams
 {
@@ -186,24 +187,24 @@ export default class SyntenyApi
         if (result.status === 'fulfilled')
         {
           const singleSpeciesSyntenyData = getSpeciesSyntenyDataFromDTO(result.value.data, params.comparativeSpecies[index]);
-          console.debug(`[DEBUG] Syntenic regions found: ${singleSpeciesSyntenyData.regionData.length} ` +
+          logger.debug(`Syntenic regions found: ${singleSpeciesSyntenyData.regionData.length} ` +
             `[mapKey: '${singleSpeciesSyntenyData.mapKey}', threshold: '${params.optional.threshold}']`);
           speciesSyntenyData.push(singleSpeciesSyntenyData);
         }
         else
         {
-          console.error(result.status, result.reason);
+          logger.error(result.status, result.reason);
         }
       });
-      console.debug(`[DEBUG] Synteny API: ${Date.now() - start} ms`,
+      logger.debug(`Synteny API: ${Date.now() - start} ms`,
           params.backboneChromosome.chromosome, params.start, params.stop, params.optional.threshold);
-      // console.debug(`[DEBUG] Synteny API: ${Date.now() - start} ms`, params);
+      // logger.debug(`Synteny API: ${Date.now() - start} ms`, params);
 
       return speciesSyntenyData;
     }
     catch (error)
     {
-      console.error(error);
+      logger.error(error);
     }
   }
 }

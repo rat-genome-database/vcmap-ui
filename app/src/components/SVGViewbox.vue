@@ -247,7 +247,7 @@ import Block from "@/models/Block";
 
 import { GeneLabel } from '@/models/Label';
 import SyntenyRegion from '@/models/SyntenyRegion';
-import { createOrthologLinesV2 } from '@/utils/OrthologHandler';
+import { createOrthologLines } from '@/utils/OrthologHandler';
 import VariantPositions from '@/models/VariantPositions';
 import Species from '@/models/Species';
 import BackboneSection from '@/models/BackboneSection';
@@ -531,7 +531,7 @@ const updateDetailsPanel = async () => {
   // Create ortholog lines
   // NOTE: Casting the type here since .value can't "unpack" the private methods on the object and thus,
   //  doesn't see it as equaling the SyntenyRegionSet type
-  orthologLines.value = createOrthologLinesV2(props.geneList, detailedBackboneSet.value, detailedSyntenySets.value as SyntenyRegionSet[]);
+  orthologLines.value = createOrthologLines(props.geneList, detailedBackboneSet.value, detailedSyntenySets.value as SyntenyRegionSet[]);
   
   // Report timing data
   const timeDetailedUpdate= Date.now() - detailedUpdateStart;

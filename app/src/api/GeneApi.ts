@@ -1,3 +1,4 @@
+import logger from "@/logger";
 import Gene from "@/models/Gene";
 import httpInstance from "./httpInstance";
 
@@ -102,7 +103,7 @@ export default class GeneApi
     // const res = await httpInstance.get<GeneDTO[]>(`/vcmap/genes/${mapKey}/${chromosome}/${roundedStart}/${roundedStop}`);
     const res = await httpInstance.get<GeneDTO[]>(`/vcmap/genes/${mapKey}/${chromosome}/${roundedStart}/${roundedStop}?orthologMapKeys=${comparativeSpeciesIds.toString()}`);
     const geneList: Gene[] = res.data.map(dto => getGeneFromGeneDTO(dto, speciesName));
-    console.debug(`[DEBUG] Genes By Region API: ${Date.now() - startTime} ms`, {
+    logger.debug(`Genes By Region API: ${Date.now() - startTime} ms`, {
       chromosome,
       start,
       stop,
