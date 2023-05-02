@@ -1,5 +1,5 @@
 <template>
-  <Slider :disabled="isZoomDisabled" class="zoom-slider" data-test="zoom-slider" v-model="zoomLevel" :step="1" :min="1" :max="100" @slideend="onZoomSliderEnd" />
+  <Slider :disabled="isZoomDisabled" class="zoom-slider" data-test="zoom-slider" v-model="zoomStep" :step="0.5" :min="1" :max="100" @slideend="onZoomSliderEnd" />
   <div class="zoom-options-container">
     <div class="zoom-out-container">
       <div class="zoom-options " v-for="interval in zoomIntervals" :key="interval">
@@ -31,6 +31,8 @@ const store = useStore(key);
 
 const zoomLevel = ref(1.0);
 const zoomIntervals = [1.5, 3.0, 10.0, 100.0];
+const zoomStep = ref(1.0);
+
 
 watch(() => store.state.detailedBasePairRange, (newRange) => {
   // Update the zoom level shown in the Slider to show the ratio of the
@@ -49,8 +51,8 @@ const onZoomSliderEnd = (event: SliderSlideEndEvent) => {
     return;
   }
 
-  zoom(event.value);
-  // logZoom(event.value);
+  // zoom(event.value);
+  logZoom(event.value);
 };
 
 const zoom = (newZoomLevel: number) => {
@@ -110,24 +112,33 @@ const zoom = (newZoomLevel: number) => {
 };
 
 const logZoom = (zoomLevel: number) => {
+  zoomStep.value = zoomLevel;
+  console.debug(`Zoom Step: ${zoomStep.value}`);
   const selectedRegion = store.state.selectedBackboneRegion;
 
   if (selectedRegion == null || selectedRegion.viewportSelection == null) {
     console.error('ERROR WITH SELECTED REGION');
-  } else {
-    let minZoom = selectedRegion.viewportSelection.basePairStart+1;
-    let maxZoom = selectedRegion.viewportSelection.basePairStop;
+  } 
+  else {
+    // check to zoom out to full backbone selection if zoom level is 1
+    if (zoomLevel <= 1) zoom(1); 
+    else {
+      let maxZoom = selectedRegion.viewportSelection.basePairStop;
 
-    let logMinZoom = Math.log(minZoom) * (1/Math.log(100));
-    let logMaxZoom = Math.log(maxZoom) * (1/Math.log(100));
+      let logMinZoom = log10(1);
+      let logMaxZoom = log10(maxZoom);
 
-    let logZoom = logMinZoom + (logMaxZoom-logMinZoom)*zoomLevel/(100-1);
-    let zoomed = Math.exp(logZoom);
+      let logZoom = logMinZoom + (logMaxZoom-logMinZoom)*zoomLevel/(100-1);
+      let zoomed = Math.exp(logZoom);
 
-    zoom(zoomed);
+      console.debug(`'Zoomed' after logZoom: ${zoomed}`);
+      zoom(zoomed);
+    }
   }
+};
 
-
+const log10 = (val: number) => {
+  return Math.log(val) / Math.LN10;
 };
 
 const zoomOut = (zoomInterval: number) => {

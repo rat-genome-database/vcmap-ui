@@ -119,15 +119,6 @@ const isActive = computed({
   }
 });
 
-// todo: temp - remove along with UI button later
-const onDebugClick = () => {
-  console.log(dataTrackItems.value);
-
-  dataTrackItems.value.forEach((item) => {
-    console.log(item.species?.key === store.state.chromosome.mapKey);
-  });
-};
-
 const onConfirmLoadDataTrack = () => {
   const selectedMapKeys: number[] = [];
   dataTrackItems.value.forEach((item) => {
@@ -160,14 +151,6 @@ const onAddDataTrack = () => {
 const close = () => {
   dataTrackItems.value.length = 0;
   props.onCloseLoadDataTrackModal();
-};
-
-const onConfirm = () => {
-  close();
-  if (props.onConfirmCallback)
-  {
-    props.onConfirmCallback();
-  }
 };
 
 function removeDataTrackItem(index: number)
