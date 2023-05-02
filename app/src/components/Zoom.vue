@@ -1,5 +1,5 @@
 <template>
-  <Slider :disabled="isZoomDisabled" class="zoom-slider" data-test="zoom-slider" v-model="zoomStep" :step="1" :min="1" :max="100" @slideend="onZoomSliderEnd" />
+  <Slider :disabled="isZoomDisabled" class="zoom-slider" data-test="zoom-slider" v-model="zoomStep" :step="0.5" :min="1" :max="100" @slideend="onZoomSliderEnd" />
   <div class="zoom-options-container">
     <div class="zoom-out-container">
       <div class="zoom-options " v-for="interval in zoomIntervals" :key="interval">
@@ -31,7 +31,7 @@ const store = useStore(key);
 
 const zoomLevel = ref(1.0);
 const zoomIntervals = [1.5, 3.0, 10.0, 100.0];
-const zoomStep = ref(1);
+const zoomStep = ref(1.0);
 
 
 watch(() => store.state.detailedBasePairRange, (newRange) => {
@@ -137,9 +137,9 @@ const logZoom = (zoomLevel: number) => {
   }
 };
 
-function log10(val: number) {
+const log10 = (val: number) => {
   return Math.log(val) / Math.LN10;
-}
+};
 
 const zoomOut = (zoomInterval: number) => {
   zoom( zoomLevel.value / zoomInterval);
