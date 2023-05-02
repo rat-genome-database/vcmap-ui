@@ -36,46 +36,36 @@ export function createVariantDatatracks(factory: GenomicSectionFactory, position
   }
   const maxCount = getMaxVariantCount(variantCounts);
   const variantDatatracks = [];
-  let backboneBinStart = backboneStart;
+  let backboneBinStart = 0;
+  let backboneBinStop = 0;
+  // NOTE: if the block is inverted, we'll start at the backboneStop
+  // and decrement the backboneBinStarts
+  if (invertedBlock) {
+    backboneBinStop = backboneStop;
+  } else {
+    backboneBinStart = backboneStart;
+  }
   binStart = sequenceStart;
   // NOTE: building the datatrack sections is really slow when zoomed in, so I should only build
   // tracks for visible portions, and then keep track of the max counts for the overall color scale
-  if (invertedBlock)
+  for (let i = 0; i < variantCounts.length; i++)
   {
-    let backboneBinStop = backboneStop;
-    for (let i = 0; i < variantCounts.length; i++)
-    {
-      const binStop = Math.min(binStart + binSize, sequenceStop);
-      const backboneBinStart = Math.max(backboneBinStop - backboneBinSize, backboneStart);
-      const backboneAlignment = getBackboneAlignment(binStart, binStop, backboneBinStart, backboneBinStop,
-        backboneWindowStart, backboneWindowStop, targetBlock);
-      if (isSectionInView(backboneAlignment.start, backboneAlignment.stop, backboneWindowStart, backboneWindowStop))
-      {
-        const newVariant = factory.createVariantDensitySection(variantCounts[i], maxCount, binStart, binStop, backboneAlignment);
-        newVariant.adjustYPositionsBasedOnVisibleStartAndStop(factory.windowBasePairRange);
-        variantDatatracks.push(newVariant);
-      }
-      binStart += binSize;
-      backboneBinStop -= backboneBinSize;
+    const binStop = Math.min(binStart + binSize, sequenceStop);
+    if (invertedBlock) {
+      backboneBinStart = Math.max(backboneBinStop - backboneBinSize, backboneStart);
+    } else {
+      backboneBinStop = Math.min(backboneBinStart + backboneBinSize, backboneStop);
     }
-  }
-  else
-  {
-    for (let i = 0; i < variantCounts.length; i++)
+    const backboneAlignment = getBackboneAlignment(binStart, binStop, backboneBinStart, backboneBinStop,
+      backboneWindowStart, backboneWindowStop, targetBlock);
+    if (isSectionInView(backboneAlignment.start, backboneAlignment.stop, backboneWindowStart, backboneWindowStop))
     {
-      const binStop = Math.min(binStart + binSize, sequenceStop);
-      const backboneBinStop = Math.min(backboneBinStart + backboneBinSize, backboneStop);
-      const backboneAlignment = getBackboneAlignment(binStart, binStop, backboneBinStart, backboneBinStop,
-        backboneWindowStart, backboneWindowStop, targetBlock);
-      if (isSectionInView(backboneAlignment.start, backboneAlignment.stop, backboneWindowStart, backboneWindowStop))
-      {
-        const newVariant = factory.createVariantDensitySection(variantCounts[i], maxCount, binStart, binStop, backboneAlignment);
-        newVariant.adjustYPositionsBasedOnVisibleStartAndStop(factory.windowBasePairRange);
-        variantDatatracks.push(newVariant);
-      }
-      binStart += binSize;
-      backboneBinStart += backboneBinSize;
+      const newVariant = factory.createVariantDensitySection(variantCounts[i], maxCount, binStart, binStop, backboneAlignment);
+      newVariant.adjustYPositionsBasedOnVisibleStartAndStop(factory.windowBasePairRange);
+      variantDatatracks.push(newVariant);
     }
+    binStart += binSize;
+    invertedBlock ? backboneBinStop -= backboneBinSize : backboneBinStart += backboneBinSize;
   }
 
   return {datatracks: variantDatatracks, maxCount: maxCount, binSize: binSize};
