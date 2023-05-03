@@ -41,17 +41,18 @@
         </div>
       </template>
       <template v-for="dataObject in props.selectedData" :key="dataObject">
-        <template v-if="dataObject?.type === 'Gene'">
+        <template v-if="dataObject.type === 'Gene'">
           <GeneInfo
             :gene="dataObject.genomicSection.gene ? dataObject.genomicSection.gene : dataObject.genomicSection"
             :chromosome="dataObject.genomicSection.chromosome ? dataObject.genomicSection.chromosome : dataObject.genomicSection.gene.chromosome"
             :start="dataObject.genomicSection.speciesStart ? dataObject.genomicSection.speciesStart : dataObject.genomicSection.start"
             :stop="dataObject.genomicSection.speciesStop ? dataObject.genomicSection.speciesStop : dataObject.genomicSection.stop"
+            :gene-list="geneList"
           />
           <Divider />
         </template>
 
-        <template v-else-if="(dataObject?.type === 'geneLabel' || dataObject?.type === 'trackSection' || dataObject?.type === 'backbone')">
+        <template v-else-if="(dataObject.type === 'trackSection' || dataObject.type === 'backbone' || dataObject.type === 'variantDensity')">
           <template v-if="(dataObject.type === 'trackSection')">
             <GeneInfo
               :gene="dataObject?.genomicSection.gene ? dataObject?.genomicSection.gene : null"
@@ -60,6 +61,7 @@
               :stop="dataObject.genomicSection.speciesStop"
               :chain-level="dataObject.genomicSection.chainLevel"
               :track-orientation="dataObject.genomicSection.isInverted ? '-' : '+'"
+              :gene-list="geneList"
             />
           </template>
           <template v-else-if="(dataObject.type === 'backbone')">
@@ -69,75 +71,23 @@
               :start="dataObject.genomicSection.windowStart"
               :stop="dataObject.genomicSection.windowStop"
               track-orientation="+"
+              :gene-list="geneList"
             />
           </template>
-          <template v-else>
-            <GeneInfo
-              :gene="dataObject?.genomicSection.gene ? dataObject?.genomicSection.gene : null"
-              :chromosome="dataObject.genomicSection.chromosome"
-              :start="dataObject.genomicSection.sectionStart"
-              :stop="dataObject.genomicSection.sectionStop"
-            />
+          <template v-else-if="dataObject?.type === 'variantDensity'">
+            <div>
+              <span>Chr{{dataObject.genomicSection.chromosome}}: </span>
+              <span>
+                {{Formatter.addCommasToBasePair(dataObject.genomicSection.speciesStart)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.speciesStop)}}
+              </span>
+            </div>
+            <div>
+              <span>Variant Count: {{ Formatter.addCommasToBasePair(dataObject.genomicSection.variantCount) }}</span>
+            </div>
           </template>
           <Divider />
-
-          <template v-if="dataObject.type === 'geneLabel'">
-            <template v-if="(dataObject.genomicSection.combinedGenes && dataObject.genomicSection.combinedGenes.length > 0)">
-              <template v-for="section in dataObject?.genomicSection.combinedGenes" :key="section">
-                <GeneInfo
-                  :gene="section.gene"
-                  :chromosome="section.gene.chromosome"
-                  :start="section.gene.start"
-                  :stop="section.gene.stop"
-                />
-                <Divider />
-              </template>
-            </template>
-          </template>
-
-          <template v-else-if="dataObject.type === 'trackSection'">
-            <template v-if="(dataObject.genomicSection.hiddenGenes && dataObject.genomicSection.hiddenGenes.length > 0)">
-              <template v-for="section in dataObject?.genomicSection.hiddenGenes" :key="section">
-                <GeneInfo
-                  :gene="section.gene"
-                  :chromosome="section.gene.chromosome"
-                  :start="section.gene.start"
-                  :stop="section.gene.stop"
-                />
-                <Divider />
-              </template>
-            </template>
-          </template>
         </template>
-
-        <template v-else-if="dataObject?.type === 'orthologLine'">
-          <div data-test="start-stop">BACKBONE GENE:</div>
-          <div data-test="gene-symbol">Symbol: {{dataObject.genomicSection.backboneGene.symbol}}</div>
-          <div data-test="gene-name">Name:{{dataObject.genomicSection.backboneGene.name ?? 'N/A'}}</div>
-          <div data-test="chromosome-name">Chromosome: {{dataObject.genomicSection.backboneGene.chromosome}}</div>
-          <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(dataObject.genomicSection.backboneGene.start)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.backboneGene.stop)}}</div>
-
-          <div data-test="start-stop">&lt;---------------------------------------&gt;</div>
-
-          <div data-test="start-stop">COMPARATIVE GENE HOMOLOG:</div>
-          <div data-test="gene-symbol">Species: {{dataObject.genomicSection.offBackboneGene.speciesName}}</div>
-          <div data-test="gene-symbol">Symbol: {{dataObject.genomicSection.offBackboneGene.symbol}}</div>
-          <div data-test="gene-name">Name:{{dataObject.genomicSection.offBackboneGene.name ?? 'N/A'}}</div>
-          <div data-test="chromosome-name">Chromosome: {{dataObject.genomicSection.offBackboneGene.chromosome}}</div>
-          <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(dataObject.genomicSection.offBackboneGene.start)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.offBackboneGene.stop)}}</div>
-        </template>
-
-        <template v-else-if="dataObject?.type === 'variantDensity'">
-          <div>
-            <span>Chr{{dataObject.genomicSection.chromosome}}: </span>
-            <span>
-              {{Formatter.addCommasToBasePair(dataObject.genomicSection.speciesStart)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.speciesStop)}}
-            </span>
-          </div>
-          <div>
-            <span>Variant Count: {{ Formatter.addCommasToBasePair(dataObject.genomicSection.variantCount) }}</span>
-          </div>
-        </template>
+        
       </template>
     </div>
   </Panel>
@@ -151,7 +101,7 @@ import { Formatter } from '@/utils/Formatter';
 import { ref, watch} from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
-import { getNewSelectedData, sortGeneList, sortGeneMatches, adjustSelectionWindow } from '@/utils/DataPanelHelpers';
+import { getNewSelectedData, sortGeneMatches, adjustSelectionWindow } from '@/utils/DataPanelHelpers';
 
 /**
  * FIXME: This whole component needs to be looked over. There are references to properties on objects that don't exist.
@@ -174,26 +124,9 @@ const numberOfResults = ref<number>(0);
 
 watch(() => props.selectedData, () => {
   numberOfResults.value = 0;
-  if (props.selectedData)
+  if (props.selectedData != null)
   {
-    props.selectedData.forEach((dataObject) => {
-      if (dataObject.type === 'trackSection' || dataObject.type === 'Gene' || dataObject.type === 'geneLabel') {
-        if (dataObject.type === 'trackSection' && dataObject.genomicSection.gene) 
-        {
-          numberOfResults.value += (dataObject.genomicSection.hiddenGenes.length + 1);
-          if (dataObject.genomicSection.hiddenGenes.length > 0) sortGeneList(dataObject.genomicSection.hiddenGenes);
-        }
-        if (dataObject.type === 'geneLabel') 
-        {
-          numberOfResults.value += (dataObject.genomicSection.combinedGenes.length + 1);
-          if (dataObject.genomicSection.combinedGenes.length > 0) sortGeneList(dataObject.genomicSection.combinedGenes);
-        }
-        if (dataObject.type === 'Gene') 
-        {
-          numberOfResults.value += 1;
-        }
-      }
-    });
+    numberOfResults.value = props.selectedData.filter(d => d.type === 'Gene').length;
   }
 });
 
@@ -214,8 +147,6 @@ const searchGene = (event: {query: string}) => {
   const searchKey = searchedGene.value;
   matches = sortGeneMatches(searchKey, matches);
   geneSuggestions.value = matches;
-
-
 };
 
 const searchSVG = (event: { value: Gene }) => {
