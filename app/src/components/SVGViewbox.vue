@@ -65,8 +65,8 @@
     </template>
 
     <ViewboxTitlesSVG
-      :overview-backbone-set="overviewBackboneSet" :overview-synteny-sets="overviewSyntenySets"
-      :detailed-backbone-set="detailedBackboneSet" :detailed-synteny-sets="detailedSyntenySets"
+      :overview-backbone-set="overviewBackboneSet" :overview-synteny-sets="(overviewSyntenySets as SyntenyRegionSet[])"
+      :detailed-backbone-set="detailedBackboneSet" :detailed-synteny-sets="(detailedSyntenySets as SyntenyRegionSet[])"
     />
 
     <!-- Navigation buttons -->
@@ -75,6 +75,7 @@
     <image class="nav-btn-img" href="../../node_modules/primeicons/raw-svg/chevron-up.svg" @click="navigateUp" :x="SVGConstants.overviewPanelWidth + (SVGConstants.detailsPanelWidth / 2)" :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
     <image class="nav-btn-img" href="../../node_modules/primeicons/raw-svg/chevron-down.svg" @click="navigateDown" :x="SVGConstants.overviewPanelWidth + (SVGConstants.detailsPanelWidth / 2)" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
 
+    <!-- Transparent panels that show up once selection starts: Allows for selection on top of the other SVGs -->
     <rect v-if="currentlySelectingRegion()" id="selecting-overview" class="selecting-panel" :class="{'is-loading': arePanelsLoading}" x="0" 
       @mousemove="updateOverviewSelection" @contextmenu.prevent @click.right="cancelOverviewSelection" @click.left="(event) => overviewSelectionHandler(event, getDetailedSelectionStatus(), overviewBackboneSet?.backbone)"
       :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.viewboxHeight" />
@@ -83,9 +84,11 @@
       @mousemove="updateZoomSelection" @contextmenu.prevent @click.right="cancelDetailedSelection" @click.left="(event) => detailedSelectionHandler(event, getOverviewSelectionStatus())"
       :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.viewboxHeight" />
 
+    <!-- The "gray" selection SVG that shows what area that the user is currently selecting -->
     <!-- Detailed panel selection svg for zoom -->
     <rect v-if="startDetailedSelectionY && stopDetailedSelectionY" 
-      @mousedown.left="(event) => detailedSelectionHandler(event, getOverviewSelectionStatus)"
+      class="visible-selecting-panel"
+      @mousedown.left="(event) => detailedSelectionHandler(event, getOverviewSelectionStatus())"
       @click.right="cancelDetailedSelection"
       @mousemove="updateZoomSelection"
       @contextmenu.prevent
@@ -93,18 +96,19 @@
       fill-opacity="0.4"
       :x="SVGConstants.overviewPanelWidth" :y="startDetailedSelectionY"
       :width="SVGConstants.detailsPanelWidth" :height="stopDetailedSelectionY - startDetailedSelectionY" />
-
     <!-- Overview panel selection svg for backbone -->
     <rect v-if="startOverviewSelectionY && stopOverviewSelectionY"
+      class="visible-selecting-panel"
       @mousemove="(event) => updateOverviewSelection(event)"
       @contextmenu.prevent
-      @mousedown.left="(event) => overviewSelectionHandler(event, overviewBackboneSet?.backbone)" 
+      @mousedown.left="(event) => overviewSelectionHandler(event, getDetailedSelectionStatus(), overviewBackboneSet?.backbone)" 
       @click.right="cancelOverviewSelection"
       fill="lightgray"
       fill-opacity="0.4"
       :x="0" :y="startOverviewSelectionY"
       :width="SVGConstants.overviewPanelWidth" :height="stopOverviewSelectionY - startOverviewSelectionY" />
   </svg>
+
   <template v-if="displayVariantLegend">
     <div class="grid">
       <div class="col-4 plus-half legend-title"><b>Variant counts (per {{ parseFloat(variantBinSize.toPrecision(3)).toLocaleString() }}bp)</b></div>
@@ -811,6 +815,11 @@ rect.selecting-panel
   {
     cursor: wait;
   }
+}
+
+rect.visible-selecting-panel
+{
+  cursor: crosshair;
 }
 
 .vcmap-loader.p-progressbar

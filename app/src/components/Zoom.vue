@@ -35,12 +35,12 @@ const zoomLevel = ref(1.0);
 const zoomIntervals = [1.5, 3.0, 10.0, 100.0];
 const zoomStep = ref(1.0);
 
-
 watch(() => store.state.detailedBasePairRange, (newRange) => {
   // Update the zoom level shown in the Slider to show the ratio of the
   // viewport size to the total chromosome.
   let seqLength = store.state.chromosome?.seqLength ?? 0;
   zoomLevel.value = seqLength * 1.0 / (newRange.stop - newRange.start);
+  zoomStep.value = getZoomStepFromZoomLevel(zoomLevel.value);
 }, { immediate: true, });
 
 const isZoomDisabled = computed(() => {
@@ -53,7 +53,6 @@ const onZoomSliderEnd = (event: SliderSlideEndEvent) => {
     return;
   }
 
-  // zoom(event.value);
   logZoom(event.value);
 };
 
@@ -113,8 +112,8 @@ const zoom = (newZoomLevel: number) => {
   }
 };
 
-const logZoom = (zoomLevel: number) => {
-  zoomStep.value = zoomLevel;
+const logZoom = (sliderStep: number) => {
+  zoomStep.value = sliderStep;
   $log.debug(`Zoom Step: ${zoomStep.value}`);
   const selectedRegion = store.state.selectedBackboneRegion;
 
@@ -123,14 +122,14 @@ const logZoom = (zoomLevel: number) => {
   } 
   else {
     // check to zoom out to full backbone selection if zoom level is 1
-    if (zoomLevel <= 1) zoom(1); 
+    if (sliderStep <= 1) zoom(1); 
     else {
       let maxZoom = selectedRegion.viewportSelection.basePairStop;
 
       let logMinZoom = log10(1);
       let logMaxZoom = log10(maxZoom);
 
-      let logZoom = logMinZoom + (logMaxZoom-logMinZoom)*zoomLevel/(100-1);
+      let logZoom = logMinZoom + (logMaxZoom-logMinZoom)*sliderStep/(100-1);
       let zoomed = Math.exp(logZoom);
 
       $log.debug(`'Zoomed' after logZoom: ${zoomed}`);
@@ -139,16 +138,35 @@ const logZoom = (zoomLevel: number) => {
   }
 };
 
-const log10 = (val: number) => {
-  return Math.log(val) / Math.LN10;
-};
-
 const zoomOut = (zoomInterval: number) => {
   zoom( zoomLevel.value / zoomInterval);
 };
 const zoomIn = (zoomInterval: number) => {
   zoom(zoomLevel.value * zoomInterval);
 };
+
+function log10(val: number)
+{
+  return Math.log(val) / Math.LN10;
+}
+
+function getZoomStepFromZoomLevel(zoomLevel: number)
+{
+  const selectedRegion = store.state.selectedBackboneRegion;
+  if (selectedRegion == null || selectedRegion.viewportSelection == null)
+  {
+    $log.error('Could not calculate zoom step from zoom level');
+    return 0;
+  }
+
+  const maxZoom = selectedRegion.viewportSelection.basePairStop;
+
+  const logMinZoom = log10(1);
+  const logMaxZoom = log10(maxZoom);
+  const logZoom = Math.log(zoomLevel); // get logarithmic value of the zoom level
+
+  return (logZoom - logMinZoom) * (100 - 1) / (logMaxZoom - logMinZoom);
+}
 </script>
 
 <style lang="scss" scoped>

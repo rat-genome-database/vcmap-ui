@@ -44,6 +44,7 @@ import { useStore } from 'vuex';
 import { key } from '@/store';
 import { useLogger } from 'vue-logger-plugin';
 import SelectedData from '@/models/SelectedData';
+import { getNewSelectedData } from '@/utils/DataPanelHelpers';
 
 const $log = useLogger();
 const store = useStore(key);
@@ -55,11 +56,12 @@ interface Props
   chromosome: string;
   start: number;
   stop: number;
+  geneList: Map<number, Gene>;
   chainLevel?: number;
   trackOrientation?: string;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
 const selectGene = (gene: Gene | null) => {
   if (gene == null)
@@ -73,10 +75,10 @@ const selectGene = (gene: Gene | null) => {
     return;
   }
 
-  //const newData = getNewSelectedData(store, gene);
+  const newData = getNewSelectedData(store, gene, props.geneList);
   store.dispatch('setSelectedGeneIds', []);
-  store.dispatch('setSelectedGeneIds', [gene.rgdId]);
-  store.dispatch('setSelectedData', [new SelectedData(gene, 'Gene')]);
+  store.dispatch('setSelectedGeneIds', newData.rgdIds);
+  store.dispatch('setSelectedData', newData.selectedData);
 
   if (store.state.chromosome == null)
   {

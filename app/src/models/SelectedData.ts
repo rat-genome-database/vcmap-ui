@@ -1,8 +1,7 @@
-import OrthologLine from "./OrthologLine";
 import Gene from "@/models/Gene";
 import BackboneSection from "@/models/BackboneSection";
 import SyntenySection from "@/models/SyntenySection";
-import DatatrackSection, { VariantDensity } from "@/models/DatatrackSection";
+import { VariantDensity } from "@/models/DatatrackSection";
 
 /**
  * TODO: I think the way we use this model is a bit inefficient. Possible refactors:
@@ -15,8 +14,8 @@ import DatatrackSection, { VariantDensity } from "@/models/DatatrackSection";
  *     set those properties based on what its type is (probably check using "instanceof"?). This would eliminate most of
  *     the conditionals in the SelectedDataPanel component and should clean up the template a bit, making it more readable.
  */
-export type SelectedDataType = 'trackSection' | 'Gene' | 'geneLabel' | 'backbone' | 'variantDensity';
-type GenomicSectionType = BackboneSection | SyntenySection | OrthologLine | Gene | DatatrackSection | VariantDensity;
+export type SelectedDataType = 'trackSection' | 'Gene' | 'backbone' | 'variantDensity';
+type GenomicSectionType = BackboneSection | SyntenySection | Gene | VariantDensity;
 
 /**
  * Model that represents the Selected Data that will appear when Selected Data Panel
