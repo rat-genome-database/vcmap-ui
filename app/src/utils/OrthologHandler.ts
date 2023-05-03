@@ -14,7 +14,7 @@ type OrthologPositionInfo = {
   endX: number;
 };
 
-const ORTHOLOG_THRESHOLD_MULTIPLIER = 0.3;
+const ORTHOLOG_THRESHOLD_MULTIPLIER = 0.5;
 
 export function createOrthologLines(geneList: Map<number, Gene>, backboneSet: BackboneSet, offBackboneSyntenyRegionSets: SyntenyRegionSet[])
 { 
