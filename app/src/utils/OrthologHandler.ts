@@ -14,16 +14,19 @@ type OrthologPositionInfo = {
   endX: number;
 };
 
+const ORTHOLOG_THRESHOLD_MULTIPLIER = 0.3;
+
 export function createOrthologLines(geneList: Map<number, Gene>, backboneSet: BackboneSet, offBackboneSyntenyRegionSets: SyntenyRegionSet[])
 { 
   logger.time(`CreateOrthologLines`);
 
   logger.time(`Ortholog Line Data Prep`);
+  
   //
-  // Draw ortholog lines for backbone genes that are large enough to be rendered
-  const threshold = getThreshold(backboneSet.backbone.windowStop - backboneSet.backbone.windowStart);
+  // Draw ortholog lines for backbone genes that are larger than our defined ortholog line threshold
+  const orthologLineThreshold = getThreshold(backboneSet.backbone.windowStop - backboneSet.backbone.windowStart) * ORTHOLOG_THRESHOLD_MULTIPLIER;
   const visibleBackboneGenesWithOrthologs = Array.from(geneList.values())
-    .filter(g => g.mapKey === backboneSet.mapKey && g.orthologs.length > 0 && (g.backboneStop - g.backboneStart) >= threshold);
+    .filter(g => g.mapKey === backboneSet.mapKey && g.orthologs.length > 0 && (g.backboneStop - g.backboneStart) >= orthologLineThreshold);
 
   //
   // Keep track of species order and gene datatrack positional values by map key:
