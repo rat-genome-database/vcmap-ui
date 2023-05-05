@@ -43,7 +43,6 @@ import { Formatter } from '@/utils/Formatter';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import { useLogger } from 'vue-logger-plugin';
-import SelectedData from '@/models/SelectedData';
 import { getNewSelectedData } from '@/utils/DataPanelHelpers';
 
 const $log = useLogger();
