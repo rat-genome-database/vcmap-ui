@@ -2,7 +2,7 @@ import { onMounted, ref } from "vue";
 import { getMousePosSVG } from '@/utils/SVGHelpers';
 import { Store } from "vuex";
 import { VCMapState } from "@/store";
-import SVGConstants from "@/utils/SVGConstants";
+import SVGConstants, {PANEL_SVG_START, PANEL_SVG_STOP} from "@/utils/SVGConstants";
 import { useLogger } from "vue-logger-plugin";
 
 export default function useDetailedPanelZoom(store: Store<VCMapState>) {
@@ -18,6 +18,34 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
     svg = document.querySelector('svg');
   });
 
+  const getDetailedSelectionStatus = () => {
+    return inSelectMode;
+  };
+
+  const detailedSelectionHandler = (event: any, isOverviewPanelSelecting: boolean) => {
+    if (store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating || isOverviewPanelSelecting)
+    {
+      // Don't allow zoom until both panels are done updating
+      return;
+    }
+
+    const selectedRegion = store.state.selectedBackboneRegion;
+    if (selectedRegion && !selectedRegion.viewportSelection)
+    {
+      $log.warn('Cannot zoom on the detailed panel without a selection in the overview');
+      return;
+    }
+
+    if (!inSelectMode) {
+      inSelectMode = true;
+      startingPoint = getMousePosSVG(svg, event);
+      startDetailedSelectionY.value = startingPoint.y;
+      return;
+    }
+
+    completeZoomSelection();
+  };
+
   const initZoomSelection = (event: any) => {
     if (store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating)
     {
@@ -25,8 +53,7 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
       return;
     }
 
-    const selectedRegion = store.state.selectedBackboneRegion;
-    if (!selectedRegion.innerSelection)
+    if (!store.state.detailedBasePairRange)
     {
       $log.warn('Cannot zoom on the detailed panel without a selection in the overview');
       return;
@@ -55,22 +82,37 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
     }
   };
 
+  const cancelDetailedSelection = () => {
+    if (inSelectMode) {
+      inSelectMode = false;
+      // Clear selection box
+      startDetailedSelectionY.value = undefined;
+      stopDetailedSelectionY.value = undefined;
+    }
+  };
+
   const completeZoomSelection = () => {
     if (!inSelectMode) return;
 
     inSelectMode = false;
+    const toastCount = store.state.selectionToastCount;
 
-    const selection = store.state.selectedBackboneRegion;
-    if (startDetailedSelectionY.value != null && stopDetailedSelectionY.value != null && selection.innerSelection != null)
+    if (startDetailedSelectionY.value != null && stopDetailedSelectionY.value != null && store.state.detailedBasePairRange)
     {
+      const svgHeight = PANEL_SVG_STOP - PANEL_SVG_START;
+      const bpVisibleWindowLength = Math.abs(store.state.detailedBasePairRange.stop - store.state.detailedBasePairRange.start);
+      const pixelsPerBpRatio = svgHeight / bpVisibleWindowLength;
       // Calculate start/stop base pairs based on bp to height ratio in the detailed panel
-      const basePairsFromInnerSelection1 = Math.floor((startDetailedSelectionY.value - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
-      const basePairStart = basePairsFromInnerSelection1 + selection.innerSelection.basePairStart;
+      const basePairStart = Math.floor((startDetailedSelectionY.value - SVGConstants.panelTitleHeight) / pixelsPerBpRatio)
+          + store.state.detailedBasePairRange.start;
 
-      const basePairsFromInnerSelection2 = Math.floor((stopDetailedSelectionY.value - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
-      const basePairStop = basePairsFromInnerSelection2 + selection.innerSelection.basePairStart;
+      const basePairStop = Math.floor((stopDetailedSelectionY.value - SVGConstants.panelTitleHeight) / pixelsPerBpRatio)
+          + store.state.detailedBasePairRange.start;
 
-      store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: basePairStop });
+      $log.log(`Requesting zoom to (${basePairStart}, ${basePairStop}) from Y:(${startDetailedSelectionY.value}, ${stopDetailedSelectionY.value})`);
+      store.dispatch('setSelectionToastCount', toastCount + 1);
+      store.dispatch('setDetailedBasePairRequest', { start: basePairStart, stop: basePairStop });
+      // store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: basePairStop });
     }
 
     // Clear selection box
@@ -79,10 +121,13 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
   };
 
   return {
+    detailedSelectionHandler,
     startDetailedSelectionY,
     stopDetailedSelectionY,
     initZoomSelection,
     updateZoomSelection,
-    completeZoomSelection
+    cancelDetailedSelection,
+    completeZoomSelection,
+    getDetailedSelectionStatus
   };
 }

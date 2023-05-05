@@ -3,57 +3,60 @@ import VuexPersistence from 'vuex-persist';
 import Species from '@/models/Species';
 import Chromosome from '@/models/Chromosome';
 import Gene from '@/models/Gene';
-import BackboneSelection, { BasePairRange, SelectedRegion } from '@/models/BackboneSelection';
-import SVGConstants from '@/utils/SVGConstants';
+import BackboneSelection, { BasePairRange } from '@/models/BackboneSelection';
 import SelectedData from '@/models/SelectedData';
 import { InjectionKey } from 'vue';
 import { createLogger } from 'vuex';
-import { LoadedSpeciesGenes } from '@/models/DatatrackSection';
+import { LoadedGene } from '@/models/DatatrackSection';
+import { ConfigurationMode } from '@/utils/Types';
 
 export const key: InjectionKey<Store<VCMapState>> = Symbol();
 
 export interface VCMapState
 {
+  /* User configuration-related properties */
   species: Species | null; // backbone species
   chromosome: Chromosome | null; // backbone chromosome
   startPos: number | null; // backbone start position
   stopPos: number | null; // backbone stop position
-  loadStart: number | null; // load start position
-  loadStop: number | null; // load stop position
   gene: Gene | null; // backbone gene
-
   comparativeSpecies: Species[];
-  loadedGenes: Map<number, LoadedSpeciesGenes> | null;
+  configMode: ConfigurationMode;
 
-  selectedBackboneRegion: BackboneSelection;
-
-  overviewBasePairToHeightRatio: number;
-  overviewSyntenyThreshold: number;
-  detailedBasePairToHeightRatio: number;
-  detailsSyntenyThreshold: number;
-
-  configTab: number;
-
-  selectedData: SelectedData[] | null;
-  selectedGeneIds: number[];
-
+  /* Triggers for VCMap processing/rendering */
+  configurationLoaded: boolean | null;
+  selectedBackboneRegion: BackboneSelection | null;
+  detailedBasePairRequest: BasePairRange | null;
   detailedBasePairRange: BasePairRange;
 
   isDetailedPanelUpdating: boolean;
   isOverviewPanelUpdating: boolean;
+  isUpdatingVariants: boolean;
+
+  selectedGeneIds: number[];
+  selectedData: SelectedData[] | null;
+
+  selectionToastCount: number;
+
+  /* These data structures have the potential to be pretty large */
+  // TODO: I think we can remove this from state
+  loadedGenes: Map<number, LoadedGene> | null;
 }
 
 const vuexLocal = new VuexPersistence<VCMapState>({
   storage: window.localStorage
 });
 
+const actionsToLog = ['setDetailedBasePairRange', 'setDetailedBasePairRequest'];
+const mutationsToLog = ['detailedBasePairRange'];
+
 const logger = createLogger({
-  /** Filter out some very frequently occurring actions/mutations */
+  // Filter out frequently occurring actions/mutations (makes the console really noisy for not much benefit)
   filter: (mutation) => {
-    return mutation.type !== 'selectedData';
+    return mutationsToLog.includes(mutation.type);
   },
   actionFilter: (action) => {
-    return action.type !== 'setSelectedData';
+    return actionsToLog.includes(action.type);
   },
 });
 
@@ -63,29 +66,26 @@ export default createStore({
     chromosome: null,
     startPos: null,
     stopPos: null,
-    loadStart: null,
-    loadStop: null,
     gene: null,
-
     comparativeSpecies: [],
-    loadedGenes: null,
+    configMode: 'gene',
 
-    selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
-
-    overviewBasePairToHeightRatio: 1000,
-    overviewSyntenyThreshold: 0,
-    detailedBasePairToHeightRatio: 1000,
-    detailsSyntenyThreshold: 0,
-
-    configTab: 0,
-
-    selectedData: null,
-    selectedGeneIds: [],
-
+    configurationLoaded: null,
+    selectedBackboneRegion: null,
+    detailedBasePairRequest: { start: 0, stop: 0 } ?? null,
     detailedBasePairRange: { start: 0, stop: 0 },
 
     isDetailedPanelUpdating: false,
     isOverviewPanelUpdating: false,
+    isUpdatingVariants: false,
+
+    selectedGeneIds: [],
+    selectedData: null,
+
+    selectionToastCount: 0,
+
+    /* These data structures have the potential to be pretty large */
+    loadedGenes: null,
   }),
 
   mutations: {
@@ -101,41 +101,29 @@ export default createStore({
     stopPosition (state: VCMapState, stopPos: number) {
       state.stopPos = stopPos;
     },
-    loadStart (state: VCMapState, loadStart: number) {
-      state.loadStart = loadStart;
-    },
-    loadStop (state: VCMapState, loadStop: number) {
-      state.loadStop = loadStop;
-    },
     gene (state: VCMapState, gene: Gene) {
       state.gene = gene;
     },
     comparativeSpecies (state: VCMapState, speciesArray: Species[]) {
       state.comparativeSpecies = speciesArray;
     },
-    loadedGenes (state: VCMapState, loadedGenesMap: Map<number, any>) {
+    loadedGenes (state: VCMapState, loadedGenesMap: Map<number, LoadedGene>) {
       state.loadedGenes = loadedGenesMap;
+    },
+    configurationLoaded(state: VCMapState, configState: boolean | null) {
+      state.configurationLoaded = configState;
     },
     selectedBackboneRegion ( state: VCMapState, selection: BackboneSelection) {
       state.selectedBackboneRegion = selection;
     },
+    detailedBasePairRequest(state: VCMapState, range: BasePairRange) {
+      state.detailedBasePairRequest = range;
+    },
     detailedBasePairRange(state: VCMapState, range: BasePairRange) {
       state.detailedBasePairRange = range;
     },
-    overviewBasePairToHeightRatio(state: VCMapState, ratio: number) {
-      state.overviewBasePairToHeightRatio = ratio;
-    },
-    overviewSyntenyThreshold(state: VCMapState, threshold: number) {
-      state.overviewSyntenyThreshold = threshold;
-    },
-    detailedBasePairToHeightRatio(state: VCMapState, ratio: number) {
-      state.detailedBasePairToHeightRatio = ratio;
-    },
-    detailsSyntenyThreshold(state: VCMapState, threshold: number) {
-      state.detailsSyntenyThreshold = threshold;
-    },
-    configTab(state: VCMapState, tab: number) {
-      state.configTab = tab;
+    configMode(state: VCMapState, mode: ConfigurationMode) {
+      state.configMode = mode;
     },
     selectedData(state: VCMapState, selectedData: SelectedData[]) {
       state.selectedData = selectedData;
@@ -149,9 +137,12 @@ export default createStore({
     isOverviewPanelUpdating(state: VCMapState, isUpdating: boolean) {
       state.isOverviewPanelUpdating = isUpdating;
     },
-    backboneOrthologs(state: VCMapState, orthologs: any) {
-      state.selectedBackboneRegion.orthologData = orthologs;
+    isUpdatingVariants(state: VCMapState, isUpdating: boolean) {
+      state.isUpdatingVariants = isUpdating;
     },
+    selectionToastCount(state: VCMapState, count: number) {
+      state.selectionToastCount = count;
+    }
   },
 
   actions: {
@@ -167,31 +158,14 @@ export default createStore({
     setStopPosition(context: ActionContext<VCMapState, VCMapState>, stopPos: number) {
       context.commit('stopPosition', stopPos);
     },
-    setLoadStart(context: ActionContext<VCMapState, VCMapState>, loadStart: number) {
-      context.commit('loadStart', loadStart);
-    },
-    setLoadStop(context: ActionContext<VCMapState, VCMapState>, loadStop: number) {
-      context.commit('loadStop', loadStop);
-    },
     setGene(context: ActionContext<VCMapState, VCMapState>, gene: Gene) {
       context.commit('gene', gene);
     },
-    setOverviewResolution(context: ActionContext<VCMapState, VCMapState>, backboneLength: number) {
-      // The height of the tracks in the overview should have a little buffer on the top and bottom margins
-      const overviewTrackHeight = SVGConstants.viewboxHeight - (SVGConstants.overviewTrackYPosition + SVGConstants.navigationButtonHeight + (SVGConstants.overviewTrackYPosition - SVGConstants.panelTitleHeight));
-      context.commit('overviewBasePairToHeightRatio', backboneLength / overviewTrackHeight);
-      // Note: Dividing by 8,000 is arbitary when calculating synteny threshold
-      context.commit('overviewSyntenyThreshold', (backboneLength > 250000) ? Math.floor((backboneLength) / 8000) : 0);
+    setConfigMode(context: ActionContext<VCMapState, VCMapState>, mode: ConfigurationMode) {
+      context.commit('configMode', mode);
     },
-    setDetailsResolution(context: ActionContext<VCMapState, VCMapState>, backboneLength: number) {
-      // The tracks in the detailed panel should have no top or bottom margins
-      const detailedTrackHeight = SVGConstants.viewboxHeight - (SVGConstants.panelTitleHeight + SVGConstants.navigationButtonHeight);
-      context.commit('detailedBasePairToHeightRatio', backboneLength / detailedTrackHeight);
-      // Note: Dividing by 8,000 is arbitary when calculating synteny threshold
-      context.commit('detailsSyntenyThreshold', (backboneLength > 250000) ? Math.floor((backboneLength) / 8000) : 0);
-    },
-    setConfigTab(context: ActionContext<VCMapState, VCMapState>, tab: number) {
-      context.commit('configTab', tab);
+    setConfigurationLoaded(context: ActionContext<VCMapState, VCMapState>, configState: boolean | null) {
+      context.commit('configurationLoaded', configState);
     },
     setSelectedData(context: ActionContext<VCMapState, VCMapState>, selected: SelectedData[]) {
       context.commit('selectedData', selected);
@@ -211,35 +185,42 @@ export default createStore({
     setIsOverviewPanelUpdating(context: ActionContext<VCMapState, VCMapState>, isUpdating: boolean) {
       context.commit('isOverviewPanelUpdating', isUpdating);
     },
+    setIsUpdatingVariants(context: ActionContext<VCMapState, VCMapState>, isUpdating: boolean) {
+      context.commit('isUpdatingVariants', isUpdating);
+    },
     clearConfiguration(context: ActionContext<VCMapState, VCMapState>) {
       context.commit('species', null);
       context.commit('gene', null);
       context.commit('chromosome', null);
       context.commit('startPosition', null);
       context.commit('stopPosition', null);
-      context.commit('loadStart', null);
-      context.commit('loadStop', null);
       context.commit('comparativeSpecies', []);
       context.commit('selectedGeneIds', []);
-      context.commit('loadedGenes', []);
-      context.commit('loadedGeneSections', []);
-      context.commit('selectedBackboneRegion', new BackboneSelection(new SelectedRegion(0,0,0,0)));
+      context.commit('loadedGenes', null);
+      context.commit('loadedBlocks', null);
+      context.commit('selectedBackboneRegion', null);
       context.commit('detailedBasePairRange', { start: 0, stop: 0 });
+      context.commit('configurationLoaded', null);
+      context.commit('selectionToastCount', 0);
     },
     clearBackboneSelection(context: ActionContext<VCMapState, VCMapState>) {
-      context.commit('selectedBackboneRegion', new BackboneSelection(new SelectedRegion(0,0,0,0)));
+      context.commit('selectedBackboneRegion', null);
       context.commit('detailedBasePairRange', { start: 0, stop: 0 });
     },
     setBackboneSelection(context: ActionContext<VCMapState, VCMapState>, selection: BackboneSelection) {
-      if (selection.innerSelection == null)
+      if (selection.viewportSelection == null)
       {
-        selection.generateInnerSelection(selection.baseSelection.basePairStart, selection.baseSelection.basePairStop, context.state.overviewBasePairToHeightRatio);
+        selection.setViewportSelection(0, selection.chromosome.seqLength);
       }
-      context.commit('startPosition', selection.baseSelection.basePairStart);
-      context.commit('stopPosition', selection.baseSelection.basePairStop);
+      context.commit('startPosition', selection.viewportSelection?.basePairStart ?? 0);
+      context.commit('stopPosition', selection.viewportSelection?.basePairStop ?? selection.chromosome.seqLength);
       context.commit('selectedBackboneRegion', selection);
+      context.commit('detailedBasePairRange', { start: selection.viewportSelection?.basePairStart, stop: selection.viewportSelection?.basePairStop });
       // Note: Committing a change to detailedBasePairRange will trigger an update on the Detailed panel
-      context.commit('detailedBasePairRange', { start: selection.innerSelection?.basePairStart, stop: selection.innerSelection?.basePairStop });
+    },
+    setDetailedBasePairRequest(context: ActionContext<VCMapState, VCMapState>, range: BasePairRange) {
+      // Note: Committing a change to detailedBasePairRange will trigger an update on the Detailed panel
+      context.commit('detailedBasePairRequest', range);
     },
     setDetailedBasePairRange(context: ActionContext<VCMapState, VCMapState>, range: BasePairRange) {
       // Note: Committing a change to detailedBasePairRange will trigger an update on the Detailed panel
@@ -247,45 +228,20 @@ export default createStore({
     },
     setBackboneOrthologData(context: ActionContext<VCMapState, VCMapState>, orthologs: any) {
       context.commit('backboneOrthologs', orthologs);
+    },
+    setSelectionToastCount(context: ActionContext<VCMapState, VCMapState>, count: number) {
+      context.commit('selectionToastCount', count);
     }
   },
 
   getters: {
-    masterGeneMapBySymbol: (state: VCMapState,) => {
-      const masterGeneMap = state.loadedGenes;
-      const mapBySymbol = new Map<string, number[]>();
+    isLoadByGene: (state: VCMapState) => {
+      return state.configMode === 'gene';
+    },
 
-      if (masterGeneMap == null)
-      {
-        return mapBySymbol;
-      }
-
-     for (const [key, value] of masterGeneMap.entries())
-     {
-        const rgdId = key;
-        const currSpecies = value;
-        
-        for (const speciesName in currSpecies)
-        {
-          const geneEntry = currSpecies[speciesName];
-          const geneSymbol = geneEntry.drawn[0].gene.gene?.symbol;
-          if (geneSymbol)
-          {
-            const currId = mapBySymbol.get(geneSymbol);
-            if (currId != null)
-            {
-              mapBySymbol.set(geneSymbol, currId.concat(rgdId));
-            }
-            else
-            {
-              mapBySymbol.set(geneSymbol, [rgdId]);
-            }
-          }
-        }
-      }
-
-      return mapBySymbol;
-    }
+    isLoadByPosition: (state: VCMapState) => {
+      return state.configMode === 'position';
+    },
   },
 
   plugins: process.env.NODE_ENV !== 'production'

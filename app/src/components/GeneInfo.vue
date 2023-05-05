@@ -2,30 +2,33 @@
   <div v-if="gene">
     <div class="gene-row">
       <div>
-        Symbol:
         <Button
           class="p-button-link rgd-link"
           @click="selectGene(gene)"
         >
           <b>{{gene.symbol}}</b>
         </Button>
+        <span v-if="gene" data-test="gene-name">({{gene.name ?? 'N/A'}})</span>
       </div>
-      <div>
+      <div v-if="gene != null">
+        <!-- Using '!' to assert that gene is for sure not null here as it is being checked in the parent div's v-if directive -->
         <Button
           class="p-button-link rgd-link"
-          @click="goToRgd(gene.rgdId)"
+          v-tooltip.left="`View in RGD`"
+          @click="goToRgd(gene!.rgdId)"
         >
           <i class="pi pi-external-link external-link"></i>
         </Button>
       </div>
     </div>
   </div>
-  <div v-if="gene" data-test="gene-name">Name: {{gene.name ?? 'N/A'}}</div>
-  <div v-if="gene" data-test="species-name">Species: {{gene.speciesName ?? 'N/A'}}</div>
-  <div data-test="chromosome-name">Chromosome: {{chromosome}}</div>
-  <div data-test="start-stop">
-    Region: {{Formatter.addCommasToBasePair(start)}} -
-      {{Formatter.addCommasToBasePair(stop)}}
+
+  <div>
+    <span v-if="gene" data-test="species-name" class="species-label">{{gene.speciesName ?? 'N/A'}} </span>
+    <span data-test="chromosome-name">Chr{{chromosome}}: </span>
+    <span data-test="start-stop">
+      {{Formatter.addCommasToBasePair(start)}} - {{Formatter.addCommasToBasePair(stop)}}
+    </span>
   </div>
   <div v-if="trackOrientation">Orientation: {{trackOrientation}}</div>
   <div v-if="chainLevel"
@@ -39,26 +42,53 @@ import Gene from '@/models/Gene';
 import { Formatter } from '@/utils/Formatter';
 import { useStore } from 'vuex';
 import { key } from '@/store';
+import { useLogger } from 'vue-logger-plugin';
 import { getNewSelectedData } from '@/utils/DataPanelHelpers';
 
+const $log = useLogger();
 const store = useStore(key);
+const SEARCHED_GENE_WINDOW_FACTOR = 3;
 
 interface Props
 {
-  gene: Gene | null;
+  gene: Gene | null; // TODO: Should we allow null here?
   chromosome: string;
   start: number;
   stop: number;
+  geneList: Map<number, Gene>;
   chainLevel?: number;
   trackOrientation?: string;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
-const selectGene = (gene: Gene) => {
-  const newData = getNewSelectedData(store, gene);
-  store.dispatch('setSelectedGeneIds', newData.rgdIds || []);
+const selectGene = (gene: Gene | null) => {
+  if (gene == null)
+  {
+    $log.warn(`Selected gene is null`);
+    return;
+  }
+
+  const geneLength = gene.stop - gene.start;
+  if (!gene.backboneStart || !gene.backboneStop) {
+    return;
+  }
+
+  const newData = getNewSelectedData(store, gene, props.geneList);
+  store.dispatch('setSelectedGeneIds', []);
+  store.dispatch('setSelectedGeneIds', newData.rgdIds);
   store.dispatch('setSelectedData', newData.selectedData);
+
+  if (store.state.chromosome == null)
+  {
+    $log.error(`Chromosome in state is null. Cannot dispatch setDetailedBasePairRequest action.`);
+    return;
+  }
+
+  store.dispatch('setDetailedBasePairRequest', {
+    start: Math.max(gene.backboneStart - (geneLength * SEARCHED_GENE_WINDOW_FACTOR), 0),
+    stop: Math.min(gene.backboneStop + (geneLength * SEARCHED_GENE_WINDOW_FACTOR), store.state.chromosome.seqLength)
+  });
 };
 
 const goToRgd = (rgdId: number) => {
@@ -85,5 +115,11 @@ const goToRgd = (rgdId: number) => {
 .external-link
 {
   padding-left: 4px;
+}
+
+.species-label
+{
+  font-weight: bold;
+  margin-right: 10px;
 }
 </style>

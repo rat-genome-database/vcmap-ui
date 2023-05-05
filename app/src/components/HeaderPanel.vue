@@ -5,16 +5,24 @@
         <template #header>
           <div class="vcmap-header">
             <img alt="VCMap Logo" class="logo" src="../assets/images/vcmap_logo_v2.png">
-            <h3 class="header">VCMap</h3><span class="version-label">v{{VERSION}}</span>
+            <Tag icon="pi pi-tag" severity="info" rounded>v{{ VERSION }}</Tag>
           </div>
         </template>
         <template #icons>
           <div class="icon-container">
-            <a  href="https://rgd.mcw.edu/" target="_blank"><img class="rgd-logo" src="../assets/images/rgd_logo.png" alt="RGD logo"></a>
+            <a  href="https://rgd.mcw.edu/" target="_blank"><img class="rgd-logo" src="../assets/images/rgd_logo.png" alt="RGD logo"
+              v-tooltip.bottom="`Go to RGD Home Page`"
+            ></a>
             <Button 
-              label="New Configuration" 
-              class="p-button-info header-btn"
+              label="New Configuration"
+              icon="pi pi-cog" 
+              class="p-button-secondary header-btn"
               @click="goToConfigurationScreen"
+              data-test="load-config-btn" />
+            <Button 
+              label="Load Data Track" 
+              class="p-button-secondary header-btn"
+              @click="openLoadDataTrackModal"
               data-test="load-config-btn" />
           </div>
         </template>
@@ -26,6 +34,12 @@
       </Panel>
     </div>
   </div>
+  <LoadDataTrackControls
+    v-model:show="showLoadDataTrackModal"
+    :on-load-synteny-variants="onLoadSyntenyVariants"
+    :on-close-load-data-track-modal="closeLoadDataTrackModal"
+    header="Load Data Tracks"
+  />
 </template>
 
 <script lang="ts" setup>
@@ -33,8 +47,31 @@ import { useRouter } from 'vue-router';
 import OverviewControls from '@/components/OverviewControls.vue';
 import DetailsControls from '@/components/DetailsControls.vue';
 import { VERSION } from '@/version';
+import { ref } from 'vue';
+import LoadDataTrackControls from '@/components/LoadDataTrackControls.vue';
+
+interface Props 
+{
+  onLoadSyntenyVariants: (mapKeys: number[] | null, triggerUpdate: boolean) => Promise<void>;
+}
+
+const props = defineProps<Props>();
 
 const router = useRouter();
+
+let showLoadDataTrackModal = ref(false);
+
+const openLoadDataTrackModal = () => {
+  showLoadDataTrackModal.value = true;
+};
+
+const onLoadSyntenyVariants = async (mapKeys: number[] | null, triggerUpdate: boolean) => {
+  props.onLoadSyntenyVariants(mapKeys, triggerUpdate);
+};
+
+const closeLoadDataTrackModal = () => {
+  showLoadDataTrackModal.value = false;
+};
 
 const goToConfigurationScreen = () => {
   router.push('/');
@@ -42,10 +79,11 @@ const goToConfigurationScreen = () => {
 </script>
 
 <style lang="scss" scoped>
-.vcmap-panel::v-deep .p-panel-icons {
+.vcmap-panel:deep() .p-panel-icons {
    display: flex;
    align-items: center;
 }
+
 .vcmap-header
 {
   display: flex;
@@ -56,6 +94,7 @@ const goToConfigurationScreen = () => {
   }
   
 }
+
 .p-button.p-component.header-btn
 {
   margin-right: 1rem;

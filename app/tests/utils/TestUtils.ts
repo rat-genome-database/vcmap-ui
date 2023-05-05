@@ -1,4 +1,3 @@
-import BackboneSelection, { SelectedRegion } from "@/models/BackboneSelection";
 import { VCMapState } from "@/store";
 import { ExternalComponentsHandler } from "@/utils/ExternalComponentsHandler";
 import { GlobalMountOptions } from "@vue/test-utils/dist/types";
@@ -64,20 +63,14 @@ export namespace TestUtils
         chromosome: null,
         startPos: null,
         stopPos: null,
-        loadStart: null,
-        loadStop: null,
         gene: null,
         comparativeSpecies: [],
+        configMode: 'gene',
 
-        selectedBackboneRegion: new BackboneSelection(new SelectedRegion(0,0,0,0)),
+        configurationLoaded: null,
+        selectedBackboneRegion: null,
+        detailedBasePairRequest: null,
         detailedBasePairRange: { start: 0, stop: 0 },
-
-        overviewBasePairToHeightRatio: 1000,
-        overviewSyntenyThreshold: 0,
-        detailedBasePairToHeightRatio: 1000,
-        detailsSyntenyThreshold: 0,
-
-        configTab: 0,
 
         selectedData: null,
         loadedGenes: null,
@@ -85,6 +78,8 @@ export namespace TestUtils
 
         isDetailedPanelUpdating: false,
         isOverviewPanelUpdating: false,
+        isUpdatingVariants: false,
+        selectionToastCount: 0,
 
         // Overwrite default state with props passed in by the tester
         ...initialState,

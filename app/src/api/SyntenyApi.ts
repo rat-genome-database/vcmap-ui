@@ -3,6 +3,7 @@ import Chromosome from '@/models/Chromosome';
 import Species from '@/models/Species';
 import Gene from '@/models/Gene';
 import { AxiosResponse } from 'axios';
+import logger from '@/logger';
 
 export interface SyntenyRequestParams
 {
@@ -67,7 +68,7 @@ export interface SyntenyComponent
 /**
  * Represents the combination of blocks, gaps, and genes in a synteny region
  */
-interface SyntenyRegionData
+export interface SyntenyRegionData
 {
   block: SyntenyComponent;
   gaps: SyntenyComponent[];
@@ -83,13 +84,12 @@ export interface SpeciesSyntenyData
   mapName: string;
   mapKey: number;
   regionData: SyntenyRegionData[];
-  allGenes?: Gene[];
-  allGenesMap?: Map<string, any>; // FIXME: Since this is meant to be an intermediate interface that gets converted into data models, this prop might be better off existing somewhere else
 }
 
 function getGeneFromDTO(dto: SyntenyGeneDTO, speciesName: string)
 {
   return new Gene({
+    mapKey: dto.mapKey,
     speciesName: speciesName,
     symbol: dto.geneSymbol,
     name: dto.geneName,
@@ -117,12 +117,14 @@ function getSpeciesSyntenyDataFromDTO(dtoArray: SyntenyResponseDTO[], comparativ
     });
   });
 
+  const genesPerRegion = regions.length > 0 ? regions.map(r => r.genes) : [];
+
   return {
     speciesName: comparativeSpecies.name,
     mapName: comparativeSpecies.activeMap.name,
     mapKey: comparativeSpecies.activeMap.key,
     regionData: regions,
-    allGenes: regions.map(r => r.genes).reduce((prevGenes, currentGenes) => prevGenes.concat(currentGenes)),
+    allGenes: genesPerRegion.length > 0 ? genesPerRegion.reduce((prevGenes, currentGenes) => prevGenes.concat(currentGenes)) : [],
   };
 }
 
@@ -130,12 +132,15 @@ export default class SyntenyApi
 {
   static async getSyntenicRegions(params: SyntenyRequestParams)
   {
+    const start = Date.now();
     try
     {
       const syntenyApiCalls: Promise<AxiosResponse<SyntenyResponseDTO[], any>>[] = [];
       const comparativeSpeciesMaps = params.comparativeSpecies.map(s => s.activeMap);
+      const roundedStart = Math.round(params.start);
+      const roundedStop = Math.round(params.stop);
       comparativeSpeciesMaps.forEach(map => {
-        let apiRoute = `/vcmap/synteny/${params.backboneChromosome?.mapKey}/${params.backboneChromosome?.chromosome}/${params.start}/${params.stop}/${map.key}`;
+        let apiRoute = `/vcmap/synteny/${params.backboneChromosome?.mapKey}/${params.backboneChromosome?.chromosome}/${roundedStart}/${roundedStop}/${map.key}`;
 
         // Append query params
         let optionCount = 0;
@@ -182,28 +187,25 @@ export default class SyntenyApi
         if (result.status === 'fulfilled')
         {
           const singleSpeciesSyntenyData = getSpeciesSyntenyDataFromDTO(result.value.data, params.comparativeSpecies[index]);
-          console.debug(`[DEBUG] Syntenic regions found: ${singleSpeciesSyntenyData.regionData.length} [mapKey: '${singleSpeciesSyntenyData.mapKey}', threshold: '${params.optional.threshold}']`);
+          logger.debug(`Syntenic regions found: ${singleSpeciesSyntenyData.regionData.length} ` +
+            `[mapKey: '${singleSpeciesSyntenyData.mapKey}', threshold: '${params.optional.threshold}']`);
           speciesSyntenyData.push(singleSpeciesSyntenyData);
         }
         else
         {
-          console.error(result.status, result.reason);
+          logger.error(result.status, result.reason);
         }
       });
+      logger.debug(`Synteny API: ${Date.now() - start} ms`,
+          params.backboneChromosome.chromosome, params.start, params.stop, params.optional.threshold);
+      // logger.debug(`Synteny API: ${Date.now() - start} ms`, params);
 
       return speciesSyntenyData;
     }
     catch (error)
     {
-      console.error(error);
+      logger.error(error);
     }
-  }
-
-  static async adjustForCachedThreshold(threshold: number)
-  {
-    //get cached data from store
-    //determine min and max of loaded thresholds
-    //adjust requested threshold to only return data that is not already loaded
   }
 }
 

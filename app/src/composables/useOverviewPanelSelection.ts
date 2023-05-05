@@ -2,8 +2,8 @@ import { onMounted, ref } from "vue";
 import { getMousePosSVG } from '@/utils/SVGHelpers';
 import { Store } from "vuex";
 import { VCMapState } from "@/store";
-import BackboneSelection, { SelectedRegion } from "@/models/BackboneSelection";
 import BackboneSection from "@/models/BackboneSection";
+import constants, {PANEL_SVG_START, PANEL_SVG_STOP} from "@/utils/SVGConstants";
 
 export default function useOverviewPanelSelection(store: Store<VCMapState>) {
   let inSelectMode = false;
@@ -16,6 +16,27 @@ export default function useOverviewPanelSelection(store: Store<VCMapState>) {
     svg = document.querySelector('svg');
   });
 
+  const getOverviewSelectionStatus = () => {
+    return inSelectMode;
+  };
+
+  const overviewSelectionHandler = (event: any, isDetailedPanelSelecting: boolean, overviewBackbone?: BackboneSection) => {
+    if (store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating || isDetailedPanelSelecting)
+    {
+      // Don't allow a selection until both panels are done updating
+      return;
+    }
+
+    if (!inSelectMode) {
+      inSelectMode = true;
+      startingPoint = getMousePosSVG(svg, event);
+      startOverviewSelectionY.value = startingPoint.y;
+      return;
+    }
+
+    completeOverviewSelection(overviewBackbone);
+  };
+
   const initOverviewSelection = (event: any) => {
     if (store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating)
     {
@@ -25,6 +46,7 @@ export default function useOverviewPanelSelection(store: Store<VCMapState>) {
 
     inSelectMode = true;
     startingPoint = getMousePosSVG(svg, event);
+
     startOverviewSelectionY.value = startingPoint.y;
   };
 
@@ -46,37 +68,46 @@ export default function useOverviewPanelSelection(store: Store<VCMapState>) {
     }
   };
 
+  const cancelOverviewSelection = () => {
+    if (inSelectMode) {
+      inSelectMode = false;
+      // Clear selection box
+      startOverviewSelectionY.value = undefined;
+      stopOverviewSelectionY.value = undefined;
+    }
+
+  };
+
   const completeOverviewSelection = (overviewBackbone?: BackboneSection) => {
-    if (!inSelectMode || !overviewBackbone) return;
+    if (!inSelectMode || !overviewBackbone || !store.state.chromosome) return;
 
     inSelectMode = false;
+    const toastCount = store.state.selectionToastCount;
 
     if (startOverviewSelectionY.value != null && stopOverviewSelectionY.value != null)
     {
-      // Calculate start/stop base pairs based on bp to height ratio in the overview panel
-      const startingBasePairCountFromStartOfBackbone = Math.floor((startOverviewSelectionY.value - overviewBackbone.posY1) * store.state.overviewBasePairToHeightRatio);
-      let basePairStart = startingBasePairCountFromStartOfBackbone + overviewBackbone.windowStart;
+      const svgHeight = PANEL_SVG_STOP - PANEL_SVG_START - (2 * constants.overviewTrackPadding);
+      const bpVisibleWindowLength = store.state.chromosome.seqLength;
+      const pixelsPerBpRatio = svgHeight / bpVisibleWindowLength;
+      let basePairStart = Math.floor((startOverviewSelectionY.value - PANEL_SVG_START  - constants.overviewTrackPadding) / pixelsPerBpRatio);
+      let basePairStop = Math.floor((stopOverviewSelectionY.value - PANEL_SVG_START  - constants.overviewTrackPadding) / pixelsPerBpRatio);
 
-      const stoppingBasePairCountFromStartOfBackbone = Math.floor((stopOverviewSelectionY.value - overviewBackbone.posY1) * store.state.overviewBasePairToHeightRatio);
-      let basePairStop = stoppingBasePairCountFromStartOfBackbone + overviewBackbone.windowStart;
-
-      let startSVGY = startOverviewSelectionY.value;
-      if (basePairStart < overviewBackbone.windowStart)
-      {
-        basePairStart = overviewBackbone.windowStart;
-        startSVGY = overviewBackbone.posY1;
+      // never emit base pair range outside of the backbone chromosome start/stop
+      if (basePairStart < 0) {
+        basePairStart = 0;
+      }
+      if (basePairStop > store.state.chromosome.seqLength) {
+        basePairStop = store.state.chromosome.seqLength;
       }
 
-      let stopSVGY = stopOverviewSelectionY.value;
-      if (basePairStop > overviewBackbone.windowStop)
+      const selectedBackboneRegion = store.state.selectedBackboneRegion;
+      if (selectedBackboneRegion && selectedBackboneRegion.setViewportSelection)
       {
-        basePairStop = overviewBackbone.windowStop;
-        stopSVGY = overviewBackbone.posY2;
+        selectedBackboneRegion.setViewportSelection(basePairStart, basePairStop);
+        //store.dispatch('setBackboneSelection', selectedBackboneRegion);
+        store.dispatch('setSelectionToastCount', toastCount + 1);
+        store.dispatch('setDetailedBasePairRequest', { start: basePairStart, stop: basePairStop });
       }
-
-      const selectedBackboneRegion = new BackboneSelection(new SelectedRegion(startSVGY, stopSVGY - startSVGY, basePairStart, basePairStop), store.state.chromosome ?? undefined);
-      selectedBackboneRegion.generateInnerSelection(basePairStart, basePairStop, store.state.overviewBasePairToHeightRatio);
-      store.dispatch('setBackboneSelection', selectedBackboneRegion);
     }
 
     // Clear selection box
@@ -85,10 +116,13 @@ export default function useOverviewPanelSelection(store: Store<VCMapState>) {
   };
 
   return {
+    overviewSelectionHandler,
     startOverviewSelectionY,
     stopOverviewSelectionY,
     initOverviewSelection,
     updateOverviewSelection,
-    completeOverviewSelection
+    cancelOverviewSelection,
+    completeOverviewSelection,
+    getOverviewSelectionStatus
   };
 }

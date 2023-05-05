@@ -6,60 +6,62 @@
           <b>Selected Data</b>
         </div>
         <div class="panel-header-item">
-          <Button
-            label="Clear Selection"
-            class="p-button-info"
-            @click="clearSelectedGenes"
-          />
-        </div>
-        <div class="panel-header-item">
           <AutoComplete
             v-model="searchedGene"
             :suggestions="geneSuggestions"
             @complete="searchGene($event)"
             @item-select="searchSVG($event)"
-            @keydown="selectAndSearchSVG($event)"
             :field="getSuggestionDisplay"
             :minLength="3"
             placeholder="Search loaded genes..."
           />
-          <Button
-            v-tooltip.right="`Only searches genes loaded in the selected overview \
-              region (${Formatter.convertBasePairToLabel(overviewStart)} - \
-              ${Formatter.convertBasePairToLabel(overviewStop)}). \
-              Select a wider region on the backbone in the overview panel to search more genes.`"
-            icon="pi pi-info-circle"
-            class="p-button-link"
-          >
-          </Button>
         </div>
         <div class="panel-header-item">
-          {{numberOfResults}} Selected Genes
+          <div v-if="numberOfResults > 0">
+            {{numberOfResults}} Selected Genes
+          </div>
+          <div class="clear-selection-btn">
+            <Button
+                v-tooltip.right="`Clear Selection`"
+                class="p-button-info p-button-sm p-button-warning"
+                icon="pi pi-ban"
+                @click="clearSelectedGenes"
+                rounded
+            />
+          </div>
         </div>
       </div>
     </template>
     
     <div class="gene-data">
+      <template v-if="!props.selectedData || props.selectedData.length === 0">
+        <div class="no-data">
+          <p class="placeholder-msg">No data selected</p>
+          <p class="placeholder-msg-txt">Select data by clicking or hovering drawn elements, or searching by gene symbol above</p>
+        </div>
+      </template>
       <template v-for="dataObject in props.selectedData" :key="dataObject">
-        <template v-if="dataObject?.type === 'Gene'">
+        <template v-if="dataObject.type === 'Gene'">
           <GeneInfo
             :gene="dataObject.genomicSection.gene ? dataObject.genomicSection.gene : dataObject.genomicSection"
             :chromosome="dataObject.genomicSection.chromosome ? dataObject.genomicSection.chromosome : dataObject.genomicSection.gene.chromosome"
             :start="dataObject.genomicSection.speciesStart ? dataObject.genomicSection.speciesStart : dataObject.genomicSection.start"
             :stop="dataObject.genomicSection.speciesStop ? dataObject.genomicSection.speciesStop : dataObject.genomicSection.stop"
+            :gene-list="geneList"
           />
           <Divider />
         </template>
 
-        <template v-else-if="(dataObject?.type === 'geneLabel' || dataObject?.type === 'trackSection' || dataObject?.type === 'backbone')">
+        <template v-else-if="(dataObject.type === 'trackSection' || dataObject.type === 'backbone' || dataObject.type === 'variantDensity')">
           <template v-if="(dataObject.type === 'trackSection')">
             <GeneInfo
               :gene="dataObject?.genomicSection.gene ? dataObject?.genomicSection.gene : null"
-              :chromosome="dataObject.genomicSection.chromosome.chromosome"
+              :chromosome="dataObject.genomicSection.chromosome"
               :start="dataObject.genomicSection.speciesStart"
               :stop="dataObject.genomicSection.speciesStop"
               :chain-level="dataObject.genomicSection.chainLevel"
               :track-orientation="dataObject.genomicSection.isInverted ? '-' : '+'"
+              :gene-list="geneList"
             />
           </template>
           <template v-else-if="(dataObject.type === 'backbone')">
@@ -69,63 +71,23 @@
               :start="dataObject.genomicSection.windowStart"
               :stop="dataObject.genomicSection.windowStop"
               track-orientation="+"
+              :gene-list="geneList"
             />
           </template>
-          <template v-else>
-            <GeneInfo
-              :gene="dataObject?.genomicSection.gene ? dataObject?.genomicSection.gene : null"
-              :chromosome="dataObject.genomicSection.chromosome"
-              :start="dataObject.genomicSection.sectionStart"
-              :stop="dataObject.genomicSection.sectionStop"
-            />
+          <template v-else-if="dataObject?.type === 'variantDensity'">
+            <div>
+              <span>Chr{{dataObject.genomicSection.chromosome}}: </span>
+              <span>
+                {{Formatter.addCommasToBasePair(dataObject.genomicSection.speciesStart)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.speciesStop)}}
+              </span>
+            </div>
+            <div>
+              <span>Variant Count: {{ Formatter.addCommasToBasePair(dataObject.genomicSection.variantCount) }}</span>
+            </div>
           </template>
           <Divider />
-
-          <template v-if="dataObject.type === 'geneLabel'">
-            <template v-if="(dataObject.genomicSection.combinedGenes && dataObject.genomicSection.combinedGenes.length > 0)">
-              <template v-for="section in dataObject?.genomicSection.combinedGenes" :key="section">
-                <GeneInfo
-                  :gene="section.gene"
-                  :chromosome="section.gene.chromosome"
-                  :start="section.gene.start"
-                  :stop="section.gene.stop"
-                />
-                <Divider />
-              </template>
-            </template>
-          </template>
-
-          <template v-else-if="dataObject.type === 'trackSection'">
-            <template v-if="(dataObject.genomicSection.hiddenGenes && dataObject.genomicSection.hiddenGenes.length > 0)">
-              <template v-for="section in dataObject?.genomicSection.hiddenGenes" :key="section">
-                <GeneInfo
-                  :gene="section.gene"
-                  :chromosome="section.gene.chromosome"
-                  :start="section.gene.start"
-                  :stop="section.gene.stop"
-                />
-                <Divider />
-              </template>
-            </template>
-          </template>
         </template>
-
-        <template v-else-if="dataObject?.type === 'orthologLine'">
-          <div data-test="start-stop">BACKBONE GENE:</div>
-          <div data-test="gene-symbol">Symbol: {{dataObject.genomicSection.backboneGene.gene.symbol}}</div>
-          <div data-test="gene-name">Name:{{dataObject.genomicSection.backboneGene.gene.name ?? 'N/A'}}</div>
-          <div data-test="chromosome-name">Chromosome: {{dataObject.genomicSection.backboneGene.gene.chromosome}}</div>
-          <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(dataObject.genomicSection.backboneGene.gene.start)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.backboneGene.gene.stop)}}</div>
-
-          <div data-test="start-stop">&lt;---------------------------------------&gt;</div>
-
-          <div data-test="start-stop">COMPARATIVE GENE HOMOLOG:</div>
-          <div data-test="gene-symbol">Species: {{dataObject.genomicSection.comparativeGene.gene.speciesName}}</div>
-          <div data-test="gene-symbol">Symbol: {{dataObject.genomicSection.comparativeGene.gene.symbol}}</div>
-          <div data-test="gene-name">Name:{{dataObject.genomicSection.comparativeGene.gene.name ?? 'N/A'}}</div>
-          <div data-test="chromosome-name">Chromosome: {{dataObject.genomicSection.comparativeGene.gene.chromosome}}</div>
-          <div data-test="start-stop">Region: {{Formatter.addCommasToBasePair(dataObject.genomicSection.comparativeGene.gene.start)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.comparativeGene.gene.stop)}}</div>
-        </template>
+        
       </template>
     </div>
   </Panel>
@@ -136,58 +98,36 @@ import SelectedData from '@/models/SelectedData';
 import Gene from '@/models/Gene';
 import GeneInfo from '@/components/GeneInfo.vue';
 import { Formatter } from '@/utils/Formatter';
-import SVGConstants from '@/utils/SVGConstants';
-import { ref, watch } from 'vue';
+import { ref, watch} from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
-import { getNewSelectedData, sortGeneList } from '@/utils/DataPanelHelpers';
+import { getNewSelectedData, sortGeneMatches, adjustSelectionWindow } from '@/utils/DataPanelHelpers';
+
+/**
+ * FIXME: This whole component needs to be looked over. There are references to properties on objects that don't exist.
+ * The template is full of v-ifs and it can be pretty confusing to wrap your head around what's going on.
+ */
 
 const store = useStore(key);
 
 interface Props
 {
   selectedData: SelectedData[] | null;
+  geneList: Map<number, Gene>;
 }
 
 const props = defineProps<Props>();
 
-const searchedGene = ref<Gene | Gene[] | null>(null);
+const searchedGene = ref<Gene | null>(null);
 const geneSuggestions = ref<Gene[]>([]);
 const numberOfResults = ref<number>(0);
-const overviewStart = ref<number>(store.state.selectedBackboneRegion.baseSelection.basePairStart);
-const overviewStop = ref<number>(store.state.selectedBackboneRegion.baseSelection.basePairStop);
-
-// fraction of gene bp length to add to the window when jumping
-// to the gene after a search
-const SEARCHED_GENE_WINDOW_FACTOR = 3;
 
 watch(() => props.selectedData, () => {
   numberOfResults.value = 0;
-  if (props.selectedData) {
-    props.selectedData.forEach((dataObject) => {
-      if (dataObject.type === 'trackSection' || dataObject.type === 'Gene' || dataObject.type === 'geneLabel') {
-        if (dataObject.type === 'trackSection' && dataObject.genomicSection.gene) 
-        {
-          numberOfResults.value += (dataObject.genomicSection.hiddenGenes.length + 1);
-          if (dataObject.genomicSection.hiddenGenes.length > 0) sortGeneList(dataObject.genomicSection.hiddenGenes);
-        }
-        if (dataObject.type === 'geneLabel') 
-        {
-          numberOfResults.value += (dataObject.genomicSection.combinedGenes.length + 1);
-          if (dataObject.genomicSection.combinedGenes.length > 0) sortGeneList(dataObject.genomicSection.combinedGenes);
-        }
-        if (dataObject.type === 'Gene') 
-        {
-          numberOfResults.value += 1;
-        }
-      }
-    });
+  if (props.selectedData != null)
+  {
+    numberOfResults.value = props.selectedData.filter(d => d.type === 'Gene').length;
   }
-});
-
-watch(() => store.state.selectedBackboneRegion.baseSelection, () => {
-  overviewStart.value = store.state.selectedBackboneRegion.baseSelection.basePairStart;
-  overviewStop.value = store.state.selectedBackboneRegion.baseSelection.basePairStop;
 });
 
 const clearSelectedGenes = () => {
@@ -198,129 +138,32 @@ const clearSelectedGenes = () => {
 };
 
 const searchGene = (event: {query: string}) => {
-  const loadedGenes = store.state.loadedGenes;
-  const loadedGeneSymbols = store.getters.masterGeneMapBySymbol;
-  
   let matches: Gene[] = [];
-  for (let k of loadedGeneSymbols.keys()) 
-  {
-    if (k.toLowerCase().includes(event.query.toLowerCase()))
-    {
-      const rgdIds = loadedGeneSymbols.get(k);
-      for (let rgdId of rgdIds) 
-      {
-        const currSpecies = loadedGenes.get(rgdId);
+  props.geneList.forEach((gene) => {
+    if (gene.symbol.toLowerCase().includes(event.query.toLowerCase()))
+      matches.push(gene);
+  });
 
-        for (const object in currSpecies) 
-        {
-          const geneEntry = currSpecies[object];
-          geneEntry.drawn.forEach(element => {
-            matches.push(element.gene.gene);
-          });
-        }
-
-      }
-    }
-  }
+  const searchKey = searchedGene.value;
+  matches = sortGeneMatches(searchKey, matches);
   geneSuggestions.value = matches;
 };
 
-const searchSVG = (event: any) => {
-  const newData = getNewSelectedData(store, event.value);
+const searchSVG = (event: { value: Gene }) => {
+  const newData = getNewSelectedData(store, event.value, props.geneList);
+  store.dispatch('setGene', event.value.clone()); // Update store config to see this as last gene selected
   store.dispatch('setSelectedGeneIds', newData.rgdIds || []);
   store.dispatch('setSelectedData', newData.selectedData);
-  // Only adjust window of the searched gene is on backbone
-  /* if (event.value && event.value.speciesName === store.state.species?.name) {
-    adjustSelectionWindow();
-  } */
-};
 
-const selectAndSearchSVG = (event: any) => {
-  // If "Enter" is pressed, just search the first gene
-  if (event.key === "Enter") {
-    searchedGene.value = geneSuggestions.value[0];
-    const newData = getNewSelectedData(store, searchedGene.value);
-    store.dispatch('setGene', searchedGene.value);
-    store.dispatch('setSelectedGeneIds', newData.rgdIds || []);
-    store.dispatch('setSelectedData', newData.selectedData);
-    /* if (searchedGene.value && searchedGene.value.speciesName === store.state.species?.name) {
-      adjustSelectionWindow();
-    } */
+  if (event.value)
+  {
+    const newWindow = adjustSelectionWindow(event.value, props.geneList, store);
+    store.dispatch('setDetailedBasePairRequest', newWindow);
   }
 };
 
 const getSuggestionDisplay = (item: any) => {
   return `${item.symbol} - ${item.speciesName}`;
-};
-
-const adjustSelectionWindow = () => {
-  const loadedGenes = store.state.loadedGenes;
-  const selectedRegion = store.state.selectedBackboneRegion;
-  const selectionStart = selectedRegion.innerSelection?.basePairStart || selectedRegion.baseSelection.basePairStart;
-
-  // New start and stop will be +/- some multiple of the gene's length (currently 2x)
-  const geneBasePairLength = searchedGene.value.stop - searchedGene.value.start;
-  // Take the max of new start position, and selected region's original start
-  // to avoid jumping to outside of loaded region
-  const newInnerStart = Math.max(Math.floor(searchedGene.value.start
-    - SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), selectedRegion.baseSelection.basePairStart);
-  // Take min of new stop and selected regions original stop
-  const newInnerStop = Math.min(Math.floor(searchedGene.value.stop
-    + SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), selectedRegion.baseSelection.basePairStop);
-    
-  //get orthologs for backbone gene, and determine the relative highest and lowest positioned genes to reset the window
-  const orthologs = loadedGenes.get(searchedGene.value.symbol.toLowerCase());
-  let drawnOrthologs = [];
-  for (let [key, value] of Object.entries(orthologs)) 
-  {
-    if (value.gene.speciesName.toLowerCase() !== searchedGene.value.speciesName.toLowerCase()) 
-    {
-      if (value.visible.length > 0)
-      {
-        drawnOrthologs = drawnOrthologs.concat(value.visible);
-      }
-      else if (value.drawn.length > 0)
-      {
-        drawnOrthologs = drawnOrthologs.concat(value.drawn);
-      }
-    }
-  }
-
-  if (drawnOrthologs.length > 0)
-  {
-    drawnOrthologs.sort((a, b) => a.svgY - b.svgY);
-    const highestOrtholog = drawnOrthologs[0];
-    const lowestOrtholog = drawnOrthologs[drawnOrthologs.length - 1];
-
-    const topOrthologLength = highestOrtholog.sectionStop - highestOrtholog.sectionStart;
-    const bottomOrthologLength = lowestOrtholog.sectionStop - lowestOrtholog.sectionStart;
-
-    const basePairsFromInnerSelection1 = Math.floor((highestOrtholog.svgY - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
-    const basePairStart = Math.max(basePairsFromInnerSelection1 + selectionStart - (topOrthologLength * 5), selectedRegion.baseSelection.basePairStart);
-
-    const basePairsFromInnerSelection2 = Math.floor((lowestOrtholog.svgY - SVGConstants.panelTitleHeight) * store.state.detailedBasePairToHeightRatio);
-    const basePairStop = Math.min(basePairsFromInnerSelection2 + selectionStart + (bottomOrthologLength * 5), selectedRegion.baseSelection.basePairStop);
-
-    //confirm the searched gene is visible in the result and adjust if not
-    if (newInnerStart > basePairStart && newInnerStop < basePairStop)
-    {
-      store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: basePairStop});
-    }
-    else if (newInnerStart < basePairStart)
-    {
-      newInnerStop > basePairStop ? store.dispatch('setDetailedBasePairRange', { start: newInnerStart, stop: newInnerStop }) : store.dispatch('setDetailedBasePairRange', { start: newInnerStart, stop: basePairStop });
-    }
-    else if (newInnerStop > basePairStop)
-    {
-      newInnerStart < basePairStart ? store.dispatch('setDetailedBasePairRange', { start: newInnerStart, stop: newInnerStop}) : store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: newInnerStop}); 
-    }
-    
-  }
-  else
-  {
-    store.dispatch('setDetailedBasePairRange', { start: newInnerStart, stop: newInnerStop});
-  }
-  
 };
 </script>
 
@@ -339,5 +182,27 @@ const adjustSelectionWindow = () => {
 .panel-header-item
 {
   padding-bottom: 10px;
+}
+
+.clear-selection-btn
+{
+  margin-top: .5em;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.placeholder-msg
+{
+  font-size: 1.1rem;
+  padding-right: 3rem;
+  margin-top: 0rem;
+  margin-bottom: 0;
+}
+
+.placeholder-msg-txt
+{
+  font-size: .9rem;
+  font-style: italic;
+  margin-top: .5em;
 }
 </style>

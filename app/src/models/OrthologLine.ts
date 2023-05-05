@@ -1,22 +1,20 @@
-import Datatracksection from './DatatrackSection';
+import { GeneDatatrack } from './DatatrackSection';
+import Gene from './Gene';
 import { SVGShape, VCMapSVGElement } from "./VCMapSVGElement";
 
-interface OrthologLineParams
-{
-  posX1: number;  //backbone gene x
-  posX2: number;  //comparative gene x
-  posY1: number;  //backbone gene y
-  posY2: number;  //comparative gene y
-
-  backboneGene: Datatracksection;
-  comparativeGene: Datatracksection;
-}
+type OrthologLineParams = {
+  startGene: Gene;
+  endGene: Gene;
+  x1: number;
+  x2: number;
+  y1: number;
+  y2: number;
+  startGeneDatatrack?: GeneDatatrack;
+  endGeneDatatrack?: GeneDatatrack;
+};
 
 export default class OrthologLine implements VCMapSVGElement
 {
-  backboneGene: Datatracksection;
-  comparativeGene: Datatracksection;
-
   posX1: number = 0;
   posX2: number = 0;
   posY1: number = 0;
@@ -29,14 +27,26 @@ export default class OrthologLine implements VCMapSVGElement
   isSelected: boolean = false;
   elementColor: string = '';
 
+  startGene: Gene;
+  endGene: Gene;
+  startGeneDatatrack: GeneDatatrack | null = null;
+  endGeneDatatrack: GeneDatatrack | null = null;
+
+  chainedOrthologLines: OrthologLine[] = []; // Other ortholog lines that are "chained" to this one
+
   constructor(params: OrthologLineParams)
   {
-    this.backboneGene = params.backboneGene;
-    this.comparativeGene = params.comparativeGene;
+    this.startGene = params.startGene;
+    this.endGene = params.endGene;
+    this.posX1 = params.x1;
+    this.posX2 = params.x2;
+    this.posY1 = params.y1;
+    this.posY2 = params.y2;
+    this.startGeneDatatrack = params.startGeneDatatrack ?? null;
+    this.endGeneDatatrack = params.endGeneDatatrack ?? null;
 
-    this.posX1 = params.posX1;
-    this.posX2 = params.posX2;
-    this.posY1 = params.posY1;
-    this.posY2 = params.posY2;
+    // Associate this line with its gene datatracks if possible
+    this.startGeneDatatrack?.lines.push(this);
+    this.endGeneDatatrack?.lines.push(this);
   }
 }

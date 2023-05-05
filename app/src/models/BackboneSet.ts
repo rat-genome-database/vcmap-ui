@@ -1,13 +1,14 @@
-import { backboneDatatrackBuilder, ProcessedGenomicData } from "@/utils/BackboneBuilder";
+import { ProcessedGenomicData } from "@/utils/BackboneBuilder";
 import SVGConstants from "@/utils/SVGConstants";
-import { mergeGeneLabels } from "@/utils/GeneLabelMerger";
+import { mergeAndCreateGeneLabels } from "@/utils/GeneLabelMerger";
 import BackboneSection from "./BackboneSection";
-import DatatrackSection from "./DatatrackSection";
+import DatatrackSection, { DatatrackSectionType } from "./DatatrackSection";
+import DatatrackSet from "./DatatrackSet";
 import { GenomicSet } from "./GenomicSet";
-import Label, { GeneLabel } from "./Label";
-
-
-const DataTrack_X_OFFSET = 10;
+import Label, { GeneLabel, IntermediateGeneLabel } from "./Label";
+import { calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment, getDetailedPanelXPositionForBackboneDatatracks, isGenomicDataInViewport } from "@/utils/Shared";
+import SpeciesMap from "./SpeciesMap";
+import logger from "@/logger";
 
 /**
  * Model for representing a set of Backbone sections and its datatrack sections
@@ -15,46 +16,35 @@ const DataTrack_X_OFFSET = 10;
 export default class BackboneSet extends GenomicSet
 {
   backbone: BackboneSection;
-  datatracks: DatatrackSection[];
-  datatrackLabels: Label[] = [];
+  datatrackSets: DatatrackSet[] = [];
+  geneLabels: GeneLabel[] = [];
+  // TODO: figure out if this is this best place for this,
+  // because it's only relevant to variant density
+  maxVariantCount?: number;
+  variantBinSize?: number;
 
-  constructor(backboneSection: BackboneSection, processedGenomicData?: ProcessedGenomicData)
+  constructor(backboneSection: BackboneSection, map: SpeciesMap, processedGenomicData?: ProcessedGenomicData)
   {
-    super(backboneSection.species?.name, backboneSection.species?.activeMap.name);
+    super(backboneSection.speciesName, map);
 
     this.backbone = backboneSection;
-    this.datatracks = processedGenomicData?.datatracks ?? [];
-    if (this.datatracks.length > 0 && processedGenomicData)
+    if (processedGenomicData?.datatracks)
+    {
+      this.datatrackSets.push(new DatatrackSet(processedGenomicData.datatracks, 'gene'));
+    }
+    if (processedGenomicData && processedGenomicData.datatracks.length > 0)
     {
       this.backbone.setBackboneGenes(processedGenomicData.genes);
     }
     this.setBackboneXPositions();
     this.createTitleLabels();
     this.setDatatrackXPositions();
-    this.processGeneLabels();
-  }
 
-  public adjustVisibleSet(backboneStart: number, backboneStop: number)
-  {
-    if (backboneStart < this.backbone.start || backboneStop > this.backbone.stop)
+    if (this.backbone.renderType === 'detailed')
     {
-      // Can't generate visible set from outside the boundaries of this BackboneSet
-      throw new Error('Cannot create visible backbone set outside boundaries of loaded backbone set');
-    }
-
-    // Change visible backbone section
-    this.backbone.changeWindowStartAndStop(backboneStart, backboneStop);
-
-    // Use stored genomic data to rebuild datatrack sections for visible region
-    // TODO: Return new master gene map?
-    if (this.backbone.backboneGenes)
-    {
-      const datatrackInfo = backboneDatatrackBuilder(this.backbone.backboneGenes, this.backbone, backboneStart, backboneStop);
-      this.datatracks = datatrackInfo.processedGenomicData.datatracks;
-      this.setDatatrackXPositions();
-      this.processGeneLabels();
-
-      return datatrackInfo.masterGeneMap;
+      logger.time(`Create Backbone Gene Labels`);
+      this.generateGeneLabels();
+      logger.timeEnd(`Create Backbone Gene Labels`);
     }
   }
 
@@ -70,6 +60,7 @@ export default class BackboneSet extends GenomicSet
       posX: this.backbone.posX1,
       posY: SVGConstants.trackMapLabelYPosition,
       text: this.mapName ?? 'Unknown',
+      addClass: 'smaller',
     });
 
     this.titleLabels = [speciesLabel, mapLabel];
@@ -94,28 +85,137 @@ export default class BackboneSet extends GenomicSet
 
   private setDatatrackXPositions()
   {
-    this.datatracks.forEach(section => {
-      section.posX1 = this.backbone.posX2 + DataTrack_X_OFFSET;
-      section.posX2 = section.posX1 + SVGConstants.dataTrackWidth;
-      section.width = SVGConstants.dataTrackWidth;
-      if (section.label)
-      {
-        section.label.posX = section.posX2;
-      }
+    this.datatrackSets.forEach((set, index) => {
+      set.datatracks.forEach((section) => {
+        section.posX1 = getDetailedPanelXPositionForBackboneDatatracks(this.backbone.posX2, index);
+        //section.posX1 = this.backbone.posX2 + (SVGConstants.backboneDatatrackXOffset) * (index + 1) + (SVGConstants.backboneDatatrackXOffset * index);
+        section.posX2 = section.posX1 + SVGConstants.dataTrackWidth;
+        section.width = SVGConstants.dataTrackWidth;
+        if (section.label)
+        {
+          section.label.posX = section.posX2;
+        }
+      });
     });
   }
 
-  private processGeneLabels()
+  private generateGeneLabels()
   {
-    const allLabels: Label[] = [];
-    this.datatracks.forEach((section) => {
-      if (section.label)
-      {
-        allLabels.push(section.label);
-      }
-    });
-    this.datatrackLabels = allLabels;
+    if (this.backbone.backboneGenes == null || this.backbone.backboneGenes.length === 0)
+    {
+      return;
+    }
 
-    mergeGeneLabels(this.datatrackLabels as GeneLabel[]);
+    //
+    // First, create our intermediate gene-labels before passing them to the label merge processing:
+
+    // Get X position based on where the gene datatrack set is positioned
+    let xPos: number | null = null;
+    for (let i = 0; i < this.datatrackSets.length; i++)
+    {
+      if (this.datatrackSets[i].type === 'gene')
+      {
+        xPos = getDetailedPanelXPositionForBackboneDatatracks(this.backbone.posX2, i) + SVGConstants.dataTrackWidth;
+        break;
+      }
+    }
+
+    if (xPos == null)
+    {
+      logger.debug(`(BackboneSet) generateGeneLabels: xPos is null after iterating through DatatrackSets`);
+      return;
+    }
+
+    const filteredGenes = this.backbone.backboneGenes
+      .filter(g => isGenomicDataInViewport(g, this.backbone.windowSVGStart, this.backbone.windowStop));
+
+    logger.time(`Create intermediate labels`);
+    // Create intermediate gene labels for all genes in the viewport:
+    const intermediateLabels: IntermediateGeneLabel[] = [];
+    for (let i = 0; i < filteredGenes.length; i++)
+    {
+      const g = filteredGenes[i];
+      const yPos = calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment(g.backboneStart, 
+        g.backboneStop, this.backbone.windowStart, this.backbone.windowStop);
+      intermediateLabels.push({
+        gene: g,
+        posY: yPos,
+        posX: xPos,
+      });
+    }
+    logger.timeEnd('Create intermediate labels');
+
+    //
+    // Create the visible gene labels from our intermediate labels (apply merging logic as appropriate)
+    this.geneLabels = mergeAndCreateGeneLabels(intermediateLabels);
+  }
+
+  public addNewDatatrackSetToEnd(datatrackSections: DatatrackSection[], type: DatatrackSectionType)
+  {
+    this.datatrackSets.push(new DatatrackSet(datatrackSections, type));
+    this.setDatatrackXPositions();
+  }
+
+  public addNewDatatrackSetToStart(datatrackSections: DatatrackSection[], type: DatatrackSectionType)
+  {
+    this.datatrackSets.unshift(new DatatrackSet(datatrackSections, type));
+    this.setDatatrackXPositions();
+    this.updateGeneLabelXPositions();
+  }
+
+  public addToDatatrackSet(datatrackSections: DatatrackSection[], datatrackSetIdx: number)
+  {
+    this.datatrackSets[datatrackSetIdx].addDatatrackSections(datatrackSections);
+    this.setDatatrackXPositions();
+  }
+
+  public removeDatatrackSet(datatrackSetIdx: number)
+  {
+    this.datatrackSets.splice(datatrackSetIdx, 1);
+    this.setDatatrackXPositions();
+    this.updateGeneLabelXPositions();
+  }
+
+  public updateGeneLabelXPositions()
+  {
+    if (this.backbone.backboneGenes == null || this.backbone.backboneGenes.length === 0)
+    {
+      return;
+    }
+
+    // Get X position based on where the gene datatrack set is positioned
+    let xPos: number | null = null;
+    for (let i = 0; i < this.datatrackSets.length; i++)
+    {
+      if (this.datatrackSets[i].type === 'gene')
+      {
+        xPos = getDetailedPanelXPositionForBackboneDatatracks(this.backbone.posX2, i) + SVGConstants.dataTrackWidth;
+        break;
+      }
+    }
+
+    if (xPos == null)
+    {
+      logger.debug(`(BackboneSet) updateGeneLabelXPositions: xPos is null after iterating through DatatrackSets`);
+      return;
+    }
+
+    for (let i = 0; i < this.geneLabels.length; i++)
+    {
+      this.geneLabels[i].posX = xPos;
+    }
+  }
+
+  public get geneDatatrackSetIndex()
+  {
+    for (let i = 0; i < this.datatrackSets.length; i++)
+    {
+      if (this.datatrackSets[i].type === 'gene')
+      {
+        return i;
+      }
+    }
+
+    return 0;
   }
 }

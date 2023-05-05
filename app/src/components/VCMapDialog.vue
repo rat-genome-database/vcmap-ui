@@ -7,13 +7,19 @@
     :draggable="false"
     :closable="false"
     :modal="true">
-    <p>{{props.message}}</p>
     <slot name="content">
       <p>{{props.message}}</p>
     </slot>
     <template #footer>
       <slot name="footer">
-        <Button label="Ok" :class="{'p-button-danger': (props.theme === 'error')}" @click="close" autofocus />
+        <div class="grid">
+          <div v-if="props.showBackButton" class="col-6 text-left">
+            <Button label="Back to Configuration" :class="{'p-button-danger': (props.theme === 'error')}" class="p-button-outlined" @click="goToConfiguration" />
+          </div>
+          <div :class="props.showBackButton ? 'col-6' : 'col-12'">
+            <Button :label="(props.showBackButton) ? 'Ok, proceed anyway' : 'Ok'" :class="{'p-button-danger': (props.theme === 'error')}" @click="onConfirm" autofocus />
+          </div>
+        </div>
       </slot>
     </template>
   </Dialog>
@@ -21,6 +27,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useRouter } from 'vue-router';
 
 /**
  * Can use v-model:show to do 2 way binding
@@ -30,7 +37,9 @@ interface Props
   header: string;
   message?: string;
   show: boolean;
-  theme?: 'error' | 'normal'
+  theme?: 'error' | 'normal';
+  showBackButton?: boolean;
+  onConfirmCallback?: () => void;
 }
 
 interface Emits
@@ -41,6 +50,7 @@ interface Emits
 
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
+const router = useRouter();
 
 const isActive = computed({
   get() {
@@ -53,6 +63,19 @@ const isActive = computed({
 
 const close = () => {
   emit('update:show', false);
+};
+
+const goToConfiguration = () => {
+  close();
+  router.push('/');
+};
+
+const onConfirm = () => {
+  close();
+  if (props.onConfirmCallback)
+  {
+    props.onConfirmCallback();
+  }
 };
 </script>
 

@@ -1,29 +1,19 @@
-import { SpeciesSyntenyData } from "@/api/SyntenyApi";
-import { syntenicSectionBuilder } from "@/utils/SectionBuilder";
 import SVGConstants from "@/utils/SVGConstants";
-import DatatrackSection, { LoadedSpeciesGenes } from "./DatatrackSection";
 import { GenomicSet } from "./GenomicSet";
-import Label, { GeneLabel } from "./Label";
-import OrthologLine from "./OrthologLine";
+import Label, { GeneLabel, IntermediateGeneLabel } from "./Label";
 import SyntenyRegion from "./SyntenyRegion";
 import SyntenySection from "./SyntenySection";
-import { mergeGeneLabels } from "@/utils/GeneLabelMerger";
+import DatatrackSet from "./DatatrackSet";
+import { mergeAndCreateGeneLabels } from "@/utils/GeneLabelMerger";
+import { calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment, getDetailedPanelXPositionForDatatracks, getDetailedPanelXPositionForSynteny, isGenomicDataInViewport } from "@/utils/Shared";
+import SpeciesMap from "./SpeciesMap";
+import logger from "@/logger";
 
 const LEVEL_2_WIDTH_MULTIPLIER = 0.75;
 
 function getOverviewPanelXPosition(order: number)
 {
   return (order * -80) + SVGConstants.backboneXPosition;
-}
-
-function getDetailedPanelXPositionForSynteny(order: number)
-{
-  return (order * 120) + SVGConstants.selectedBackboneXPosition;
-}
-
-function getDetailedPanelXPositionForDatatracks(order: number)
-{
-  return getDetailedPanelXPositionForSynteny(order) + (order * 30);
 }
 
 /**
@@ -34,39 +24,101 @@ export default class SyntenyRegionSet extends GenomicSet
   regions: SyntenyRegion[] = [];
   order: number = 1;
   renderType: 'overview' | 'detailed' = 'overview';
-  speciesSyntenyData: SpeciesSyntenyData; // Raw synteny data for the species represented by this SyntenyRegionSet
-  threshold: number; // The synteny threshold that was used to create this SyntenyRegionSet
-  datatrackLabels: Label[] = []; // array of Label objects associated with the datatrackSections in every SyntenyRegion
+  geneLabels: GeneLabel[] = [];
+  // TODO: figure out if this is this best place for this,
+  // because it's only relevant to variant density
+  maxVariantCount?: number;
+  variantBinSize?: number;
 
-  constructor(speciesName: string, mapName: string, regions: SyntenyRegion[], order: number, renderType: 'overview' | 'detailed', speciesSyntenyData: SpeciesSyntenyData, threshold: number)
+  constructor(speciesName: string, map: SpeciesMap, regions: SyntenyRegion[], order: number, renderType: 'overview' | 'detailed')
   {
-    super(speciesName, mapName);
+    super(speciesName, map);
     this.regions = regions;
     this.order = order;
     this.renderType = renderType;
-    this.speciesSyntenyData = speciesSyntenyData;
-    this.threshold = threshold;
+
     this.setRegionXPositionsBasedOnOrder();
     this.createTitleLabels();
     this.sortBasePairLabels();
-    this.processGeneLabels();
+    
+    if (renderType === 'detailed')
+    {
+      logger.time(`Create Gene Labels`);
+      this.generateGeneLabels();
+      logger.timeEnd(`Create Gene Labels`);
+    }
   }
 
-  public adjustVisibleSet(backboneStart: number, backboneStop: number, masterGeneMap: Map<number, LoadedSpeciesGenes>)
+  private generateGeneLabels()
   {
-    const syntenyRegionData = syntenicSectionBuilder(
-      this.speciesSyntenyData,
-      backboneStart,
-      backboneStop,
-      this.threshold,
-      this.renderType,
-      this.order,
-      masterGeneMap,
-    );
+    // Get:
+    // + X position based on where the gene datatrack set is positioned in the regions
+    // + window start base pair (backbone)
+    // + window stop base pair (backbone)
+    // TODO: The backbone window start/stop should probably be more accessible at this level in some way
+    let xPos: number | null = null;
+    let visibleBackboneStart: number | null = null;
+    let visibleBackboneStop: number | null = null;
+    for (let i = 0; i < this.regions.length; i++)
+    {
+      if (visibleBackboneStart == null || visibleBackboneStop == null)
+      {
+        visibleBackboneStart = this.regions[i].gaplessBlock.windowStart;
+        visibleBackboneStop = this.regions[i].gaplessBlock.windowStop;
+      }
 
-    this.regions = syntenyRegionData.regions;
-    // TODO: adjusting gene labels seesm to slow things down a lot here, so should address this at some point
-    this.processGeneLabels();
+      for (let j = 0; j < this.regions[i].datatrackSets.length; j++)
+      {
+        if (this.regions[i].datatrackSets[j].type === 'gene')
+        {
+          xPos = getDetailedPanelXPositionForDatatracks(this.order, j) + SVGConstants.dataTrackWidth;
+          break;
+        }
+      }
+
+      if (xPos != null && visibleBackboneStart != null && visibleBackboneStop != null)
+      {
+        break;
+      }
+    }
+
+    if (xPos == null || visibleBackboneStart == null || visibleBackboneStop == null)
+    {
+      logger.debug(`(SyntenyRegionSet) generateGeneLabels: xPos || visibleBackboneStart || visibleBackboneStop is null after iterating through DatatrackSets`);
+      logger.debug(`  ${xPos}, ${visibleBackboneStart}, ${visibleBackboneStop}`);
+      return;
+    }
+
+    // Create gene labels for all genes that are contained in the viewport
+    const filteredGenes = this.regions.map(r => r.genes)
+      .flat()
+      // Using '!' to declare visibleBackboneStart and visibleBackboneStop are never null at this point
+      // Typescript seems to not be able to pick this up inside of an anonymous function
+      .filter(g => isGenomicDataInViewport(g, visibleBackboneStart!, visibleBackboneStop!));
+
+    logger.time(`Create intermediate labels`);
+    // Create intermediate gene labels for all genes in the viewport:
+    const intermediateLabels: IntermediateGeneLabel[] = [];
+    for (let i = 0; i < filteredGenes.length; i++)
+    {
+      const g = filteredGenes[i];
+      const yPos = calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment(g.backboneStart, 
+        g.backboneStop, visibleBackboneStart, visibleBackboneStop);
+      intermediateLabels.push({
+        gene: g,
+        posY: yPos,
+        posX: xPos,
+      });
+    }
+    logger.timeEnd(`Create intermediate labels`);
+
+    this.geneLabels = mergeAndCreateGeneLabels(intermediateLabels);
+  }
+
+  public addRegions(regions: SyntenyRegion[])
+  {
+    this.regions.length > 0 ? this.regions = this.regions.concat(regions) : this.regions = regions;
+    this.setRegionXPositionsBasedOnOrder();
   }
 
   protected createTitleLabels()
@@ -81,6 +133,7 @@ export default class SyntenyRegionSet extends GenomicSet
       posX: (this.renderType === 'overview') ? getOverviewPanelXPosition(this.order) : getDetailedPanelXPositionForSynteny(this.order),
       posY: SVGConstants.trackMapLabelYPosition,
       text: this.mapName,
+      addClass: 'smaller',
     });
 
     this.titleLabels = [speciesLabel, mapLabel];
@@ -91,9 +144,10 @@ export default class SyntenyRegionSet extends GenomicSet
     if (this.regions.length > 0)
     {
       this.regions.forEach(region => {
+        this.setGaplessSyntenyBlockXPositions(region.gaplessBlock);
         this.setSyntenyBlockXPositions(region.syntenyBlocks);
         this.setSyntenyGapXPositions(region.syntenyGaps);
-        this.setDatatrackSectionXPositions(region.datatrackSections, region.orthologLines);
+        this.setDatatrackSectionXPositions(region.datatrackSets);
       });
     }
   }
@@ -140,89 +194,79 @@ export default class SyntenyRegionSet extends GenomicSet
 
       section.posX2 = section.posX1 + trackWidth;
       section.width = Math.abs(section.posX2 - section.posX1);
-      section.startLabel.posX = section.posX2;
-      section.stopLabel.posX = section.posX2;
     });
   }
 
-  private setDatatrackSectionXPositions(sections: DatatrackSection[], lines: OrthologLine[])
+  private setGaplessSyntenyBlockXPositions(section: SyntenySection)
   {
-    sections.forEach(section => {
+    this.setSyntenyBlockXPositions([section]);
+    section.startLabel.posX = section.posX2;
+    section.stopLabel.posX = section.posX2;
+  }
+
+  private setDatatrackSectionXPositions(datatrackSets: DatatrackSet[])
+  {
+    // TODO: Skip for overview since datatracks are only shown in Detailed Panel?
+    datatrackSets.forEach((set, index) => {
+      let posX1 = 0;
       if (this.renderType === 'overview')
       {
-        section.posX1 = getOverviewPanelXPosition(this.order);
+        posX1 = getOverviewPanelXPosition(this.order);
       }
       else if (this.renderType === 'detailed')
       {
-        section.posX1 = getDetailedPanelXPositionForDatatracks(this.order);
+        posX1 = getDetailedPanelXPositionForDatatracks(this.order, index);
       }
 
-      section.posX2 = section.posX1 + SVGConstants.dataTrackWidth;
-      // set the label x position if there is one
-      if (section.label)
-      {
-        section.label.posX = section.posX2;
-      }
-      section.width = Math.abs(section.posX2 - section.posX1);
-    });
+      set.datatracks.forEach((section) => {
+        section.posX1 = posX1;
 
-    lines.forEach(line => {
-      if (this.renderType === 'overview')
-      {
-        line.posX2 = getOverviewPanelXPosition(this.order);
-      }
-      else if (this.renderType === 'detailed')
-      {
-        line.posX2 = getDetailedPanelXPositionForDatatracks(this.order);
-      }
+        section.posX2 = section.posX1 + SVGConstants.dataTrackWidth;
+        // set the label x position if there is one
+        if (section.label)
+        {
+          section.label.posX = section.posX2;
+        }
+        section.width = Math.abs(section.posX2 - section.posX1);
+      });
     });
   }
 
   private sortBasePairLabels()
   {
-    const labelPairs = this.regions.flatMap((region) =>{
-      return region.syntenyBlocks.map((section) => {
-        return {startLabel: section.startLabel, stopLabel: section.stopLabel};
-      });
+    const labelPosX = getOverviewPanelXPosition(this.order) + SVGConstants.trackWidth;
+    const labelPairs = this.regions.map((region) =>{
+      return {startLabel: region.gaplessBlock.startLabel, stopLabel: region.gaplessBlock.stopLabel};
     });
-    labelPairs.sort((a, b) => (Math.abs(b.startLabel.posY - b.stopLabel.posY)) - Math.abs((a.startLabel.posY - a.stopLabel.posY)));
+    labelPairs.sort((a, b) =>
+        (Math.abs(b.startLabel.posY - b.stopLabel.posY)) - Math.abs((a.startLabel.posY - a.stopLabel.posY)));
     for (let i = 0; i < labelPairs.length; i++)
     {
       const labelPair = labelPairs[i];
-      if (i === 0 && Math.abs(labelPair.stopLabel.posY - labelPair.startLabel.posY) > 5)
+      labelPair.startLabel.posX = labelPosX;
+      labelPair.stopLabel.posX = labelPosX;
+      if (Math.abs(labelPair.stopLabel.posY - labelPair.startLabel.posY) > 14)
       {
         labelPair.startLabel.isVisible = true;
         labelPair.stopLabel.isVisible = true;
         continue;
       }
-      const overlappedLabels = labelPairs.filter((overlapPair) => {
-        return Math.abs(overlapPair.startLabel.posY - labelPair.startLabel.posY) < 10
-          || Math.abs(overlapPair.startLabel.posY - labelPair.stopLabel.posY) < 10
-          || Math.abs(overlapPair.stopLabel.posY - labelPair.startLabel.posY) < 10
-          || Math.abs(overlapPair.stopLabel.posY - labelPair.stopLabel.posY) < 10;
-      });
-      if (!overlappedLabels.some((overlapLabel) => overlapLabel.startLabel.isVisible || overlapLabel.stopLabel.isVisible)
-        && Math.abs(labelPair.stopLabel.posY - labelPair.startLabel.posY) > 5)
-      {
-        labelPair.startLabel.isVisible = true;
-        labelPair.startLabel.isVisible = true;
-      }
-
     }
   }
 
-  public processGeneLabels()
+  public get geneDatatrackSetIndex()
   {
-    const allLabels: any[] = [];
-    this.regions.forEach((region: SyntenyRegion) => {
-      region.datatrackSections.forEach((section) => {
-        if (section.label)
+    for (let i = 0; i < this.regions.length; i++)
+    {
+      for (let j = 0; j < this.regions[i].datatrackSets.length; j++)
+      {
+        if (this.regions[i].datatrackSets[j].type === 'gene')
         {
-          allLabels.push(section.label);
+          return j;
         }
-      });
-    });
-    this.datatrackLabels = allLabels;
-    mergeGeneLabels(this.datatrackLabels as GeneLabel[]);
+      }
+    }
+
+    return 0;
   }
 }

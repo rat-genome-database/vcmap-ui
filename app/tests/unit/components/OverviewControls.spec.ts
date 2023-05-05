@@ -5,7 +5,6 @@ import Map from '@/models/SpeciesMap';
 import { VCMapState } from '@/store';
 import { ActionTree, Store } from 'vuex';
 import Chromosome from '@/models/Chromosome';
-import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
 import { TestUtils } from '../../utils/TestUtils';
 
 describe('OverviewControls', () => {
@@ -16,7 +15,7 @@ describe('OverviewControls', () => {
     chromosome: new Chromosome({ chromosome: '1', mapKey: 38, seqLength: 1000000}),
     startPos: 1,
     stopPos: 10000,
-    selectedBackboneRegion: new BackboneSelection(new SelectedRegion(50,100,100,10000)),
+    selectedBackboneRegion: null,
   };
 
   beforeEach(() => {
@@ -38,6 +37,6 @@ describe('OverviewControls', () => {
     });
 
     const speciesText = wrapper.get('[data-test="backbone-overview-display"]');
-    expect(speciesText.text()).toBe('Test Species chr1:0-1,000,000');
+    expect(speciesText.text()).toBe('Test Species chr1 (GRCh38)');
   });
 });

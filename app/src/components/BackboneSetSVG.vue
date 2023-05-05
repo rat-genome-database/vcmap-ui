@@ -3,9 +3,9 @@
   <rect v-if="backbone"
     data-test="track-section-svg"
     class="section"
-    @mouseenter="onMouseEnter(backbone, 'backbone')"
-    @mouseleave="onMouseLeave(backbone)"
-    @click="onClick($event, backbone, 'trackSection')"
+    @mouseenter="() => onMouseEnter(backbone, 'backbone')"
+    @mouseleave="() => onMouseLeave(backbone)"
+    @mousemove="updatePositionLabelFromMouseEvent($event)"
     :fill="backbone.isHovered && showDataOnHover ? HOVER_HIGHLIGHT_COLOR : backbone.elementColor"
     :x="backbone.posX1" :y="backbone.posY1"
     :width="backbone.width"
@@ -15,7 +15,7 @@
   <text v-if="backbone"
     class="chromosome-label"
     :x="backbone.posX1 + (SVGConstants.trackWidth / 2)"
-    :y="backbone.posY1 + (backbone.height / 2)"
+    :y="backbone.windowSVGMiddle"
     dominant-baseline="middle"
     text-anchor="middle">
     {{backbone.chromosome}}
@@ -32,79 +32,74 @@
     </text>
   </template>
 
+  <!-- TODO: This will likely be its own component soon to handle different datatrack types -->
   <!-- Datatracks -->
-  <template v-for="(datatrack, index) in datatracks" :key="index">
-    <rect
-      class="section clickable"
-      @mouseenter="onMouseEnter(datatrack, 'Gene')"
-      @mouseleave="onMouseLeave(datatrack)"
-      @click="onClick($event, datatrack, 'Gene')"
-
-      :y="datatrack.posY1"
-      :x="datatrack.posX1"
-      :width="datatrack.width"
-      :height="datatrack.height"
-      :fill="getSectionFill(datatrack)"
-      :fill-opacity=".7"
-    />
+  <template v-for="(datatrackSet, index) in datatrackSets" :key="index">
+    <template v-for="(datatrack, index) in datatrackSet.datatracks" :key="index">
+      <rect
+        :class="getSectionClass(datatrackSet)"
+        @mouseenter="() => onMouseEnter(datatrack, 'Gene')"
+        @mouseleave="() => onMouseLeave(datatrack)"
+        @click="onDatatrackSectionClick($event, datatrack, geneList)"
+        :y="datatrack.posY1"
+        :x="datatrack.posX1"
+        :width="datatrack.width"
+        :height="datatrack.height"
+        :fill="getSectionFill(datatrack)"
+        :fill-opacity="datatrack.opacity"
+        :stroke="getSectionFill(datatrack)"
+      />
+    </template>
   </template>
 
-  <!-- Selected Region on Track -->
-  <rect v-if="!isDetailed && selectedRegion.baseSelection.svgHeight > 0"
-    data-test="selected-region"
-    class="selected-region"
-    fill="#000"
-    fill-opacity="0.3"
-    stroke="#333"
-    stroke-width="1"
-    :x="backbone.posX1" :y="selectedRegion.baseSelection.svgYPoint"
-    :width="SVGConstants.trackWidth"
-    :height="selectedRegion.baseSelection.svgHeight" />
-
-  <!-- Inner selection that changes depending on Detailed panel zoom -->
-  <rect v-if="!isDetailed && selectedRegion.innerSelection && selectedRegion.innerSelection.svgHeight > 0"
-    stroke="green"
-    fill="green"
-    fill-opacity="0.5"
-    :x="backbone.posX1 - 2" :y="selectedRegion.innerSelection.svgYPoint"
-    :width="SVGConstants.trackWidth + INNER_SELECTION_EXTRA_WIDTH"
-    :height="selectedRegion.innerSelection.svgHeight" />
+  <!-- Visible selection that changes depending on Detailed panel zoom -->
+  <template v-if="!isDetailed && selectedRegion?.viewportSelection != null && selectedRegion.viewportSelection.svgHeight > 0">
+    <rect
+      stroke="green"
+      fill="green"
+      fill-opacity="0.5"
+      :x="backbone.posX1 - 2" :y="selectedRegion.viewportSelection.svgYPoint"
+      :width="SVGConstants.trackWidth + INNER_SELECTION_EXTRA_WIDTH"
+      :height="selectedRegion.viewportSelection.svgHeight" />
     
-  <text v-if="!isDetailed && selectedRegion.baseSelection.svgYPoint > 75"
-    class="label small"
-    :x="backbone.posX1 - 3"
-    :y="selectedRegion.baseSelection.svgYPoint - 1">
-      {{ Formatter.convertBasePairToLabel(selectedRegion.baseSelection.basePairStart) }}
-  </text>
-
-  <text v-if="!isDetailed && (selectedRegion.baseSelection.svgYPoint + selectedRegion.baseSelection.svgHeight) < 405"
-    class="label small"
-    :x="backbone.posX1 - 3"
-    :y="selectedRegion.baseSelection.svgYPoint + selectedRegion.baseSelection.svgHeight + 6">
-      {{ Formatter.convertBasePairToLabel(selectedRegion.baseSelection.basePairStop) }}
-  </text>
-
-  <template v-if="(!isDetailed && selectedRegion.innerSelection)">
-    <text v-if="!isDetailed && selectedRegion.innerSelection?.svgHeight > 0 && selectedRegion.innerSelection?.svgYPoint - selectedRegion.baseSelection.svgYPoint > 6"
+    <text v-if="selectedRegion.viewportSelection.svgYPoint > backbone.posY1 + 10"
       class="label small"
-      :x="backbone.posX1 - 3"
-      :y="selectedRegion.innerSelection?.svgYPoint - 1">
-        {{ Formatter.convertBasePairToLabel(selectedRegion.innerSelection.basePairStart) }}
+      :x="backbone.posX1 - 5"
+      :y="selectedRegion.viewportSelection.svgYPoint - 2">
+        {{ Formatter.convertBasePairToLabel(selectedRegion.viewportSelection.basePairStart) }}
     </text>
     
-    <text v-if="!isDetailed && selectedRegion.innerSelection?.svgHeight >= 6 && ((selectedRegion.baseSelection.svgYPoint + selectedRegion.baseSelection.svgHeight + 6) - (selectedRegion.innerSelection.svgYPoint + selectedRegion.innerSelection.svgHeight + 6) > 6)"
+    <text v-if="selectedRegion.viewportSelection.svgYPoint + selectedRegion.viewportSelection.svgHeight < backbone.posY2 - 10"
       class="label small"
-      :x="backbone.posX1 - 3"
-      :y="selectedRegion.innerSelection?.svgYPoint + selectedRegion.innerSelection.svgHeight + 6">
-        {{ Formatter.convertBasePairToLabel(selectedRegion.innerSelection.basePairStop) }}
+      :x="backbone.posX1 - 5"
+      :y="selectedRegion.viewportSelection.svgYPoint + selectedRegion.viewportSelection.svgHeight + 7">
+        {{ Formatter.convertBasePairToLabel(selectedRegion.viewportSelection.basePairStop) }}
     </text>
+  </template>
+
+  <template v-if="showBasePairLine">
+    <text
+      class="label small"
+      text-anchor="end"
+      dominant-baseline="middle"
+      :x="backbone.posX1 - 1"
+      :y="mouseYPos"
+    >
+      {{ basePairPositionLabel }}
+    </text>
+    <line
+      class="position-label"
+      :x1="backbone.posX1"
+      :x2="backbone.posX1 + backbone.width"
+      :y1="mouseYPos"
+      :y2="mouseYPos"
+    />
   </template>
 </template>
 
 <script lang="ts" setup>
-import BackboneSelection, { SelectedRegion } from '@/models/BackboneSelection';
+import BackboneSelection from '@/models/BackboneSelection';
 import SelectedData, { SelectedDataType } from '@/models/SelectedData';
-import { sortGeneList, getNewSelectedData } from '@/utils/DataPanelHelpers';
 import { computed, toRefs } from '@vue/reactivity';
 import { ref, watch, onMounted } from 'vue';
 import { useStore } from 'vuex';
@@ -113,8 +108,13 @@ import { key } from '@/store';
 import { Formatter } from '@/utils/Formatter';
 import BackboneSection from '@/models/BackboneSection';
 import BackboneSet from '@/models/BackboneSet';
-import DatatrackSection from '@/models/DatatrackSection';
+import Gene from '@/models/Gene';
+import DatatrackSection, { GeneDatatrack } from '@/models/DatatrackSection';
+import DatatrackSet from '@/models/DatatrackSet';
 import { VCMapSVGElement } from '@/models/VCMapSVGElement';
+import useMouseBasePairPos from '@/composables/useMouseBasePairPos';
+import { getSelectedDataAndGeneIdsFromOrthologLine } from '@/utils/OrthologHandler';
+import useSyntenyAndDataInteraction from '@/composables/useSyntenyAndDataInteraction';
 
 const INNER_SELECTION_EXTRA_WIDTH = 4;
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
@@ -122,44 +122,72 @@ const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
 
 const store = useStore(key);
 
+const { getBasePairPositionFromMouseEvent, getBasePairPositionFromSVG, mouseYPos, } = useMouseBasePairPos();
+const { setHoverOnGeneLinesAndDatatrackSections, onDatatrackSectionClick } = useSyntenyAndDataInteraction(store);
+
 interface Props
 {
   showDataOnHover?: boolean;
   backboneSet: BackboneSet;
+  syntenyHoverSvgY?: number | null;
+  geneList: Map<number, Gene>;
+  
 }
 
 const props = defineProps<Props>();
+
+const emit = defineEmits<{
+  (e: 'synteny-hover', svgY: number | null): void
+}>();
 
 const backbone = computed(() => {
   return props.backboneSet.backbone;
 });
 
-const datatracks = computed(() => {
-  return props.backboneSet.datatracks;
+const datatrackSets = computed(() => {
+  return (props.backboneSet.datatrackSets);
 });
 
 const isDetailed = computed(() => {
   return props.backboneSet.backbone.renderType === 'detailed';
 });
 
+const showBasePairLine = computed(() => {
+  return props.syntenyHoverSvgY != null && mouseYPos.value != null && isDetailed.value;
+});
+
 //Converts each property in this object to its own reactive prop
 toRefs(props);
-const selectedRegion = ref(new BackboneSelection(new SelectedRegion(0,0,0,0), store.state.chromosome ?? undefined));
+let selectedRegion = ref<BackboneSelection>();
+if (store.state.chromosome)
+{
+  selectedRegion.value = store.state.selectedBackboneRegion ?? new BackboneSelection(store.state.chromosome);
+}
+const basePairPositionLabel = ref<string>('');
 
-watch(() => store.state.selectedBackboneRegion, (newVal: BackboneSelection, oldVal: BackboneSelection) => {
+watch(() => store.state.selectedBackboneRegion, (newVal: BackboneSelection | null) => {
   // Watch for possible clear out of the selected backbone region
-  if (!isDetailed.value && oldVal.baseSelection.svgHeight > 0 && newVal.baseSelection.svgHeight === 0)
+  if (!isDetailed.value && newVal == null && store.state.chromosome != null)
   {
-    selectedRegion.value = new BackboneSelection(new SelectedRegion(0,0,0,0), store.state.chromosome ?? undefined);
+    selectedRegion.value = new BackboneSelection(store.state.chromosome);
   }
-  else if (!isDetailed.value && newVal.baseSelection.svgHeight > 0)
+  else if (!isDetailed.value && newVal != null)
   {
     selectedRegion.value = newVal;
   }
 }, { deep: true });
 
-watch(() => store.state.selectedGeneIds, () => {
+watch([() => store.state.selectedGeneIds, () => props.backboneSet], () => {
   highlightSelections(store.state.selectedGeneIds);
+});
+
+watch(() => props.syntenyHoverSvgY, () => {
+  // If backbone is not being hovered but another synteny section is emitting a mouse event,
+  // show the bp position on this backbone section
+  if (!props.backboneSet.backbone.isHovered && props.syntenyHoverSvgY != null)
+  {
+    updatePositionLabelFromSVG(props.syntenyHoverSvgY);
+  }
 });
 
 onMounted(() => {
@@ -173,22 +201,72 @@ const onMouseEnter = (section: BackboneSection | DatatrackSection, type: Selecte
     section.isHovered = true;
   }
 
-  // Only set selected data if there are no selected genes
-  if (store.state.selectedGeneIds.length === 0)
+  // NOTE: disable selected data for qtls for now
+  if (section.type === 'qtl')
   {
-    const selectedData = new SelectedData(section, type);
-    store.dispatch('setSelectedData', [selectedData]);
+    return;
+  }
+
+  // Only set selected data if there are no selected genes
+  if (store.state.selectedGeneIds.length === 0 && section.type === 'gene')
+  {
+    const selectedDataList: SelectedData[] = [];
+    const geneSection = section as GeneDatatrack;
+    setHoverOnGeneLinesAndDatatrackSections(geneSection?.lines, true);
+
+    if (geneSection.lines.length > 0)
+    {
+      const {
+        selectedData: selectedOrthologs,
+      } = getSelectedDataAndGeneIdsFromOrthologLine(geneSection.lines[0]);
+      selectedDataList.push(...selectedOrthologs);
+    }
+    else
+    {
+      selectedDataList.push(new SelectedData(geneSection.gene.clone(), 'Gene'));
+    }
+
+    store.dispatch('setSelectedData', selectedDataList);
+  }
+  else if (store.state.selectedGeneIds.length === 0)
+  {
+    if (section.type === 'variant')
+    {
+      const selectedData = new SelectedData(section, 'variantDensity');
+      store.dispatch('setSelectedData', [selectedData]);
+    }
+    else
+    {
+      // BackboneSection
+      const selectedData = new SelectedData(section, type);
+      store.dispatch('setSelectedData', [selectedData]);
+    }
   }
 };
 
 const onMouseLeave = (section: BackboneSection | DatatrackSection) => {
+  emit('synteny-hover', null);
+
   if (section && section.isHovered == true)
   {
     section.isHovered = false;
   }
 
+  // NOTE: disable selected data for qtls and variants for now
+  if (section.type === 'qtl' || section.type === 'variant')
+  {
+    return;
+  }
+
+  if (section.type === 'gene')
+  {
+    const geneSection = section as GeneDatatrack;
+    setHoverOnGeneLinesAndDatatrackSections(geneSection?.lines, false);
+  }
+
   // Only reset selected data if there are no selected genes
-  if (store.state.selectedGeneIds.length === 0) {
+  if (store.state.selectedGeneIds.length === 0)
+  {
     store.dispatch('setSelectedData', null);
   }
 };
@@ -199,73 +277,51 @@ const getSectionFill = (section: VCMapSVGElement) => {
   return section.elementColor;
 };
 
-const onClick = (event: any, section: DatatrackSection | BackboneSection, type: string) => {
-  if (!section.gene?.rgdId) {
-    return;
+const getSectionClass = (datatrackSet: DatatrackSet) => {
+  if (datatrackSet.type === 'variant')
+  {
+    return 'section clickable variant';
   }
-  // If clicked section already selected, just reset the selectedGeneId state
-  if (store.state.selectedGeneIds.includes(section.gene?.rgdId || -1)) {
-    store.dispatch('setSelectedGeneIds', []);
-    store.dispatch('setSelectedData', null);
-    return;
-  }
-
-  // If shift key is held, we'll just add to the selections, otherwise, reset first
-  let geneIds: number[] = event.shiftKey ? [...store.state.selectedGeneIds] : [];
-
-  let newSelectedData: SelectedData[] = [];
-  if (section.gene) {
-    const newData = getNewSelectedData(store, section.gene);
-    const geneAndOrthologs = newData.selectedData;
-    const newGeneIds = newData.rgdIds;
-    newSelectedData.push(...geneAndOrthologs);
-    geneIds.push(...newGeneIds);
-  }
-
-  store.dispatch('setSelectedGeneIds', geneIds || []);
-  if (event.shiftKey) {
-    const selectedDataArray = [...(store.state.selectedData || []), ...newSelectedData];
-    store.dispatch('setSelectedData', selectedDataArray);
-  } else {
-    store.dispatch('setSelectedData', newSelectedData);
+  else
+  {
+    return 'section clickable';
   }
 };
 
 const highlightSelections = (selectedGeneIds: number[]) => {
-  // Look through the sections and highlight based on selected genes
-  datatracks.value.forEach((section) => {
-    if (section.gene == null)
-    {
-      return;
-    }
-
-    if (selectedGeneIds.includes(section.gene.rgdId)) 
-    {
-      section.isSelected = true;
-    } 
-    else 
-    {
-      section.isSelected = false;
-    }
-  });
-
-  /* // After selecting the sections, check if we should use alt labels
-  props.track.geneLabels.forEach((label) => {
-    // Only consider geneLabels that are already visible anyway
-    if (label.isVisible) {
-      // If the main gene for this section is selected, we'll use the normal label
-      let useAltLabel = false;
-      if (selectedGeneIds.includes(label.section.gene.rgdId)) {
-        useAltLabel = false;
-      } else { // Otherwise if any selected ids exist in the alt labels, we'll use an alt label
-        const altLabelIds = label.section.altLabels.map((label) => label.rgdId);
-        if (selectedGeneIds.some((id) => altLabelIds.includes(id))) {
-          useAltLabel = true;
-        }
+  // Look through the backbone gene datatracks and highlight based on selected genes
+  (datatrackSets.value[props.backboneSet.geneDatatrackSetIndex]?.datatracks as GeneDatatrack[])
+    .forEach(section => {
+      if (section.gene == null)
+      {
+        return;
       }
-      label.section.showAltLabel = useAltLabel;
-    }
-  }); */
+
+      if (selectedGeneIds.includes(section.gene.rgdId)) 
+      {
+        section.isSelected = true;
+      } 
+      else 
+      {
+        section.isSelected = false;
+      }
+    });
+};
+
+const updatePositionLabelFromMouseEvent = (event: MouseEvent) => {
+  const basePairPos = getBasePairPositionFromMouseEvent(event, backbone.value.windowSVGStart, backbone.value.windowSVGStop, backbone.value.windowStart, backbone.value.windowStop);
+  basePairPositionLabel.value = Formatter.convertBasePairToLabel(basePairPos) || '';
+
+  if (props.backboneSet.backbone.isHovered)
+  {
+    // Emit our svg y position so that other synteny sections can see it
+    emit('synteny-hover', mouseYPos.value ?? null);
+  }
+};
+
+const updatePositionLabelFromSVG = (svgY: number) => {
+  const basePairPos = getBasePairPositionFromSVG(svgY, backbone.value.windowSVGStart, backbone.value.windowSVGStop, backbone.value.windowStart, backbone.value.windowStop);
+  basePairPositionLabel.value = Formatter.convertBasePairToLabel(basePairPos) || '';
 };
 </script>
 
@@ -273,12 +329,14 @@ const highlightSelections = (selectedGeneIds: number[]) => {
 .label.small
 {
   font: normal 8px sans-serif;
+  pointer-events: none;
 }
 
 .chromosome-label
 {
   font: normal 12px sans-serif;
   fill: #4c4b4b;
+  pointer-events: none;
 }
 
 .section
@@ -293,10 +351,21 @@ const highlightSelections = (selectedGeneIds: number[]) => {
   {
     cursor: pointer;
   }
+
+  &.variant
+  {
+    stroke-width: 0.25;
+  }
 }
 
 .selected-region
 {
   stroke-width: 1;
+}
+
+.position-label
+{
+  stroke: black;
+  pointer-events: none;
 }
 </style>

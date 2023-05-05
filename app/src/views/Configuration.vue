@@ -1,11 +1,11 @@
 <template>
   <div class="configuration-header">
     <img alt="VCMap Logo" class="logo" src="../assets/images/vcmap_logo_v2.png">
-    <h3 class="header">VCMap</h3><span class="version-label">v{{VERSION}}</span>
+    <Tag icon="pi pi-tag" severity="info" rounded>v{{ VERSION }}</Tag>
     <a  class="logo-link" href="https://rgd.mcw.edu/" target="_blank"><img class="rgd-logo" src="../assets/images/rgd_logo.png" alt="RGD logo"></a>
   </div>
   <div>
-    <TabView v-model:activeIndex="activeTab">
+    <TabView v-model:activeIndex="activeTab" :lazy="true">
       <TabPanel header="Load by Gene">
         <div class="grid">
           <div class="col-12 text-center">
@@ -143,7 +143,6 @@
                   placeholder="Backbone Species" />
               </div>
             </div>
-
             <div class="grid">
               <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
                 <h4>Assembly</h4>
@@ -156,7 +155,6 @@
                   placeholder="Backbone Assembly" />
               </div>
             </div>
-            
             <div class="grid">
               <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
                 <h4>Chromosome</h4>
@@ -178,7 +176,6 @@
                   showButtons
                   v-model="startPosition"
                   :disabled="!backboneChromosome"
-                  suffix="bp"
                   :step="1000"
                   :max="(maxPosition != null) ? maxPosition - 1 : 1"
                   :min="0"
@@ -192,9 +189,8 @@
                     showButtons
                     v-model="stopPosition"
                     :disabled="!backboneChromosome"
-                    suffix="bp"
                     :step="1000"
-                    :max="maxPosition"
+                    :max="maxPosition ?? undefined"
                     :min="1"
                   />
                 </div>
@@ -257,7 +253,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, computed, watch, nextTick } from 'vue';
 import SpeciesApi from '@/api/SpeciesApi';
 import GeneApi from '@/api/GeneApi';
 import ChromosomeApi from '@/api/ChromosomeApi';
@@ -272,6 +268,8 @@ import { VERSION } from '@/version';
 import { Formatter } from '@/utils/Formatter';
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import { key } from '@/store';
+import { sortGeneMatches } from '@/utils/DataPanelHelpers';
+import { ConfigurationMode } from '@/utils/Types';
 
 interface ComparativeSpeciesSelection
 {
@@ -284,12 +282,13 @@ const router = useRouter();
 const store = useStore(key);
 const $log = useLogger();
 
-const TABS = {
-  GENE: 0,
-  POSITION: 1
+// Translate from configuration mode to tabs on this page
+const TABS: { [key in ConfigurationMode]: number } = {
+  gene: 0,
+  position: 1
 };
 
-const activeTab = ref(TABS.GENE);
+const activeTab = ref(TABS.gene);
 
 const speciesOptions = ref<Species[]>([]);
 const backboneSpecies = ref<Species | null>(null);
@@ -325,6 +324,10 @@ watch(backboneAssembly, () => {
   }); 
 });
 
+watch(activeTab, async () => {
+  await nextTick();
+});
+
 const isValidConfig = computed(() => {
   const isCommonConfigValid = backboneSpecies.value && comparativeSpeciesSelections.value.length > 0 && comparativeSpeciesSelections.value.every(s => s.typeKey !== 0 && s.mapKey !== 0);
   if (!isCommonConfigValid)
@@ -332,11 +335,11 @@ const isValidConfig = computed(() => {
     return false;
   }
 
-  if (activeTab.value === TABS.POSITION)
+  if (activeTab.value === TABS.position)
   {
     return backboneChromosome.value;
   }
-  else if (activeTab.value === TABS.GENE)
+  else if (activeTab.value === TABS.gene)
   {
     return geneChromosome.value;
   }
@@ -358,8 +361,12 @@ async function searchGene(event: {query: string})
   isLoadingGene.value = true;
   try
   {
-    const matches = await GeneApi.getGenesBySymbol(backboneSpecies.value.activeMap.key, backboneSpecies.value.name, event.query);
-    geneSuggestions.value = matches;
+    const searchKey = event.query;
+    const matches = await GeneApi.getGenesBySymbol(backboneSpecies.value.activeMap.key, backboneSpecies.value.name, searchKey);
+    if (matches.length > 0)
+    {
+      geneSuggestions.value = sortGeneMatches(searchKey, matches);
+    }
   }
   catch (err: any)
   {
@@ -463,7 +470,9 @@ async function setGeneChromosomeAndDefaultStartAndStopPositions(gene: Gene | nul
 
 async function prepopulateConfigOptions()
 {
-  activeTab.value = store.state.configTab;
+  store.dispatch('setConfigurationLoaded', null);
+
+  activeTab.value = TABS[store.state.configMode];
   isLoadingSpecies.value = true;
   const backboneSelection = store.state.selectedBackboneRegion;
   try
@@ -546,7 +555,7 @@ async function prepopulateConfigOptions()
   {
     const prevGene = store.state.gene;
     backboneGene.value = (prevGene.speciesName === backboneSpecies.value.name) ? prevGene : null;
-    if (backboneSelection.baseSelection.length > 0 && backboneSelection.baseSelection.basePairStart <= prevGene.start && backboneSelection.baseSelection.basePairStop >= prevGene.stop)
+    if (backboneSelection != null && backboneSelection.chromosome.seqLength > 0 && 0 <= prevGene.start && backboneSelection.chromosome.seqLength >= prevGene.stop)
     {
       // If user's last selection included this gene
       geneOptionStartPosition.value = store.state.startPos ?? 0;
@@ -597,19 +606,15 @@ function saveConfigToStoreAndGoToMainScreen()
 
   store.dispatch('setSpecies', backboneSpecies.value);
   // Always reset loaded genes before loading VCMap
-  store.dispatch('setLoadedGenes', []);
-  if (activeTab.value === TABS.GENE)
+  store.dispatch('setLoadedGenes', null);
+  if (activeTab.value === TABS.gene)
   {
     store.dispatch('setGene', backboneGene.value);
     store.dispatch('setChromosome', geneChromosome.value);
-    store.dispatch('setStartPosition', geneOptionStartPosition.value ?? backboneGene.value?.start);
-    store.dispatch('setStopPosition', geneOptionStopPosition.value ?? backboneGene.value?.stop);
-    store.dispatch('setLoadStart', geneOptionStartPosition.value ?? backboneGene.value?.start);
-    store.dispatch('setLoadStop', geneOptionStopPosition.value ?? backboneGene.value?.stop);
     // If loading by gene, set the selectedGeneIds based on search, and selected data panel
     store.dispatch('setSelectedGeneIds', [backboneGene.value?.rgdId] || []);
   }
-  else if (activeTab.value === TABS.POSITION)
+  else if (activeTab.value === TABS.position)
   {
     store.dispatch('setChromosome', backboneChromosome.value);
     store.dispatch('setStartPosition', startPosition.value ?? 0);
@@ -651,9 +656,23 @@ function saveConfigToStoreAndGoToMainScreen()
   });
 
   store.dispatch('setComparativeSpecies', comparativeSpecies);
-  store.dispatch('setConfigTab', activeTab.value);
+  store.dispatch('setConfigMode', getConfigModeFromActiveTab(activeTab.value));
+  store.dispatch('setConfigurationLoaded', null);
 
   router.push('/main');
+}
+
+function getConfigModeFromActiveTab(tabValue: number): ConfigurationMode
+{
+  for (const mode in TABS)
+  {
+    if (TABS[mode as ConfigurationMode] === tabValue)
+    {
+      return mode as ConfigurationMode;
+    }
+  }
+
+  return 'gene';
 }
 
 function clearPriorBackboneSelectionIfNecessary()
@@ -664,7 +683,7 @@ function clearPriorBackboneSelectionIfNecessary()
     return;
   }
 
-  if (activeTab.value === TABS.GENE
+  if (activeTab.value === TABS.gene
     && (store.state.chromosome?.chromosome !== geneChromosome.value?.chromosome
       || store.state.startPos !== geneOptionStartPosition.value
       || store.state.stopPos !== geneOptionStopPosition.value))
@@ -673,7 +692,7 @@ function clearPriorBackboneSelectionIfNecessary()
     return;
   }
   
-  if (activeTab.value === TABS.POSITION 
+  if (activeTab.value === TABS.position 
     && (store.state.chromosome?.chromosome !== backboneChromosome.value?.chromosome
       || store.state.startPos !== startPosition.value
       || store.state.stopPos !== stopPosition.value))

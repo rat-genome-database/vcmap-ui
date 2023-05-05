@@ -32,6 +32,11 @@ module.exports = {
       "vue/no-v-for-template-key": "off",
       "vue/script-setup-uses-vars": "error",
       "no-inner-declarations": "off",
-      "no-unused-vars": "warn"
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": "warn", // ignores args in abstract functions
+      "no-warning-comments": [
+        "off", // change to "warn" to see all TODOs and FIXMEs in the codebase
+        { "terms": ["todo", "fixme"], "location": "anywhere" }
+      ]
     }
 };

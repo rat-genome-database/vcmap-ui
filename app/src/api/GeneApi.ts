@@ -1,3 +1,4 @@
+import logger from "@/logger";
 import Gene from "@/models/Gene";
 import httpInstance from "./httpInstance";
 
@@ -15,6 +16,7 @@ interface GeneDTO
   startPos: number;
   stopPos: number;
   strand: '+' | '-';
+  orthologs: number[];
 }
 
 /**
@@ -22,7 +24,15 @@ interface GeneDTO
  */
 function getGeneFromGeneDTO(dto: GeneDTO, speciesName?: string)
 {
+  let formattedOrthologs = null;
+  if (dto.orthologs)
+  {
+    const orthologIds = Object.values(dto.orthologs);
+    formattedOrthologs = orthologIds.flat();
+  }
+
   return new Gene({
+    mapKey: dto.mapKey,
     speciesName: speciesName,
     symbol: dto.geneSymbol,
     name: dto.geneName,
@@ -30,6 +40,9 @@ function getGeneFromGeneDTO(dto: GeneDTO, speciesName?: string)
     chromosome: dto.chr,
     start: dto.startPos,
     stop: dto.stopPos,
+    backboneStart: dto.startPos,
+    backboneStop: dto.stopPos,
+    orthologs: formattedOrthologs ? formattedOrthologs : [],
   });
 }
 
@@ -79,10 +92,26 @@ export default class GeneApi
     return geneList;
   }
 
-  static async getGenesByRegion(chromosome: String, start: Number, stop: Number, mapKey: Number, speciesName: string)
+  static async getGenesByRegion(chromosome: String, start: number, stop: number, mapKey: number, speciesName: string, comparativeSpeciesIds: number[])
   {
-    const res = await httpInstance.get<GeneDTO[]>(`/vcmap/genes/${mapKey}/${chromosome}/${start}/${stop}`);
+    const roundedStart = Math.round(start);
+    const roundedStop = Math.round(stop);
+    const startTime = Date.now();
+
+    
+
+    // const res = await httpInstance.get<GeneDTO[]>(`/vcmap/genes/${mapKey}/${chromosome}/${roundedStart}/${roundedStop}`);
+    const res = await httpInstance.get<GeneDTO[]>(`/vcmap/genes/${mapKey}/${chromosome}/${roundedStart}/${roundedStop}?orthologMapKeys=${comparativeSpeciesIds.toString()}`);
     const geneList: Gene[] = res.data.map(dto => getGeneFromGeneDTO(dto, speciesName));
+    logger.debug(`Genes By Region API: ${Date.now() - startTime} ms`, {
+      chromosome,
+      start,
+      stop,
+      mapKey,
+      speciesName,
+      comparativeSpeciesIds,
+    });
+
     return geneList;
   }
 
