@@ -17,10 +17,10 @@ const logger = createLogger({
 logger.time = (message: string) => {
   if (LOG_LEVEL === 'debug')
     console.time(`[TIME] ${message}`);
-}
+};
 logger.timeEnd = (message: string) => {
   if (LOG_LEVEL === 'debug')
     console.timeEnd(`[TIME] ${message}`);
-}
+};
 
 export default logger;

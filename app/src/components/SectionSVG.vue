@@ -8,7 +8,7 @@
     <rect
       class="block-section"
       @mouseenter="onMouseEnter(blockSection, 'trackSection')"
-      @mouseleave="onMouseLeave(blockSection, 'trackSection')"
+      @mouseleave="onMouseLeave(blockSection)"
       @mousemove="updatePositionLabelFromMouseEvent($event, blockSection)"
       @click="selectOnClick ? onSyntenyBlockClick(blockSection) : () => {}"
       :y="blockSection.posY1"
@@ -26,7 +26,7 @@
     <rect
       class="level-2 block-section"
       @mouseenter="onMouseEnter(blockSection, 'trackSection')"
-      @mouseleave="onMouseLeave(blockSection, 'trackSection')"
+      @mouseleave="onMouseLeave(blockSection)"
       @mousemove="updatePositionLabelFromMouseEvent($event, blockSection)"
       :y="blockSection.posY1"
       :x="blockSection.posX1"
@@ -110,7 +110,7 @@
       <rect
         :class="getDatatrackClass(datatrackSet)"
         @mouseenter="onMouseEnter(datatrack, 'Gene')"
-        @mouseleave="onMouseLeave(datatrack, 'Gene')"
+        @mouseleave="onMouseLeave(datatrack)"
         @click="onDatatrackSectionClick($event, datatrack, geneList)"
         :y="datatrack.posY1"
         :x="datatrack.posX1"
@@ -270,7 +270,7 @@ const onMouseEnter = (section: SyntenySection | DatatrackSection, type: Selected
   }
 };
 
-const onMouseLeave = (section: DatatrackSection | SyntenySection, type: SelectedDataType) => {
+const onMouseLeave = (section: DatatrackSection | SyntenySection) => {
   emit('synteny-hover', null);
   basePairPositionLabel.value = '';
 
