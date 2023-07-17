@@ -75,7 +75,7 @@ export default abstract class GenomicSection implements VCMapSVGElement
 
     // Set color and shape of VCMapSVGElement
     this.elementColor = params.color;
-    if (params.type === 'block' || params.type === 'gene' || params.type === 'qtl')
+    if (params.type === 'block' || params.type === 'gene' || params.type === 'qtl' )
     {
       this.shape = 'rect';
     }

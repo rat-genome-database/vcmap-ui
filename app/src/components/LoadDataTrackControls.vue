@@ -33,7 +33,8 @@
       </div>
     </template>
     <div class="content-container">
-      <Button label="Add Variants" icon="pi pi-plus" class="p-button-secondary p-button-sm add-track-btn" @click="onAddDataTrack" />
+      <Button label="Load Variant Data Track" icon="pi pi-plus" class="p-button-secondary p-button-sm add-track-btn" @click="onAddVariantDataTrack" />
+
       <!-- <Button label="Debug" icon="pi pi-circle" class="p-button-info p-button-sm add-track-btn" @click="onDebugClick" /> -->
       <div class="track-item-container">
         <div class="grid track-item" v-for="(item, index) in dataTrackItems" :key="index">
@@ -55,9 +56,10 @@
           <Button label="Cancel" class="p-button-danger" @click="close" />
         </div>
         <div>
-          <Button label="Load Tracks" class="p-button-secondary" icon="pi pi-arrow-right" @click="onConfirmLoadDataTrack" />
+          <Button label="Load Variant Data Track" class="p-button-secondary" icon="pi pi-arrow-right" @click="onConfirmLoadVariantDataTrack" />
+
         </div>
-      </div>
+    </div>
   </Dialog>
 </template>
   
@@ -82,7 +84,9 @@ interface Props
   showBackButton?: boolean;
   onConfirmCallback?: () => void;
   onLoadSyntenyVariants: (mapKeys: number[] | null, triggerUpdate: boolean) => Promise<void>;
-  onCloseLoadDataTrackModal: () => void;
+ onCloseLoadVariantDataTrackModal: () => void;
+ 
+
 }
 
 interface Emits
@@ -120,7 +124,7 @@ const isActive = computed({
   }
 });
 
-const onConfirmLoadDataTrack = () => {
+/*const onConfirmLoadDataTrack = () => {
   const selectedMapKeys: number[] = [];
   dataTrackItems.value.forEach((item) => {
     if (item.species) {
@@ -130,12 +134,28 @@ const onConfirmLoadDataTrack = () => {
 
   if (selectedMapKeys.length > 0) {
     props.onCloseLoadDataTrackModal();
-    props.onLoadSyntenyVariants(selectedMapKeys, true /* trigger update */);
-    dataTrackItems.value.length = 0;
+    props.onLoadSyntenyVariants(selectedMapKeys, true /* trigger update *///);
+  /*      props.onLoadSyntenyVariants(selectedMapKeys, true /* trigger update *///);
+
+  /*  dataTrackItems.value.length = 0;
+  }
+};*/
+const onConfirmLoadVariantDataTrack = () => {
+  const selectedMapKeys: number[] = [];
+  dataTrackItems.value.forEach((item) => {
+    if (item.species) {
+      selectedMapKeys.push(item.species.key);
+    }
+  });
+
+  if (selectedMapKeys.length > 0) {
+    props.onCloseLoadVariantDataTrackModal();
+   props.onLoadSyntenyVariants(selectedMapKeys, true /* trigger update */);
+     dataTrackItems.value.length = 0;
   }
 };
 
-const onAddDataTrack = () => {
+const onAddVariantDataTrack = () => {
   let currLength = dataTrackItems.value.length;
 
   // limit max number of tracks
@@ -151,7 +171,7 @@ const onAddDataTrack = () => {
 
 const close = () => {
   dataTrackItems.value.length = 0;
-  props.onCloseLoadDataTrackModal();
+  props.onCloseLoadVariantDataTrackModal();
 };
 
 function removeDataTrackItem(index: number)

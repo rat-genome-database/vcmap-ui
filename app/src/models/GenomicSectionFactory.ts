@@ -1,4 +1,4 @@
-import { GeneDatatrack, VariantDensity } from "./DatatrackSection";
+import { GeneDatatrack, VariantDensity, EpigenomeDensity } from "./DatatrackSection";
 import Gene from "./Gene";
 import { WindowBasePairRange, RenderType, BackboneAlignment } from "./GenomicSection";
 import SyntenySection, { Orientation, SyntenySectionType } from "./SyntenySection";
@@ -77,4 +77,11 @@ export class GenomicSectionFactory
   {
     return new VariantDensity(variantCount, maxCount, start, stop, backboneAlignment, this.speciesName, this.mapName, this.chromosome, this.windowBasePairRange, this.renderType);
   }
+   /**
+   * Creates a new Epigenome datatrack section
+   */
+   createEpigenomeDensitySection(variantCount: number, maxCount: number, start: number, stop: number, backboneAlignment: BackboneAlignment): EpigenomeDensity
+   {
+     return new EpigenomeDensity(variantCount, maxCount, start, stop, backboneAlignment, this.speciesName, this.mapName, this.chromosome, this.windowBasePairRange, this.renderType);
+   }
 }

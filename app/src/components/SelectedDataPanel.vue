@@ -52,7 +52,7 @@
           <Divider />
         </template>
 
-        <template v-else-if="(dataObject.type === 'trackSection' || dataObject.type === 'backbone' || dataObject.type === 'variantDensity')">
+        <template v-else-if="(dataObject.type === 'trackSection' || dataObject.type === 'backbone' || dataObject.type === 'variantDensity' || dataObject.type === 'epigenomeDensity')">
           <template v-if="(dataObject.type === 'trackSection')">
             <GeneInfo
               :gene="dataObject?.genomicSection.gene ? dataObject?.genomicSection.gene : null"
@@ -83,6 +83,17 @@
             </div>
             <div>
               <span>Variant Count: {{ Formatter.addCommasToBasePair(dataObject.genomicSection.variantCount) }}</span>
+            </div>
+          </template>
+          <template v-else-if="dataObject?.type === 'epigenomeDensity'">
+            <div>
+              <span>Chr{{dataObject.genomicSection.chromosome}}: </span>
+              <span>
+                {{Formatter.addCommasToBasePair(dataObject.genomicSection.speciesStart)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.speciesStop)}}
+              </span>
+            </div>
+            <div>
+              <span>Epigenome Count: {{ Formatter.addCommasToBasePair(dataObject.genomicSection.variantCount) }}</span>
             </div>
           </template>
           <Divider />

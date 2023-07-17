@@ -230,9 +230,15 @@ const onMouseEnter = (section: BackboneSection | DatatrackSection, type: Selecte
   }
   else if (store.state.selectedGeneIds.length === 0)
   {
+   
     if (section.type === 'variant')
     {
       const selectedData = new SelectedData(section, 'variantDensity');
+      store.dispatch('setSelectedData', [selectedData]);
+    }else
+    if (section.type === 'epigenome')
+    {
+      const selectedData = new SelectedData(section, 'epigenomeDensity');
       store.dispatch('setSelectedData', [selectedData]);
     }
     else
@@ -253,7 +259,7 @@ const onMouseLeave = (section: BackboneSection | DatatrackSection) => {
   }
 
   // NOTE: disable selected data for qtls and variants for now
-  if (section.type === 'qtl' || section.type === 'variant')
+  if (section.type === 'qtl' || section.type === 'variant' || section.type === 'epigenome')
   {
     return;
   }
@@ -278,9 +284,14 @@ const getSectionFill = (section: VCMapSVGElement) => {
 };
 
 const getSectionClass = (datatrackSet: DatatrackSet) => {
+  console.log("DATA TRACK SET TYPE:"+ datatrackSet.type );
   if (datatrackSet.type === 'variant')
   {
     return 'section clickable variant';
+  }
+  if (datatrackSet.type === 'epigenome')
+  {
+    return 'section clickable epigenome';
   }
   else
   {
@@ -353,6 +364,10 @@ const updatePositionLabelFromSVG = (svgY: number) => {
   }
 
   &.variant
+  {
+    stroke-width: 0.25;
+  }
+  &.epigenome
   {
     stroke-width: 0.25;
   }

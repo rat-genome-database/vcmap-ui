@@ -32,6 +32,7 @@ export interface VCMapState
   isDetailedPanelUpdating: boolean;
   isOverviewPanelUpdating: boolean;
   isUpdatingVariants: boolean;
+  isUpdatingEpigenome: boolean;
 
   selectedGeneIds: number[];
   selectedData: SelectedData[] | null;
@@ -78,6 +79,7 @@ export default createStore({
     isDetailedPanelUpdating: false,
     isOverviewPanelUpdating: false,
     isUpdatingVariants: false,
+    isUpdatingEpigenome: false,
 
     selectedGeneIds: [],
     selectedData: null,
@@ -140,6 +142,9 @@ export default createStore({
     isUpdatingVariants(state: VCMapState, isUpdating: boolean) {
       state.isUpdatingVariants = isUpdating;
     },
+    isUpdatingEpigenome(state: VCMapState, isUpdating: boolean) {
+      state.isUpdatingEpigenome = isUpdating;
+    },
     selectionToastCount(state: VCMapState, count: number) {
       state.selectionToastCount = count;
     }
@@ -187,6 +192,9 @@ export default createStore({
     },
     setIsUpdatingVariants(context: ActionContext<VCMapState, VCMapState>, isUpdating: boolean) {
       context.commit('isUpdatingVariants', isUpdating);
+    },
+    setIsUpdatingEpigenome(context: ActionContext<VCMapState, VCMapState>, isUpdating: boolean) {
+      context.commit('isUpdatingEpigenome', isUpdating);
     },
     clearConfiguration(context: ActionContext<VCMapState, VCMapState>) {
       context.commit('species', null);

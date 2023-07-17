@@ -26,7 +26,7 @@ export default function useSyntenyAndDataInteraction(store: Store<VCMapState>) {
 
   const onDatatrackSectionClick = (event: any, section: GeneDatatrack, geneList: Map<number, Gene>) => {
     // NOTE: ignore variant datatrack sections for now
-    if (!section.gene?.rgdId || section.type === 'variant' || section.type === 'qtl') return;
+    if (!section.gene?.rgdId || section.type === 'variant' || section.type === 'epigenome' || section.type === 'qtl') return;
 
     section.isHovered = false;
 

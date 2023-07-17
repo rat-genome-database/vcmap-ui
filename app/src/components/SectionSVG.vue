@@ -258,6 +258,10 @@ const onMouseEnter = (section: SyntenySection | DatatrackSection, type: Selected
       if (section.type === 'variant')
       {
         selectedDataList.push(new SelectedData(section, 'variantDensity'));
+      }
+      if (section.type === 'epigenome')
+      {
+        selectedDataList.push(new SelectedData(section, 'epigenomeDensity'));
       } else
       {
         selectedDataList.push(new SelectedData(section, type));
@@ -313,6 +317,10 @@ const getDatatrackClass = (datatrackSet: DatatrackSet) => {
   if (datatrackSet.type === 'variant')
   {
     return 'block-section variant';
+  }
+  if (datatrackSet.type === 'epigenome')
+  {
+    return 'block-section epigenome';
   }
   else
   {
@@ -446,6 +454,16 @@ const updatePositionLabelFromSVG = (svgY: number) => {
   {
     stroke-width: 0.25;
   }
+ 
+}
+.block-section
+{
+  stroke-width: 0;
+  &.epigenome
+  {
+    stroke-width: 0.25;
+  }
+ 
 }
 .block-section:hover
 {

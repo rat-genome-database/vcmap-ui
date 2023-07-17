@@ -10,6 +10,7 @@ import { RenderType } from '@/models/GenomicSection';
 import { Orientation } from '@/models/SyntenySection';
 import { getThreshold } from './Shared';
 import { createVariantDatatracks } from './VariantBuilder';
+import { createEpigenomeDatatracks } from './EpigenomeBuilder';
 import logger from '@/logger';
 
 /**
@@ -164,10 +165,11 @@ function syntenicSectionBuilder(speciesSyntenyData: Block[], species: Species, s
 
   const currSpecies = species;
   const processVariantDensity = speciesSyntenyData.some((block) => block.variantPositions && block.variantPositions.positions.length > 0);
+  const processEpigenomeDensity = speciesSyntenyData.some((block) => block.epigenomePositions && block.epigenomePositions.positions.length > 0);
   let regionMaxCount = 0;
   let regionBinSize = 0;
   // const allGeneLabels: Label[] = [];
-
+console.log("PROCESS VARIANT DENSITY:"+ processVariantDensity +"\tPROCESS EPIGENOME DENSITY:"+ processEpigenomeDensity);
 logger.debug(`About to loop over ${speciesSyntenyData.length} Blocks...`);
   // Step 1: Create syntenic sections for each VISIBLE block
   for (let index = 0; index < speciesSyntenyData.length; index++)
@@ -177,6 +179,7 @@ logger.debug(`About to loop over ${speciesSyntenyData.length} Blocks...`);
     const blockGenes = blockInfo.genes;
     const blockChrStr = blockInfo.chromosome.chromosome;
     const blockVariantPositions = blockInfo.variantPositions;
+    const blockEpigenomePositions = blockInfo.epigenomePositions;
 
     // Create a factory for the creation of our "Regions" (Blocks, Gaps, etc)
     const factory = new GenomicSectionFactory(currSpecies.name, currSpecies.activeMap.name, blockChrStr,
@@ -226,6 +229,17 @@ logger.timeEnd("splitBlockWithGaps");
       if (variantDatatracks.maxCount > regionMaxCount)
       {
         regionMaxCount = variantDatatracks.maxCount;
+      }
+    }
+    if (blockEpigenomePositions && processEpigenomeDensity)
+    {
+      const epigenomeDatatracks = createEpigenomeDatatracks(factory, blockEpigenomePositions.positions,
+        blockInfo.start, blockInfo.stop, blockInfo.backboneStart, blockInfo.backboneStop, blockInfo.isBlockInverted(), blockInfo);
+      currSyntenicRegion.addDatatrackSections(epigenomeDatatracks.epigenomeDatatracks, 0, 'epigenome');
+      regionBinSize = epigenomeDatatracks.binSize;
+      if (epigenomeDatatracks.maxCount > regionMaxCount)
+      {
+        regionMaxCount = epigenomeDatatracks.maxCount;
       }
     }
 
@@ -291,7 +305,19 @@ logger.timeEnd(timerLabel);
       }
     }
   }
-
+  if (processEpigenomeDensity && regionMaxCount > 0)
+  {
+    for (let i = 0; i < processedSyntenicRegions.length; i++)
+    {
+      const variantIdx = processedSyntenicRegions[i].datatrackSets.findIndex((set) => set.type === 'epigenome');
+      if (variantIdx !== -1)
+      {
+        processedSyntenicRegions[i].datatrackSets[variantIdx].datatracks.forEach((track: any) =>{
+            track.setSectionColor(regionMaxCount);
+        });
+      }
+    }
+  }
   // Finished creating this Set:
 logger.time("createSyntenyRegionSet");
   const regionSet = new SyntenyRegionSet(currSpecies.name, currSpecies.activeMap, processedSyntenicRegions, setOrder, renderType);

@@ -29,6 +29,8 @@ export default class DatatrackSet
         return 'Genes';
       case 'variant':
         return 'Variants';
+      case 'epigenome':
+        return 'Epigenome';
     }
   }
 }

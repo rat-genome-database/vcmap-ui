@@ -1,5 +1,5 @@
 <template>
-  <HeaderPanel :on-load-synteny-variants="loadSyntenyVariants" />
+  <HeaderPanel :on-load-synteny-variants="loadSyntenyVariants" :on-load-synteny-epigenome="loadSyntenyEpigenome" />
   <!-- <Button
     label="INSPECT (Main)"
     @click="onInspectPressed"
@@ -11,8 +11,10 @@
         :synteny-tree="syntenyTree"
         :loading="isLoading"
         :variant-positions-list="variantPositionsList"
+        :epigenome-positions-list="epigenomePositionsList"
       />
       <Toast />
+      
     </div>
     <div class="col-3">
       <SelectedDataPanel :selected-data="store.state.selectedData" :gene-list="geneList" />
@@ -49,9 +51,11 @@ import useDialog from '@/composables/useDialog';
 import { adjustSelectionWindow, getNewSelectedData } from '@/utils/DataPanelHelpers';
 import { backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError, noSyntenyFoundError } from '@/utils/VCMapErrors';
 import { isGenomicDataInViewport, getThreshold, processAlignmentsOfGeneInsideOfViewport, processAlignmentsOfGeneOutsideOfViewport } from '@/utils/Shared';
-import { buildVariantPositions } from '@/utils/VariantBuilder';
-import VariantPositions from '@/models/VariantPositions';
+import { buildEpigenomePositions } from '@/utils/EpigenomeBuilder';
+import EpigenomePositions from '@/models/EpigenomePositions';
 import { VCMapLogger } from '@/logger';
+import VariantPositions from '@/models/VariantPositions';
+import { buildVariantPositions } from '@/utils/VariantBuilder';
 
 // TODO: Can we figure out a better way to handle blocks with a high chainlevel?
 const MAX_CHAINLEVEL = 2;
@@ -92,6 +96,7 @@ const geneList = ref(new Map<number, Gene>());
 
 // Our list of variantPositions that have been loaded/generated
 const variantPositionsList = ref<VariantPositions[]>([]);
+  const epigenomePositionsList = ref<EpigenomePositions[]>([]);
 
 // TODO TEMP
 // TODO: temp ignore here, should remove once this method is actively being used
@@ -485,6 +490,11 @@ async function queryAndProcessSyntenyForBasePairRange(backboneChromosome: Chromo
       // Don't trigger an update when requerying synteny, because variant tracks will get built anyway
       loadSyntenyVariants([key], false /* don't trigger update */);
     }
+    if (speciesData && speciesData.some((block) => block.epigenomePositions))
+    {
+      // Don't trigger an update when requerying synteny, because variant tracks will get built anyway
+      loadSyntenyEpigenome([key], false /* don't trigger update */);
+    }
   }
 }
 
@@ -618,6 +628,41 @@ async function loadBackboneVariants() {
   }
   // isLoading.value = false;
 }
+async function loadBackboneEpigenome() {
+  isLoading.value = true;
+  const chromosome = store.state.chromosome;
+  const backboneSpecies = store.state.species;
+  const backboneRegion = store.state.selectedBackboneRegion;
+  const stop = backboneRegion?.viewportSelection?.basePairStop;
+  const speciesMap = store.state.species?.activeMap;
+  if (chromosome && stop && speciesMap && backboneSpecies)
+  {
+    // Check if this variantPosition set has been loaded
+    const matchIdx = epigenomePositionsList.value.findIndex((positions) => (
+      positions.mapKey === speciesMap.key && positions.blockStart === 0 && positions.blockStop === chromosome.seqLength
+    ));
+    if (matchIdx === -1)
+    {
+      const epigenomePositions = await buildEpigenomePositions(
+        chromosome.chromosome,
+        0,
+        chromosome.seqLength,
+        0,
+        chromosome.seqLength,
+        speciesMap.key
+      );
+      if (epigenomePositions.positions.length > 0)
+      {
+        epigenomePositionsList.value.push(epigenomePositions);
+      }
+      else
+      {
+        showToast('warn', 'No Variants Found', 'There were no epigenome found for the given chromosome', 5000);
+      }
+    }
+  }
+  // isLoading.value = false;
+}
 
 async function loadSyntenyVariants(mapKeys: number[] | null, triggerUpdate: boolean) {
   if (!mapKeys) return;
@@ -628,6 +673,7 @@ async function loadSyntenyVariants(mapKeys: number[] | null, triggerUpdate: bool
   let foundSomeVariants = false;
   let variantPromises: Promise<void>[] = [];
   variantPromises.push(...mapKeys.map( async (mapKey) => {
+  //  loadBackboneVariants();// added by thota
     if (mapKey === store.state.chromosome?.mapKey) {
       loadingBackbone = true;
       await loadBackboneVariants();
@@ -672,6 +718,75 @@ async function loadSyntenyVariants(mapKeys: number[] | null, triggerUpdate: bool
         return;
       }
     }
+  }));
+  await Promise.allSettled(variantPromises);
+  isLoading.value = false;
+  if (!foundSomeVariants && !loadingBackbone)
+  {
+    showToast('warn', 'No Variants Found', 'There were no variants found for the given regions.', 5000);
+  }
+  if (triggerUpdate)
+  {
+    store.dispatch('setIsUpdatingVariants', true);
+  }
+}
+async function loadSyntenyEpigenome(mapKeys: number[] | null, triggerUpdate: boolean) {
+  if (!mapKeys) return;
+  // Ensure isUpdatingVariants is false
+  store.dispatch('setIsUpdatingEpigenome', false);
+  isLoading.value = true;
+  let loadingBackbone = false;
+  let foundSomeVariants = false;
+  let variantPromises: Promise<void>[] = [];
+    loadingBackbone = true;
+ 
+    
+  variantPromises.push(...mapKeys.map( async (mapKey) => {
+    await loadBackboneEpigenome();
+   /* if (mapKey === store.state.chromosome?.mapKey) {
+      loadingBackbone = true;
+      await loadBackboneEpigenome();
+      return;
+    } else {
+      let currentBlockSet = syntenyTree.value.get(mapKey);
+      if (currentBlockSet) {
+        const promises = currentBlockSet.map( async (block) => {
+          // If this block already has positions loaded, don't load again
+          if (block.variantPositions)
+          {
+            foundSomeVariants = true; // some variants exist so we don't need to warn the user
+            return;
+          }
+          else if (block.chainLevel === 1)
+          {
+            const variantRes = await buildEpigenomePositions(
+              block.chromosome.chromosome,
+              block.start,
+              block.stop,
+              block.backboneStart,
+              block.backboneStop,
+              block.chromosome.mapKey
+            );
+            if (variantRes)
+            {
+              if (!foundSomeVariants && variantRes.positions.length > 0)
+              {
+                foundSomeVariants = true;
+              }
+              block.variantPositions = variantRes;
+              // NOTE: adding to variantPositionList is how we tell SVGViewbox to update
+              // the backbone variants, but if we push the responses here SVGViewbox will
+              // update everytime a request completes
+              // So we need a better way to tell SVGViewbox to update
+              // variantPositionsList.value.push(variantRes);
+            }
+            return;
+          }
+        });
+        await Promise.allSettled(promises);
+        return;
+      }
+    }*/
   }));
   await Promise.allSettled(variantPromises);
   isLoading.value = false;

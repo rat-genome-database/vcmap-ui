@@ -118,7 +118,7 @@
             :species-name="detailedBackboneSet?.speciesName || ''" :map-name="detailedBackboneSet?.mapName"
             :min-value="0" :max-value="detailedBackboneSet?.maxVariantCount || 0"
             :bin-size="detailedBackboneSet.variantBinSize"
-            min-color="#0000FF" max-color="#FF0000">
+            min-color="#e5ff00" max-color="#FF0000">
           </GradientLegend>
         </template>
       </div>
@@ -129,7 +129,34 @@
               :species-name="set.speciesName" :map-name="set.mapName"
               :min-value="0" :max-value="set.maxVariantCount"
               :bin-size="set.variantBinSize"
-              min-color="#0000FF" max-color="#FF0000">
+              min-color="#e5ff00" max-color="#FF0000">
+            </GradientLegend>
+          </template>
+        </div>
+      </template>
+    </div>
+  </template>
+  <template v-if="displayEpigenomeLegend">
+    <div class="grid">
+      <div class="col-4 plus-half legend-title"><b>Epigenome counts (per {{ parseFloat(variantBinSize.toPrecision(3)).toLocaleString() }}bp)</b></div>
+      <div class="col-2 legend-container">
+        <template v-if="detailedBackboneSet && detailedBackboneSet.maxVariantCount && detailedBackboneSet.variantBinSize && detailedBackboneSet.maxVariantCount > 0">
+          <GradientLegend
+            :species-name="detailedBackboneSet?.speciesName || ''" :map-name="detailedBackboneSet?.mapName"
+            :min-value="0" :max-value="detailedBackboneSet?.maxVariantCount || 0"
+            :bin-size="detailedBackboneSet.variantBinSize"
+            min-color="#e5ff00" max-color="#FF0000">
+          </GradientLegend>
+        </template>
+      </div>
+      <template v-for="(set, index) in detailedSyntenySets" :key="index">
+        <div class="col-2 legend-container">
+          <template v-if="set.variantBinSize && set.maxVariantCount && set.maxVariantCount > 0">
+            <GradientLegend
+              :species-name="set.speciesName" :map-name="set.mapName"
+              :min-value="0" :max-value="set.maxVariantCount"
+              :bin-size="set.variantBinSize"
+              min-color="#e5ff00" max-color="#FF0000">
             </GradientLegend>
           </template>
         </div>
@@ -246,6 +273,7 @@ import OrthologLineSVG from './OrthologLineSVG.vue';
 import LoadingSpinnerMask from './LoadingSpinnerMask.vue';
 import { createQtlDatatracks } from '@/utils/QtlBuilder';
 import { backboneVariantTrackBuilder } from '@/utils/VariantBuilder';
+import { backboneEpigenomeTrackBuilder } from '@/utils/EpigenomeBuilder';
 import { GenomicSectionFactory } from '@/models/GenomicSectionFactory';
 import Block from "@/models/Block";
 
@@ -253,6 +281,7 @@ import { GeneLabel } from '@/models/Label';
 import SyntenyRegion from '@/models/SyntenyRegion';
 import { createOrthologLines } from '@/utils/OrthologHandler';
 import VariantPositions from '@/models/VariantPositions';
+import EpigenomePositions from '@/models/EpigenomePositions';
 import Species from '@/models/Species';
 import BackboneSection from '@/models/BackboneSection';
 import GradientLegend from './GradientLegend.vue';
@@ -275,6 +304,7 @@ interface Props
   syntenyTree: Map<number, Block[]>;
   loading: boolean;
   variantPositionsList: VariantPositions[];
+  epigenomePositionsList: EpigenomePositions[];
 }
 
 const props = defineProps<Props>();
@@ -383,6 +413,41 @@ const displayVariantLegend = computed(() => {
   {
     const hasVariantTracks = detailedSyntenySets.value[i].regions.some((region) =>
       region.datatrackSets.findIndex((set) => set.type === 'variant') !== -1
+    );
+    if (hasVariantTracks)
+    {
+      return true;
+    }
+  }
+  return false;
+});
+watch(() => props.epigenomePositionsList, () => {
+  const backboneSpecies = store.state.species;
+  const detailedBackbone = detailedBackboneSet.value?.backbone;
+  if (backboneSpecies && detailedBackbone)
+  {
+    props.epigenomePositionsList.forEach((epigenomePositions) => {
+      if (epigenomePositions.mapKey === backboneSpecies.activeMap.key)
+      {
+        updateBackboneEpigenome(backboneSpecies, epigenomePositions, detailedBackbone);
+      }
+    });
+  }
+}, {deep: true});
+
+watch(() => store.state.isUpdatingEpigenome, () => {
+  if (store.state.isUpdatingEpigenome) updateSyntenyEpigenome();
+});
+const displayEpigenomeLegend = computed(() => {
+  const backboneVariantIdx = detailedBackboneSet.value?.datatrackSets.findIndex((set) => set.type === 'epigenome');
+  if (backboneVariantIdx !== undefined && backboneVariantIdx !== -1)
+  {
+    return true;
+  }
+  for (let i = 0; i < detailedSyntenySets.value.length; i++)
+  {
+    const hasVariantTracks = detailedSyntenySets.value[i].regions.some((region) =>
+      region.datatrackSets.findIndex((set) => set.type === 'epigenome') !== -1
     );
     if (hasVariantTracks)
     {
@@ -515,6 +580,12 @@ const updateDetailsPanel = async () => {
     if (variantPositions.mapKey === backboneSpecies.activeMap.key)
     {
       updateBackboneVariants(backboneSpecies, variantPositions, detailedBackbone);
+    }
+  });
+  props.epigenomePositionsList.forEach((epigenomePositions) => {
+    if (epigenomePositions.mapKey === backboneSpecies.activeMap.key)
+    {
+      updateBackboneEpigenome(backboneSpecies, epigenomePositions, detailedBackbone);
     }
   });
 
@@ -711,9 +782,33 @@ const updateBackboneVariants = (backboneSpecies: Species, variantPositions: Vari
   }
 };
 
+const updateBackboneEpigenome = (backboneSpecies: Species, epigenomePositions: EpigenomePositions, detailedBackbone: BackboneSection) => {
+  const epigenomeDatatrackInfo = backboneEpigenomeTrackBuilder(backboneSpecies, epigenomePositions, detailedBackbone);
+  if (detailedBackboneSet.value)
+  {
+    detailedBackboneSet.value?.addNewDatatrackSetToStart(epigenomeDatatrackInfo.epigenomeDatatracks, 'epigenome');
+    detailedBackboneSet.value.maxVariantCount = epigenomeDatatrackInfo.maxCount;
+    detailedBackboneSet.value.variantBinSize = epigenomeDatatrackInfo.binSize;
+
+    // TODO: I believe this code is no longer needed since ortholog lines get rebuilt every time the details panel is updated
+    // NOTE: we can do this because we always know the variant track is first and then the genes
+    // When variants are displayed, lines should start two gaps and two track widths from the right of the backbone
+    const xPos = detailedBackboneSet.value.backbone.posX2 + SVGConstants.backboneDatatrackXOffset * 2 + SVGConstants.dataTrackWidth * 2;
+    orthologLines.value?.forEach((line) => {
+      if (line.startGene.mapKey === detailedBackboneSet.value?.mapKey)
+      {
+        line.posX1 = xPos;
+      }
+    });
+  }
+};
 const updateSyntenyVariants = () => {
   updateDetailsPanel();
   store.dispatch('setIsUpdatingVariants', false);
+};
+const updateSyntenyEpigenome = () => {
+  updateDetailsPanel();
+  store.dispatch('setIsUpdatingEpigenome', false);
 };
 
 document.addEventListener('scroll' , getDetailedPosition);

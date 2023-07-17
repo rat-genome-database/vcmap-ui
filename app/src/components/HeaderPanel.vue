@@ -20,9 +20,14 @@
               @click="goToConfigurationScreen"
               data-test="load-config-btn" />
             <Button 
-              label="Load Data Track" 
+              label="Load Variant Data Tracks" 
               class="p-button-secondary header-btn"
-              @click="openLoadDataTrackModal"
+              @click="openLoadVariantDataTrackModal"
+              data-test="load-config-btn" />
+              <Button 
+              label="Load Epigenome Data Tracks" 
+              class="p-button-secondary header-btn"
+              @click="openLoadEpigenomeDataTrackModal"
               data-test="load-config-btn" />
           </div>
         </template>
@@ -35,10 +40,16 @@
     </div>
   </div>
   <LoadDataTrackControls
-    v-model:show="showLoadDataTrackModal"
+    v-model:show="showLoadVariantDataTrackModal"
     :on-load-synteny-variants="onLoadSyntenyVariants"
-    :on-close-load-data-track-modal="closeLoadDataTrackModal"
-    header="Load Data Tracks"
+    :on-close-load-variant-data-track-modal="closeLoadVariantDataTrackModal"
+    header="Load Variant Data Tracks"
+  />
+  <LoadEpigenomeTrackControls
+    v-model:show="showLoadEpigenomeDataTrackModal"
+    :on-load-synteny-epigenome="onLoadSyntenyEpigenome"
+    :on-close-load-epigenome-data-track-modal="closeLoadEpigenomeDataTrackModal"
+    header="Load Epigenome Data Tracks"
   />
 </template>
 
@@ -49,28 +60,41 @@ import DetailsControls from '@/components/DetailsControls.vue';
 import { VERSION } from '@/version';
 import { ref } from 'vue';
 import LoadDataTrackControls from '@/components/LoadDataTrackControls.vue';
+import LoadEpigenomeTrackControls from '@/components/LoadEpigenomeTrackControls.vue';
+
 
 interface Props 
 {
   onLoadSyntenyVariants: (mapKeys: number[] | null, triggerUpdate: boolean) => Promise<void>;
+  onLoadSyntenyEpigenome: (mapKeys: number[] | null, triggerUpdate: boolean) => Promise<void>;
 }
 
 const props = defineProps<Props>();
 
 const router = useRouter();
 
-let showLoadDataTrackModal = ref(false);
+let showLoadVariantDataTrackModal = ref(false);
 
-const openLoadDataTrackModal = () => {
-  showLoadDataTrackModal.value = true;
+const openLoadVariantDataTrackModal = () => {
+  showLoadVariantDataTrackModal.value = true;
 };
+let showLoadEpigenomeDataTrackModal = ref(false);
 
+const openLoadEpigenomeDataTrackModal = () => {
+  showLoadEpigenomeDataTrackModal.value = true;
+};
 const onLoadSyntenyVariants = async (mapKeys: number[] | null, triggerUpdate: boolean) => {
   props.onLoadSyntenyVariants(mapKeys, triggerUpdate);
 };
+const onLoadSyntenyEpigenome = async (mapKeys: number[] | null, triggerUpdate: boolean) => {
+  props.onLoadSyntenyEpigenome(mapKeys, triggerUpdate);
+};
 
-const closeLoadDataTrackModal = () => {
-  showLoadDataTrackModal.value = false;
+const closeLoadVariantDataTrackModal = () => {
+  showLoadVariantDataTrackModal.value = false;
+};
+const closeLoadEpigenomeDataTrackModal = () => {
+  showLoadEpigenomeDataTrackModal.value = false;
 };
 
 const goToConfigurationScreen = () => {
