@@ -118,7 +118,7 @@
             :species-name="detailedBackboneSet?.speciesName || ''" :map-name="detailedBackboneSet?.mapName"
             :min-value="0" :max-value="detailedBackboneSet?.maxVariantCount || 0"
             :bin-size="detailedBackboneSet.variantBinSize"
-            min-color="#e5ff00" max-color="#FF0000">
+            min-color="#0000FF" max-color="#FF0000">
           </GradientLegend>
         </template>
       </div>
@@ -129,7 +129,7 @@
               :species-name="set.speciesName" :map-name="set.mapName"
               :min-value="0" :max-value="set.maxVariantCount"
               :bin-size="set.variantBinSize"
-              min-color="#e5ff00" max-color="#FF0000">
+              min-color="#0000FF" max-color="#FF0000">
             </GradientLegend>
           </template>
         </div>
@@ -138,25 +138,25 @@
   </template>
   <template v-if="displayEpigenomeLegend">
     <div class="grid">
-      <div class="col-4 plus-half legend-title"><b>Epigenome counts (per {{ parseFloat(variantBinSize.toPrecision(3)).toLocaleString() }}bp)</b></div>
+      <div class="col-4 plus-half legend-title"><b>Epigenome counts (per {{ parseFloat(epigenomeBinSize.toPrecision(3)).toLocaleString() }}bp)</b></div>
       <div class="col-2 legend-container">
-        <template v-if="detailedBackboneSet && detailedBackboneSet.maxVariantCount && detailedBackboneSet.variantBinSize && detailedBackboneSet.maxVariantCount > 0">
+        <template v-if="detailedBackboneSet && detailedBackboneSet.maxEpigenomeCount && detailedBackboneSet.epigenomeBinSize && detailedBackboneSet.maxEpigenomeCount > 0">
           <GradientLegend
             :species-name="detailedBackboneSet?.speciesName || ''" :map-name="detailedBackboneSet?.mapName"
-            :min-value="0" :max-value="detailedBackboneSet?.maxVariantCount || 0"
-            :bin-size="detailedBackboneSet.variantBinSize"
-            min-color="#e5ff00" max-color="#FF0000">
+            :min-value="0" :max-value="detailedBackboneSet?.maxEpigenomeCount || 0"
+            :bin-size="detailedBackboneSet.epigenomeBinSize"
+            min-color="#0000FF" max-color="#FF0000">
           </GradientLegend>
         </template>
       </div>
       <template v-for="(set, index) in detailedSyntenySets" :key="index">
         <div class="col-2 legend-container">
-          <template v-if="set.variantBinSize && set.maxVariantCount && set.maxVariantCount > 0">
+          <template v-if="set.epigenomeBinSize && set.maxEpigenomeCount && set.maxEpigenomeCount > 0">
             <GradientLegend
               :species-name="set.speciesName" :map-name="set.mapName"
-              :min-value="0" :max-value="set.maxVariantCount"
-              :bin-size="set.variantBinSize"
-              min-color="#e5ff00" max-color="#FF0000">
+              :min-value="0" :max-value="set.maxEpigenomeCount"
+              :bin-size="set.epigenomeBinSize"
+              min-color="#0000FF" max-color="#FF0000">
             </GradientLegend>
           </template>
         </div>
@@ -421,6 +421,7 @@ const displayVariantLegend = computed(() => {
   }
   return false;
 });
+
 watch(() => props.epigenomePositionsList, () => {
   const backboneSpecies = store.state.species;
   const detailedBackbone = detailedBackboneSet.value?.backbone;
@@ -446,10 +447,10 @@ const displayEpigenomeLegend = computed(() => {
   }
   for (let i = 0; i < detailedSyntenySets.value.length; i++)
   {
-    const hasVariantTracks = detailedSyntenySets.value[i].regions.some((region) =>
+    const hasEpigenomeTracks = detailedSyntenySets.value[i].regions.some((region) =>
       region.datatrackSets.findIndex((set) => set.type === 'epigenome') !== -1
     );
-    if (hasVariantTracks)
+    if (hasEpigenomeTracks)
     {
       return true;
     }
@@ -466,6 +467,18 @@ const variantBinSize = computed(() => {
   {
     const setWithVariants = detailedSyntenySets.value.find((set) => set.variantBinSize && set.variantBinSize > 0);
     return setWithVariants?.variantBinSize ?? 0;
+  }
+  return 0;
+});
+const epigenomeBinSize = computed(() => {
+  if (detailedBackboneSet.value?.epigenomeBinSize)
+  {
+    return detailedBackboneSet.value.epigenomeBinSize;
+  }
+  else if (detailedSyntenySets.value.some((set) => set.epigenomeBinSize))
+  {
+    const setWithEpigenome = detailedSyntenySets.value.find((set) => set.epigenomeBinSize && set.epigenomeBinSize > 0);
+    return setWithEpigenome?.epigenomeBinSize ?? 0;
   }
   return 0;
 });
@@ -787,8 +800,8 @@ const updateBackboneEpigenome = (backboneSpecies: Species, epigenomePositions: E
   if (detailedBackboneSet.value)
   {
     detailedBackboneSet.value?.addNewDatatrackSetToStart(epigenomeDatatrackInfo.epigenomeDatatracks, 'epigenome');
-    detailedBackboneSet.value.maxVariantCount = epigenomeDatatrackInfo.maxCount;
-    detailedBackboneSet.value.variantBinSize = epigenomeDatatrackInfo.binSize;
+    detailedBackboneSet.value.maxEpigenomeCount = epigenomeDatatrackInfo.maxCount;
+    detailedBackboneSet.value.epigenomeBinSize = epigenomeDatatrackInfo.binSize;
 
     // TODO: I believe this code is no longer needed since ortholog lines get rebuilt every time the details panel is updated
     // NOTE: we can do this because we always know the variant track is first and then the genes

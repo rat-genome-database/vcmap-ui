@@ -23,6 +23,9 @@ export default class BackboneSet extends GenomicSet
   maxVariantCount?: number;
   variantBinSize?: number;
 
+  maxEpigenomeCount?: number;
+  epigenomeBinSize?: number;
+
   constructor(backboneSection: BackboneSection, map: SpeciesMap, processedGenomicData?: ProcessedGenomicData)
   {
     super(backboneSection.speciesName, map);

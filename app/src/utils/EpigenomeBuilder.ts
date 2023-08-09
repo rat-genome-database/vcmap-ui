@@ -7,6 +7,7 @@ import { EpigenomeDensity } from "@/models/DatatrackSection";
 import { processAlignmentsOfGeneInsideOfViewport, processAlignmentsOfGeneOutsideOfViewport } from "./Shared";
 import Block from "@/models/Block";
 import EpigenomePositions from "@/models/EpigenomePositions";
+import EpigenomeApi from "@/api/EpigenomeApi";
 
 const NUM_BINS = 100; // For whole window per species
 const MIN_BIN_SIZE = 10000; // Smallest size for a variant density datatrack (in species base pairs)
@@ -75,7 +76,8 @@ export function createEpigenomeDatatracks(factory: GenomicSectionFactory, positi
 export async function buildEpigenomePositions(chromosome: string, bpStart: number, bpStop: number,
   backboneStart: number, backboneStop: number, mapKey: number)
 {
-  const positions = await VariantApi.getVariants(chromosome, bpStart, bpStop, mapKey);
+  //const positions = await VariantApi.getVariants(chromosome, bpStart, bpStop, mapKey);
+  const positions = await EpigenomeApi.getEpigenomePositions(chromosome, bpStart, bpStop, mapKey);
   return new EpigenomePositions({
       mapKey: mapKey,
       chromosome: chromosome,
