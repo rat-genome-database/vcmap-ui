@@ -736,14 +736,13 @@ async function loadSyntenyEpigenome(mapKeys: number[] | null, triggerUpdate: boo
   store.dispatch('setIsUpdatingEpigenome', false);
   isLoading.value = true;
   let loadingBackbone = false;
-  let foundSomeVariants = false;
-  let variantPromises: Promise<void>[] = [];
+  let foundSomeEpigenomePositions = false;
+  let epigenomePromises: Promise<void>[] = [];
     loadingBackbone = true;
  
     
-  variantPromises.push(...mapKeys.map( async (mapKey) => {
-    await loadBackboneEpigenome();
-   /* if (mapKey === store.state.chromosome?.mapKey) {
+  epigenomePromises.push(...mapKeys.map( async (mapKey) => {
+    if (mapKey === store.state.chromosome?.mapKey) {
       loadingBackbone = true;
       await loadBackboneEpigenome();
       return;
@@ -752,14 +751,14 @@ async function loadSyntenyEpigenome(mapKeys: number[] | null, triggerUpdate: boo
       if (currentBlockSet) {
         const promises = currentBlockSet.map( async (block) => {
           // If this block already has positions loaded, don't load again
-          if (block.variantPositions)
+          if (block.epigenomePositions)
           {
-            foundSomeVariants = true; // some variants exist so we don't need to warn the user
+            foundSomeEpigenomePositions = true; // some variants exist so we don't need to warn the user
             return;
           }
           else if (block.chainLevel === 1)
           {
-            const variantRes = await buildEpigenomePositions(
+            const epigenomeRes = await buildEpigenomePositions(
               block.chromosome.chromosome,
               block.start,
               block.stop,
@@ -767,18 +766,18 @@ async function loadSyntenyEpigenome(mapKeys: number[] | null, triggerUpdate: boo
               block.backboneStop,
               block.chromosome.mapKey
             );
-            if (variantRes)
+            if (epigenomeRes)
             {
-              if (!foundSomeVariants && variantRes.positions.length > 0)
+              if (!foundSomeEpigenomePositions && epigenomeRes.positions.length > 0)
               {
-                foundSomeVariants = true;
+                foundSomeEpigenomePositions = true;
               }
-              block.variantPositions = variantRes;
-              // NOTE: adding to variantPositionList is how we tell SVGViewbox to update
+              block.epigenomePositions = epigenomeRes;
+              // NOTE: adding to epigenomePositionList is how we tell SVGViewbox to update
               // the backbone variants, but if we push the responses here SVGViewbox will
               // update everytime a request completes
               // So we need a better way to tell SVGViewbox to update
-              // variantPositionsList.value.push(variantRes);
+              // epigenomePositionsList.value.push(epigenomeRes);
             }
             return;
           }
@@ -786,11 +785,11 @@ async function loadSyntenyEpigenome(mapKeys: number[] | null, triggerUpdate: boo
         await Promise.allSettled(promises);
         return;
       }
-    }*/
+    }
   }));
-  await Promise.allSettled(variantPromises);
+  await Promise.allSettled(epigenomePromises);
   isLoading.value = false;
-  if (!foundSomeVariants && !loadingBackbone)
+  if (!foundSomeEpigenomePositions && !loadingBackbone)
   {
     showToast('warn', 'No Variants Found', 'There were no variants found for the given regions.', 5000);
   }
