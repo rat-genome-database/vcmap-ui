@@ -323,6 +323,8 @@ timerLabel = `  addDatatrackSections(${processedGeneInfo.length})`;
   const regionSet = new SyntenyRegionSet(currSpecies.name, currSpecies.activeMap, processedSyntenicRegions, setOrder, renderType);
   regionSet.maxVariantCount = regionMaxCount;
   regionSet.variantBinSize = regionBinSize;
+  regionSet.maxEpigenomeCount = regionMaxCount;
+  regionSet.epigenomeBinSize = regionBinSize;
 // logger.timeEnd("createSyntenyRegionSet");
   return regionSet;
 }
