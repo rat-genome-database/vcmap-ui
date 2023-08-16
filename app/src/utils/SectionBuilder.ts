@@ -247,7 +247,7 @@ logger.timeEnd("splitBlockWithGaps");
     if (blockGenes && blockGenes.length > 0)
     {
       // Filter all genes to only those that are visible
-logger.time("  filterVisibleGenes");
+// logger.time("  filterVisibleGenes");
       const visibleGenes = blockGenes.filter((gene) => {
         if (!gene.backboneStart || !gene.backboneStop) return false;
 
@@ -256,24 +256,24 @@ logger.time("  filterVisibleGenes");
           // Skip any genes that are deemed too small for rendering
           && Math.abs(gene.backboneStop - gene.backboneStart) >= getThreshold(viewportStop - viewportStart));
       });
-logger.timeEnd("  filterVisibleGenes");
+// logger.timeEnd("  filterVisibleGenes");
 
 // logger.debug("Step 3: Create Syntenic Sections for each gene")
       // Step 3.1: Pass block data and gene data to gene processing pipeline
       // NOTE: We might want to instead associate block data with gene data, store data in an array, and pass all gene
       //   data at once for processing in order to avoid multiple passes of gene data for initial processing and then finding orthologs
 let timerLabel = `  syntenicDataTrackBuilder(${visibleGenes.length})`;
-logger.time(timerLabel);
+// logger.time(timerLabel);
       // const processedGeneInfo = {genomicData: [], orthologLines: [], geneIds: []};
 // logger.log('Visible Gene list: ', visibleGenes);
       const processedGeneInfo = syntenicDatatrackBuilder(factory, visibleGenes, blockInfo.orientation);
 // FIXME: I have a theory that the "Gene" object used to create the GeneDataTrack may be too heavy and not need references
 //   for things like the Block it is owned by. Would like to explore this next potentially...
-logger.timeEnd(timerLabel);
+// logger.timeEnd(timerLabel);
 
       // Get the index for the gene data track set, otherwise default to 0
 timerLabel = `  addDatatrackSections(${processedGeneInfo.length})`;
-logger.time(timerLabel);
+// logger.time(timerLabel);
       // let geneTrackIdx = currSyntenicRegion.datatrackSets.findIndex((set) => set.type === 'gene');
       // geneTrackIdx = geneTrackIdx === -1 ? 0 : geneTrackIdx;
       // currSyntenicRegion.addDatatrackSections(processedGeneInfo, geneTrackIdx, 'gene');
@@ -281,7 +281,7 @@ logger.time(timerLabel);
       // Add gene datatrack sections (this will always be the last datatrack set)
       const idx = currSyntenicRegion.datatrackSets.length;
       currSyntenicRegion.addDatatrackSections(processedGeneInfo, idx, 'gene');
-logger.timeEnd(timerLabel);
+// logger.timeEnd(timerLabel);
      } else {
       // Add empty gene datatrack section so every region as one
       const idx = currSyntenicRegion.datatrackSets.length;
@@ -319,11 +319,13 @@ logger.timeEnd(timerLabel);
     }
   }
   // Finished creating this Set:
-logger.time("createSyntenyRegionSet");
+// logger.time("createSyntenyRegionSet");
   const regionSet = new SyntenyRegionSet(currSpecies.name, currSpecies.activeMap, processedSyntenicRegions, setOrder, renderType);
   regionSet.maxVariantCount = regionMaxCount;
   regionSet.variantBinSize = regionBinSize;
-logger.timeEnd("createSyntenyRegionSet");
+  regionSet.maxEpigenomeCount = regionMaxCount;
+  regionSet.epigenomeBinSize = regionBinSize;
+// logger.timeEnd("createSyntenyRegionSet");
   return regionSet;
 }
 

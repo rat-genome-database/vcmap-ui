@@ -2,5 +2,6 @@ node_modules
 app.config.ts
 version.ts
 .idea
+.vscode
 .DS_Store
 dist/

@@ -154,7 +154,7 @@
   
     if (selectedMapKeys.length > 0) {
       props.onCloseLoadEpigenomeDataTrackModal();
-    props.onLoadSyntenyEpigenome(selectedMapKeys, true /* trigger update */);
+      props.onLoadSyntenyEpigenome(selectedMapKeys, true /* trigger update */);
   
       dataTrackItems.value.length = 0;
     }
@@ -165,7 +165,7 @@
     let currLength = dataTrackItems.value.length;
   
     // limit max number of tracks
-    if (currLength < store.state.comparativeSpecies.length + 1)
+    if (currLength < store.state.comparativeSpecies.length + 2)
     {
       dataTrackItems.value.push({ species: null });
     }
