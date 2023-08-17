@@ -96,7 +96,7 @@ const geneList = ref(new Map<number, Gene>());
 
 // Our list of variantPositions that have been loaded/generated
 const variantPositionsList = ref<VariantPositions[]>([]);
-  const epigenomePositionsList = ref<EpigenomePositions[]>([]);
+const epigenomePositionsList = ref<EpigenomePositions[]>([]);
 
 // TODO TEMP
 // TODO: temp ignore here, should remove once this method is actively being used
@@ -637,7 +637,7 @@ async function loadBackboneEpigenome() {
   const speciesMap = store.state.species?.activeMap;
   if (chromosome && stop && speciesMap && backboneSpecies)
   {
-    // Check if this variantPosition set has been loaded
+    // Check if this epigenomePosition set has been loaded
     const matchIdx = epigenomePositionsList.value.findIndex((positions) => (
       positions.mapKey === speciesMap.key && positions.blockStart === 0 && positions.blockStop === chromosome.seqLength
     ));
@@ -732,7 +732,7 @@ async function loadSyntenyVariants(mapKeys: number[] | null, triggerUpdate: bool
 }
 async function loadSyntenyEpigenome(mapKeys: number[] | null, triggerUpdate: boolean) {
   if (!mapKeys) return;
-  // Ensure isUpdatingVariants is false
+  // Ensure isUpdatingEpigenome is false
   store.dispatch('setIsUpdatingEpigenome', false);
   isLoading.value = true;
   let loadingBackbone = false;
@@ -753,7 +753,7 @@ async function loadSyntenyEpigenome(mapKeys: number[] | null, triggerUpdate: boo
           // If this block already has positions loaded, don't load again
           if (block.epigenomePositions)
           {
-            foundSomeEpigenomePositions = true; // some variants exist so we don't need to warn the user
+            foundSomeEpigenomePositions = true; // some epigenome data exist so we don't need to warn the user
             return;
           }
           else if (block.chainLevel === 1)
@@ -795,7 +795,7 @@ async function loadSyntenyEpigenome(mapKeys: number[] | null, triggerUpdate: boo
   }
   if (triggerUpdate)
   {
-    store.dispatch('setIsUpdatingVariants', true);
+    store.dispatch('setIsUpdatingEpigenome', true);
   }
 }
 </script>

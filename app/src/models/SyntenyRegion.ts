@@ -57,7 +57,8 @@ export default class SyntenyRegion
   public addDatatrackSections(datatrackSection: DatatrackSection[], datatrackSetIdx: number, type: DatatrackSectionType)
   {
     this.datatrackSets[datatrackSetIdx] && this.datatrackSets[datatrackSetIdx].datatracks.length > 0 ?
-      this.datatrackSets[datatrackSetIdx].addDatatrackSections(datatrackSection) : this.datatrackSets[datatrackSetIdx] = new DatatrackSet(datatrackSection, type);
+      this.datatrackSets[datatrackSetIdx].addDatatrackSections(datatrackSection) : 
+      this.datatrackSets[datatrackSetIdx] = new DatatrackSet(datatrackSection, type);
   }
 
   // TODO: Wonder if we should move this method back out of this class to a utils file? It might help make each of these

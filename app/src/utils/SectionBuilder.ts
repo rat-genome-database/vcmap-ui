@@ -166,10 +166,11 @@ function syntenicSectionBuilder(speciesSyntenyData: Block[], species: Species, s
   const currSpecies = species;
   const processVariantDensity = speciesSyntenyData.some((block) => block.variantPositions && block.variantPositions.positions.length > 0);
   const processEpigenomeDensity = speciesSyntenyData.some((block) => block.epigenomePositions && block.epigenomePositions.positions.length > 0);
-  let regionMaxCount = 0;
+  let variantRegionMaxCount = 0;
+  let epigenomeRegionMaxCount = 0;
   let regionBinSize = 0;
   // const allGeneLabels: Label[] = [];
-console.log("PROCESS VARIANT DENSITY:"+ processVariantDensity +"\tPROCESS EPIGENOME DENSITY:"+ processEpigenomeDensity);
+// console.log("PROCESS VARIANT DENSITY:"+ processVariantDensity +"\tPROCESS EPIGENOME DENSITY:"+ processEpigenomeDensity);
 logger.debug(`About to loop over ${speciesSyntenyData.length} Blocks...`);
   // Step 1: Create syntenic sections for each VISIBLE block
   for (let index = 0; index < speciesSyntenyData.length; index++)
@@ -224,22 +225,25 @@ logger.timeEnd("splitBlockWithGaps");
     {
       const variantDatatracks = createVariantDatatracks(factory, blockVariantPositions.positions,
         blockInfo.start, blockInfo.stop, blockInfo.backboneStart, blockInfo.backboneStop, blockInfo.isBlockInverted(), blockInfo);
-      currSyntenicRegion.addDatatrackSections(variantDatatracks.datatracks, 0, 'variant');
+      const idx = currSyntenicRegion.datatrackSets.length;
+      currSyntenicRegion.addDatatrackSections(variantDatatracks.datatracks, idx, 'variant');
       regionBinSize = variantDatatracks.binSize;
-      if (variantDatatracks.maxCount > regionMaxCount)
+      if (variantDatatracks.maxCount > variantRegionMaxCount)
       {
-        regionMaxCount = variantDatatracks.maxCount;
+        variantRegionMaxCount = variantDatatracks.maxCount;
       }
     }
     if (blockEpigenomePositions && processEpigenomeDensity)
     {
       const epigenomeDatatracks = createEpigenomeDatatracks(factory, blockEpigenomePositions.positions,
         blockInfo.start, blockInfo.stop, blockInfo.backboneStart, blockInfo.backboneStop, blockInfo.isBlockInverted(), blockInfo);
-      currSyntenicRegion.addDatatrackSections(epigenomeDatatracks.epigenomeDatatracks, 0, 'epigenome');
+      const idx = currSyntenicRegion.datatrackSets.length;
+
+      currSyntenicRegion.addDatatrackSections(epigenomeDatatracks.epigenomeDatatracks, idx, 'epigenome');
       regionBinSize = epigenomeDatatracks.binSize;
-      if (epigenomeDatatracks.maxCount > regionMaxCount)
+      if (epigenomeDatatracks.maxCount > epigenomeRegionMaxCount)
       {
-        regionMaxCount = epigenomeDatatracks.maxCount;
+        epigenomeRegionMaxCount = epigenomeDatatracks.maxCount;
       }
     }
 
@@ -292,7 +296,7 @@ timerLabel = `  addDatatrackSections(${processedGeneInfo.length})`;
   }
 
   // Adjust variant datatrack colors now that all are processed
-  if (processVariantDensity && regionMaxCount > 0)
+  if (processVariantDensity && variantRegionMaxCount > 0)
   {
     for (let i = 0; i < processedSyntenicRegions.length; i++)
     {
@@ -300,12 +304,12 @@ timerLabel = `  addDatatrackSections(${processedGeneInfo.length})`;
       if (variantIdx !== -1)
       {
         processedSyntenicRegions[i].datatrackSets[variantIdx].datatracks.forEach((track: any) =>{
-            track.setSectionColor(regionMaxCount);
+            track.setSectionColor(variantRegionMaxCount);
         });
       }
     }
   }
-  if (processEpigenomeDensity && regionMaxCount > 0)
+  if (processEpigenomeDensity && epigenomeRegionMaxCount > 0)
   {
     for (let i = 0; i < processedSyntenicRegions.length; i++)
     {
@@ -313,7 +317,7 @@ timerLabel = `  addDatatrackSections(${processedGeneInfo.length})`;
       if (variantIdx !== -1)
       {
         processedSyntenicRegions[i].datatrackSets[variantIdx].datatracks.forEach((track: any) =>{
-            track.setSectionColor(regionMaxCount);
+            track.setSectionColor(epigenomeRegionMaxCount);
         });
       }
     }
@@ -321,9 +325,9 @@ timerLabel = `  addDatatrackSections(${processedGeneInfo.length})`;
   // Finished creating this Set:
 // logger.time("createSyntenyRegionSet");
   const regionSet = new SyntenyRegionSet(currSpecies.name, currSpecies.activeMap, processedSyntenicRegions, setOrder, renderType);
-  regionSet.maxVariantCount = regionMaxCount;
+  regionSet.maxVariantCount = variantRegionMaxCount;
   regionSet.variantBinSize = regionBinSize;
-  regionSet.maxEpigenomeCount = regionMaxCount;
+  regionSet.maxEpigenomeCount = epigenomeRegionMaxCount;
   regionSet.epigenomeBinSize = regionBinSize;
 // logger.timeEnd("createSyntenyRegionSet");
   return regionSet;
