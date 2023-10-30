@@ -43,8 +43,20 @@ export interface VCMapState
   loadedGenes: Map<number, LoadedGene> | null;
 }
 
+/**
+ * Saves VCMap state to local storage so that newly opened tabs can default to last loaded configuration
+ */
 const vuexLocal = new VuexPersistence<VCMapState>({
-  storage: window.localStorage
+  key: 'VCMAP_LOCAL',
+  storage: window.localStorage,
+});
+
+/**
+ * Saves VCMap state to session storage so that tabs can have different configurations loaded
+ */
+const vuexSession = new VuexPersistence<VCMapState>({
+  key: 'VCMAP_SESSION',
+  storage: window.sessionStorage,
 });
 
 const actionsToLog = ['setDetailedBasePairRange', 'setDetailedBasePairRequest'];
@@ -244,7 +256,9 @@ export default createStore({
     },
   },
 
+  // The order of these plugins matter. Local storage will be overwritten by session storage
+  // as long as the vuexSession comes after vuexLocal.
   plugins: process.env.NODE_ENV !== 'production'
-    ? [vuexLocal.plugin, logger] // Only use Vuex logger in development
-    : [vuexLocal.plugin]
+    ? [vuexLocal.plugin, vuexSession.plugin, logger] // Only use Vuex logger in development
+    : [vuexLocal.plugin, vuexSession.plugin]
 });

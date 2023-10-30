@@ -165,6 +165,11 @@ function prepopulateConfigOptions()
   try
   {
     let loadedBackbone = store.state.species;
+    if (loadedBackbone == null) {
+      console.warn(`Cannot prepopulate data track config options when loaded backbone is null`);
+      return;
+    }
+    
     loadedBackbone.label = loadedBackbone.name + ": " + loadedBackbone.activeMap.name;
     loadedSpecies.push(loadedBackbone);
     store.state.comparativeSpecies.forEach((entry) => {

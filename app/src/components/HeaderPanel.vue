@@ -10,15 +10,18 @@
         </template>
         <template #icons>
           <div class="icon-container">
-            <a  href="https://rgd.mcw.edu/" target="_blank"><img class="rgd-logo" src="../assets/images/rgd_logo.png" alt="RGD logo"
+            <a href="https://rgd.mcw.edu/" target="_blank"><img class="rgd-logo" src="../assets/images/rgd_logo.png" alt="RGD logo"
               v-tooltip.bottom="`Go to RGD Home Page`"
             ></a>
-            <Button 
+            <router-link to="/" target="_blank">
+              <Button 
               label="New Configuration"
               icon="pi pi-cog" 
               class="p-button-secondary header-btn"
-              @click="goToConfigurationScreen"
+              v-tooltip.bottom="`Open configuration in new tab`"
               data-test="load-config-btn" />
+            </router-link>
+            
             <Button 
               label="Load Data Track" 
               class="p-button-secondary header-btn"
@@ -43,7 +46,6 @@
 </template>
 
 <script lang="ts" setup>
-import { useRouter } from 'vue-router';
 import OverviewControls from '@/components/OverviewControls.vue';
 import DetailsControls from '@/components/DetailsControls.vue';
 import { VERSION } from '@/version';
@@ -57,8 +59,6 @@ interface Props
 
 const props = defineProps<Props>();
 
-const router = useRouter();
-
 let showLoadDataTrackModal = ref(false);
 
 const openLoadDataTrackModal = () => {
@@ -71,10 +71,6 @@ const onLoadSyntenyVariants = async (mapKeys: number[] | null, triggerUpdate: bo
 
 const closeLoadDataTrackModal = () => {
   showLoadDataTrackModal.value = false;
-};
-
-const goToConfigurationScreen = () => {
-  router.push('/');
 };
 </script>
 
