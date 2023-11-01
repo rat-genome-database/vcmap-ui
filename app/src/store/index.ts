@@ -9,6 +9,7 @@ import { InjectionKey } from 'vue';
 import { createLogger } from 'vuex';
 import { LoadedGene } from '@/models/DatatrackSection';
 import { ConfigurationMode } from '@/utils/Types';
+import { SVGPositionVariables } from '@/utils/SVGConstants';
 
 export const key: InjectionKey<Store<VCMapState>> = Symbol();
 
@@ -41,6 +42,7 @@ export interface VCMapState
   /* These data structures have the potential to be pretty large */
   // TODO: I think we can remove this from state
   loadedGenes: Map<number, LoadedGene> | null;
+  svgPositions: SVGPositionVariables;
 }
 
 /**
@@ -98,6 +100,10 @@ export default createStore({
 
     /* These data structures have the potential to be pretty large */
     loadedGenes: null,
+    svgPositions: {
+      detailedStart: 320,
+      detailedSpeciesGap: 20,
+    }
   }),
 
   mutations: {

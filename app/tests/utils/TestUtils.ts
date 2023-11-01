@@ -80,6 +80,10 @@ export namespace TestUtils
         isOverviewPanelUpdating: false,
         isUpdatingVariants: false,
         selectionToastCount: 0,
+        svgPositions: {
+          detailedStart: 320,
+          detailedSpeciesGap: 20,
+        }
 
         // Overwrite default state with props passed in by the tester
         ...initialState,
