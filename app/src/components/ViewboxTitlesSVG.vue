@@ -20,7 +20,7 @@
     <template v-for="(label, index) in detailedBackboneSet.titleLabels" :key="index">
       <text :class="`label small ${label.addClass}`" :x="label.posX - 5" :y="label.posY">{{label.text}}</text>
     </template>
-    <template v-for="(datatrackSet, index) in detailedBackboneSet.datatrackSets" :key="index">
+    <template v-for="(datatrackSet, index) in detailedBackboneSet?.datatrackSets" :key="index">
       <template v-if="datatrackSet.datatracks.length > 0">
         <text
             class="label small"
@@ -38,7 +38,7 @@
       <template v-for="(label, index) in syntenySet.titleLabels" :key="index">
         <text :class="`label small ${label.addClass}`" :x="label.posX - 5" :y="label.posY">{{label.text}}</text>
       </template>
-      <template v-for="(datatrackSet, index) in syntenySet.regions[0].datatrackSets" :key="index">
+      <template v-for="(datatrackSet, index) in syntenySet.regions[0]?.datatrackSets" :key="index">
         <text
             class="label small"
             :x="getSyntenyDatatrackXPos(syntenySet.order, index)"
