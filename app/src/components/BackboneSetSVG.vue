@@ -289,8 +289,13 @@ const getSectionClass = (datatrackSet: DatatrackSet) => {
 };
 
 const highlightSelections = (selectedGeneIds: number[]) => {
+  console.warn(props.backboneSet.geneDatatrackSetIndex, datatrackSets.value);
+  const geneDatatracks = datatrackSets.value[props.backboneSet.geneDatatrackSetIndex]?.datatracks as GeneDatatrack[];
+  if (!geneDatatracks) {
+    return;
+  }
   // Look through the backbone gene datatracks and highlight based on selected genes
-  (datatrackSets.value[props.backboneSet.geneDatatrackSetIndex]?.datatracks as GeneDatatrack[])
+  geneDatatracks
     .forEach(section => {
       if (section.gene == null)
       {
