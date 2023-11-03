@@ -144,6 +144,10 @@
     :show-back-button="showDialogBackButton"
   />
   <LoadingSpinnerMask v-if="arePanelsLoading" :style="getDetailedPosition()"></LoadingSpinnerMask>
+  <Button 
+    label="Move Backbone"
+    @click="moveBackbone"
+  />
   <!--
   <Button
     style="margin-right: 20px;"
@@ -427,13 +431,18 @@ const updateOverviewPanel = async () => {
   // Build backbone set
   overviewSyntenySets.value = [];
   const overviewBackbone = createBackboneSection(backboneSpecies, backboneChromosome, 0, backboneChromosome.seqLength, 'overview');
-  overviewBackboneSet.value = createBackboneSet(overviewBackbone, backboneSpecies.activeMap);
+  console.log('updateOverPanel');
+  console.log(store.state.speciesOrder);
+  console.log(backboneSpecies.activeMap.key);
+  const overviewBackboneOrder = store.state.speciesOrder.get(backboneSpecies.activeMap.key);
+  console.log(overviewBackboneOrder);
+  overviewBackboneSet.value = createBackboneSet(overviewBackbone, overviewBackboneOrder ?? 0, backboneSpecies.activeMap);
 
   const overviewBackboneCreationTime = Date.now();
 
   // Build overview synteny sets
   const overviewSyntenyTrackCreationTime = Date.now();
-  overviewSyntenySets.value = await createOverviewSyntenicRegionSets(props.syntenyTree, store.state.comparativeSpecies, backboneChromosome);
+  overviewSyntenySets.value = await createOverviewSyntenicRegionSets(props.syntenyTree, store.state.comparativeSpecies, backboneChromosome, store.state.speciesOrder);
 
   // TODO: request an update to the detailed panel here
 
@@ -508,7 +517,8 @@ const updateDetailsPanel = async () => {
   const backboneDatatrackInfo = backboneDatatrackBuilder(backboneSpecies, backboneGenes, detailedBackbone);
   timeCreateBackboneDatatracks = Date.now() - backboneDatatracksStart;
   const backboneSetStart = Date.now();
-  detailedBackboneSet.value = createBackboneSet(detailedBackbone, backboneSpecies.activeMap, backboneDatatrackInfo.processedGenomicData);
+  const backboneOrder = store.state.speciesOrder.get(backboneSpecies.activeMap.key);
+  detailedBackboneSet.value = createBackboneSet(detailedBackbone, backboneOrder || 0, backboneSpecies.activeMap, backboneDatatrackInfo.processedGenomicData);
 
   // Now check for other potential datatracks to add to the backbone (like variant positions)
   props.variantPositionsList.forEach((variantPositions) => {
@@ -528,6 +538,7 @@ const updateDetailsPanel = async () => {
       store.state.comparativeSpecies,
       detailedBasePairRange.start,
       detailedBasePairRange.stop,
+      store.state.speciesOrder,
   );
   timeSyntenyTracks = Date.now() - syntenyTracksStart;
 
@@ -769,6 +780,24 @@ function logPerformanceReport(title: string, totalTimeMillis: number, detailedTi
   }
 
   $log.debug(JSON.stringify(performanceReport, null, 2));
+}
+
+// TEMP FUNCTION
+function moveBackbone() {
+  const speciesOrder = store.state.speciesOrder;
+  const newSpeciesOrder = new Map();
+  speciesOrder.forEach((value, key) => {
+    if (value === 0) {
+      newSpeciesOrder.set(key, 1);
+    } else if (value === 1) {
+      newSpeciesOrder.set(key, 0);
+    } else {
+      newSpeciesOrder.set(key, value);
+    }
+  });
+  store.dispatch('setSpeciesOrder', newSpeciesOrder);
+  updateOverviewPanel();
+  updateDetailsPanel();
 }
 
 </script>

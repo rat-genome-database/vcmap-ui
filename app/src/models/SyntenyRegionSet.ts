@@ -269,4 +269,8 @@ export default class SyntenyRegionSet extends GenomicSet
 
     return 0;
   }
+
+  public setOrder(order: number) {
+    this.order = order;
+  }
 }

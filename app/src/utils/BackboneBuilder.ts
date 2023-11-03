@@ -80,7 +80,7 @@ export function backboneDatatrackBuilder(species: Species, genomicData: Gene[], 
   return { backboneSection, processedGenomicData };
 }
 
-export function createBackboneSet(backbone: BackboneSection, backboneMap: SpeciesMap, genomicData?: ProcessedGenomicData)
+export function createBackboneSet(backbone: BackboneSection, order: number, backboneMap: SpeciesMap, genomicData?: ProcessedGenomicData)
 {
-  return new BackboneSet(backbone, backboneMap, genomicData);
+  return new BackboneSet(backbone, order, backboneMap, genomicData);
 }

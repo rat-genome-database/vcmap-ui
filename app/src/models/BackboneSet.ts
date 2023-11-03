@@ -6,7 +6,12 @@ import DatatrackSection, { DatatrackSectionType } from "./DatatrackSection";
 import DatatrackSet from "./DatatrackSet";
 import { GenomicSet } from "./GenomicSet";
 import Label, { GeneLabel, IntermediateGeneLabel } from "./Label";
-import { calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment, getDetailedPanelXPositionForBackboneDatatracks, isGenomicDataInViewport } from "@/utils/Shared";
+import {
+  calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment,
+  getDetailedPanelXPositionForBackboneDatatracks,
+  isGenomicDataInViewport,
+  getDetailedPanelXPositionForSynteny,
+} from "@/utils/Shared";
 import SpeciesMap from "./SpeciesMap";
 import logger from "@/logger";
 
@@ -15,6 +20,7 @@ import logger from "@/logger";
  */
 export default class BackboneSet extends GenomicSet
 {
+  order: number = 0;
   backbone: BackboneSection;
   datatrackSets: DatatrackSet[] = [];
   geneLabels: GeneLabel[] = [];
@@ -23,11 +29,12 @@ export default class BackboneSet extends GenomicSet
   maxVariantCount?: number;
   variantBinSize?: number;
 
-  constructor(backboneSection: BackboneSection, map: SpeciesMap, processedGenomicData?: ProcessedGenomicData)
+  constructor(backboneSection: BackboneSection, order: number, map: SpeciesMap, processedGenomicData?: ProcessedGenomicData)
   {
     super(backboneSection.speciesName, map);
 
     this.backbone = backboneSection;
+    this.order = order;
     if (processedGenomicData?.datatracks)
     {
       this.datatrackSets.push(new DatatrackSet(processedGenomicData.datatracks, 'gene'));
@@ -71,12 +78,12 @@ export default class BackboneSet extends GenomicSet
     // Calculate X positions of this backbone section
     if (this.backbone.renderType === 'overview')
     {
-      this.backbone.posX1 = SVGConstants.backboneXPosition;
+      this.backbone.posX1 = (this.order * -80) + SVGConstants.backboneXPosition;
       this.backbone.posX2 = this.backbone.posX1 + SVGConstants.trackWidth;
     }
     else if (this.backbone.renderType === 'detailed')
     {
-      this.backbone.posX1 = SVGConstants.selectedBackboneXPosition;
+      this.backbone.posX1 = getDetailedPanelXPositionForSynteny(this.order);
       this.backbone.posX2 = this.backbone.posX1 + SVGConstants.trackWidth;
     }
 
@@ -217,5 +224,9 @@ export default class BackboneSet extends GenomicSet
     }
 
     return 0;
+  }
+
+  public setOrder(order: number) {
+    this.order = order;
   }
 }

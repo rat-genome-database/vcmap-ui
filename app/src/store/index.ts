@@ -38,11 +38,12 @@ export interface VCMapState
   selectedData: SelectedData[] | null;
 
   selectionToastCount: number;
+  svgPositions: SVGPositionVariables;
+  speciesOrder: Map<number, number>;
 
   /* These data structures have the potential to be pretty large */
   // TODO: I think we can remove this from state
   loadedGenes: Map<number, LoadedGene> | null;
-  svgPositions: SVGPositionVariables;
 }
 
 /**
@@ -98,12 +99,14 @@ export default createStore({
 
     selectionToastCount: 0,
 
-    /* These data structures have the potential to be pretty large */
-    loadedGenes: null,
     svgPositions: {
       detailedStart: 320,
       detailedSpeciesGap: 20,
-    }
+    },
+    speciesOrder: new Map(),
+
+    /* These data structures have the potential to be pretty large */
+    loadedGenes: null,
   }),
 
   mutations: {
@@ -160,7 +163,10 @@ export default createStore({
     },
     selectionToastCount(state: VCMapState, count: number) {
       state.selectionToastCount = count;
-    }
+    },
+    speciesOrder(state: VCMapState, speciesOrder: Map<number, number>) {
+      state.speciesOrder = speciesOrder;
+    },
   },
 
   actions: {
@@ -249,6 +255,9 @@ export default createStore({
     },
     setSelectionToastCount(context: ActionContext<VCMapState, VCMapState>, count: number) {
       context.commit('selectionToastCount', count);
+    },
+    setSpeciesOrder(context: ActionContext<VCMapState, VCMapState>, speciesOrder: Map<number, number>) {
+      context.commit('speciesOrder', speciesOrder);
     }
   },
 

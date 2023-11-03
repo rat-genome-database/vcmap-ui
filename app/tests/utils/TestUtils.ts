@@ -83,7 +83,8 @@ export namespace TestUtils
         svgPositions: {
           detailedStart: 320,
           detailedSpeciesGap: 20,
-        }
+        },
+        speciesOrder: new Map(),
 
         // Overwrite default state with props passed in by the tester
         ...initialState,
