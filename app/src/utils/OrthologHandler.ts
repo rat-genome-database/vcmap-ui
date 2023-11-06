@@ -33,6 +33,7 @@ export function createOrthologLines(geneList: Map<number, Gene>, backboneSet: Ba
   const speciesPositionMap: Map<number, OrthologPositionInfo> = new Map();
   const backboneGeneStartX = getDetailedPanelXPositionForBackboneDatatracks(backboneSet.backbone.posX2, backboneSet.geneDatatrackSetIndex);
   speciesPositionMap.set(backboneSet.mapKey, {
+    // order: backboneSet.order,
     order: 0,
     startX: backboneGeneStartX,
     endX: backboneGeneStartX + SVGConstants.dataTrackWidth,
@@ -92,7 +93,7 @@ export function createOrthologLines(geneList: Map<number, Gene>, backboneSet: Ba
 
     // Place the orthologs in this map according to what "order" they appear in
     const orthologOrderMap: Map<number, Gene[]> = new Map();
-    orthologOrderMap.set(0, [backboneGene]);
+    orthologOrderMap.set(backboneSet.order, [backboneGene]);
     // Sort orthologs by species set order
     orthologs.sort((a, b) => {
       const positionInfoA = speciesPositionMap.get(a.mapKey);
