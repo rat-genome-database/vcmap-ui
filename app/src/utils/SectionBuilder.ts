@@ -38,6 +38,9 @@ export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, 
     const currSpecies = comparativeSpecies.find((compSpecies) => compSpecies.activeMap.key == mapKey);
     if (!currSpecies) return;
 
+    const speciesPos = speciesOrder.get(currSpecies.activeMap.key) ?? defaultOrder;
+    const backbonePos = speciesOrder.get(backboneChr.mapKey) ?? 0;
+
     const processedSyntenicRegions: SyntenyRegion[] = [];
     for (let blockIdx = 0; blockIdx < blocks.length; blockIdx++)
     {
@@ -64,6 +67,7 @@ export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, 
         orientation: blockInfo.orientation,
         chainLevel: blockInfo.chainLevel,
         isGapless: true,
+        labelOnLeft: speciesPos < backbonePos,
       });
       // Create the SyntenyRegion that covers the extent of the Block
       // NOTE: This might extend beyond the visible window, but we will try to only create
@@ -79,12 +83,8 @@ export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, 
 
       processedSyntenicRegions.push(currSyntenicRegion);
     }
-    const speciesPos = speciesOrder.get(currSpecies.activeMap.key);
-    console.log(speciesPos);
-    const value = speciesPos ?? defaultOrder;
-    console.log('value')
-    console.log(value);
-    syntenyRegionSets.push(new SyntenyRegionSet(currSpecies.name, currSpecies.activeMap, processedSyntenicRegions, value, 'overview'));
+
+    syntenyRegionSets.push(new SyntenyRegionSet(currSpecies.name, currSpecies.activeMap, processedSyntenicRegions, speciesPos, 'overview'));
     defaultOrder++;
   });
 

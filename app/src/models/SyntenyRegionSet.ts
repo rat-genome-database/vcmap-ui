@@ -234,7 +234,7 @@ export default class SyntenyRegionSet extends GenomicSet
 
   private sortBasePairLabels()
   {
-    const labelPosX = getOverviewPanelXPosition(this.order) + SVGConstants.trackWidth;
+    const regionPosX2 = getOverviewPanelXPosition(this.order) + SVGConstants.trackWidth;
     const labelPairs = this.regions.map((region) =>{
       return {startLabel: region.gaplessBlock.startLabel, stopLabel: region.gaplessBlock.stopLabel};
     });
@@ -243,8 +243,8 @@ export default class SyntenyRegionSet extends GenomicSet
     for (let i = 0; i < labelPairs.length; i++)
     {
       const labelPair = labelPairs[i];
-      labelPair.startLabel.posX = labelPosX;
-      labelPair.stopLabel.posX = labelPosX;
+      labelPair.startLabel.posX = labelPair.startLabel.labelOnLeft ? regionPosX2 - SVGConstants.trackWidth : regionPosX2;
+      labelPair.stopLabel.posX = labelPair.stopLabel.labelOnLeft ? regionPosX2 - SVGConstants.trackWidth : regionPosX2;
       if (Math.abs(labelPair.stopLabel.posY - labelPair.startLabel.posY) > 14)
       {
         labelPair.startLabel.isVisible = true;
