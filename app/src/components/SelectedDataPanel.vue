@@ -40,7 +40,7 @@
           <p class="placeholder-msg-txt">Select data by clicking or hovering drawn elements, or searching by gene symbol above</p>
         </div>
       </template>
-      <template v-for="dataObject in props.selectedData" :key="dataObject">
+      <template v-for="dataObject in sortedSelectedData" :key="dataObject">
         <template v-if="dataObject.type === 'Gene'">
           <GeneInfo
             :gene="dataObject.genomicSection.gene ? dataObject.genomicSection.gene : dataObject.genomicSection"
@@ -98,7 +98,7 @@ import SelectedData from '@/models/SelectedData';
 import Gene from '@/models/Gene';
 import GeneInfo from '@/components/GeneInfo.vue';
 import { Formatter } from '@/utils/Formatter';
-import { ref, watch} from 'vue';
+import { ref, watch, computed } from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import { getNewSelectedData, sortGeneMatches, adjustSelectionWindow } from '@/utils/DataPanelHelpers';
@@ -126,8 +126,9 @@ watch(() => props.selectedData, () => {
   numberOfResults.value = 0;
   if (props.selectedData != null)
   {
-    numberOfResults.value = props.selectedData.filter(d => d.type === 'Gene').length;
+    numberOfResults.value = props.selectedData.filter((d: { type: string; }) => d.type === 'Gene').length;
   }
+  console.log('SELECTED DATA', props.selectedData)
 });
 
 const clearSelectedGenes = () => {
@@ -139,7 +140,7 @@ const clearSelectedGenes = () => {
 
 const searchGene = (event: {query: string}) => {
   let matches: Gene[] = [];
-  props.geneList.forEach((gene) => {
+  props.geneList.forEach((gene: Gene) => {
     if (gene.symbol.toLowerCase().includes(event.query.toLowerCase()))
       matches.push(gene);
   });
@@ -165,6 +166,21 @@ const searchSVG = (event: { value: Gene }) => {
 const getSuggestionDisplay = (item: any) => {
   return `${item.symbol} - ${item.speciesName}`;
 };
+
+const sortedSelectedData = computed(() => {
+  if (!props.selectedData) return [];
+
+  return [...props.selectedData].sort((a, b) => {
+    if (a.type === 'Gene' && b.type === 'Gene') {
+      return a.genomicSection.speciesName.localeCompare(b.genomicSection.speciesName);
+    }
+    return 0;
+  });
+});
+
+watch(sortedSelectedData, (newVal: any) => {
+  console.log('Sorted Data Updated:', newVal);
+}, { deep: true });
 </script>
 
 <style lang="scss" scoped>
