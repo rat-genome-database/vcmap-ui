@@ -168,13 +168,20 @@ const getSuggestionDisplay = (item: any) => {
 };
 
 const sortedSelectedData = computed(() => {
-  if (!props.selectedData) return [];
+  if (!props.selectedData || props.selectedData.length === 0) return [];
+
+  const priority = props.selectedData[0]?.genomicSection?.speciesName;
 
   return [...props.selectedData].sort((a, b) => {
     if (a.type === 'Gene' && b.type === 'Gene') {
-      return a.genomicSection.speciesName.localeCompare(b.genomicSection.speciesName);
+    if (a.genomicSection.speciesName === priority && b.genomicSection.speciesName !== priority) {
+      return -1;
     }
-    return 0;
+    if (b.genomicSection.speciesName === priority && a.genomicSection.speciesName !== priority) {
+      return 1;
+    }
+      return a.genomicSection.speciesName.localeCompare(b.genomicSection.speciesName);
+  }
   });
 });
 
