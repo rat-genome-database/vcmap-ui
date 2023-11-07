@@ -50,6 +50,11 @@ export function getDetailedPanelXPositionForDatatracks(order: number, index: num
     + SVGConstants.backboneDatatrackXOffset * (index + 1) + (SVGConstants.backboneDatatrackXOffset * index);
 }
 
+export function getOverviewPanelXPosition(order: number)
+{
+  return (order * -80) + SVGConstants.backboneXPosition;
+}
+
 export function getDetailedPanelXPositionForSynteny(order: number)
 {
   return (order * 140) + SVGConstants.selectedBackboneXPosition;

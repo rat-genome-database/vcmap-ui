@@ -430,12 +430,8 @@ const updateOverviewPanel = async () => {
 
   // Build backbone set
   overviewSyntenySets.value = [];
-  const overviewBackbone = createBackboneSection(backboneSpecies, backboneChromosome, 0, backboneChromosome.seqLength, 'overview');
-  console.log('updateOverPanel');
-  console.log(store.state.speciesOrder);
-  console.log(backboneSpecies.activeMap.key);
   const overviewBackboneOrder = store.state.speciesOrder.get(backboneSpecies.activeMap.key);
-  console.log(overviewBackboneOrder);
+  const overviewBackbone = createBackboneSection(backboneSpecies, backboneChromosome, 0, backboneChromosome.seqLength, 'overview', overviewBackboneOrder ?? 0);
   overviewBackboneSet.value = createBackboneSet(overviewBackbone, overviewBackboneOrder ?? 0, backboneSpecies.activeMap);
 
   const overviewBackboneCreationTime = Date.now();
@@ -498,11 +494,11 @@ const updateDetailsPanel = async () => {
     detailedSyntenySets.value = [];
     return;
   }
-
+  const backboneOrder = store.state.speciesOrder.get(backboneSpecies.activeMap.key);
   //
   // First, create the visible backbone elements
   const detailedBackbone = createBackboneSection(backboneSpecies, backboneChromosome,
-      store.state.detailedBasePairRange.start, store.state.detailedBasePairRange.stop, 'detailed');
+      store.state.detailedBasePairRange.start, store.state.detailedBasePairRange.stop, 'detailed', backboneOrder ?? 0);
   const backboneFilterGenesStart = Date.now();
   const backboneGenes: Gene[] = [];
   props.geneList.forEach((gene: Gene) => {
@@ -517,8 +513,7 @@ const updateDetailsPanel = async () => {
   const backboneDatatrackInfo = backboneDatatrackBuilder(backboneSpecies, backboneGenes, detailedBackbone);
   timeCreateBackboneDatatracks = Date.now() - backboneDatatracksStart;
   const backboneSetStart = Date.now();
-  const backboneOrder = store.state.speciesOrder.get(backboneSpecies.activeMap.key);
-  detailedBackboneSet.value = createBackboneSet(detailedBackbone, backboneOrder || 0, backboneSpecies.activeMap, backboneDatatrackInfo.processedGenomicData);
+  detailedBackboneSet.value = createBackboneSet(detailedBackbone, backboneOrder ?? 0, backboneSpecies.activeMap, backboneDatatrackInfo.processedGenomicData);
 
   // Now check for other potential datatracks to add to the backbone (like variant positions)
   props.variantPositionsList.forEach((variantPositions) => {

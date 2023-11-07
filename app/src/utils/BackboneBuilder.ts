@@ -20,7 +20,7 @@ export interface ProcessedGenomicData
  * Creates a BackboneSection model
  */
 export function createBackboneSection(species: Species, chromosome: Chromosome, startPos: number, stopPos: number,
-                                      renderType: RenderType)
+                                      renderType: RenderType, order: number)
 {
   return new BackboneSection({
     chromosome: chromosome.chromosome,
@@ -33,6 +33,7 @@ export function createBackboneSection(species: Species, chromosome: Chromosome, 
     },
     renderType: renderType,
     createLabels: true,
+    order,
   });
 }
 

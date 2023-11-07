@@ -5,16 +5,17 @@ import SyntenyRegion from "./SyntenyRegion";
 import SyntenySection from "./SyntenySection";
 import DatatrackSet from "./DatatrackSet";
 import { mergeAndCreateGeneLabels } from "@/utils/GeneLabelMerger";
-import { calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment, getDetailedPanelXPositionForDatatracks, getDetailedPanelXPositionForSynteny, isGenomicDataInViewport } from "@/utils/Shared";
+import {
+  calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment,
+  getDetailedPanelXPositionForDatatracks,
+  getDetailedPanelXPositionForSynteny,
+  isGenomicDataInViewport,
+  getOverviewPanelXPosition,
+} from "@/utils/Shared";
 import SpeciesMap from "./SpeciesMap";
 import logger from "@/logger";
 
 const LEVEL_2_WIDTH_MULTIPLIER = 0.75;
-
-function getOverviewPanelXPosition(order: number)
-{
-  return (order * -80) + SVGConstants.backboneXPosition;
-}
 
 /**
  * Model for representing a set of SyntenyRegions for the same species and map
