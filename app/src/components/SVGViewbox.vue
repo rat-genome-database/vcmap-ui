@@ -148,6 +148,7 @@
     label="Move Backbone"
     @click="moveBackbone"
   />
+  <SpeciesOrder />
   <!--
   <Button
     style="margin-right: 20px;"
@@ -260,6 +261,7 @@ import VariantPositions from '@/models/VariantPositions';
 import Species from '@/models/Species';
 import BackboneSection from '@/models/BackboneSection';
 import GradientLegend from './GradientLegend.vue';
+import SpeciesOrder from './SpeciesOrder.vue';
 
 const SHOW_DEBUG = process.env.NODE_ENV === 'development';
 const NAV_SHIFT_PERCENT = 0.2;
@@ -370,6 +372,11 @@ watch(() => props.variantPositionsList, () => {
 watch(() => store.state.isUpdatingVariants, () => {
   if (store.state.isUpdatingVariants) updateSyntenyVariants();
 });
+
+watch(() => store.state.speciesOrder, () => {
+  updateOverviewPanel();
+  updateDetailsPanel();
+})
 
 // FIXME: check on this (probably needs to be attached to Main props instead):
 const arePanelsLoading = computed(() => {
@@ -783,8 +790,8 @@ function moveBackbone() {
   const newSpeciesOrder = new Map();
   speciesOrder.forEach((value, key) => {
     if (value === 0) {
-      newSpeciesOrder.set(key, 1);
-    } else if (value === 1) {
+      newSpeciesOrder.set(key, 2);
+    } else if (value === 2) {
       newSpeciesOrder.set(key, 0);
     } else {
       newSpeciesOrder.set(key, value);
