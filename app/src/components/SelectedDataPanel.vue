@@ -29,6 +29,18 @@
                 rounded
             />
           </div>
+          <div class="sort-options">
+            <Button
+              v-tooltip.top="`Sort by Label`"
+              icon="pi pi-sort-alpha-down"
+              @click="symbolSort"
+            />
+            <Button 
+              v-tooltip.top="`Sort by Position`"
+              icon="pi pi-sort-numeric-down"
+              @click="positionSort"
+            />
+          </div>
         </div>
       </div>
     </template>
@@ -121,6 +133,8 @@ const props = defineProps<Props>();
 const searchedGene = ref<Gene | null>(null);
 const geneSuggestions = ref<Gene[]>([]);
 const numberOfResults = ref<number>(0);
+const sortByPosition = ref('off');
+const sortBySymbol = ref(false);
 
 watch(() => props.selectedData, () => {
   numberOfResults.value = 0;
@@ -128,7 +142,8 @@ watch(() => props.selectedData, () => {
   {
     numberOfResults.value = props.selectedData.filter((d: { type: string; }) => d.type === 'Gene').length;
   }
-  console.log('SELECTED DATA', props.selectedData)
+
+  console.log('SELECTED DATA', props.selectedData);
 });
 
 const clearSelectedGenes = () => {
@@ -138,6 +153,14 @@ const clearSelectedGenes = () => {
   searchedGene.value = null;
 };
 
+const symbolSort = () => {
+  sortBySymbol.value = !sortBySymbol.value;
+}
+const positionSort = () => {
+  const options = ['asc', 'desc', 'off'];
+  const current = options.indexOf(sortByPosition.value);
+  sortByPosition.value = options[(current + 1) % options.length]
+}
 const searchGene = (event: {query: string}) => {
   let matches: Gene[] = [];
   props.geneList.forEach((gene: Gene) => {
@@ -174,20 +197,24 @@ const sortedSelectedData = computed(() => {
 
   return [...props.selectedData].sort((a, b) => {
     if (a.type === 'Gene' && b.type === 'Gene') {
-    if (a.genomicSection.speciesName === priority && b.genomicSection.speciesName !== priority) {
-      return -1;
-    }
-    if (b.genomicSection.speciesName === priority && a.genomicSection.speciesName !== priority) {
-      return 1;
-    }
-      return a.genomicSection.speciesName.localeCompare(b.genomicSection.speciesName);
-  }
-  });
+      if (a.genomicSection.speciesName === priority && b.genomicSection.speciesName !== priority) {
+        return -1;
+      }
+      if (b.genomicSection.speciesName === priority && a.genomicSection.speciesName !== priority) {
+        return 1;
+      }
+      if (sortByPosition.value === 'asc') {
+        return a.genomicSection.start - b.genomicSection.start;
+      }
+      if (sortByPosition.value === 'desc') {
+        return b.genomicSection.start - a.genomicSection.start;
+      }
+      if (sortBySymbol.value) {
+        return a.genomicSection.symbol.localeCompare(b.genomicSection.symbol);
+      }
+    return a.genomicSection.speciesName.localeCompare(b.genomicSection.speciesName);
+  }});
 });
-
-watch(sortedSelectedData, (newVal: any) => {
-  console.log('Sorted Data Updated:', newVal);
-}, { deep: true });
 </script>
 
 <style lang="scss" scoped>
@@ -227,5 +254,9 @@ watch(sortedSelectedData, (newVal: any) => {
   font-size: .9rem;
   font-style: italic;
   margin-top: .5em;
+}
+
+.sort-button-inactive {
+  opacity: 0.6
 }
 </style>
