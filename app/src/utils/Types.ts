@@ -3,6 +3,6 @@
  * or do not directly relate to one our models
  */
 
-export type ConfigurationMode = 'gene' | 'position';
+export type ConfigurationMode = 'gene' | 'position' | 'flanking';
 
 export type DialogTheme = 'error' | 'normal';

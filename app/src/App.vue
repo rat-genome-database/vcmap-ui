@@ -13,13 +13,7 @@
 
 .logo
 {
-  height: 4rem;
-}
-
-.version-label
-{
-  font-size: 0.75rem;
-  margin-left: 0.5rem;
+  height: 3.5rem;
 }
 
 .grid
@@ -53,5 +47,21 @@
 .label.bold
 {
   font-style: bold;
+}
+
+/**
+ * Make font size of floating input labels a little larger
+ * when the input is filled
+ */
+.p-float-label
+{
+  .p-inputwrapper-filled ~ label {
+    font-size: 1rem;
+  }
+}
+
+button.p-button.p-component
+{
+  border-radius: 7px;
 }
 </style>

@@ -102,7 +102,7 @@ const closeLoadDataTrackModal = () => {
   
   .rgd-logo {
     padding-right: 1em;
-    width: 80%;
+    width: 70%;
   }
 }
 </style>

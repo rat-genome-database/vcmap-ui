@@ -22,6 +22,7 @@ import Dialog from 'primevue/dialog';
 import Slider from 'primevue/slider';
 import Toast from 'primevue/toast';
 import Tag from 'primevue/tag';
+import RadioButton from 'primevue/radiobutton';
 
 /**
  * Add any plugins/configs that you want to be globally registered:
@@ -53,6 +54,7 @@ const COMPONENTS: {[key: string]: Component} = {
   'Slider': Slider,
   'Toast': Toast,
   'Tag': Tag,
+  'RadioButton': RadioButton,
 };
 
 /**

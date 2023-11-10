@@ -20,6 +20,8 @@ export interface VCMapState
   startPos: number | null; // backbone start position
   stopPos: number | null; // backbone stop position
   gene: Gene | null; // backbone gene
+  flankingGene1: Gene | null;
+  flankingGene2: Gene | null;
   comparativeSpecies: Species[];
   configMode: ConfigurationMode;
 
@@ -79,6 +81,8 @@ export default createStore({
     startPos: null,
     stopPos: null,
     gene: null,
+    flankingGene1: null,
+    flankingGene2: null,
     comparativeSpecies: [],
     configMode: 'gene',
 
@@ -154,7 +158,13 @@ export default createStore({
     },
     selectionToastCount(state: VCMapState, count: number) {
       state.selectionToastCount = count;
-    }
+    },
+    flankingGene1(state: VCMapState, gene: Gene | null) {
+      state.flankingGene1 = gene;
+    },
+    flankingGene2(state: VCMapState, gene: Gene | null) {
+      state.flankingGene2 = gene;
+    },
   },
 
   actions: {
@@ -243,7 +253,11 @@ export default createStore({
     },
     setSelectionToastCount(context: ActionContext<VCMapState, VCMapState>, count: number) {
       context.commit('selectionToastCount', count);
-    }
+    },
+    setFlankingGenes(context: ActionContext<VCMapState, VCMapState>, genes: [gene1: Gene | null, gene2: Gene | null]) {
+      context.commit('flankingGene1', genes[0]);
+      context.commit('flankingGene2', genes[1]);
+    },
   },
 
   getters: {
@@ -253,6 +267,10 @@ export default createStore({
 
     isLoadByPosition: (state: VCMapState) => {
       return state.configMode === 'position';
+    },
+
+    isLoadByFlankingGenes: (state: VCMapState) => {
+      return state.configMode === 'flanking';
     },
   },
 
