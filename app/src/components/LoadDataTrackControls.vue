@@ -166,7 +166,7 @@ function prepopulateConfigOptions()
   {
     let loadedBackbone = store.state.species;
     if (loadedBackbone == null) {
-      console.warn(`Cannot prepopulate data track config options when loaded backbone is null`);
+      logger.warn(`Cannot prepopulate data track config options when loaded backbone is null`);
       return;
     }
     
