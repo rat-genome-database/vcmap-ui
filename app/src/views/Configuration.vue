@@ -135,7 +135,7 @@
             <div v-if="isLoadingGene">
               <ProgressSpinner style="width:50px;height:50px"/>
             </div>
-            <div class="col-12">
+            <div class="col-12 text-left">
               <p class="p-float-label">
                 <AutoComplete
                   input-id="backbone-gene-1-autocomplete"
@@ -151,7 +151,7 @@
               </p>
               <small v-if="flankingGeneError.length > 0" class="warning-text">{{ flankingGeneError }}</small>
             </div>
-            <div class="col-12">
+            <div class="col-12 text-left">
               <p class="p-float-label">
                 <AutoComplete
                   input-id="backbone-gene-2-autocomplete"
