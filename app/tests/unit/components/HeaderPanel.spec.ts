@@ -34,9 +34,10 @@ describe('HeaderPanel', () => {
       }),
     });
 
-    const loadButton = wrapper.get('[data-test="load-config-btn"]');
-    await loadButton.trigger('click');
-    expect(mockPush).toBeCalledTimes(1);
-    expect(mockPush).toHaveBeenCalledWith('/');
+    const newConfigBtn = wrapper.get('[data-test="new-config-btn"]');
+
+    // Check that router-link is configured to open up a new tab and take us to the correct route
+    expect(newConfigBtn.html()).toContain(`to="/"`);
+    expect(newConfigBtn.html()).toContain(`target="_blank"`);
   });
 });

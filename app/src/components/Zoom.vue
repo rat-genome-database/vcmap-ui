@@ -9,7 +9,7 @@
       <p class="zoom-out-label">Zoom Out</p>
     </div>
     <div class="zoom-level-container">
-      <p class="zoom-level-label">{{ Math.round(zoomLevel * 100) / 100.0 }}x</p>
+      <p class="zoom-level-label" data-test="zoom-level-label">{{ Math.round(zoomLevel * 100) / 100.0 }}x</p>
     </div>
     <div class="zoom-in-container">
       <div class="zoom-options" v-for="interval in zoomIntervals" :key="interval">

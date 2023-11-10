@@ -13,20 +13,18 @@
             <a href="https://rgd.mcw.edu/" target="_blank"><img class="rgd-logo" src="../assets/images/rgd_logo.png" alt="RGD logo"
               v-tooltip.bottom="`Go to RGD Home Page`"
             ></a>
-            <router-link to="/" target="_blank">
+            <router-link to="/" target="_blank" data-test="new-config-btn">
               <Button 
               label="New Configuration"
               icon="pi pi-cog" 
               class="p-button-secondary header-btn"
-              v-tooltip.bottom="`Open configuration in new tab`"
-              data-test="load-config-btn" />
+              v-tooltip.bottom="`Open configuration in new tab`" />
             </router-link>
             
             <Button 
               label="Load Data Track" 
               class="p-button-secondary header-btn"
-              @click="openLoadDataTrackModal"
-              data-test="load-config-btn" />
+              @click="openLoadDataTrackModal" />
           </div>
         </template>
         <div class="grid p-d-flex">
@@ -102,7 +100,7 @@ const closeLoadDataTrackModal = () => {
   
   .rgd-logo {
     padding-right: 1em;
-    width: 80%;
+    width: 70%;
   }
 }
 </style>

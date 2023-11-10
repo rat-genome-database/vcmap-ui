@@ -64,6 +64,8 @@ export namespace TestUtils
         startPos: null,
         stopPos: null,
         gene: null,
+        flankingGene1: null,
+        flankingGene2: null,
         comparativeSpecies: [],
         configMode: 'gene',
 

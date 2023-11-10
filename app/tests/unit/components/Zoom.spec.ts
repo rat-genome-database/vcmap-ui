@@ -20,6 +20,7 @@ describe('Zoom', () => {
 
     state.selectedBackboneRegion = new BackboneSelection(test_chromosome);
     state.selectedBackboneRegion.setViewportSelection(0, 100);
+    state.chromosome = test_chromosome;
     store = TestUtils.initStore(state, actions);
   });
 
@@ -32,10 +33,11 @@ describe('Zoom', () => {
       }),
     });
 
+    await wrapper.vm.$nextTick();
+    store.state.detailedBasePairRange = {start:0, stop:test_chromosome.seqLength};
+    await wrapper.vm.$nextTick();
     const zoomLevelLabel = wrapper.get('[data-test="zoom-level-label"]');
-    //state.detailedBasePairRange = {start:0, stop:test_chromosome.seqLength};
-    //expect(zoomLevelLabel.text()).toEqual('1x');
-    expect(zoomLevelLabel.text()).toEqual('NaNx'); // TEMP
+    expect(zoomLevelLabel.text()).toEqual('1x');
   });
 
   // TODO... need to trigger moving the zoom slider in the DOM and testing the params of the setDetailedBasePairRange action

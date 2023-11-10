@@ -1,254 +1,241 @@
 <template>
-  <div class="configuration-header">
+  <div class="configuration-header border-bottom-1 border-bottom-solid">
     <img alt="VCMap Logo" class="logo" src="../assets/images/vcmap_logo_v2.png">
     <Tag icon="pi pi-tag" severity="info" rounded>v{{ VERSION }}</Tag>
     <a  class="logo-link" href="https://rgd.mcw.edu/" target="_blank"><img class="rgd-logo" src="../assets/images/rgd_logo.png" alt="RGD logo"></a>
   </div>
-  <div>
-    <TabView v-model:activeIndex="activeTab" :lazy="true">
-      <TabPanel header="Load by Gene">
-        <div class="grid">
-          <div class="col-12 text-center">
-            <h2>Backbone Configuration</h2>
-          </div>
-          <div class="col-12 text-center">
-            <Button @click="clearConfigSelections" label="Clear All" class="p-button-sm p-button-secondary" style="margin-right: .5em"/>
-          </div>
-          <div class="col-12">
-            <div class="grid">
-              <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1 ">
-                <h4>Species</h4>
-                <Dropdown 
-                  v-model="backboneSpecies" 
-                  :options="speciesOptions" 
-                  :loading="isLoadingSpecies"
-                  @change="setAssemblyOptions($event.value)"
-                  optionLabel="name" 
-                  placeholder="Backbone Species" />
-              </div>
+  <div class="grid mt-0 text-center">
+
+    <!-- Backbone Column -->
+    <div class="col-5 col-offset-1">
+      <div class="lg:col-10 md:col-10 sm:col-12">
+        <h2>
+          Backbone
+        </h2>
+      </div>
+      <div class="lg:col-10 md:col-10 sm:col-12">
+        <p class="p-float-label text-left">
+          <Dropdown 
+            input-id="backbone-species-dropdown"
+            v-model="backboneSpecies" 
+            :options="speciesOptions" 
+            :loading="isLoadingSpecies"
+            @change="setAssemblyOptions($event.value)"
+            optionLabel="name" />
+          <label for="backbone-species-dropdown">Backbone Species</label>
+        </p>
+      </div>
+      <div class="lg:col-10 md:col-10 sm:col-12">
+        <p class="p-float-label text-left">
+          <Dropdown 
+            input-id="backbone-assembly-dropdown"
+            v-model="backboneAssembly" 
+            :options="backboneAssemblies" 
+            :disabled="!backboneSpecies"
+            @change="setChromosomeOptions($event.value)"
+            :optionLabel="getAssemblyOptionLabel" />
+          <label for="backbone-assembly-dropdown">Backbone Assembly</label>
+        </p>
+      </div>
+      <div class="p-fluid grid">
+        <div class="col-12 text-left">
+          <p style="font-weight: bold;">Load by:</p>
+          <div class="flex flex-wrap gap-3">
+            <div class="flex align-items-center">
+                <RadioButton v-model="activeTab" inputId="load-by-gene" name="Gene" :value=0 />
+                <label for="load-by-gene" class="ml-2">Gene</label>
             </div>
-            <div class="grid">
-              <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
-                <h4>Assembly</h4>
-                <Dropdown 
-                  v-model="backboneAssembly" 
-                  :options="backboneAssemblies" 
-                  :disabled="!backboneSpecies"
-                  @change="setChromosomeOptions($event.value)"
-                  :optionLabel="getAssemblyOptionLabel" 
-                  placeholder="Backbone Assembly" />
-              </div>
+            <div class="flex align-items-center">
+                <RadioButton v-model="activeTab" inputId="load-by-position" name="Position" :value=1 />
+                <label for="load-by-position" class="ml-2">Position</label>
             </div>
-            <div class="p-fluid grid">
-              <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
-                <h4>Gene Symbol</h4>
-                <div v-if="isLoadingGene">
-                  <ProgressSpinner style="width:50px;height:50px"/>
-                </div>
+            <div class="flex align-items-center">
+                <RadioButton v-model="activeTab" inputId="load-by-flanking" name="Flanking Genes" :value=2 />
+                <label for="load-by-flanking" class="ml-2">Flanking Genes</label>
+            </div>
+          </div>
+        </div>
+        <template v-if="activeTab === TABS.gene">
+          <div class="lg:col-10 md:col-10 sm:col-12">
+            <div v-if="isLoadingGene">
+              <ProgressSpinner style="width:50px;height:50px"/>
+            </div>
+            <p class="p-float-label">
+              <AutoComplete
+                input-id="backbone-gene-autocomplete"
+                v-model="backboneGene"
+                :suggestions="geneSuggestions"
+                :disabled="!backboneSpecies"
+                @complete="searchGene($event)"
+                @item-select="setGeneChromosomeAndDefaultStartAndStopPositions($event.value)"
+                :option-label="(gene: Gene) => `${gene.symbol} (Chr${gene.chromosome})`"
+                :minLength="3"
+              />
+              <label for="backbone-gene-autocomplete">Gene Symbol</label>
+            </p>
+          </div>
+          <div class="lg:col-10 md:col-10 sm:col-12">
+            <p v-if="geneChromosome" class="label-description">
+              Chromosome: {{geneChromosome?.chromosome}} <span v-if="geneChromosome">(Length: {{Formatter.addCommasToBasePair(geneChromosome.seqLength)}} bp)</span>
+            </p>
+            <p v-if="geneOptionStartPosition" class="label-description" >
+              Gene Start: <span v-if="geneOptionStartPosition">{{geneOptionStartPosition}} bp</span>
+            </p>
+            <p v-if="geneOptionStopPosition" class="label-description">
+              Gene Stop: <span>{{geneOptionStopPosition}} bp</span>
+            </p>
+          </div>
+        </template>
+        <template v-else-if="activeTab === TABS.position">
+          <div class="lg:col-10 md:col-10 sm:col-12">
+            <p class="p-float-label text-left">
+              <Dropdown 
+                input-id="backbone-chromosome-dropdown"
+                @change="setDefaultStartAndStopPositions($event.value)" 
+                v-model="backboneChromosome"
+                :disabled = "!chromosomeOptions.length"
+                :options="chromosomeOptions"
+                :loading="isLoadingChromosome"
+                optionLabel="chromosome"
+              />
+              <label for="backbone-chromosome-dropdown">Backbone Chromosome</label>
+            </p>
+          </div>
+          <div class="lg:col-10 md:col-10 sm:col-12">
+            <p v-if="backboneChromosome" class="p-float-label">
+              <InputNumber
+                input-id="chromosome-start-input"
+                showButtons
+                v-model="startPosition"
+                :disabled="!backboneChromosome"
+                :step="1000"
+                :max="(maxPosition != null) ? maxPosition - 1 : 1"
+                :min="0"
+              />
+              <label for="chromosome-start-input">Start Position (Min: 0bp)</label>
+            </p>
+          </div>
+          <div class="lg:col-10 md:col-10 sm:col-12">
+            <p v-if="backboneChromosome" class="p-float-label">
+              <InputNumber
+                input-id="chromosome-stop-position"
+                showButtons
+                v-model="stopPosition"
+                :disabled="!backboneChromosome"
+                :step="1000"
+                :max="maxPosition ?? undefined"
+                :min="1"
+              />
+              <label for="chromosome-stop-position">Stop Position (Max: {{Formatter.addCommasToBasePair(maxPosition)}}bp)</label>
+            </p>
+          </div>
+        </template>
+        <template v-else>
+          <div class="lg:col-10 md:col-10 sm:col-12">
+            <div v-if="isLoadingGene">
+              <ProgressSpinner style="width:50px;height:50px"/>
+            </div>
+            <div class="col-12 text-left">
+              <p class="p-float-label">
                 <AutoComplete
-                  v-model="backboneGene"
+                  input-id="backbone-gene-1-autocomplete"
+                  v-model="flankingGene1"
                   :suggestions="geneSuggestions"
                   :disabled="!backboneSpecies"
                   @complete="searchGene($event)"
-                  @item-select="setGeneChromosomeAndDefaultStartAndStopPositions($event.value)"
-                  field="symbol"
+                  @item-select="validateFlankingGenesAndSetChromosome"
+                  :option-label="(gene: Gene) => `${gene.symbol} (Chr${gene.chromosome})`"
                   :minLength="3"
                 />
-              </div>
+                <label for="backbone-gene-1-autocomplete">Gene 1</label>
+              </p>
+              <small v-if="flankingGeneError.length > 0" class="warning-text">{{ flankingGeneError }}</small>
             </div>
-            <div class="grid">
-              <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
-                <p v-if="geneChromosome" class="label-description">
-                  Chromosome: {{geneChromosome?.chromosome}} <span v-if="geneChromosome">(Length: {{Formatter.addCommasToBasePair(geneChromosome.seqLength)}} bp)</span>
-                </p>
-                <p v-if="geneOptionStartPosition" class="label-description" >
-                  Gene Start: <span v-if="geneOptionStartPosition">{{geneOptionStartPosition}} bp</span>
-                </p>
-                <p v-if="geneOptionStopPosition" class="label-description">
-                  Gene Stop: <span>{{geneOptionStopPosition}} bp</span>
-                </p>
-              </div>
-            </div>
-            <div class="p-fluid grid">
-              <div class="lg:col-2 lg:col-offset-3 md:col-1 md:col-offset-2 sm:col-2 sm:col-offset-1">
-                
-              </div>
-              <div class="lg:col-2 md:col-3 sm:col-4">
-                
-              </div>
-              <div class="lg:col-2 md:col-3 sm:col-4">
-                
-              </div>
-            </div>
-            <div class="col-12 text-center">
-              <h2>Comparative Species</h2>
-            </div>
-            <div class="col-12 text-center">
-              <Button @click="addTempComparativeSpecies" :label="(comparativeSpeciesLimitReached) ? 'Limit Reached' : 'Add Species'" :disabled="comparativeSpeciesLimitReached" icon="pi pi-plus-circle" class="p-button" style="margin-right: .5em"/>
-            </div>
-            <div class="col-6 col-offset-3">
-              <Message severity="warn" closeable v-if="comparativeSpeciesSelections.length >= 4">Selecting 4 or more species might cause display errors</Message>
-            </div>
-            <div class="grid" v-for="(species, index) in comparativeSpeciesSelections" :key="index">
-              <div class="lg:col-3 lg:col-offset-3 md:col-3 md:col-offset-2 sm:col-4 sm:col-offset-1">
-                <Dropdown 
-                  v-model="comparativeSpeciesSelections[index].typeKey" 
-                  :loading="isLoadingSpecies"
-                  :options="speciesOptions"
-                  @change="setPrimaryAssembly(index)"
-                  optionValue="typeKey"
-                  optionLabel="name" 
-                  placeholder="Comparative Species"
-                  />
-              </div>
-              <div class="lg:col-2 md:col-3 sm:col-4">
-                <Dropdown 
-                  v-model="comparativeSpeciesSelections[index].mapKey"
-                  :disabled="comparativeSpeciesSelections[index].typeKey === 0"
-                  :options="getAssemblyOptionsForSpecies(index)"
-                  :optionLabel="getAssemblyOptionLabel"
-                  @change="checkAgainstBackboneSpeciesAndAssembly(comparativeSpeciesSelections[index])"
-                  optionValue="key"
-                  placeholder="Comparative Assembly"
-                  :class="{'border-warning': comparativeSpeciesSelections[index].showWarning}"
-                  />
-                <small v-if="comparativeSpeciesSelections[index].showWarning" class="warning-text">Warning: Selected same species and assembly as the backbone</small>
-              </div>
-              <div class="lg:col-1 md:col-2 sm:col-2">
-                <Button @click="removeTempComparativeSpecies(index)" label="Remove" icon="pi pi-minus-circle" class="p-button-sm p-button-danger" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </TabPanel>
-
-      <TabPanel header="Load by Position" >
-        <div class="grid">
-          <div class="col-12 text-center">
-            <h2>Backbone Configuration</h2>
-          </div>
-          <div class="col-12 text-center">
-            <Button @click="clearConfigSelections" label="Clear All" class="p-button-sm p-button-secondary" style="margin-right: .5em"/>
-          </div>
-          <div class="col-12">
-            <div class="grid">
-              <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
-                <h4>Species</h4>
-                <Dropdown 
-                  v-model="backboneSpecies" 
-                  :options="speciesOptions" 
-                  :loading="isLoadingSpecies"
-                  @change="setAssemblyOptions($event.value)"
-                  optionLabel="name"
-                  placeholder="Backbone Species" />
-              </div>
-            </div>
-            <div class="grid">
-              <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
-                <h4>Assembly</h4>
-                <Dropdown 
-                  v-model="backboneAssembly" 
-                  :options="backboneAssemblies" 
+            <div class="col-12 text-left">
+              <p class="p-float-label">
+                <AutoComplete
+                  input-id="backbone-gene-2-autocomplete"
+                  v-model="flankingGene2"
+                  :suggestions="geneSuggestions"
                   :disabled="!backboneSpecies"
-                  @change="setChromosomeOptions($event.value)"
-                  :optionLabel="(assembly: SpeciesMap) => assembly.primaryRefAssembly ? `${assembly.name} (primary)` : assembly.name" 
-                  placeholder="Backbone Assembly" />
-              </div>
-            </div>
-            <div class="grid">
-              <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
-                <h4>Chromosome</h4>
-                <Dropdown 
-                  @change="setDefaultStartAndStopPositions($event.value)" 
-                  v-model="backboneChromosome"
-                  :disabled = "!chromosomeOptions.length"
-                  :options="chromosomeOptions"
-                  :loading="isLoadingChromosome"
-                  optionLabel="chromosome"
-                  />
-              </div>
-            </div>
-            <div class="p-fluid grid">
-              <div class="lg:col-3 lg:col-offset-3 md:col-4 md:col-offset-1 sm:col-5 sm:col-offset-1">
-                <h4 :class="{'config-label': backboneChromosome}">Start Position</h4>
-                <p v-if="backboneChromosome" class="label-description">Min: 0bp</p>
-                <InputNumber
-                  showButtons
-                  v-model="startPosition"
-                  :disabled="!backboneChromosome"
-                  :step="1000"
-                  :max="(maxPosition != null) ? maxPosition - 1 : 1"
-                  :min="0"
+                  @complete="searchGene($event)"
+                  @item-select="validateFlankingGenesAndSetChromosome"
+                  :option-label="(gene: Gene) => `${gene.symbol} (Chr${gene.chromosome})`"
+                  :minLength="3"
                 />
-              </div>
-              <div class="lg:col-3 md:col-3 sm:col-5">
-                <div>
-                  <h4 :class="{'config-label': backboneChromosome}">Stop Position</h4>
-                  <p v-if="maxPosition" class="label-description">Max: {{Formatter.addCommasToBasePair(maxPosition)}}bp</p>
-                  <InputNumber
-                    showButtons
-                    v-model="stopPosition"
-                    :disabled="!backboneChromosome"
-                    :step="1000"
-                    :max="maxPosition ?? undefined"
-                    :min="1"
-                  />
-                </div>
-              </div>
-            </div>
-            <div class="col-12 text-center">
-              <h2>Comparative Species</h2>
-            </div>
-            <div class="col-12 text-center">
-              <Button @click="addTempComparativeSpecies" :label="(comparativeSpeciesLimitReached) ? 'Limit Reached' : 'Add Species'" :disabled="comparativeSpeciesLimitReached" icon="pi pi-plus-circle" class="p-button" style="margin-right: .5em"/>
-            </div>
-            <div class="col-6 col-offset-3">
-              <Message severity="warn" closeable v-if="comparativeSpeciesSelections.length >= 4">Selecting 4 or more species might cause display errors</Message>
-            </div>
-            <div class="grid" v-for="(species, index) in comparativeSpeciesSelections" :key="index">
-              <div class="lg:col-3 lg:col-offset-3 md:col-3 md:col-offset-2 sm:col-4 sm:col-offset-1">
-                <Dropdown 
-                  v-model="comparativeSpeciesSelections[index].typeKey" 
-                  :loading="isLoadingSpecies"
-                  :options="speciesOptions"
-                  @change="setPrimaryAssembly(index)"
-                  optionValue="typeKey"
-                  optionLabel="name" 
-                  placeholder="Comparative Species"
-                  />
-              </div>
-              <div class="lg:col-2 md:col-3 sm:col-4">
-                <Dropdown 
-                  v-model="comparativeSpeciesSelections[index].mapKey"
-                  :disabled="comparativeSpeciesSelections[index].typeKey === 0"
-                  :options="getAssemblyOptionsForSpecies(index)"
-                  :optionLabel="getAssemblyOptionLabel"
-                  @change="checkAgainstBackboneSpeciesAndAssembly(comparativeSpeciesSelections[index])"
-                  optionValue="key"
-                  placeholder="Comparative Assembly"
-                  :class="{'border-warning': comparativeSpeciesSelections[index].showWarning}"
-                  />
-                <small v-if="comparativeSpeciesSelections[index].showWarning" class="warning-text">Warning: Selected same species and assembly as the backbone</small>
-              </div>
-              <div class="lg:col-1 md:col-2 sm:col-2">
-                <Button @click="removeTempComparativeSpecies(index)" label="Remove" icon="pi pi-minus-circle" class="p-button-sm p-button-danger" />
-              </div>
+                <label for="backbone-gene-2-autocomplete">Gene 2</label>
+              </p>
+              <small v-if="flankingGeneError.length > 0" class="warning-text">{{ flankingGeneError }}</small>
             </div>
           </div>
-        </div>
-      </TabPanel>
-    </TabView>
-    <div class="grid">
-      <div class="lg:col-6 lg:col-offset-3 md:col-8 md:col-offset-2 sm:col-10 sm:col-offset-1">
-        <Button 
-          @click="saveConfigToStoreAndGoToMainScreen" 
-          :disabled="!isValidConfig"
-          label="Load VCMap" 
-          icon="pi pi-play" 
-          class="p-button-lg p-button-success" />
+        </template>
       </div>
     </div>
+
+    <!-- Comparative Species Column -->
+    <div class="col-6 border-left-1 border-400 mt-2 mb-2">
+      <div class="col-10 col-offset-1">
+        <h2>
+          Comparative Species
+        </h2>
+      </div>
+      <div class="col-11 col-offset-1 text-left">
+        <Button
+          @click="addTempComparativeSpecies"
+          :label="(comparativeSpeciesLimitReached) ? 'Limit Reached' : 'Add Species'"
+          :disabled="comparativeSpeciesLimitReached"
+          icon="pi pi-plus-circle"
+          class="p-button mb-2" />
+      </div>
+      <p v-if="comparativeSpeciesSelections == null || comparativeSpeciesSelections.length === 0">No comparative species selected...</p>
+      <div>
+        <Message severity="warn" closeable v-if="comparativeSpeciesSelections.length >= 4">Selecting 4 or more species might cause display errors</Message>
+      </div>
+      <div class="grid" v-for="(species, index) in comparativeSpeciesSelections" :key="index">
+        <div class="lg:col-offset-1 lg:col-4 md:col-5 sm:col-5 text-left">
+          <Dropdown 
+            v-model="comparativeSpeciesSelections[index].typeKey" 
+            :loading="isLoadingSpecies"
+            :options="speciesOptions"
+            @change="setPrimaryAssembly(index)"
+            optionValue="typeKey"
+            optionLabel="name" 
+            placeholder="Comparative Species"
+            />
+        </div>
+        <div class="lg:col-4 md:col-5 sm:col-5 text-left">
+          <Dropdown 
+            v-model="comparativeSpeciesSelections[index].mapKey"
+            :disabled="comparativeSpeciesSelections[index].typeKey === 0"
+            :options="getAssemblyOptionsForSpecies(index)"
+            :optionLabel="getAssemblyOptionLabel"
+            @change="checkAgainstBackboneSpeciesAndAssembly(comparativeSpeciesSelections[index])"
+            optionValue="key"
+            placeholder="Comparative Assembly"
+            :class="{'border-warning': comparativeSpeciesSelections[index].showWarning}"
+            />
+          <small v-if="comparativeSpeciesSelections[index].showWarning" class="warning-text">Warning: Selected same species and assembly as the backbone</small>
+        </div>
+        <div class="lg:col-1 md:col-1 sm:col-1">
+          <Button @click="removeTempComparativeSpecies(index)" label="Remove" icon="pi pi-minus-circle" class="p-button-sm p-button-danger" />
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 flex flex-wrap gap-3 justify-content-center border-top-1 border-top-solid">
+      <Button
+        @click="clearConfigSelections"
+        label="Clear All"
+        class="p-button-sm p-button-secondary" />
+      <Button 
+        @click="saveConfigToStoreAndGoToMainScreen" 
+        :disabled="!isValidConfig"
+        label="Load VCMap" 
+        icon="pi pi-play" 
+        class="p-button-lg p-button-success" />
+    </div>
   </div>
+
   <VCMapDialog v-model:show="showError" header="Error" :message="errorMessage" theme="error" />
 </template>
 
@@ -285,7 +272,8 @@ const $log = useLogger();
 // Translate from configuration mode to tabs on this page
 const TABS: { [key in ConfigurationMode]: number } = {
   gene: 0,
-  position: 1
+  position: 1,
+  flanking: 2,
 };
 
 const activeTab = ref(TABS.gene);
@@ -310,6 +298,11 @@ const isLoadingChromosome = ref(false);
 const startPosition = ref<number | null>(null);
 const stopPosition = ref<number | null>(null);
 const maxPosition = ref<number | null>(null);
+
+const flankingGene1 = ref<Gene | null>(null);
+const flankingGene2 = ref<Gene | null>(null);
+const flankingChromosome = ref<Chromosome | null>(null);
+const flankingGeneError = ref<string>('');
 
 const comparativeSpeciesSelections = ref<ComparativeSpeciesSelection[]>([]);
 
@@ -337,11 +330,15 @@ const isValidConfig = computed(() => {
 
   if (activeTab.value === TABS.position)
   {
-    return backboneChromosome.value;
+    return backboneChromosome.value != null;
   }
   else if (activeTab.value === TABS.gene)
   {
-    return geneChromosome.value;
+    return geneChromosome.value != null;
+  }
+  else if (activeTab.value === TABS.flanking)
+  {
+    return flankingGene1.value != null && flankingGene2.value != null && flankingChromosome.value != null && flankingGeneError.value === '';
   }
 
   return false;
@@ -392,6 +389,9 @@ function setAssemblyOptions(species: Species | null)
   geneChromosome.value = null;
   geneOptionStartPosition.value = null;
   geneOptionStopPosition.value = null;
+  flankingGene1.value = null;
+  flankingGene2.value = null;
+  flankingChromosome.value = null;
 
   if (species == null)
   {
@@ -415,6 +415,9 @@ async function setChromosomeOptions(map: SpeciesMap | null)
   geneChromosome.value = null;
   geneOptionStartPosition.value = null;
   geneOptionStopPosition.value = null;
+  flankingGene1.value = null;
+  flankingGene2.value = null;
+  flankingChromosome.value = null;
 
   if (map == null)
   {
@@ -466,6 +469,28 @@ async function setGeneChromosomeAndDefaultStartAndStopPositions(gene: Gene | nul
 
   geneOptionStartPosition.value = gene?.start ?? 0;
   geneOptionStopPosition.value = gene?.stop ?? 0;
+}
+
+async function validateFlankingGenesAndSetChromosome()
+{
+  if (flankingGene1.value == null || flankingGene2.value == null || backboneSpecies.value == null) {
+    return;
+  }
+
+  if (flankingGene1.value && flankingGene2.value && flankingGene1.value.chromosome !== flankingGene2.value.chromosome) {
+    flankingGeneError.value = 'Genes must belong to the same chromosome';
+    return;
+  }
+
+  flankingGeneError.value = '';
+  try
+  {
+    flankingChromosome.value = await ChromosomeApi.getChromosomeInfo(flankingGene1.value.chromosome, backboneSpecies.value.activeMap.key);
+  }
+  catch (err: any)
+  {
+    onApiError(err, 'An error occurred while getting chromosome data for the gene');
+  }
 }
 
 async function prepopulateConfigOptions()
@@ -576,6 +601,20 @@ async function prepopulateConfigOptions()
     }
     geneChromosome.value = backboneChromosome.value;
   }
+
+  if (store.state.flankingGene1 && store.state.flankingGene2)
+  {
+    flankingGene1.value = store.state.flankingGene1;
+    flankingGene2.value = store.state.flankingGene2;
+
+    if (!store.state.chromosome && backboneSpecies.value != null)
+    {
+      // If chromosome not present in the store, set it based on the gene
+      const chromosome = await ChromosomeApi.getChromosomeInfo(flankingGene1.value.chromosome, backboneAssembly.value.key);
+      backboneChromosome.value = chromosome;
+    }
+    flankingChromosome.value = backboneChromosome.value;
+  }
   
   // Pre-populate previously selected comparative species
   if (store.state.comparativeSpecies)
@@ -613,15 +652,34 @@ function saveConfigToStoreAndGoToMainScreen()
     store.dispatch('setChromosome', geneChromosome.value);
     // If loading by gene, set the selectedGeneIds based on search, and selected data panel
     store.dispatch('setSelectedGeneIds', [backboneGene.value?.rgdId] || []);
+
+    // Clear out data for any other load types:
+    store.dispatch('setStartPosition', null);
+    store.dispatch('setStopPosition', null);
+    store.dispatch('setFlankingGenes', [null, null]);
   }
   else if (activeTab.value === TABS.position)
   {
     store.dispatch('setChromosome', backboneChromosome.value);
     store.dispatch('setStartPosition', startPosition.value ?? 0);
     store.dispatch('setStopPosition', stopPosition.value ?? backboneChromosome.value?.seqLength);
-    store.dispatch('setGene', null);
     // If loading by position, make sure selectedGeneIds is empty
     store.dispatch('setSelectedGeneIds', []);
+
+    // Clear out data for any other load types:
+    store.dispatch('setGene', null);
+    store.dispatch('setFlankingGenes', [null, null]);
+  }
+  else if (activeTab.value === TABS.flanking)
+  {
+    store.dispatch('setChromosome', flankingChromosome.value);
+    store.dispatch('setFlankingGenes', [flankingGene1.value, flankingGene2.value]);
+
+    // Clear out data for any other load types:
+    store.dispatch('setSelectedGeneIds', [flankingGene1.value?.rgdId, flankingGene2.value?.rgdId]);
+    store.dispatch('setStartPosition', null);
+    store.dispatch('setStopPosition', null);
+    store.dispatch('setGene', null);
   }
   else
   {
@@ -677,12 +735,19 @@ function getConfigModeFromActiveTab(tabValue: number): ConfigurationMode
 
 function clearPriorBackboneSelectionIfNecessary()
 {
-  if (store.state.species?.typeKey !== backboneSpecies.value?.typeKey || store.state.species?.activeMap.key !== backboneSpecies.value?.activeMap.key)
+  // If species or assembly has changed, or if start and stop are not defined from a previous configuration
+  if (
+    store.state.species?.typeKey !== backboneSpecies.value?.typeKey
+    || store.state.species?.activeMap.key !== backboneSpecies.value?.activeMap.key
+    || store.state.startPos == null
+    || store.state.stopPos == null
+  )
   {
     store.dispatch('clearBackboneSelection');
     return;
   }
 
+  // If loading by gene and the chromosome, start, or stop positions are different from a previous configuration
   if (activeTab.value === TABS.gene
     && (store.state.chromosome?.chromosome !== geneChromosome.value?.chromosome
       || store.state.startPos !== geneOptionStartPosition.value
@@ -692,10 +757,28 @@ function clearPriorBackboneSelectionIfNecessary()
     return;
   }
   
+  // If loading by position and the chromosome, start, or stop positions are different from a previous configuration
   if (activeTab.value === TABS.position 
     && (store.state.chromosome?.chromosome !== backboneChromosome.value?.chromosome
       || store.state.startPos !== startPosition.value
       || store.state.stopPos !== stopPosition.value))
+  {
+    store.dispatch('clearBackboneSelection');
+    return;
+  }
+
+  // If loading by flanking genes and the chromosome has changed, or the start/stop positions from the previous configuration
+  // are not within the range of the flanking genes
+  if (activeTab.value === TABS.flanking
+    && (
+      (flankingGene1.value == null || flankingGene2.value == null)
+      || (
+        (store.state.chromosome?.chromosome !== flankingChromosome.value?.chromosome
+        || store.state.startPos <= Math.min(flankingGene1.value.start, flankingGene2.value.start)
+        || store.state.stopPos >= Math.max(flankingGene1.value.stop, flankingGene2.value.stop))
+      )
+    )
+  )
   {
     store.dispatch('clearBackboneSelection');
     return;
@@ -792,6 +875,8 @@ function clearConfigSelections()
   geneOptionStopPosition.value = null;
   comparativeSpeciesSelections.value = [];
   chromosomeOptions.value = [];
+  flankingGene1.value = null;
+  flankingGene2.value = null;
 
   store.dispatch('clearConfiguration');
 }
@@ -814,11 +899,6 @@ $warning-color: #a3852b;
   color: $warning-color
 }
 
-.start-button
-{
-  margin-top: 1em;
-}
-
 .configuration-header
 {
   display: flex;
@@ -829,7 +909,7 @@ $warning-color: #a3852b;
   }
   .rgd-logo {
     margin-left: auto;
-    width: 80%;
+    width: 70%;
   }
   .logo-link {
     margin-left: auto;
@@ -840,10 +920,5 @@ p.label-description
 {
   margin: 0 0 0.5rem 0;
   font-style: italic;
-}
-
-.config-label
-{
-  margin-bottom: 0;
 }
 </style>
