@@ -268,6 +268,32 @@ async function initVCMapProcessing()
     store.dispatch('setSelectedGeneIds', rgdIds);
     store.dispatch('setSelectedData', selectedData);
   }
+  else if (store.getters.isLoadByFlankingGenes && store.state.flankingGene1 != null && store.state.flankingGene2 != null)
+  {
+    //
+    // Load by Flanking Genes
+    const flankingGene1 = store.state.flankingGene1;
+    const flankingGene2 = store.state.flankingGene2;
+    selectionStart = flankingGene1.start < flankingGene2.start
+      ? flankingGene1.start
+      : flankingGene2.start;
+    selectionStop = flankingGene1.stop > flankingGene2.stop
+      ? flankingGene1.stop
+      : flankingGene2.stop;
+
+    // Auto-select the gene and its orthologs
+    const {
+      rgdIds: flankingGene1Ids,
+      selectedData: flankingGene1SelectedData,
+    } = getNewSelectedData(store, flankingGene1, geneList.value);
+    const {
+      rgdIds: flankingGene2Ids,
+      selectedData: flankingGene2SelectedData,
+    } = getNewSelectedData(store, flankingGene2, geneList.value);
+    
+    store.dispatch('setSelectedGeneIds', [...flankingGene1Ids, ...flankingGene2Ids]);
+    store.dispatch('setSelectedData', [...flankingGene1SelectedData, ...flankingGene2SelectedData]);
+  }
   else if (store.getters.isLoadByPosition && store.state.startPos != null && store.state.stopPos != null)
   {
     //
