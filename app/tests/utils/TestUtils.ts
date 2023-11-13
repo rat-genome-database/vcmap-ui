@@ -77,6 +77,7 @@ export namespace TestUtils
         selectedData: null,
         loadedGenes: null,
         selectedGeneIds: [],
+        isDataPanelCollapsed: false,
 
         isDetailedPanelUpdating: false,
         isOverviewPanelUpdating: false,

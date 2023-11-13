@@ -5,7 +5,7 @@
     @click="onInspectPressed"
   /> -->
   <div class="grid">
-    <div class="col-9">
+    <div :class="{ 'col-9':panelCollapsed==false, 'col-11':panelCollapsed==true }">
       <SVGViewbox
         :geneList="geneList"
         :synteny-tree="syntenyTree"
@@ -14,8 +14,15 @@
       />
       <Toast />
     </div>
-    <div class="col-3">
-      <SelectedDataPanel :selected-data="store.state.selectedData" :gene-list="geneList" />
+    <div :class="{ 'col-3':panelCollapsed==false, 'col-1':panelCollapsed==true, 'collapsed': panelCollapsed }">
+      <div class="collapse-button-container">
+        <button class="collapse-button" @click="togglePanelCollapse">
+          <i :class="{ 'collapsed': panelCollapsed, 'pi pi-chevron-left': !panelCollapsed, 'pi pi-chevron-right': panelCollapsed }"></i>
+        </button>
+      </div>
+      <div class="selected-data-content"  :style="{ 'transition-delay': panelCollapsed ? '.5s' : '0.5s' }">
+        <SelectedDataPanel :selected-data="store.state.selectedData" :gene-list="geneList" />
+      </div>
     </div>
   </div>
   <VCMapDialog 
@@ -65,6 +72,7 @@ const { showDialog, dialogHeader, dialogMessage, showDialogBackButton, dialogThe
 
 const isLoading = ref(false);
 const proceedAfterError = ref(false);
+const panelCollapsed = ref(store.state.isDataPanelCollapsed);
 
 // Our synteny tree keyed by MapId
 // TODO: Consider adding a map for mapKey -> Species
@@ -710,4 +718,55 @@ async function loadSyntenyVariants(mapKeys: number[] | null, triggerUpdate: bool
     store.dispatch('setIsUpdatingVariants', true);
   }
 }
+
+function togglePanelCollapse()
+{
+  panelCollapsed.value = !panelCollapsed.value;
+  store.dispatch('setDataPanelCollapsed', panelCollapsed.value);
+}
 </script>
+
+<style lang="scss" scoped>
+.col-9 {
+  padding-right: 0;
+  transition: width 0.5s ease;
+}
+.col-11 {
+  padding-right: 0;
+  transition: width 0.5s ease;
+}
+.col-3 {
+  position: relative;
+  transition: width 0.5s ease;
+  right: 0;
+}
+.col-1 {
+  position: relative;
+  transition: right 0.5s ease;
+  right: 0;
+}
+
+.collapsed {
+  right: -7%;
+}
+
+.collapse-button {
+  position: absolute;
+  top: 50%;
+  left: -10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #ccc;
+  border-color: #0288D1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.collapsed .collapse-button {
+  transition: left 0.5s ease;
+  left: -10px;
+}
+</style>
