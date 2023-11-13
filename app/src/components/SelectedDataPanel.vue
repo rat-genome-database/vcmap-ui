@@ -39,7 +39,7 @@
             />
             <Button 
               v-tooltip.top="`Sort by Start Position`"
-              :icon="sortByPosition === 'desc' ? 'pi pi-sort-numeric-down-alt' : 'pi pi-sort-numeric-down'"
+              :icon="sortByPosition === 'off' ? 'pi pi-sort-alt-slash' : (sortByPosition === 'desc' ? 'pi pi-sort-numeric-down-alt' : 'pi pi-sort-numeric-down')"
               :class="{'p-button-sm': true, 'sort-button-inactive': sortByPosition === 'off'}"
               @click="positionSort"
             />
@@ -157,12 +157,12 @@ const clearSelectedGenes = () => {
 
 const symbolSort = () => {
   sortBySymbol.value = !sortBySymbol.value;
-}
+};
 const positionSort = () => {
   const options = ['asc', 'desc', 'off'];
   const current = options.indexOf(sortByPosition.value);
-  sortByPosition.value = options[(current + 1) % options.length]
-}
+  sortByPosition.value = options[(current + 1) % options.length];
+};
 const searchGene = (event: {query: string}) => {
   let matches: Gene[] = [];
   props.geneList.forEach((gene: Gene) => {
