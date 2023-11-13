@@ -20,7 +20,8 @@
           <div v-if="numberOfResults > 0">
             {{numberOfResults}} Selected Genes
           </div>
-          <div class="clear-selection-btn">
+          <div class="selected-data-actions">
+            <div class="clear-selection-btn">
             <Button
                 v-tooltip.right="`Clear Selection`"
                 class="p-button-info p-button-sm p-button-warning"
@@ -33,13 +34,16 @@
             <Button
               v-tooltip.top="`Sort by Label`"
               icon="pi pi-sort-alpha-down"
+              :class="{'p-button-sm': true, 'sort-button-inactive': !sortBySymbol}"
               @click="symbolSort"
             />
             <Button 
-              v-tooltip.top="`Sort by Position`"
-              icon="pi pi-sort-numeric-down"
+              v-tooltip.top="`Sort by Start Position`"
+              :icon="sortByPosition === 'desc' ? 'pi pi-sort-numeric-down-alt' : 'pi pi-sort-numeric-down'"
+              :class="{'p-button-sm': true, 'sort-button-inactive': sortByPosition === 'off'}"
               @click="positionSort"
             />
+          </div>
           </div>
         </div>
       </div>
@@ -142,8 +146,6 @@ watch(() => props.selectedData, () => {
   {
     numberOfResults.value = props.selectedData.filter((d: { type: string; }) => d.type === 'Gene').length;
   }
-
-  console.log('SELECTED DATA', props.selectedData);
 });
 
 const clearSelectedGenes = () => {
@@ -259,4 +261,18 @@ const sortedSelectedData = computed(() => {
 .sort-button-inactive {
   opacity: 0.6
 }
+
+.sort-options {
+  display: flex;
+  gap: 5px;
+}
+
+.selected-data-actions {
+  display: flex;
+  align-items: end;
+};
+
+.selected-data-actions > :not(:last-child) {
+  margin-right: 100px;
+};
 </style>
