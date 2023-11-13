@@ -17,7 +17,7 @@
     <div :class="{ 'col-3':panelCollapsed==false, 'col-1':panelCollapsed==true, 'collapsed': panelCollapsed }">
       <div class="collapse-button-container">
         <button class="collapse-button" @click="togglePanelCollapse">
-          <i :class="{ 'collapsed': panelCollapsed, 'pi pi-chevron-left': !panelCollapsed, 'pi pi-chevron-right': panelCollapsed }"></i>
+          <i class="pi pi-chevron-left" :class="{ 'collapsed': panelCollapsed }"></i>
         </button>
       </div>
       <div class="selected-data-content"  :style="{ 'transition-delay': panelCollapsed ? '.5s' : '0.5s' }">
@@ -727,6 +727,9 @@ function togglePanelCollapse()
 </script>
 
 <style lang="scss" scoped>
+.grid {
+  overflow-x: hidden;
+}
 .col-9 {
   padding-right: 0;
   transition: width 0.5s ease;
@@ -747,7 +750,8 @@ function togglePanelCollapse()
 }
 
 .collapsed {
-  right: -7%;
+  transition: transform 0.5s ease;
+  transform: translateX(85%);
 }
 
 .collapse-button {
@@ -768,5 +772,14 @@ function togglePanelCollapse()
 .collapsed .collapse-button {
   transition: left 0.5s ease;
   left: -10px;
+}
+
+.collapse-button i {
+  transition: transform 0.5s ease;
+}
+
+.collapsed i {
+  transition: transform 0.5s ease;
+  transform: rotate(180deg);
 }
 </style>
