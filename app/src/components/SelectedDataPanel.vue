@@ -20,7 +20,8 @@
           <div v-if="numberOfResults > 0">
             {{numberOfResults}} Selected Genes
           </div>
-          <div class="clear-selection-btn">
+          <div class="selected-data-actions">
+            <div class="clear-selection-btn">
             <Button
                 v-tooltip.right="`Clear Selection`"
                 class="p-button-info p-button-sm p-button-warning"
@@ -28,6 +29,21 @@
                 @click="clearSelectedGenes"
                 rounded
             />
+          </div>
+          <div class="sort-options">
+            <Button
+              v-tooltip.top="`Sort by Label`"
+              icon="pi pi-sort-alpha-down"
+              :class="{'p-button-sm': true, 'sort-button-inactive': !sortBySymbol}"
+              @click="symbolSort"
+            />
+            <Button 
+              v-tooltip.top="`Sort by Start Position`"
+              :icon="sortByPosition === 'off' ? 'pi pi-sort-alt-slash' : (sortByPosition === 'desc' ? 'pi pi-sort-numeric-down-alt' : 'pi pi-sort-numeric-down')"
+              :class="{'p-button-sm': true, 'sort-button-inactive': sortByPosition === 'off'}"
+              @click="positionSort"
+            />
+          </div>
           </div>
         </div>
       </div>
@@ -40,7 +56,7 @@
           <p class="placeholder-msg-txt">Select data by clicking or hovering drawn elements, or searching by gene symbol above</p>
         </div>
       </template>
-      <template v-for="dataObject in props.selectedData" :key="dataObject">
+      <template v-for="dataObject in sortedSelectedData" :key="dataObject">
         <template v-if="dataObject.type === 'Gene'">
           <GeneInfo
             :gene="dataObject.genomicSection.gene ? dataObject.genomicSection.gene : dataObject.genomicSection"
@@ -98,7 +114,7 @@ import SelectedData from '@/models/SelectedData';
 import Gene from '@/models/Gene';
 import GeneInfo from '@/components/GeneInfo.vue';
 import { Formatter } from '@/utils/Formatter';
-import { ref, watch} from 'vue';
+import { ref, watch, computed } from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import { getNewSelectedData, sortGeneMatches, adjustSelectionWindow } from '@/utils/DataPanelHelpers';
@@ -121,12 +137,14 @@ const props = defineProps<Props>();
 const searchedGene = ref<Gene | null>(null);
 const geneSuggestions = ref<Gene[]>([]);
 const numberOfResults = ref<number>(0);
+const sortByPosition = ref('off');
+const sortBySymbol = ref(false);
 
 watch(() => props.selectedData, () => {
   numberOfResults.value = 0;
   if (props.selectedData != null)
   {
-    numberOfResults.value = props.selectedData.filter(d => d.type === 'Gene').length;
+    numberOfResults.value = props.selectedData.filter((d: { type: string; }) => d.type === 'Gene').length;
   }
 });
 
@@ -137,9 +155,17 @@ const clearSelectedGenes = () => {
   searchedGene.value = null;
 };
 
+const symbolSort = () => {
+  sortBySymbol.value = !sortBySymbol.value;
+};
+const positionSort = () => {
+  const options = ['asc', 'desc', 'off'];
+  const current = options.indexOf(sortByPosition.value);
+  sortByPosition.value = options[(current + 1) % options.length];
+};
 const searchGene = (event: {query: string}) => {
   let matches: Gene[] = [];
-  props.geneList.forEach((gene) => {
+  props.geneList.forEach((gene: Gene) => {
     if (gene.symbol.toLowerCase().includes(event.query.toLowerCase()))
       matches.push(gene);
   });
@@ -165,6 +191,32 @@ const searchSVG = (event: { value: Gene }) => {
 const getSuggestionDisplay = (item: any) => {
   return `${item.symbol} - ${item.speciesName}`;
 };
+
+const sortedSelectedData = computed(() => {
+  if (!props.selectedData || props.selectedData.length === 0) return [];
+
+  const priority = props.selectedData[0]?.genomicSection?.speciesName;
+
+  return [...props.selectedData].sort((a, b) => {
+    if (a.type === 'Gene' && b.type === 'Gene') {
+      if (a.genomicSection.speciesName === priority && b.genomicSection.speciesName !== priority) {
+        return -1;
+      }
+      if (b.genomicSection.speciesName === priority && a.genomicSection.speciesName !== priority) {
+        return 1;
+      }
+      if (sortByPosition.value === 'asc') {
+        return a.genomicSection.start - b.genomicSection.start;
+      }
+      if (sortByPosition.value === 'desc') {
+        return b.genomicSection.start - a.genomicSection.start;
+      }
+      if (sortBySymbol.value) {
+        return a.genomicSection.symbol.localeCompare(b.genomicSection.symbol);
+      }
+    return a.genomicSection.speciesName.localeCompare(b.genomicSection.speciesName);
+  }});
+});
 </script>
 
 <style lang="scss" scoped>
@@ -205,4 +257,22 @@ const getSuggestionDisplay = (item: any) => {
   font-style: italic;
   margin-top: .5em;
 }
+
+.sort-button-inactive {
+  opacity: 0.6
+}
+
+.sort-options {
+  display: flex;
+  gap: 5px;
+}
+
+.selected-data-actions {
+  display: flex;
+  align-items: end;
+};
+
+.selected-data-actions > :not(:last-child) {
+  margin-right: 100px;
+};
 </style>
