@@ -37,6 +37,7 @@ export interface VCMapState
 
   selectedGeneIds: number[];
   selectedData: SelectedData[] | null;
+  isDataPanelCollapsed: boolean;
 
   selectionToastCount: number;
 
@@ -97,6 +98,7 @@ export default createStore({
 
     selectedGeneIds: [],
     selectedData: null,
+    isDataPanelCollapsed: false,
 
     selectionToastCount: 0,
 
@@ -258,6 +260,9 @@ export default createStore({
       context.commit('flankingGene1', genes[0]);
       context.commit('flankingGene2', genes[1]);
     },
+    setDataPanelCollapsed(context: ActionContext<VCMapState, VCMapState>, isCollapsed: boolean) {
+      context.commit('isDataPanelCollapsed', isCollapsed);
+    }
   },
 
   getters: {
