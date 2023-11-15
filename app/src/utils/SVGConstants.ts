@@ -22,9 +22,12 @@ export const PANEL_SVG_START = constants.panelTitleHeight;
 export const PANEL_SVG_STOP = constants.viewboxHeight - constants.navigationButtonHeight;
 export const PANEL_HEIGHT = PANEL_SVG_STOP - PANEL_SVG_START;
 
-export type SVGPositionVariables = {
-  detailedStart: number,
-  detailedSpeciesGap: number,
-}
+// NOTE: I'm commenting these out for now because I'm not using them,
+// but I think we can use something like this to start setting some variables
+// to adjust positions and spacing of elements in the svg
+// export type SVGPositionVariables = {
+//   detailedStart: number,
+//   detailedSpeciesGap: number,
+// }
 
 export default constants;

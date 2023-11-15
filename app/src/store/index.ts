@@ -9,7 +9,6 @@ import { InjectionKey } from 'vue';
 import { createLogger } from 'vuex';
 import { LoadedGene } from '@/models/DatatrackSection';
 import { ConfigurationMode } from '@/utils/Types';
-import { SVGPositionVariables } from '@/utils/SVGConstants';
 
 export const key: InjectionKey<Store<VCMapState>> = Symbol();
 
@@ -38,7 +37,11 @@ export interface VCMapState
   selectedData: SelectedData[] | null;
 
   selectionToastCount: number;
-  svgPositions: SVGPositionVariables;
+  // NOTE: I'm commenting these out for now because I'm not using them,
+  // but I think we can use something like this to start setting some variables
+  // to adjust positions and spacing of elements in the svg
+  // svgPositions: SVGPositionVariables;
+
   speciesOrder: Map<number, number>;
 
   /* These data structures have the potential to be pretty large */
@@ -99,10 +102,13 @@ export default createStore({
 
     selectionToastCount: 0,
 
-    svgPositions: {
-      detailedStart: 320,
-      detailedSpeciesGap: 20,
-    },
+    // NOTE: I'm commenting these out for now because I'm not using them,
+    // but I think we can use something like this to start setting some variables
+    // to adjust positions and spacing of elements in the svg
+    // svgPositions: {
+    //   detailedStart: 320,
+    //   detailedSpeciesGap: 20,
+    // },
     speciesOrder: new Map(),
 
     /* These data structures have the potential to be pretty large */
