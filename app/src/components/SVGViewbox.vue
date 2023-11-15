@@ -433,7 +433,7 @@ const updateOverviewPanel = async () => {
 
   // Build backbone set
   overviewSyntenySets.value = [];
-  const overviewBackboneOrder = store.state.speciesOrder.get(backboneSpecies.activeMap.key);
+  const overviewBackboneOrder = store.state.speciesOrder[backboneSpecies.activeMap.key.toString()];
   const overviewBackbone = createBackboneSection(backboneSpecies, backboneChromosome, 0, backboneChromosome.seqLength, 'overview', overviewBackboneOrder ?? 0);
   overviewBackboneSet.value = createBackboneSet(overviewBackbone, overviewBackboneOrder ?? 0, backboneSpecies.activeMap);
 
@@ -497,7 +497,7 @@ const updateDetailsPanel = async () => {
     detailedSyntenySets.value = [];
     return;
   }
-  const backboneOrder = store.state.speciesOrder.get(backboneSpecies.activeMap.key);
+  const backboneOrder = store.state.speciesOrder[backboneSpecies.activeMap.key];
   //
   // First, create the visible backbone elements
   const detailedBackbone = createBackboneSection(backboneSpecies, backboneChromosome,

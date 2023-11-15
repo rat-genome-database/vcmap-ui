@@ -28,7 +28,7 @@ import logger from '@/logger';
  *   SyntenyRegionSets representing the off-backbone synteny data in the overview panel
  */
 export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, Block[]>, comparativeSpecies: Species[],
-    backboneChr: Chromosome, speciesOrder: Map<number, number>): Promise<SyntenyRegionSet[]>
+    backboneChr: Chromosome, speciesOrder: any): Promise<SyntenyRegionSet[]>
 {
   const syntenyRegionSets: SyntenyRegionSet[] = [];
 
@@ -38,8 +38,8 @@ export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, 
     const currSpecies = comparativeSpecies.find((compSpecies) => compSpecies.activeMap.key == mapKey);
     if (!currSpecies) return;
 
-    const speciesPos = speciesOrder.get(currSpecies.activeMap.key) ?? defaultOrder;
-    const backbonePos = speciesOrder.get(backboneChr.mapKey) ?? 0;
+    const speciesPos = speciesOrder[currSpecies.activeMap.key.toString()] ?? defaultOrder;
+    const backbonePos = speciesOrder[backboneChr.mapKey.toString()] ?? 0;
 
     const processedSyntenicRegions: SyntenyRegion[] = [];
     for (let blockIdx = 0; blockIdx < blocks.length; blockIdx++)
@@ -110,7 +110,7 @@ export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, 
  *     The processed SyntenicRegionSets for each species.
  */
 export async function createSyntenicRegionSets(syntenyData: Map<number, Block[]>, comparativeSpecies: Species[],
-  backboneStart: number, backboneStop: number, speciesOrder: Map<number, number>): Promise<SyntenyRegionSet[]>
+  backboneStart: number, backboneStop: number, speciesOrder: any): Promise<SyntenyRegionSet[]>
 {
   const syntenyRegionSets: SyntenyRegionSet[] = [];
 
@@ -130,7 +130,7 @@ export async function createSyntenicRegionSets(syntenyData: Map<number, Block[]>
         return;
       }
 
-      const speciesPos = speciesOrder.get(mapKey);
+      const speciesPos = speciesOrder[mapKey.toString()];
       const syntenyRegionSet = syntenicSectionBuilder(speciesSyntenyData, species, speciesPos ?? defaultPos,
           backboneStart, backboneStop, 'detailed');
 

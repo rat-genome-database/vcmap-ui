@@ -84,7 +84,7 @@ export namespace TestUtils
         //   detailedStart: 320,
         //   detailedSpeciesGap: 20,
         // },
-        speciesOrder: new Map(),
+        speciesOrder: {},
 
         // Overwrite default state with props passed in by the tester
         ...initialState,

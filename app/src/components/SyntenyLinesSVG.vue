@@ -19,7 +19,7 @@ import { key } from '@/store';
 
 const store = useStore(key);
 const backboneMapKey = store.state.selectedBackboneRegion?.chromosome.mapKey ?? 0;
-const backboneOrder = store.state.speciesOrder.get(backboneMapKey) ?? 0;
+const backboneOrder = store.state.speciesOrder[backboneMapKey.toString()] ?? 0;
 
 interface Props
 {

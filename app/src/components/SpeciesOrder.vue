@@ -37,14 +37,15 @@ const speciesList = computed(() => {
   const comparativeSpecies = store.state.comparativeSpecies;
   const numSpecies = comparativeSpecies.length + 1;
   for (let i = 0; i < numSpecies; i++) {
-    speciesOrder.forEach((value, key) => {
+    Object.keys(speciesOrder).forEach((key) => {
+      const value = speciesOrder[key];
       if (value === i) {
         let speciesName = '';
-        if (backboneSpecies?.activeMap.key === key) {
+        if (backboneSpecies?.activeMap.key.toString() === key) {
           speciesName = `${backboneSpecies.name} (${backboneSpecies.activeMap.name})`;
         } else {
           comparativeSpecies.forEach((species) => {
-            if (species.activeMap.key === key) {
+            if (species.activeMap.key.toString() === key) {
               speciesName = `${species.name} (${species.activeMap.name})`;
             }
           })
@@ -58,33 +59,33 @@ const speciesList = computed(() => {
 });
 
 function moveSpeciesUp(key: number, index: number) {
-  const newSpeciesMap = new Map();
+  const newSpeciesOrder: any = {};
   for (let i = 0; i < speciesList.value.length; i++) {
     const currentSpecies = speciesList.value[i];
     if (i === index - 1) {
-       newSpeciesMap.set(currentSpecies.mapKey, index);
+       newSpeciesOrder[currentSpecies.mapKey.toString()] = index;
     } else if (i === index) {
-       newSpeciesMap.set(currentSpecies.mapKey, index - 1);
+       newSpeciesOrder[currentSpecies.mapKey.toString()] =  index - 1;
     } else {
-       newSpeciesMap.set(currentSpecies.mapKey, i);
+       newSpeciesOrder[currentSpecies.mapKey.toString()] = i;
     }
   }
-  store.dispatch('setSpeciesOrder', newSpeciesMap);
+  store.dispatch('setSpeciesOrder', newSpeciesOrder);
 }
 
 function moveSpeciesDown(key: number, index: number) {
-  const newSpeciesMap = new Map();
+  const newSpeciesOrder: any = {};
   for (let i = 0; i < speciesList.value.length; i++) {
     const currentSpecies = speciesList.value[i];
     if (i === index + 1) {
-       newSpeciesMap.set(currentSpecies.mapKey, index);
+       newSpeciesOrder[currentSpecies.mapKey.toString()] = index;
     } else if (i === index) {
-       newSpeciesMap.set(currentSpecies.mapKey, index + 1);
+       newSpeciesOrder[currentSpecies.mapKey.toString()] =  index + 1;
     } else {
-       newSpeciesMap.set(currentSpecies.mapKey, i);
+       newSpeciesOrder[currentSpecies.mapKey.toString()] =  i;
     }
   }
-  store.dispatch('setSpeciesOrder', newSpeciesMap);
+  store.dispatch('setSpeciesOrder', newSpeciesOrder);
 }
 </script>
 

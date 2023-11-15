@@ -42,7 +42,7 @@ export interface VCMapState
   // to adjust positions and spacing of elements in the svg
   // svgPositions: SVGPositionVariables;
 
-  speciesOrder: Map<number, number>;
+  speciesOrder: any;
 
   /* These data structures have the potential to be pretty large */
   // TODO: I think we can remove this from state
@@ -109,7 +109,7 @@ export default createStore({
     //   detailedStart: 320,
     //   detailedSpeciesGap: 20,
     // },
-    speciesOrder: new Map(),
+    speciesOrder: {},
 
     /* These data structures have the potential to be pretty large */
     loadedGenes: null,
@@ -170,7 +170,7 @@ export default createStore({
     selectionToastCount(state: VCMapState, count: number) {
       state.selectionToastCount = count;
     },
-    speciesOrder(state: VCMapState, speciesOrder: Map<number, number>) {
+    speciesOrder(state: VCMapState, speciesOrder: any) {
       state.speciesOrder = speciesOrder;
     },
   },
@@ -232,6 +232,7 @@ export default createStore({
       context.commit('detailedBasePairRange', { start: 0, stop: 0 });
       context.commit('configurationLoaded', null);
       context.commit('selectionToastCount', 0);
+      context.commit('setSpeciesOrder', {});
     },
     clearBackboneSelection(context: ActionContext<VCMapState, VCMapState>) {
       context.commit('selectedBackboneRegion', null);
@@ -262,9 +263,9 @@ export default createStore({
     setSelectionToastCount(context: ActionContext<VCMapState, VCMapState>, count: number) {
       context.commit('selectionToastCount', count);
     },
-    setSpeciesOrder(context: ActionContext<VCMapState, VCMapState>, speciesOrder: Map<number, number>) {
+    setSpeciesOrder(context: ActionContext<VCMapState, VCMapState>, speciesOrder: any) {
       context.commit('speciesOrder', speciesOrder);
-    }
+    },
   },
 
   getters: {

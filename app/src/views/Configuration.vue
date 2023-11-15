@@ -598,11 +598,11 @@ function saveConfigToStoreAndGoToMainScreen()
 {
   // Set the selected assembly as the active map on the species
   // Set the speciesOrder Map
-  const speciesOrder = new Map<number, number>();
+  const speciesOrder: any = {};
   if (backboneSpecies.value != null && backboneAssembly.value != null)
   {
     backboneSpecies.value.activeMap = backboneAssembly.value;
-    speciesOrder.set(backboneSpecies.value.activeMap.key, 0);
+    speciesOrder[backboneSpecies.value.activeMap.key.toString()] = 0;
   }
 
   clearPriorBackboneSelectionIfNecessary();
@@ -655,7 +655,7 @@ function saveConfigToStoreAndGoToMainScreen()
           }
         }
         comparativeSpecies.push(selectedSpecies);
-        speciesOrder.set(selectedSpecies.activeMap.key, currentOrder);
+        speciesOrder[selectedSpecies.activeMap.key] = currentOrder;
         break;
       }
     }
