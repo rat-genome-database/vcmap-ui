@@ -144,10 +144,6 @@
     :show-back-button="showDialogBackButton"
   />
   <LoadingSpinnerMask v-if="arePanelsLoading" :style="getDetailedPosition()"></LoadingSpinnerMask>
-  <Button 
-    label="Move Backbone"
-    @click="moveBackbone"
-  />
   <SpeciesOrder />
   <!--
   <Button
@@ -782,24 +778,6 @@ function logPerformanceReport(title: string, totalTimeMillis: number, detailedTi
   }
 
   $log.debug(JSON.stringify(performanceReport, null, 2));
-}
-
-// TEMP FUNCTION
-function moveBackbone() {
-  const speciesOrder = store.state.speciesOrder;
-  const newSpeciesOrder = new Map();
-  speciesOrder.forEach((value, key) => {
-    if (value === 0) {
-      newSpeciesOrder.set(key, 2);
-    } else if (value === 2) {
-      newSpeciesOrder.set(key, 0);
-    } else {
-      newSpeciesOrder.set(key, value);
-    }
-  });
-  store.dispatch('setSpeciesOrder', newSpeciesOrder);
-  updateOverviewPanel();
-  updateDetailsPanel();
 }
 
 </script>

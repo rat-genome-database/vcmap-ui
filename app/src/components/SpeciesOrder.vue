@@ -1,12 +1,27 @@
 <template>
   <div>Species Order Component</div>
-  <template v-for="(species, index) in speciesList" :key="index">
-    <div class="orderRow">
-      <Button icon="pi pi-angle-up" @click="moveSpeciesUp(species.mapKey, index)"/>
-      <Button icon="pi pi-angle-down" @click="moveSpeciesDown(species.mapKey, index)"/>
-      <div>{{ species.speciesName }}</div>
-    </div>
-  </template>
+  <div class="orderRowContainer">
+    <template v-for="(species, index) in speciesList" :key="index">
+      <div class="orderRow">
+        <Button
+          icon="pi pi-angle-up"
+          text
+          class="arrowButton"
+          :disabled="index === 0"
+          @click="moveSpeciesUp(species.mapKey, index)"
+        />
+        <div>{{ species.speciesName }}</div>
+        <Button
+          icon="pi pi-angle-down"
+          text
+          class="arrowButton"
+          size="small"
+          :disabled="index === speciesList.length - 1"
+          @click="moveSpeciesDown(species.mapKey, index)"
+        />
+      </div>
+    </template>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -26,11 +41,11 @@ const speciesList = computed(() => {
       if (value === i) {
         let speciesName = '';
         if (backboneSpecies?.activeMap.key === key) {
-          speciesName = backboneSpecies.name;
+          speciesName = `${backboneSpecies.name} (${backboneSpecies.activeMap.name})`;
         } else {
           comparativeSpecies.forEach((species) => {
             if (species.activeMap.key === key) {
-              speciesName = species.name;
+              speciesName = `${species.name} (${species.activeMap.name})`;
             }
           })
         }
@@ -51,7 +66,7 @@ function moveSpeciesUp(key: number, index: number) {
     } else if (i === index) {
        newSpeciesMap.set(currentSpecies.mapKey, index - 1);
     } else {
-       newSpeciesMap.set(currentSpecies.mapKey, index);
+       newSpeciesMap.set(currentSpecies.mapKey, i);
     }
   }
   store.dispatch('setSpeciesOrder', newSpeciesMap);
@@ -66,7 +81,7 @@ function moveSpeciesDown(key: number, index: number) {
     } else if (i === index) {
        newSpeciesMap.set(currentSpecies.mapKey, index + 1);
     } else {
-       newSpeciesMap.set(currentSpecies.mapKey, index);
+       newSpeciesMap.set(currentSpecies.mapKey, i);
     }
   }
   store.dispatch('setSpeciesOrder', newSpeciesMap);
@@ -78,5 +93,27 @@ function moveSpeciesDown(key: number, index: number) {
 {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.orderRowContainer
+{
+  max-width: max-content;
+}
+
+.arrowButton
+{
+  height: 1rem;
+  width: 1rem;
+  background-color: white;
+  color: #2196F3;
+  border-color: white;
+  &:hover {
+    background-color: white;
+    color: #2196F3;
+  }
 }
 </style>
