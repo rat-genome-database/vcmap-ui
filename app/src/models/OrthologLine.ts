@@ -26,6 +26,7 @@ export default class OrthologLine implements VCMapSVGElement
   isHovered: boolean = false;
   isSelected: boolean = false;
   elementColor: string = '';
+  thickness: number = 1;
 
   startGene: Gene;
   endGene: Gene;

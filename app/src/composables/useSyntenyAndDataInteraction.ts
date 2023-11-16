@@ -5,6 +5,7 @@ import OrthologLine from "@/models/OrthologLine";
 import SelectedData from "@/models/SelectedData";
 import { VCMapState } from "@/store";
 import { sortGeneList } from "@/utils/DataPanelHelpers";
+import { VCMapSVGElement } from '@/models/VCMapSVGElement';
 import { getSelectedDataAndGeneIdsFromOrthologLine } from "@/utils/OrthologHandler";
 import { Store } from "vuex";
 
@@ -22,6 +23,14 @@ export default function useSyntenyAndDataInteraction(store: Store<VCMapState>) {
         if (l.endGeneDatatrack) l.endGeneDatatrack.isHovered = isLineHovered;
       });
     }
+  };
+
+  const changeHoverElementSize = (element: VCMapSVGElement, isHovered: boolean) => {
+    //make our element bigger when hovered
+    element.width = isHovered ? element.width + 6 : element.width - 6;
+    //make sure the element is centered
+    element.posX1 = isHovered ? element.posX1 - 3 : element.posX1 + 3;
+    element.posX2 = isHovered ? element.posX2 + 3 : element.posX2 - 3;
   };
 
   const onDatatrackSectionClick = (event: any, section: GeneDatatrack, geneList: Map<number, Gene>) => {
@@ -176,5 +185,6 @@ export default function useSyntenyAndDataInteraction(store: Store<VCMapState>) {
     setHoverOnGeneLinesAndDatatrackSections,
     onDatatrackSectionClick,
     onGeneLabelClick,
+    changeHoverElementSize,
   };
 }

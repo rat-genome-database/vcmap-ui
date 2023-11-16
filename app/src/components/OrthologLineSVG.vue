@@ -2,6 +2,7 @@
   <line
     class="ortholog-line"
     :stroke="lineColor"
+    :stroke-width="line.thickness"
     :x1="line.posX1" :x2="line.posX2"
     :y1="line.posY1" :y2="line.posY2"
     @click="onClick($event, line)"
@@ -48,6 +49,7 @@ const onMouseEnter = (line: OrthologLine) => {
   if (!line.isSelected) {
     changeHoverStatusOnOrthologLines(line, true);
     changeDatatrackColors(line, HOVER_HIGHLIGHT_COLOR);
+    changeHoverLineThickness(line, true);
   }
 
   // If there are selected genes, don't update the selected data panel
@@ -62,6 +64,7 @@ const onMouseLeave = (line: OrthologLine) => {
   if (!line.isSelected) {
     changeHoverStatusOnOrthologLines(line, false);
     changeDatatrackColors(line, '#000000');
+    changeHoverLineThickness(line, false);
   }
 
   // Only reset data onMouseLeave if there isn't a selected gene
@@ -120,6 +123,12 @@ const changeDatatrackColors = (line: OrthologLine, colorHex: string) => {
 const changeHoverStatusOnOrthologLines = (line: OrthologLine, isHovered: boolean) => {
   [line, ...line.chainedOrthologLines].forEach(l => {
     l.isHovered = isHovered;
+  });
+};
+
+const changeHoverLineThickness = (line: OrthologLine, isHovered: boolean) => {
+  [line, ...line.chainedOrthologLines].forEach(l => {
+    l.thickness = isHovered ? 3 : 1;
   });
 };
 </script>

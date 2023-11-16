@@ -5,6 +5,16 @@
   <GapSVG v-for="(gapSection,index) in level1Gaps" :key="index" :gap-section="gapSection" />
   <GapSVG v-for="(gapSection,index) in level2Gaps" :key="index" :gap-section="gapSection" />
   <template v-for="(blockSection, index) in level1Blocks" :key="index">
+    <rect v-if="blockSection.isHovered"
+      :y="region.gaplessBlock.posY1"
+      :x="region.gaplessBlock.posX1"
+      :width="region.gaplessBlock.width"
+      :height="region.gaplessBlock.height"
+      fill="none"
+      stroke-width=".5"
+      stroke="#0000FF"
+      stroke-dasharray="2,2"
+    />
     <rect
       class="block-section"
       @mouseenter="onMouseEnter(blockSection, 'trackSection')"
@@ -23,6 +33,16 @@
   </template>
 
   <template v-for="(blockSection, index) in level2Blocks" :key="index">
+    <rect v-if="blockSection.isHovered"
+      :y="region.gaplessBlock.posY1"
+      :x="region.gaplessBlock.posX1"
+      :width="region.gaplessBlock.width"
+      :height="region.gaplessBlock.height"
+      fill="none"
+      stroke-width=".5"
+      stroke="#0000FF"
+      stroke-dasharray="2,2"
+    />
     <rect
       class="level-2 block-section"
       @mouseenter="onMouseEnter(blockSection, 'trackSection')"
@@ -35,7 +55,6 @@
       :fill="getSectionFill(blockSection)"
       :fill-opacity="1"
     />
-
     <ChromosomeLabelSVG v-if="showChromosome" :synteny-section="blockSection" />
   </template>
 
@@ -93,6 +112,15 @@
       :y="mouseYPos"
     >
       {{ basePairPositionLabel }}
+    </text>
+    <text
+      class="label small"
+      text-anchor="end"
+      dominant-baseline="middle"
+      :x="region.gaplessBlock.posX1 - 10"
+      :y="mouseYPos ? mouseYPos - 10 : mouseYPos"
+    >
+      Chr: {{ region.gaplessBlock.chromosome }}
     </text>
     <line
       class="position-label"
@@ -156,7 +184,7 @@ const SYNTENY_LABEL_SHIFT = 10;
 const store = useStore(key);
 
 const { getBasePairPositionFromMouseEvent, getBasePairPositionFromSVG, mouseYPos } = useMouseBasePairPos();
-const { setHoverOnGeneLinesAndDatatrackSections, onDatatrackSectionClick } = useSyntenyAndDataInteraction(store);
+const { setHoverOnGeneLinesAndDatatrackSections, onDatatrackSectionClick, changeHoverElementSize } = useSyntenyAndDataInteraction(store);
 
 interface Props
 {
@@ -235,6 +263,7 @@ const onMouseEnter = (section: SyntenySection | DatatrackSection, type: Selected
     // Gene datatrack section
     const geneSection = section as GeneDatatrack;
     setHoverOnGeneLinesAndDatatrackSections(geneSection?.lines, true);
+    changeHoverElementSize(geneSection, true);
 
     // Only update the selected data panel if no Genes are already selected
     if (!genesAreSelected)
@@ -254,7 +283,9 @@ const onMouseEnter = (section: SyntenySection | DatatrackSection, type: Selected
   {
     //
     // Synteny section
+    changeHoverElementSize(section, true);
     if (!genesAreSelected)
+    {
       if (section.type === 'variant')
       {
         selectedDataList.push(new SelectedData(section, 'variantDensity'));
@@ -262,6 +293,7 @@ const onMouseEnter = (section: SyntenySection | DatatrackSection, type: Selected
       {
         selectedDataList.push(new SelectedData(section, type));
       }
+    }
   }
 
   if (selectedDataList.length > 0)
@@ -289,6 +321,7 @@ const onMouseLeave = (section: DatatrackSection | SyntenySection) => {
     const geneSection = section as GeneDatatrack;
     setHoverOnGeneLinesAndDatatrackSections(geneSection.lines, false);
   }
+  changeHoverElementSize(section, false);
 };
 
 const onSyntenyBlockClick = (section: GenomicSection) => {
