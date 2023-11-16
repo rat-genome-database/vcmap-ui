@@ -4,7 +4,9 @@
       <Panel :toggleable="true" class="vcmap-panel">
         <template #header>
           <div class="vcmap-header">
-            <img alt="VCMap Logo" class="logo" src="../assets/images/vcmap_logo_v2.png">
+            <router-link to="/" v-tooltip.bottom="`Return to Configuration`">
+              <img alt="VCMap Logo" class="logo" src="../assets/images/vcmap_logo_v2.png">
+            </router-link>
             <Tag icon="pi pi-tag" severity="info" rounded>v{{ VERSION }}</Tag>
           </div>
         </template>
@@ -18,7 +20,7 @@
               label="New Configuration"
               icon="pi pi-cog" 
               class="p-button-secondary header-btn"
-              v-tooltip.bottom="`Open configuration in new tab`" />
+              v-tooltip.bottom="`Open Configuration in New Tab`" />
             </router-link>
             
             <Button 

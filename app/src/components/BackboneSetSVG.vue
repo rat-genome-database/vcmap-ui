@@ -123,7 +123,7 @@ const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
 const store = useStore(key);
 
 const { getBasePairPositionFromMouseEvent, getBasePairPositionFromSVG, mouseYPos, } = useMouseBasePairPos();
-const { setHoverOnGeneLinesAndDatatrackSections, onDatatrackSectionClick } = useSyntenyAndDataInteraction(store);
+const { setHoverOnGeneLinesAndDatatrackSections, onDatatrackSectionClick, changeHoverElementSize } = useSyntenyAndDataInteraction(store);
 
 interface Props
 {
@@ -213,6 +213,7 @@ const onMouseEnter = (section: BackboneSection | DatatrackSection, type: Selecte
     const selectedDataList: SelectedData[] = [];
     const geneSection = section as GeneDatatrack;
     setHoverOnGeneLinesAndDatatrackSections(geneSection?.lines, true);
+    changeHoverElementSize(geneSection, true);
 
     if (geneSection.lines.length > 0)
     {
@@ -262,7 +263,9 @@ const onMouseLeave = (section: BackboneSection | DatatrackSection) => {
   {
     const geneSection = section as GeneDatatrack;
     setHoverOnGeneLinesAndDatatrackSections(geneSection?.lines, false);
+    changeHoverElementSize(geneSection, false);
   }
+
 
   // Only reset selected data if there are no selected genes
   if (store.state.selectedGeneIds.length === 0)
