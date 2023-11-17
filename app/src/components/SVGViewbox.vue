@@ -239,15 +239,16 @@ import { useToast } from 'primevue/usetoast';
 import { createBackboneSection, backboneDatatrackBuilder, createBackboneSet } from '@/utils/BackboneBuilder';
 import BackboneSetSVG from './BackboneSetSVG.vue';
 import SyntenyRegionSet from '@/models/SyntenyRegionSet';
-import QtlApi from '@/api/QtlApi';
 import BackboneSet from '@/models/BackboneSet';
 import { createOverviewSyntenicRegionSets } from '@/utils/SectionBuilder';
 import OrthologLineSVG from './OrthologLineSVG.vue';
 import LoadingSpinnerMask from './LoadingSpinnerMask.vue';
-import { createQtlDatatracks } from '@/utils/QtlBuilder';
 import { backboneVariantTrackBuilder } from '@/utils/VariantBuilder';
-import { GenomicSectionFactory } from '@/models/GenomicSectionFactory';
 import Block from "@/models/Block";
+
+// import QtlApi from '@/api/QtlApi';
+// import { createQtlDatatracks } from '@/utils/QtlBuilder';
+// import { GenomicSectionFactory } from '@/models/GenomicSectionFactory';
 
 import { GeneLabel } from '@/models/Label';
 import SyntenyRegion from '@/models/SyntenyRegion';
@@ -667,28 +668,28 @@ const isBpRangeVisible = (start: number, stop: number) => {
 
 // TODO: temp ignore here, should remove once this method is actively being used
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const loadBackboneQtls = async () => {
-  const chromosome = store.state.chromosome;
-  const backboneSpecies = store.state.species;
-  const backboneRegion = store.state.selectedBackboneRegion;
-  const start = backboneRegion?.viewportSelection?.basePairStart;
-  const stop = backboneRegion?.viewportSelection?.basePairStop;
-  const speciesMap = store.state.species?.activeMap;
+// const loadBackboneQtls = async () => {
+//   const chromosome = store.state.chromosome;
+//   const backboneSpecies = store.state.species;
+//   const backboneRegion = store.state.selectedBackboneRegion;
+//   const start = backboneRegion?.viewportSelection?.basePairStart;
+//   const stop = backboneRegion?.viewportSelection?.basePairStop;
+//   const speciesMap = store.state.species?.activeMap;
 
-  if (chromosome && stop && speciesMap && backboneSpecies)
-  {
-    const factory = new GenomicSectionFactory(
-      backboneSpecies.name,
-      speciesMap.name,
-      chromosome.chromosome,
-      { start: start || 0, stop: stop },
-      'detailed'
-    );
-    const qtls = await QtlApi.getQtls(chromosome.chromosome, start || 0, stop, speciesMap.key);
-    const qtlDatatracks = createQtlDatatracks(factory, qtls, backboneSpecies, chromosome);
-    detailedBackboneSet.value?.addNewDatatrackSetToStart(qtlDatatracks, 'qtl');
-  }
-};
+//   if (chromosome && stop && speciesMap && backboneSpecies)
+//   {
+//     const factory = new GenomicSectionFactory(
+//       backboneSpecies.name,
+//       speciesMap.name,
+//       chromosome.chromosome,
+//       { start: start || 0, stop: stop },
+//       'detailed'
+//     );
+//     const qtls = await QtlApi.getQtls(chromosome.chromosome, start || 0, stop, speciesMap.key);
+//     const qtlDatatracks = createQtlDatatracks(factory, qtls, backboneSpecies, chromosome);
+//     detailedBackboneSet.value?.addNewDatatrackSetToStart(qtlDatatracks, 'qtl');
+//   }
+// };
 
 const updateBackboneVariants = (backboneSpecies: Species, variantPositions: VariantPositions, detailedBackbone: BackboneSection) => {
   const variantDatatrackInfo = backboneVariantTrackBuilder(backboneSpecies, variantPositions, detailedBackbone);
