@@ -18,6 +18,7 @@ type SyntenySectionParams = {
   chromosome: string;
   chainLevel: number;
   isGapless?: boolean;
+  labelOnLeft?: boolean;
   renderType: RenderType;
 }
 
@@ -52,21 +53,23 @@ export default class SyntenySection extends GenomicSection
     // Only build these section labels for gapless blocks to display in overview panel
     if (params.isGapless)
     {
-      this.createSyntenySectionLabels();
+      this.createSyntenySectionLabels(params.labelOnLeft ?? false);
     }
   }
 
-  private createSyntenySectionLabels()
+  private createSyntenySectionLabels(labelOnLeft: boolean)
   {
     this.startLabel = new Label({
       posX: this.posX2,
       posY: this.posY1,
+      labelOnLeft: labelOnLeft,
       text: Formatter.convertBasePairToLabel(this.speciesStart) || '',
       isVisible: false,
     });
     this.stopLabel = new Label({
       posX: this.posX2,
       posY: this.posY2,
+      labelOnLeft: labelOnLeft,
       text: Formatter.convertBasePairToLabel(this.speciesStop) || '',
       isVisible: false,
     });

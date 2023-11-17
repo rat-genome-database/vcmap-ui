@@ -28,15 +28,18 @@ import logger from '@/logger';
  *   SyntenyRegionSets representing the off-backbone synteny data in the overview panel
  */
 export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, Block[]>, comparativeSpecies: Species[],
-    backboneChr: Chromosome): Promise<SyntenyRegionSet[]>
+    backboneChr: Chromosome, speciesOrder: any): Promise<SyntenyRegionSet[]>
 {
   const syntenyRegionSets: SyntenyRegionSet[] = [];
 
   // TODO: This code is extremely similar to building synteny blocks WITH datatracks, need to reorganize this...
-  let setOrder = 1;
+  let defaultOrder = 1;
   syntenyData.forEach((blocks, mapKey) => {
     const currSpecies = comparativeSpecies.find((compSpecies) => compSpecies.activeMap.key == mapKey);
     if (!currSpecies) return;
+
+    const speciesPos = speciesOrder[currSpecies.activeMap.key.toString()] ?? defaultOrder;
+    const backbonePos = speciesOrder[backboneChr.mapKey.toString()] ?? 0;
 
     const processedSyntenicRegions: SyntenyRegion[] = [];
     for (let blockIdx = 0; blockIdx < blocks.length; blockIdx++)
@@ -64,6 +67,7 @@ export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, 
         orientation: blockInfo.orientation,
         chainLevel: blockInfo.chainLevel,
         isGapless: true,
+        labelOnLeft: speciesPos < backbonePos,
       });
       // Create the SyntenyRegion that covers the extent of the Block
       // NOTE: This might extend beyond the visible window, but we will try to only create
@@ -79,8 +83,9 @@ export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, 
 
       processedSyntenicRegions.push(currSyntenicRegion);
     }
-    syntenyRegionSets.push(new SyntenyRegionSet(currSpecies.name, currSpecies.activeMap, processedSyntenicRegions, setOrder, 'overview'));
-    setOrder++;
+
+    syntenyRegionSets.push(new SyntenyRegionSet(currSpecies.name, currSpecies.activeMap, processedSyntenicRegions, speciesPos, 'overview'));
+    defaultOrder++;
   });
 
   return syntenyRegionSets;
@@ -105,14 +110,15 @@ export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, 
  *     The processed SyntenicRegionSets for each species.
  */
 export async function createSyntenicRegionSets(syntenyData: Map<number, Block[]>, comparativeSpecies: Species[],
-  backboneStart: number, backboneStop: number): Promise<SyntenyRegionSet[]>
+  backboneStart: number, backboneStop: number, speciesOrder: any): Promise<SyntenyRegionSet[]>
 {
   const syntenyRegionSets: SyntenyRegionSet[] = [];
 
   // Process each species of our synteny Tree separately
   if (syntenyData && syntenyData.size > 0)
   {
-    let pos = 1;
+    // NOTE: keep a track of default track order position incase the speciesOrder isn't set correctly
+    let defaultPos = 1;
     syntenyData.forEach((speciesSyntenyData, mapKey) => {
       // NOTE: In the future we are going to have to address how we will allow the
       //   possibility of a Species with >1 "active" map. For example, loading multiple
@@ -124,14 +130,15 @@ export async function createSyntenicRegionSets(syntenyData: Map<number, Block[]>
         return;
       }
 
-      const syntenyRegionSet = syntenicSectionBuilder(speciesSyntenyData, species, pos,
+      const speciesPos = speciesOrder[mapKey.toString()];
+      const syntenyRegionSet = syntenicSectionBuilder(speciesSyntenyData, species, speciesPos ?? defaultPos,
           backboneStart, backboneStop, 'detailed');
 
       logger.log(`Completed build of Synteny for ${syntenyRegionSet?.mapName}, with ${syntenyRegionSet?.regions.length} regions`);
 
       // Add this to our final Array
       if (syntenyRegionSet) syntenyRegionSets.push(syntenyRegionSet);
-      pos++;
+      defaultPos++;
     });
   }
 

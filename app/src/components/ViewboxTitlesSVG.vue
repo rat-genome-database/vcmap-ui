@@ -3,7 +3,7 @@
   <rect class="panel" x="0" :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.panelTitleHeight" />
   <rect class="panel" :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.panelTitleHeight" />
   <text class="label medium bold" :x="SVGConstants.overviewTitleXPosition" :y="SVGConstants.panelTitleYPosition">Overview</text>
-  <text class="label medium bold" :x="SVGConstants.selectedBackboneXPosition - 5" :y="SVGConstants.panelTitleYPosition">Detailed</text>
+  <text class="label medium bold" :x="SVGConstants.selectedBackboneXPosition + 30" :y="SVGConstants.panelTitleYPosition">Detailed</text>
 
   <!-- SyntenyRegionSet Title Labels -->
   <template v-for="(syntenySet, index) in overviewSyntenySets" :key="index">
@@ -19,6 +19,28 @@
   <template v-if="detailedBackboneSet">
     <template v-for="(label, index) in detailedBackboneSet.titleLabels" :key="index">
       <text :class="`label small ${label.addClass}`" :x="label.posX - 5" :y="label.posY">{{label.text}}</text>
+    </template>
+    <template v-if="detailedBackboneSet.order !== 0">
+      <SpeciesOrderButtonSVG
+        :species-list="speciesList"
+        :right-arrow="false"
+        :pos-x="detailedBackboneSet.titleLabels[0].posX"
+        :pos-y="detailedBackboneSet.titleLabels[0].posY"
+        :map-key="detailedBackboneSet.mapKey"
+        :current-order="detailedBackboneSet.order"
+        :new-order="detailedBackboneSet.order - 1"
+      />
+    </template>
+    <template v-if="detailedBackboneSet.order !== speciesList.length - 1">
+      <SpeciesOrderButtonSVG
+        :species-list="speciesList"
+        :right-arrow="true"
+        :pos-x="detailedBackboneSet.titleLabels[0].posX"
+        :pos-y="detailedBackboneSet.titleLabels[0].posY"
+        :map-key="detailedBackboneSet.mapKey"
+        :current-order="detailedBackboneSet.order"
+        :new-order="detailedBackboneSet.order + 1"
+      />
     </template>
     <template v-for="(datatrackSet, index) in detailedBackboneSet?.datatrackSets" :key="index">
       <template v-if="datatrackSet.datatracks.length > 0">
@@ -38,6 +60,28 @@
       <template v-for="(label, index) in syntenySet.titleLabels" :key="index">
         <text :class="`label small ${label.addClass}`" :x="label.posX - 5" :y="label.posY">{{label.text}}</text>
       </template>
+      <template v-if="syntenySet.order !== 0">
+        <SpeciesOrderButtonSVG
+          :species-list="speciesList"
+          :right-arrow="false"
+          :pos-x="syntenySet.titleLabels[0].posX"
+          :pos-y="syntenySet.titleLabels[0].posY"
+          :map-key="syntenySet.mapKey"
+          :current-order="syntenySet.order"
+          :new-order="syntenySet.order - 1"
+        />
+      </template>
+      <template v-if="syntenySet.order !== speciesList.length - 1">
+        <SpeciesOrderButtonSVG
+          :species-list="speciesList"
+          :right-arrow="true"
+          :pos-x="syntenySet.titleLabels[0].posX"
+          :pos-y="syntenySet.titleLabels[0].posY"
+          :map-key="syntenySet.mapKey"
+          :current-order="syntenySet.order"
+          :new-order="syntenySet.order + 1"
+        />
+      </template>
       <template v-for="(datatrackSet, index) in syntenySet.regions[0]?.datatrackSets" :key="index">
         <text
             class="label small"
@@ -53,12 +97,43 @@
 </template>
 
 <script lang="ts" setup>
+import { computed } from 'vue';
+import { useStore } from 'vuex';
+import { key } from '@/store';
 import SVGConstants from '@/utils/SVGConstants';
 import SyntenyRegionSet from '@/models/SyntenyRegionSet';
 import BackboneSet from '@/models/BackboneSet';
+import SpeciesOrderButtonSVG from './SpeciesOrderButtonSVG.vue';
 import { getDetailedPanelXPositionForDatatracks } from '@/utils/Shared';
 
-const TITLE_ROTATION = -30;
+const TITLE_ROTATION = -30;const store = useStore(key);
+const speciesList = computed(() => {
+  const list: any[] = [];
+  const speciesOrder = store.state.speciesOrder;
+  const backboneSpecies = store.state.species;
+  const comparativeSpecies = store.state.comparativeSpecies;
+  const numSpecies = comparativeSpecies.length + 1;
+  for (let i = 0; i < numSpecies; i++) {
+    Object.keys(speciesOrder).forEach((key) => {
+      const value = speciesOrder[key];
+      if (value === i) {
+        let speciesName = '';
+        if (backboneSpecies?.activeMap.key.toString() === key) {
+          speciesName = `${backboneSpecies.name} (${backboneSpecies.activeMap.name})`;
+        } else {
+          comparativeSpecies.forEach((species) => {
+            if (species.activeMap.key.toString() === key) {
+              speciesName = `${species.name} (${species.activeMap.name})`;
+            }
+          });
+        }
+        list.push({mapKey: key, speciesName: speciesName});
+      }
+    });
+  }
+
+  return list;
+});
 
 interface Props {
   overviewBackboneSet?: BackboneSet;

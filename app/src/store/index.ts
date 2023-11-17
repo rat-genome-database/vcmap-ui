@@ -41,6 +41,12 @@ export interface VCMapState
   isDataPanelCollapsed: boolean;
 
   selectionToastCount: number;
+  // NOTE: I'm commenting these out for now because I'm not using them,
+  // but I think we can use something like this to start setting some variables
+  // to adjust positions and spacing of elements in the svg
+  // svgPositions: SVGPositionVariables;
+
+  speciesOrder: any;
 }
 
 /**
@@ -98,6 +104,15 @@ export default createStore({
     isDataPanelCollapsed: false,
 
     selectionToastCount: 0,
+
+    // NOTE: I'm commenting these out for now because I'm not using them,
+    // but I think we can use something like this to start setting some variables
+    // to adjust positions and spacing of elements in the svg
+    // svgPositions: {
+    //   detailedStart: 320,
+    //   detailedSpeciesGap: 20,
+    // },
+    speciesOrder: {},
   }),
 
   mutations: {
@@ -158,6 +173,9 @@ export default createStore({
     flankingGene2(state: VCMapState, gene: Gene | null) {
       state.flankingGene2 = gene;
     },
+    speciesOrder(state: VCMapState, speciesOrder: any) {
+      state.speciesOrder = speciesOrder;
+    },
   },
 
   actions: {
@@ -213,6 +231,7 @@ export default createStore({
       context.commit('detailedBasePairRange', { start: 0, stop: 0 });
       context.commit('configurationLoaded', null);
       context.commit('selectionToastCount', 0);
+      context.commit('setSpeciesOrder', {});
     },
     clearBackboneSelection(context: ActionContext<VCMapState, VCMapState>) {
       context.commit('selectedBackboneRegion', null);
@@ -249,7 +268,10 @@ export default createStore({
     },
     setDataPanelCollapsed(context: ActionContext<VCMapState, VCMapState>, isCollapsed: boolean) {
       context.commit('isDataPanelCollapsed', isCollapsed);
-    }
+    },
+    setSpeciesOrder(context: ActionContext<VCMapState, VCMapState>, speciesOrder: any) {
+      context.commit('speciesOrder', speciesOrder);
+    },
   },
 
   getters: {

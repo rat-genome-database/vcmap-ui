@@ -5,16 +5,17 @@ import SyntenyRegion from "./SyntenyRegion";
 import SyntenySection from "./SyntenySection";
 import DatatrackSet from "./DatatrackSet";
 import { mergeAndCreateGeneLabels } from "@/utils/GeneLabelMerger";
-import { calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment, getDetailedPanelXPositionForDatatracks, getDetailedPanelXPositionForSynteny, isGenomicDataInViewport } from "@/utils/Shared";
+import {
+  calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment,
+  getDetailedPanelXPositionForDatatracks,
+  getDetailedPanelXPositionForSynteny,
+  isGenomicDataInViewport,
+  getOverviewPanelXPosition,
+} from "@/utils/Shared";
 import SpeciesMap from "./SpeciesMap";
 import logger from "@/logger";
 
 const LEVEL_2_WIDTH_MULTIPLIER = 0.75;
-
-function getOverviewPanelXPosition(order: number)
-{
-  return (order * -80) + SVGConstants.backboneXPosition;
-}
 
 /**
  * Model for representing a set of SyntenyRegions for the same species and map
@@ -234,7 +235,7 @@ export default class SyntenyRegionSet extends GenomicSet
 
   private sortBasePairLabels()
   {
-    const labelPosX = getOverviewPanelXPosition(this.order) + SVGConstants.trackWidth;
+    const regionPosX2 = getOverviewPanelXPosition(this.order) + SVGConstants.trackWidth;
     const labelPairs = this.regions.map((region) =>{
       return {startLabel: region.gaplessBlock.startLabel, stopLabel: region.gaplessBlock.stopLabel};
     });
@@ -243,8 +244,8 @@ export default class SyntenyRegionSet extends GenomicSet
     for (let i = 0; i < labelPairs.length; i++)
     {
       const labelPair = labelPairs[i];
-      labelPair.startLabel.posX = labelPosX;
-      labelPair.stopLabel.posX = labelPosX;
+      labelPair.startLabel.posX = labelPair.startLabel.labelOnLeft ? regionPosX2 - SVGConstants.trackWidth : regionPosX2;
+      labelPair.stopLabel.posX = labelPair.stopLabel.labelOnLeft ? regionPosX2 - SVGConstants.trackWidth : regionPosX2;
       if (Math.abs(labelPair.stopLabel.posY - labelPair.startLabel.posY) > 14)
       {
         labelPair.startLabel.isVisible = true;
@@ -268,5 +269,9 @@ export default class SyntenyRegionSet extends GenomicSet
     }
 
     return 0;
+  }
+
+  public setOrder(order: number) {
+    this.order = order;
   }
 }

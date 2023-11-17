@@ -7,6 +7,7 @@ interface LabelParams
   text: string;
   isVisible?: boolean;
   addClass?: string;
+  labelOnLeft?: boolean;
 }
 
 export default class Label
@@ -14,6 +15,7 @@ export default class Label
   posX: number = 0;
   posY: number = 0;
   text: string = '';
+  labelOnLeft: boolean = false;
   isVisible: boolean = true;
   isHovered: boolean = false;
   addClass: string = "";
@@ -23,6 +25,7 @@ export default class Label
     this.posX = params.posX;
     this.posY = params.posY;
     this.text = params.text;
+    this.labelOnLeft = params.labelOnLeft ?? this.labelOnLeft;
     this.isVisible = params.isVisible ?? this.isVisible;
     this.addClass = params.addClass ?? this.addClass;
   }

@@ -636,9 +636,12 @@ async function prepopulateConfigOptions()
 function saveConfigToStoreAndGoToMainScreen()
 {
   // Set the selected assembly as the active map on the species
+  // Set the speciesOrder Map
+  const speciesOrder: any = {};
   if (backboneSpecies.value != null && backboneAssembly.value != null)
   {
     backboneSpecies.value.activeMap = backboneAssembly.value;
+    speciesOrder[backboneSpecies.value.activeMap.key.toString()] = 0;
   }
 
   clearPriorBackboneSelectionIfNecessary();
@@ -689,6 +692,7 @@ function saveConfigToStoreAndGoToMainScreen()
 
   // Make copies of the selected comparative species/assemblies from our available options and push them onto an array before saving them to the store
   const comparativeSpecies: Species[] = [];
+  let currentOrder = 0;
   comparativeSpeciesSelections.value.forEach(s => {
     if (s.typeKey === 0)
     {
@@ -705,15 +709,18 @@ function saveConfigToStoreAndGoToMainScreen()
           if (selectedSpecies.maps[j].key === s.mapKey)
           {
             selectedSpecies.activeMap = selectedSpecies.maps[j];
+            currentOrder++;
             break;
           }
         }
         comparativeSpecies.push(selectedSpecies);
+        speciesOrder[selectedSpecies.activeMap.key] = currentOrder;
         break;
       }
     }
   });
 
+  store.dispatch('setSpeciesOrder', speciesOrder);
   store.dispatch('setComparativeSpecies', comparativeSpecies);
   store.dispatch('setConfigMode', getConfigModeFromActiveTab(activeTab.value));
   store.dispatch('setConfigurationLoaded', null);
