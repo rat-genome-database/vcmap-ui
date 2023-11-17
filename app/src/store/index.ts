@@ -11,6 +11,12 @@ import { ConfigurationMode } from '@/utils/Types';
 
 export const key: InjectionKey<Store<VCMapState>> = Symbol();
 
+type HoveredData = {
+  x: number; // mouse x position
+  y: number; // mouse y position
+  data: string[];
+};
+
 export interface VCMapState
 {
   /* User configuration-related properties */
@@ -38,6 +44,9 @@ export interface VCMapState
   selectedGeneIds: number[];
   selectedData: SelectedData[] | null;
   isDataPanelCollapsed: boolean;
+
+  /* Hovered data */
+  hoveredData: HoveredData;
 
   selectionToastCount: number;
 }
@@ -95,6 +104,12 @@ export default createStore({
     selectedGeneIds: [],
     selectedData: null,
     isDataPanelCollapsed: false,
+
+    hoveredData: {
+      x: 0,
+      y: 0,
+      data: [],
+    },
 
     selectionToastCount: 0,
   }),
@@ -156,6 +171,9 @@ export default createStore({
     },
     flankingGene2(state: VCMapState, gene: Gene | null) {
       state.flankingGene2 = gene;
+    },
+    hoveredData(state: VCMapState, hoveredData: HoveredData) {
+      state.hoveredData = hoveredData;
     },
   },
 
@@ -248,7 +266,10 @@ export default createStore({
     },
     setDataPanelCollapsed(context: ActionContext<VCMapState, VCMapState>, isCollapsed: boolean) {
       context.commit('isDataPanelCollapsed', isCollapsed);
-    }
+    },
+    setHoveredData(context: ActionContext<VCMapState, VCMapState>, hoveredData: HoveredData) {
+      context.commit('hoveredData', hoveredData);
+    },
   },
 
   getters: {

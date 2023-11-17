@@ -1,9 +1,10 @@
 import SVGConstants, { PANEL_SVG_START, PANEL_SVG_STOP } from "@/utils/SVGConstants";
 import { SVGShape, VCMapSVGElement } from "./VCMapSVGElement";
 import { DatatrackSectionType } from "./DatatrackSection";
+import { SyntenySectionType } from "./SyntenySection";
 
 export type RenderType = 'overview' | 'detailed';
-type GenomicSectionType = 'gap' | DatatrackSectionType;
+type GenomicSectionType = SyntenySectionType | DatatrackSectionType;
 
 export type BackboneAlignment = {
   start: number;
@@ -84,6 +85,8 @@ export default abstract class GenomicSection implements VCMapSVGElement
       this.shape = 'line';
     }
   }
+
+  public abstract toHoveredData(): string[];
 
   /**
    * Length of this genomic section (in basepairs)

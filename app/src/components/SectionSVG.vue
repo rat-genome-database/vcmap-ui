@@ -17,7 +17,7 @@
     />
     <rect
       class="block-section"
-      @mouseenter="onMouseEnter(blockSection, 'trackSection')"
+      @mouseenter="onMouseEnter($event, blockSection, 'trackSection')"
       @mouseleave="onMouseLeave(blockSection)"
       @mousemove="updatePositionLabelFromMouseEvent($event, blockSection)"
       @click="selectOnClick ? onSyntenyBlockClick(blockSection) : () => {}"
@@ -45,7 +45,7 @@
     />
     <rect
       class="level-2 block-section"
-      @mouseenter="onMouseEnter(blockSection, 'trackSection')"
+      @mouseenter="onMouseEnter($event, blockSection, 'trackSection')"
       @mouseleave="onMouseLeave(blockSection)"
       @mousemove="updatePositionLabelFromMouseEvent($event, blockSection)"
       :y="blockSection.posY1"
@@ -137,7 +137,7 @@
     <template v-for="(datatrack, index) in datatrackSet.datatracks" :key="index">
       <rect
         :class="getDatatrackClass(datatrackSet)"
-        @mouseenter="onMouseEnter(datatrack, 'Gene')"
+        @mouseenter="onMouseEnter($event, datatrack, 'Gene')"
         @mouseleave="onMouseLeave(datatrack)"
         @click="onDatatrackSectionClick($event, datatrack, geneList)"
         :y="datatrack.posY1"
@@ -184,7 +184,13 @@ const SYNTENY_LABEL_SHIFT = 10;
 const store = useStore(key);
 
 const { getBasePairPositionFromMouseEvent, getBasePairPositionFromSVG, mouseYPos } = useMouseBasePairPos();
-const { setHoverOnGeneLinesAndDatatrackSections, onDatatrackSectionClick, changeHoverElementSize } = useSyntenyAndDataInteraction(store);
+const {
+  setHoverOnGeneLinesAndDatatrackSections,
+  onDatatrackSectionClick,
+  changeHoverElementSize,
+  showHoveredData,
+  hideHoveredData,
+} = useSyntenyAndDataInteraction(store);
 
 interface Props
 {
@@ -248,12 +254,15 @@ const showBasePairLine = computed(() => {
     && (isRegionHovered.value || basePairPositionLabel.value !== '');
 });
 
-const onMouseEnter = (section: SyntenySection | DatatrackSection, type: SelectedDataType) => {
+const onMouseEnter = (event: MouseEvent, section: SyntenySection | DatatrackSection, type: SelectedDataType) => {
 
   section.isHovered = true;
 
   // NOTE: ignore qtl datatracks for now
   if (section.type === 'qtl') return;
+
+  changeHoverElementSize(section, true);
+  showHoveredData(section, event);
 
   const genesAreSelected = store.state.selectedGeneIds.length > 0;
   let selectedDataList: SelectedData[] = [];
@@ -263,8 +272,7 @@ const onMouseEnter = (section: SyntenySection | DatatrackSection, type: Selected
     // Gene datatrack section
     const geneSection = section as GeneDatatrack;
     setHoverOnGeneLinesAndDatatrackSections(geneSection?.lines, true);
-    changeHoverElementSize(geneSection, true);
-
+    
     // Only update the selected data panel if no Genes are already selected
     if (!genesAreSelected)
     {
@@ -283,7 +291,6 @@ const onMouseEnter = (section: SyntenySection | DatatrackSection, type: Selected
   {
     //
     // Synteny section
-    changeHoverElementSize(section, true);
     if (!genesAreSelected)
     {
       if (section.type === 'variant')
@@ -322,6 +329,7 @@ const onMouseLeave = (section: DatatrackSection | SyntenySection) => {
     setHoverOnGeneLinesAndDatatrackSections(geneSection.lines, false);
   }
   changeHoverElementSize(section, false);
+  hideHoveredData();
 };
 
 const onSyntenyBlockClick = (section: GenomicSection) => {

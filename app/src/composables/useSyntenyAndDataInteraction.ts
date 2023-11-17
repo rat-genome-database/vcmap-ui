@@ -8,6 +8,7 @@ import { sortGeneList } from "@/utils/DataPanelHelpers";
 import { VCMapSVGElement } from '@/models/VCMapSVGElement';
 import { getSelectedDataAndGeneIdsFromOrthologLine } from "@/utils/OrthologHandler";
 import { Store } from "vuex";
+import GenomicSection from "@/models/GenomicSection";
 
 export default function useSyntenyAndDataInteraction(store: Store<VCMapState>) {
   const setHoverOnGeneLinesAndDatatrackSections = (lines: OrthologLine[], isHovered: boolean) => {
@@ -181,10 +182,28 @@ export default function useSyntenyAndDataInteraction(store: Store<VCMapState>) {
     }
   };
 
+  const showHoveredData = (section: GenomicSection, mouse: MouseEvent) => {
+    store.dispatch('setHoveredData', {
+      x: mouse.pageX,
+      y: mouse.pageY,
+      data: section?.toHoveredData() ?? [],
+    });
+  };
+
+  const hideHoveredData = () => {
+    store.dispatch('setHoveredData', {
+      x: 0,
+      y: 0,
+      data: [],
+    });
+  };
+
   return {
     setHoverOnGeneLinesAndDatatrackSections,
     onDatatrackSectionClick,
     onGeneLabelClick,
     changeHoverElementSize,
+    showHoveredData,
+    hideHoveredData,
   };
 }
