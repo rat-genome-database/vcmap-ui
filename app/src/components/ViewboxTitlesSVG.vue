@@ -125,11 +125,11 @@ const speciesList = computed(() => {
             if (species.activeMap.key.toString() === key) {
               speciesName = `${species.name} (${species.activeMap.name})`;
             }
-          })
+          });
         }
         list.push({mapKey: key, speciesName: speciesName});
       }
-    })
+    });
   }
 
   return list;

@@ -150,7 +150,6 @@
     :show-back-button="showDialogBackButton"
   />
   <LoadingSpinnerMask v-if="arePanelsLoading" :style="getDetailedPosition()"></LoadingSpinnerMask>
-  <SpeciesOrder />
   <!--
   <Button
     style="margin-right: 20px;"
@@ -263,7 +262,6 @@ import VariantPositions from '@/models/VariantPositions';
 import Species from '@/models/Species';
 import BackboneSection from '@/models/BackboneSection';
 import GradientLegend from './GradientLegend.vue';
-import SpeciesOrder from './SpeciesOrder.vue';
 
 const SHOW_DEBUG = process.env.NODE_ENV === 'development';
 const NAV_SHIFT_PERCENT = 0.2;
@@ -378,7 +376,7 @@ watch(() => store.state.isUpdatingVariants, () => {
 watch(() => store.state.speciesOrder, () => {
   updateOverviewPanel();
   updateDetailsPanel();
-})
+});
 
 // FIXME: check on this (probably needs to be attached to Main props instead):
 const arePanelsLoading = computed(() => {
