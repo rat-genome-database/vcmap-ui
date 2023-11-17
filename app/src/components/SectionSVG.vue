@@ -387,21 +387,6 @@ const highlightSelections = (selectedGeneIds: number[]) => {
       });
     }
   });
-  // Highlight the line if needed, and make sure genes highlighted too
-  // (this ensures backbone and comparitive genes are highlighted, regardless of which is clicked)
-  props.region.orthologLines.forEach((line) => {
-    if (selectedGeneIds.includes(line.backboneGene.rgdId || -1) ||
-        selectedGeneIds.includes(line.offBackboneGene.rgdId || -1)) 
-    {
-      line.isSelected = true;
-      if (line.backboneGeneDatatrack) line.backboneGeneDatatrack.isSelected = true;
-      if (line.offBackboneGeneDatatrack) line.offBackboneGeneDatatrack.isSelected = true;
-    } 
-    else 
-    {
-      line.isSelected = false;
-    }
-  });
 };
 
 const calculateSectionStartPositionLabel = (section: SyntenySection) => {
