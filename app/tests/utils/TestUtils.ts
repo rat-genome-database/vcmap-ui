@@ -75,7 +75,6 @@ export namespace TestUtils
         detailedBasePairRange: { start: 0, stop: 0 },
 
         selectedData: null,
-        loadedGenes: null,
         selectedGeneIds: [],
         isDataPanelCollapsed: false,
 

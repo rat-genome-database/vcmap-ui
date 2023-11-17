@@ -63,8 +63,6 @@ export function sortGeneList(geneList: Gene[]) {
 
 export function adjustSelectionWindow(searchedGene: Gene, geneList: Map<number, Gene>, store: Store<VCMapState>)
 {
-  // const loadedGenes = store.state.loadedGenes;
-
   // New start and stop will be +/- some multiple of the gene's length (currently 2x)
   const geneBasePairLength = searchedGene.stop - searchedGene.start;
   // Take the max of new start position, and selected region's original start

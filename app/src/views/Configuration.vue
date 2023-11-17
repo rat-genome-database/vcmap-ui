@@ -644,8 +644,9 @@ function saveConfigToStoreAndGoToMainScreen()
   clearPriorBackboneSelectionIfNecessary();
 
   store.dispatch('setSpecies', backboneSpecies.value);
-  // Always reset loaded genes before loading VCMap
-  store.dispatch('setLoadedGenes', null);
+  // New selected data is calculated by Main.vue so clearing this out now
+  // to avoid having the selected data panel show stale data on initial load
+  store.dispatch('setSelectedData', []);
   if (activeTab.value === TABS.gene)
   {
     store.dispatch('setGene', backboneGene.value);

@@ -155,7 +155,10 @@ function getZoomStepFromZoomLevel(zoomLevel: number)
   const selectedRegion = store.state.selectedBackboneRegion;
   if (selectedRegion == null || selectedRegion.viewportSelection == null)
   {
-    $log.error('Could not calculate zoom step from zoom level');
+    // This is expected on initial load of a new configuration because of this method
+    // gets called immediately in the watcher. So the first execution will likely not have the
+    // selectedRegion defined yet, but the next execution should once the detailedBasePairRange
+    // is calculated and set in Main.vue
     return 0;
   }
 

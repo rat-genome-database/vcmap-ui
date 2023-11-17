@@ -35,15 +35,12 @@ export interface VCMapState
   isOverviewPanelUpdating: boolean;
   isUpdatingVariants: boolean;
 
+  /* Selected data */
   selectedGeneIds: number[];
   selectedData: SelectedData[] | null;
   isDataPanelCollapsed: boolean;
 
   selectionToastCount: number;
-
-  /* These data structures have the potential to be pretty large */
-  // TODO: I think we can remove this from state
-  loadedGenes: Map<number, LoadedGene> | null;
 }
 
 /**
@@ -101,9 +98,6 @@ export default createStore({
     isDataPanelCollapsed: false,
 
     selectionToastCount: 0,
-
-    /* These data structures have the potential to be pretty large */
-    loadedGenes: null,
   }),
 
   mutations: {
@@ -124,9 +118,6 @@ export default createStore({
     },
     comparativeSpecies (state: VCMapState, speciesArray: Species[]) {
       state.comparativeSpecies = speciesArray;
-    },
-    loadedGenes (state: VCMapState, loadedGenesMap: Map<number, LoadedGene>) {
-      state.loadedGenes = loadedGenesMap;
     },
     configurationLoaded(state: VCMapState, configState: boolean | null) {
       state.configurationLoaded = configState;
@@ -200,9 +191,6 @@ export default createStore({
     setComparativeSpecies(context: ActionContext<VCMapState, VCMapState>, species: Species[]) {
       context.commit('comparativeSpecies', species);
     },
-    setLoadedGenes(context: ActionContext<VCMapState, VCMapState>, loadedGenes: Gene[]) {
-      context.commit('loadedGenes', loadedGenes);
-    },
     setIsDetailedPanelUpdating(context: ActionContext<VCMapState, VCMapState>, isUpdating: boolean) {
       context.commit('isDetailedPanelUpdating', isUpdating);
     },
@@ -220,8 +208,7 @@ export default createStore({
       context.commit('stopPosition', null);
       context.commit('comparativeSpecies', []);
       context.commit('selectedGeneIds', []);
-      context.commit('loadedGenes', null);
-      context.commit('loadedBlocks', null);
+      context.commit('selectedData', []);
       context.commit('selectedBackboneRegion', null);
       context.commit('detailedBasePairRange', { start: 0, stop: 0 });
       context.commit('configurationLoaded', null);
