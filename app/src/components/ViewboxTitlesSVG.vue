@@ -20,40 +20,28 @@
     <template v-for="(label, index) in detailedBackboneSet.titleLabels" :key="index">
       <text :class="`label small ${label.addClass}`" :x="label.posX - 5" :y="label.posY">{{label.text}}</text>
     </template>
-    <rect
-      class="navigation-btn"
-      @click="moveSpecies(detailedBackboneSet.mapKey, detailedBackboneSet.order, detailedBackboneSet.order - 1)"
-      :x="detailedBackboneSet.titleLabels[0].posX"
-      :y="detailedBackboneSet.titleLabels[0].posY - ORDER_BUTTON_Y_OFFSET"
-      width="10"
-      height="10"
-    />
-    <image
-      class="nav-btn-img"
-      href="../../node_modules/primeicons/raw-svg/chevron-left.svg"
-      @click="moveSpecies(detailedBackboneSet.mapKey, detailedBackboneSet.order, detailedBackboneSet.order - 1)"
-      :x="detailedBackboneSet.titleLabels[0].posX"
-      :y="detailedBackboneSet.titleLabels[0].posY - ORDER_BUTTON_Y_OFFSET"
-      width="10"
-      height="10"
-    />
-    <rect
-      class="navigation-btn"
-      @click="moveSpecies(detailedBackboneSet.mapKey, detailedBackboneSet.order, detailedBackboneSet.order + 1)"
-      :x="detailedBackboneSet.titleLabels[0].posX + 10"
-      :y="detailedBackboneSet.titleLabels[0].posY - ORDER_BUTTON_Y_OFFSET"
-      width="10"
-      height="10"
-    />
-    <image
-      class="nav-btn-img"
-      href="../../node_modules/primeicons/raw-svg/chevron-right.svg"
-      @click="moveSpecies(detailedBackboneSet.mapKey, detailedBackboneSet.order, detailedBackboneSet.order + 1)"
-      :x="detailedBackboneSet.titleLabels[0].posX + 10"
-      :y="detailedBackboneSet.titleLabels[0].posY - ORDER_BUTTON_Y_OFFSET"
-      width="10"
-      height="10"
-    />
+    <template v-if="detailedBackboneSet.order !== 0">
+      <SpeciesOrderButtonSVG
+        :species-list="speciesList"
+        :right-arrow="false"
+        :pos-x="detailedBackboneSet.titleLabels[0].posX"
+        :pos-y="detailedBackboneSet.titleLabels[0].posY"
+        :map-key="detailedBackboneSet.mapKey"
+        :current-order="detailedBackboneSet.order"
+        :new-order="detailedBackboneSet.order - 1"
+      />
+    </template>
+    <template v-if="detailedBackboneSet.order !== speciesList.length - 1">
+      <SpeciesOrderButtonSVG
+        :species-list="speciesList"
+        :right-arrow="true"
+        :pos-x="detailedBackboneSet.titleLabels[0].posX"
+        :pos-y="detailedBackboneSet.titleLabels[0].posY"
+        :map-key="detailedBackboneSet.mapKey"
+        :current-order="detailedBackboneSet.order"
+        :new-order="detailedBackboneSet.order + 1"
+      />
+    </template>
     <template v-for="(datatrackSet, index) in detailedBackboneSet.datatrackSets" :key="index">
       <template v-if="datatrackSet.datatracks.length > 0">
         <text
@@ -72,40 +60,28 @@
       <template v-for="(label, index) in syntenySet.titleLabels" :key="index">
         <text :class="`label small ${label.addClass}`" :x="label.posX - 5" :y="label.posY">{{label.text}}</text>
       </template>
-      <rect
-        class="navigation-btn"
-        @click="moveSpecies(syntenySet.mapKey, syntenySet.order, syntenySet.order - 1)"
-        :x="syntenySet.titleLabels[0].posX"
-        :y="syntenySet.titleLabels[0].posY - ORDER_BUTTON_Y_OFFSET"
-        width="10"
-        height="10"
-      />
-      <image
-        class="nav-btn-img"
-        href="../../node_modules/primeicons/raw-svg/chevron-left.svg"
-        @click="moveSpecies(syntenySet.mapKey, syntenySet.order, syntenySet.order - 1)"
-        :x="syntenySet.titleLabels[0].posX"
-        :y="syntenySet.titleLabels[0].posY - ORDER_BUTTON_Y_OFFSET"
-        width="10"
-        height="10"
-      />
-      <rect
-        class="navigation-btn"
-        @click="moveSpecies(syntenySet.mapKey, syntenySet.order, syntenySet.order + 1)"
-        :x="syntenySet.titleLabels[0].posX + 10"
-        :y="syntenySet.titleLabels[0].posY - ORDER_BUTTON_Y_OFFSET"
-        width="10"
-        height="10"
-      />
-      <image
-        class="nav-btn-img"
-        href="../../node_modules/primeicons/raw-svg/chevron-right.svg"
-        @click="moveSpecies(syntenySet.mapKey, syntenySet.order, syntenySet.order + 1)"
-        :x="syntenySet.titleLabels[0].posX + 10"
-        :y="syntenySet.titleLabels[0].posY - ORDER_BUTTON_Y_OFFSET"
-        width="10"
-        height="10"
-      />
+      <template v-if="syntenySet.order !== 0">
+        <SpeciesOrderButtonSVG
+          :species-list="speciesList"
+          :right-arrow="false"
+          :pos-x="syntenySet.titleLabels[0].posX"
+          :pos-y="syntenySet.titleLabels[0].posY"
+          :map-key="syntenySet.mapKey"
+          :current-order="syntenySet.order"
+          :new-order="syntenySet.order - 1"
+        />
+      </template>
+      <template v-if="syntenySet.order !== speciesList.length - 1">
+        <SpeciesOrderButtonSVG
+          :species-list="speciesList"
+          :right-arrow="true"
+          :pos-x="syntenySet.titleLabels[0].posX"
+          :pos-y="syntenySet.titleLabels[0].posY"
+          :map-key="syntenySet.mapKey"
+          :current-order="syntenySet.order"
+          :new-order="syntenySet.order + 1"
+        />
+      </template>
       <template v-for="(datatrackSet, index) in syntenySet.regions[0].datatrackSets" :key="index">
         <text
             class="label small"
@@ -127,12 +103,10 @@ import { key } from '@/store';
 import SVGConstants from '@/utils/SVGConstants';
 import SyntenyRegionSet from '@/models/SyntenyRegionSet';
 import BackboneSet from '@/models/BackboneSet';
+import SpeciesOrderButtonSVG from './SpeciesOrderButtonSVG.vue';
 import { getDetailedPanelXPositionForDatatracks } from '@/utils/Shared';
 
-const TITLE_ROTATION = -30;
-const ORDER_BUTTON_Y_OFFSET = 20;
-
-const store = useStore(key);
+const TITLE_ROTATION = -30;const store = useStore(key);
 const speciesList = computed(() => {
   const list: any[] = [];
   const speciesOrder = store.state.speciesOrder;
@@ -181,24 +155,6 @@ function getSyntenyDatatrackXPos(setOrder: number, datatrackSetIdx: number) {
   return xPos;
 }
 
-function moveSpecies(key: number, oldIndex: number, newIndex: number) {
-  const newSpeciesOrder: any = {};
-  for (let i = 0; i < speciesList.value.length; i++) {
-    const currentSpecies = speciesList.value[i];
-    if (i === oldIndex) {
-       newSpeciesOrder[currentSpecies.mapKey.toString()] = newIndex;
-    } else if (i === newIndex) {
-       newSpeciesOrder[currentSpecies.mapKey.toString()] =  oldIndex;
-    } else {
-       newSpeciesOrder[currentSpecies.mapKey.toString()] = i;
-    }
-  }
-  console.log('in moveSpecies');
-  console.log(oldIndex);
-  console.log(newIndex);
-  store.dispatch('setSpeciesOrder', newSpeciesOrder);
-}
-
 </script>
 
 <style lange="scss" scoped>
@@ -212,27 +168,5 @@ rect.panel
   stroke-width: 2;
   stroke: lightgray;
   z-index: 0;
-}
-rect.navigation-btn
-{
-  fill: lightgray;
-  stroke-width: 1;
-  stroke: lightslategray;
-  &:hover:not(.disabled)
-  {
-    fill: whitesmoke;
-    cursor: pointer;
-  }
-
-  &.disabled
-  {
-    cursor: not-allowed;
-  }
-}
-
-.nav-btn-img
-{
-  cursor: pointer;
-  pointer-events: none;
 }
 </style>
