@@ -38,7 +38,6 @@ export function createBackboneSection(species: Species, chromosome: Chromosome, 
 
 export function backboneDatatrackBuilder(species: Species, genomicData: Gene[], backboneSection: BackboneSection)
 {
-  // const masterGeneMap = new Map<number, LoadedGene>();
   const processedGenomicData: ProcessedGenomicData = {
     datatracks: [],
     genes: genomicData,
