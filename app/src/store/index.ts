@@ -37,6 +37,8 @@ export interface VCMapState
   selectedData: SelectedData[] | null;
 
   selectionToastCount: number;
+  hideBackboneDensityTrack: boolean;
+  hiddenDensityTracks: number[];
 
   /* These data structures have the potential to be pretty large */
   // TODO: I think we can remove this from state
@@ -98,6 +100,9 @@ export default createStore({
 
     /* These data structures have the potential to be pretty large */
     loadedGenes: null,
+
+    hideBackboneDensityTrack: false,
+    hiddenDensityTracks: [],
   }),
 
   mutations: {
@@ -154,7 +159,21 @@ export default createStore({
     },
     selectionToastCount(state: VCMapState, count: number) {
       state.selectionToastCount = count;
-    }
+    },
+    hideBackboneDensityTrack(state: VCMapState, isHidden: boolean) {
+      state.hideBackboneDensityTrack = isHidden;
+    },
+    toggleSyntenicDensityTrackVisibility(state: VCMapState, mapKey: number) {
+      if (!state.hiddenDensityTracks.includes(mapKey)) {
+        state.hiddenDensityTracks.push(mapKey);
+      } else {
+        state.hiddenDensityTracks = state.hiddenDensityTracks.filter((key) => key !== mapKey);
+      }
+    },
+    clearSynthenicDensityTrackVisibility(state: VCMapState) {
+      state.hiddenDensityTracks = [];
+    },
+
   },
 
   actions: {
@@ -200,6 +219,12 @@ export default createStore({
     setIsUpdatingVariants(context: ActionContext<VCMapState, VCMapState>, isUpdating: boolean) {
       context.commit('isUpdatingVariants', isUpdating);
     },
+    setHideBackboneDensityTrack(context: ActionContext<VCMapState, VCMapState>, isHidden: boolean) {
+      context.commit('hideBackboneDensityTrack', isHidden);
+    },
+    setToggleSyntenicDensityTrackVisibility(context: ActionContext<VCMapState, VCMapState>, mapKey: number) {
+      context.commit('toggleSyntenicDensityTrackVisibility', mapKey);
+    },
     clearConfiguration(context: ActionContext<VCMapState, VCMapState>) {
       context.commit('species', null);
       context.commit('gene', null);
@@ -214,6 +239,8 @@ export default createStore({
       context.commit('detailedBasePairRange', { start: 0, stop: 0 });
       context.commit('configurationLoaded', null);
       context.commit('selectionToastCount', 0);
+      context.commit('hideBackboneDensityTrack', false);
+      context.commit('clearSynthenicDensityTrackVisibility');
     },
     clearBackboneSelection(context: ActionContext<VCMapState, VCMapState>) {
       context.commit('selectedBackboneRegion', null);

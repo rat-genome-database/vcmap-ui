@@ -101,11 +101,13 @@ export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, 
  * @param backboneStop
  *     The stop of the visible range (in the backbone basepair coordinate scale).
  *
+ * 
+ * 
  * @returns
  *     The processed SyntenicRegionSets for each species.
  */
 export async function createSyntenicRegionSets(syntenyData: Map<number, Block[]>, comparativeSpecies: Species[],
-  backboneStart: number, backboneStop: number): Promise<SyntenyRegionSet[]>
+  backboneStart: number, backboneStop: number, hiddenDensityTracks: number[]): Promise<SyntenyRegionSet[]>
 {
   const syntenyRegionSets: SyntenyRegionSet[] = [];
 
@@ -124,8 +126,11 @@ export async function createSyntenicRegionSets(syntenyData: Map<number, Block[]>
         return;
       }
 
+      // check whether to ignore variant data
+      const hideDensity = hiddenDensityTracks.includes(species.activeMap.key);
+
       const syntenyRegionSet = syntenicSectionBuilder(speciesSyntenyData, species, pos,
-          backboneStart, backboneStop, 'detailed');
+          backboneStart, backboneStop, 'detailed', hideDensity);
 
       logger.log(`Completed build of Synteny for ${syntenyRegionSet?.mapName}, with ${syntenyRegionSet?.regions.length} regions`);
 
@@ -158,12 +163,12 @@ export async function createSyntenicRegionSets(syntenyData: Map<number, Block[]>
  *   The renderable version of speciesSyntenyData represented as an array of type SyntenyRegion[]
  */
 function syntenicSectionBuilder(speciesSyntenyData: Block[], species: Species, setOrder: number,
-    viewportStart: number,  viewportStop: number, renderType: RenderType)
+    viewportStart: number,  viewportStop: number, renderType: RenderType, hideDensityTrack: boolean)
 {
   const processedSyntenicRegions: SyntenyRegion[] = [];
 
   const currSpecies = species;
-  const processVariantDensity = speciesSyntenyData.some((block) => block.variantPositions && block.variantPositions.positions.length > 0);
+  const processVariantDensity = speciesSyntenyData.some((block) => block.variantPositions && block.variantPositions.positions.length > 0) && !hideDensityTrack;
   let regionMaxCount = 0;
   let regionBinSize = 0;
   // const allGeneLabels: Label[] = [];
@@ -219,6 +224,7 @@ logger.timeEnd("splitBlockWithGaps");
     // Check if there are variants and build those data tracks
     if (blockVariantPositions && processVariantDensity)
     {
+
       const variantDatatracks = createVariantDatatracks(factory, blockVariantPositions.positions,
         blockInfo.start, blockInfo.stop, blockInfo.backboneStart, blockInfo.backboneStop, blockInfo.isBlockInverted(), blockInfo);
       currSyntenicRegion.addDatatrackSections(variantDatatracks.datatracks, 0, 'variant');

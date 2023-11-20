@@ -1,7 +1,6 @@
 <template>
   <Toast />
   <svg :viewBox="'0 0 800 ' + SVGConstants.viewboxHeight" xmlns="http://www.w3.org/2000/svg" id="svg-wrapper" width="100%">
-
     <!-- Outside panel -->
     <rect class="panel" x="0" width="800" :height="SVGConstants.viewboxHeight" />
     <!-- Inner panels -->
@@ -144,6 +143,20 @@
     :show-back-button="showDialogBackButton"
   />
   <LoadingSpinnerMask v-if="arePanelsLoading" :style="getDetailedPosition()"></LoadingSpinnerMask>
+
+  <Fieldset v-if="displayDensityTrackTogglePanel" class="density-toggle-container" legend="Density Tracks" :toggleable="true">
+    <div class="flex-container">
+      <Button v-if="props.variantPositionsList" class="density-toggle-button" icon="pi pi-eye" rounded v-on:click="toggleDensityTrack()">
+        {{ detailedBackboneSet?.speciesName }}
+      </Button>
+      <template v-for="(set, index) in props.syntenyTree" :key="index">
+        <Button v-if="set[1][0].variantPositions" class="density-toggle-button" icon="pi pi-eye" rounded v-on:click="toggleSyntenicDensityTrack(set[0])">
+          {{ getSpeciesName(set[0]) }}
+        </Button>
+      </template>
+    </div>
+  </Fieldset>
+  
   <!--
   <Button
     style="margin-right: 20px;"
@@ -235,6 +248,7 @@ import { createSyntenicRegionSets,  } from '@/utils/SectionBuilder';
 import useOverviewPanelSelection from '@/composables/useOverviewPanelSelection';
 import { useLogger } from 'vue-logger-plugin';
 import Toast from 'primevue/toast';
+import Fieldset from 'primevue/fieldset';
 import { useToast } from 'primevue/usetoast';
 import { createBackboneSection, backboneDatatrackBuilder, createBackboneSet } from '@/utils/BackboneBuilder';
 import BackboneSetSVG from './BackboneSetSVG.vue';
@@ -373,6 +387,25 @@ const arePanelsLoading = computed(() => {
   return store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating || props.loading;
 });
 
+const displayDensityTrackTogglePanel = computed(() => {
+  if (props.variantPositionsList.length > 0)
+  {
+    return true;
+  }
+  for (let set of props.syntenyTree.values()) {
+    if (set[0].variantPositions)
+    {
+      return true;
+    }
+  }
+  return false;
+});
+
+const getSpeciesName = (mapKey: number) => {
+  const species = store.state.comparativeSpecies.find((species) => species.activeMap.key === mapKey);
+  return species?.name ?? '';
+};
+
 const displayVariantLegend = computed(() => {
   const backboneVariantIdx = detailedBackboneSet.value?.datatrackSets.findIndex((set) => set.type === 'variant');
   if (backboneVariantIdx !== undefined && backboneVariantIdx !== -1)
@@ -407,6 +440,24 @@ const variantBinSize = computed(() => {
 
 const currentlySelectingRegion = () => {
   return (getOverviewSelectionStatus() || getDetailedSelectionStatus());
+};
+
+const toggleDensityTrack = () => {
+  const hideDensityTrack: boolean = store.state.hideBackboneDensityTrack;
+  store.dispatch('setHideBackboneDensityTrack', !hideDensityTrack);
+  updateDetailsPanel();
+};
+
+const toggleSyntenicDensityTrack = (mapKey: number) => {
+  console.log(props.syntenyTree);
+  console.log(props.variantPositionsList);
+
+  for (let set of props.syntenyTree.values()) {
+    console.log(set[0].variantPositions);
+  }
+
+  store.dispatch('setToggleSyntenicDensityTrackVisibility', mapKey);
+  updateDetailsPanel();
 };
 
 const updateOverviewPanel = async () => {
@@ -462,6 +513,7 @@ const updateDetailsPanel = async () => {
   const backboneSpecies = store.state.species;
   const backboneChromosome = store.state.chromosome;
   const detailedBasePairRange = store.state.detailedBasePairRange;
+  const hiddenDensityTracks = store.state.hiddenDensityTracks;
 
   // Get comparison species Ids for ortholog API call parameter
   const comparativeSpeciesIds: number[] = [];
@@ -512,7 +564,7 @@ const updateDetailsPanel = async () => {
 
   // Now check for other potential datatracks to add to the backbone (like variant positions)
   props.variantPositionsList.forEach((variantPositions) => {
-    if (variantPositions.mapKey === backboneSpecies.activeMap.key)
+    if (variantPositions.mapKey === backboneSpecies.activeMap.key && !store.state.hideBackboneDensityTrack)
     {
       updateBackboneVariants(backboneSpecies, variantPositions, detailedBackbone);
     }
@@ -528,6 +580,7 @@ const updateDetailsPanel = async () => {
       store.state.comparativeSpecies,
       detailedBasePairRange.start,
       detailedBasePairRange.stop,
+      hiddenDensityTracks,
   );
   timeSyntenyTracks = Date.now() - syntenyTracksStart;
 
@@ -858,6 +911,29 @@ rect.navigation-btn
 .legend-container
 {
   margin-left: 1%;
+}
+
+.density-toggle-container
+{
+  margin-top: 1%;
+  margin-bottom: 1%;
+  width: fit-content;
+}
+
+.density-toggle-button
+{
+  margin-left: 2%;
+  margin-right: 2%;
+  width: fit-content;
+  min-width: 4em;
+}
+
+.flex-container
+{
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: space-between;
 }
 .col-4
 {

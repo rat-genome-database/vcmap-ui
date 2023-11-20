@@ -35,6 +35,11 @@
           <DetailsControls />
         </div>
       </Panel>
+      <!-- <Panel :toggleable="true" class="vcmap-panel">
+        <div class="grid p-d-flex">
+          toggle here
+        </div>
+      </Panel> -->
     </div>
   </div>
   <LoadDataTrackControls

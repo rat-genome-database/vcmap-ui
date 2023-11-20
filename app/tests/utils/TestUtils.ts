@@ -81,6 +81,9 @@ export namespace TestUtils
         isUpdatingVariants: false,
         selectionToastCount: 0,
 
+        hideBackboneDensityTrack: false,
+        hiddenDensityTracks: [],
+
         // Overwrite default state with props passed in by the tester
         ...initialState,
       },
