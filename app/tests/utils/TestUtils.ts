@@ -88,6 +88,9 @@ export namespace TestUtils
         // },
         speciesOrder: {},
 
+        hideBackboneDensityTrack: false,
+        hiddenDensityTracks: [],
+
         // Overwrite default state with props passed in by the tester
         ...initialState,
       },

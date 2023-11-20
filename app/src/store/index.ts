@@ -41,6 +41,8 @@ export interface VCMapState
   isDataPanelCollapsed: boolean;
 
   selectionToastCount: number;
+  hideBackboneDensityTrack: boolean;
+  hiddenDensityTracks: number[];
   // NOTE: I'm commenting these out for now because I'm not using them,
   // but I think we can use something like this to start setting some variables
   // to adjust positions and spacing of elements in the svg
@@ -113,6 +115,9 @@ export default createStore({
     //   detailedSpeciesGap: 20,
     // },
     speciesOrder: {},
+
+    hideBackboneDensityTrack: false,
+    hiddenDensityTracks: [],
   }),
 
   mutations: {
@@ -167,6 +172,19 @@ export default createStore({
     selectionToastCount(state: VCMapState, count: number) {
       state.selectionToastCount = count;
     },
+    hideBackboneDensityTrack(state: VCMapState, isHidden: boolean) {
+      state.hideBackboneDensityTrack = isHidden;
+    },
+    toggleSyntenicDensityTrackVisibility(state: VCMapState, mapKey: number) {
+      if (!state.hiddenDensityTracks.includes(mapKey)) {
+        state.hiddenDensityTracks.push(mapKey);
+      } else {
+        state.hiddenDensityTracks = state.hiddenDensityTracks.filter((key) => key !== mapKey);
+      }
+    },
+    clearSynthenicDensityTrackVisibility(state: VCMapState) {
+      state.hiddenDensityTracks = [];
+    },
     flankingGene1(state: VCMapState, gene: Gene | null) {
       state.flankingGene1 = gene;
     },
@@ -218,6 +236,12 @@ export default createStore({
     setIsUpdatingVariants(context: ActionContext<VCMapState, VCMapState>, isUpdating: boolean) {
       context.commit('isUpdatingVariants', isUpdating);
     },
+    setHideBackboneDensityTrack(context: ActionContext<VCMapState, VCMapState>, isHidden: boolean) {
+      context.commit('hideBackboneDensityTrack', isHidden);
+    },
+    setToggleSyntenicDensityTrackVisibility(context: ActionContext<VCMapState, VCMapState>, mapKey: number) {
+      context.commit('toggleSyntenicDensityTrackVisibility', mapKey);
+    },
     clearConfiguration(context: ActionContext<VCMapState, VCMapState>) {
       context.commit('species', null);
       context.commit('gene', null);
@@ -231,6 +255,8 @@ export default createStore({
       context.commit('detailedBasePairRange', { start: 0, stop: 0 });
       context.commit('configurationLoaded', null);
       context.commit('selectionToastCount', 0);
+      context.commit('hideBackboneDensityTrack', false);
+      context.commit('clearSynthenicDensityTrackVisibility');
       context.commit('setSpeciesOrder', {});
     },
     clearBackboneSelection(context: ActionContext<VCMapState, VCMapState>) {
