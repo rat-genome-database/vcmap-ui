@@ -35,7 +35,8 @@
         show-data-on-hover
         :backbone-set="detailedBackboneSet" 
         :synteny-hover-svg-y="detailedSyntenySvgYPosition"
-        @synteny-hover="onDetailedSyntenyHover" :gene-list="geneList" />
+        @synteny-hover="onDetailedSyntenyHover" :gene-list="geneList"
+        :synteny-hover-backbone-y-values="detailedSyntenyBlockYPositions" />
       <template v-if="detailedBackboneSet.geneLabels">
         <template v-for="(label, index) in detailedBackboneSet.geneLabels" :key="index">
           <template v-if="(label.isVisible)">
@@ -53,7 +54,8 @@
             :region="(syntenicRegion as SyntenyRegion)" 
             :synteny-hover-svg-y="detailedSyntenySvgYPosition" 
             :gene-list="geneList"
-            @synteny-hover="onDetailedSyntenyHover" />
+            @synteny-hover="onDetailedSyntenyHover"
+            @block-hover="onDetailedBlockHover" />
         </template>
         <template v-for="(label, index) in syntenySet.geneLabels" :key="index">
           <template v-if="label.isVisible">
@@ -162,6 +164,12 @@
       </template>
     </div>
   </Fieldset>
+
+  <div>
+    <p>
+      Y: {{ detailedSyntenySvgYPosition }}
+    </p>
+  </div>
   
   <!--
   <Button
@@ -305,6 +313,7 @@ let detailedBackboneSet = ref<BackboneSet>();
 let overviewSyntenySets = ref<SyntenyRegionSet[]>([]);
 let orthologLines = ref<OrthologLine[]>();
 let detailedSyntenySvgYPosition = ref<number | null>(null);
+let detailedSyntenyBlockYPositions = ref<number[] | null>(null);
 
 ////
 // Debugging helper refs and methods (debug template is currently commented out):
@@ -686,6 +695,10 @@ const isNavigationDownDisabled = computed(() => {
 
 const onDetailedSyntenyHover = (svgY: number | null) => {
   detailedSyntenySvgYPosition.value = svgY;
+};
+
+const onDetailedBlockHover = (startStopY: number[] | null) => {
+  detailedSyntenyBlockYPositions.value = startStopY;
 };
 
 
