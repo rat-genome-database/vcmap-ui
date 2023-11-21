@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import HeaderPanel from '@/components/HeaderPanel.vue';
-import Species from '@/models/Species';
+import Species, { ComparativeSpecies } from '@/models/Species';
 import Map from '@/models/SpeciesMap';
 import { TestUtils } from '../../utils/TestUtils';
 import Chromosome from '@/models/Chromosome';
@@ -8,8 +8,8 @@ import Chromosome from '@/models/Chromosome';
 const mockStore = TestUtils.initStore({
   species: new Species({ typeKey: 1, name: 'Test Species', defaultMapKey: 1, maps: [new Map({ key: 1, primaryRefAssembly: true, name: 'GRCh38'})]}),
   comparativeSpecies: [
-    new Species({ typeKey: 2, name: 'Test Species 2', defaultMapKey: 2, maps: [new Map({ key: 2, primaryRefAssembly: true, name: 'GRCh37'})] }), 
-    new Species({ typeKey: 3, name: 'Test Species 3', defaultMapKey: 3, maps: [new Map({ key: 3, primaryRefAssembly: true, name: 'GRCh36'})] })
+    new ComparativeSpecies({ typeKey: 2, name: 'Test Species 2', defaultMapKey: 2, maps: [new Map({ key: 2, primaryRefAssembly: true, name: 'GRCh37'})] }),
+    new ComparativeSpecies({ typeKey: 3, name: 'Test Species 3', defaultMapKey: 3, maps: [new Map({ key: 3, primaryRefAssembly: true, name: 'GRCh36'})] })
   ],
   chromosome: new Chromosome ({ 'mapKey': 0, 'chromosome':'T', 'seqLength': 100 }),
 });

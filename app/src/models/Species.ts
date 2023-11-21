@@ -36,3 +36,12 @@ export default class Species
     });
   }
 }
+
+export class ComparativeSpecies extends Species
+{
+  visible: boolean = true;
+  constructor(params: {typeKey: number, name: string, defaultMapKey?: number, maps: SpeciesMap[]})
+  {
+    super(params);
+  }
+}
