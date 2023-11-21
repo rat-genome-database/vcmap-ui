@@ -95,6 +95,42 @@
       :y2="mouseYPos"
     />
   </template>
+  <template v-if="props.syntenyHoverBackboneYValues != null">
+    <text
+      class="block-label-text"
+      text-anchor="end"
+      dominant-baseline="middle"
+      :x="backbone.posX1 - 1"
+      :y="props.syntenyHoverBackboneYValues![0]"
+    >
+      {{ blockStartPositionLabel }}
+    </text>
+    <line
+      class="block-label"
+      :x1="backbone.posX1"
+      :x2="backbone.posX1 + backbone.width"
+      :y1="props.syntenyHoverBackboneYValues![0]"
+      :y2="props.syntenyHoverBackboneYValues![0]"
+      stroke-dasharray="2,2"
+    />
+    <text
+      class="block-label-text"
+      text-anchor="end"
+      dominant-baseline="middle"
+      :x="backbone.posX1 - 1"
+      :y="props.syntenyHoverBackboneYValues![1]"
+    >
+      {{ blockStopPositionLabel }}
+    </text>
+    <line
+      class="block-label"
+      :x1="backbone.posX1"
+      :x2="backbone.posX1 + backbone.width"
+      :y1="props.syntenyHoverBackboneYValues![1]"
+      :y2="props.syntenyHoverBackboneYValues![1]"
+      stroke-dasharray="2,2"
+    />
+  </template>
 </template>
 
 <script lang="ts" setup>
@@ -131,7 +167,7 @@ interface Props
   backboneSet: BackboneSet;
   syntenyHoverSvgY?: number | null;
   geneList: Map<number, Gene>;
-  
+  syntenyHoverBackboneYValues?: number[] | null;
 }
 
 const props = defineProps<Props>();
@@ -164,6 +200,8 @@ if (store.state.chromosome)
   selectedRegion.value = store.state.selectedBackboneRegion ?? new BackboneSelection(store.state.chromosome);
 }
 const basePairPositionLabel = ref<string>('');
+const blockStartPositionLabel = ref<string>('');
+const blockStopPositionLabel = ref<string>('');
 
 watch(() => store.state.selectedBackboneRegion, (newVal: BackboneSelection | null) => {
   // Watch for possible clear out of the selected backbone region
@@ -186,7 +224,7 @@ watch(() => props.syntenyHoverSvgY, () => {
   // show the bp position on this backbone section
   if (!props.backboneSet.backbone.isHovered && props.syntenyHoverSvgY != null)
   {
-    updatePositionLabelFromSVG(props.syntenyHoverSvgY);
+    updatePositionLabelFromSVG(props.syntenyHoverSvgY, props.syntenyHoverBackboneYValues![0], props.syntenyHoverBackboneYValues![1]);
   }
 });
 
@@ -326,8 +364,14 @@ const updatePositionLabelFromMouseEvent = (event: MouseEvent) => {
   }
 };
 
-const updatePositionLabelFromSVG = (svgY: number) => {
+const updatePositionLabelFromSVG = (svgY: number, blockStartY: number, blockStopY: number) => {
+  const basePairStart = getBasePairPositionFromSVG(blockStartY, backbone.value.windowSVGStart, backbone.value.windowSVGStop, backbone.value.windowStart, backbone.value.windowStop);
+  const basePairStop = getBasePairPositionFromSVG(blockStopY, backbone.value.windowSVGStart, backbone.value.windowSVGStop, backbone.value.windowStart, backbone.value.windowStop);
   const basePairPos = getBasePairPositionFromSVG(svgY, backbone.value.windowSVGStart, backbone.value.windowSVGStop, backbone.value.windowStart, backbone.value.windowStop);
+
+  // todo: calculate start and stop label positions from svgY's based on hovered synteny block start and stop
+  blockStartPositionLabel.value = Formatter.convertBasePairToLabel(basePairStart) || '';
+  blockStopPositionLabel.value = Formatter.convertBasePairToLabel(basePairStop) || '';
   basePairPositionLabel.value = Formatter.convertBasePairToLabel(basePairPos) || '';
 };
 </script>
@@ -335,6 +379,13 @@ const updatePositionLabelFromSVG = (svgY: number) => {
 <style lang="scss" scoped>
 .label.small
 {
+  font: normal 8px sans-serif;
+  pointer-events: none;
+}
+
+.block-label-text
+{
+  color: rgb(75, 74, 74);
   font: normal 8px sans-serif;
   pointer-events: none;
 }
@@ -373,6 +424,12 @@ const updatePositionLabelFromSVG = (svgY: number) => {
 .position-label
 {
   stroke: black;
+  pointer-events: none;
+}
+
+.block-label
+{
+  stroke: rgb(75, 74, 74);
   pointer-events: none;
 }
 </style>

@@ -200,7 +200,8 @@ interface Props
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (e: 'synteny-hover', svgY: number | null): void
+  (e: 'synteny-hover', svgY: number | null): void,
+  (e: 'block-hover', startStop: number[] | null): void,
 }>();
 
 //Converts each property in this object to its own reactive prop
@@ -246,6 +247,10 @@ const isRegionHovered = computed(() => {
 const showBasePairLine = computed(() => {
   return props.syntenyHoverSvgY != null && mouseYPos.value != null && !props.showStartStop
     && (isRegionHovered.value || basePairPositionLabel.value !== '');
+});
+
+const isDetailed = computed(() => {
+  return props.backboneSet.backbone.renderType === 'detailed';
 });
 
 const onMouseEnter = (section: SyntenySection | DatatrackSection, type: SelectedDataType) => {
@@ -304,6 +309,9 @@ const onMouseEnter = (section: SyntenySection | DatatrackSection, type: Selected
 
 const onMouseLeave = (section: DatatrackSection | SyntenySection) => {
   emit('synteny-hover', null);
+  if (isDetailed){
+    emit('block-hover', null);
+  }
   basePairPositionLabel.value = '';
 
   if (section)
@@ -420,6 +428,12 @@ const updatePositionLabelFromMouseEvent = (event: MouseEvent, blockSection: Synt
   {
     // Emit our svg y position so that other synteny sections can see it
     emit('synteny-hover', mouseYPos.value ?? null);
+
+    if (isDetailed){
+      emit('block-hover', [props.region.gaplessBlock.posY1, props.region.gaplessBlock.posY2]);
+    }
+    // emit('block-hover', [blockSection.speciesStart, blockSection.speciesStop]);
+
   }
 };
 
