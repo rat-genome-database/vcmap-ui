@@ -39,7 +39,21 @@
         icon="pi pi-plus-circle"
         class="p-button mb-2" />
     </div>
-    <p v-if="comparativeSpeciesSelections == null || comparativeSpeciesSelections.length === 0">No comparative species selected...</p>
+    <div v-for="(species, index) in store.state.comparativeSpecies" :key="index">
+      <div class="grid">
+        <div class="col-4">
+          {{ species.name }} ({{ species.activeMap.name }})
+        </div>
+        <div class="col-2">
+          <ToggleButton
+            v-model="species.visible"
+          />
+        </div>
+        <div class="lg:col-1 md:col-1 sm:col-1">
+          <Button @click="removeComparativeSpecies(index)" label="Remove" icon="pi pi-minus-circle" class="p-button-sm p-button-danger" />
+        </div>
+      </div>
+    </div>
     <div>
       <Message severity="warn" closeable v-if="comparativeSpeciesSelections.length >= 4">Selecting 4 or more species might cause display errors</Message>
     </div>
@@ -809,23 +823,6 @@ const comparativeSpeciesSelections = ref<ComparativeSpeciesSelection[]>([]);
 const comparativeSpeciesLimitReached = computed(() => {
   return (comparativeSpeciesSelections.value.length >= 5);
 });
-const initComparativeSpeciesSelections = () => {
-  const compSpeciesSelections: ComparativeSpeciesSelection[] = store.state.comparativeSpecies.map((species: Species) => ({
-    typeKey: species.typeKey,
-    mapKey: species.defaultMapKey,
-    showWarning: false,
-    visible: species.visible,
-  }));
-  if (compSpeciesSelections.length > 0) {
-    comparativeSpeciesSelections.value = compSpeciesSelections;
-  } else {
-    comparativeSpeciesSelections.value = [];
-  }
-}
-initComparativeSpeciesSelections();
-watch(() => store.state.comparativeSpecies, () => {
-  initComparativeSpeciesSelections();
-});
 
 function addTempComparativeSpecies()
 {
@@ -896,13 +893,19 @@ function removeTempComparativeSpecies(index: number)
   comparativeSpeciesSelections.value.splice(index, 1);
 }
 
+function removeComparativeSpecies(index: number)
+{
+  const comparativeSpecies = store.state.comparativeSpecies;
+  comparativeSpecies.splice(index, 1);
+}
+
 async function updateComparativeSpecies() {
   const speciesOrder: any = {};
   const origComparativeSpeciesIds = store.state.comparativeSpecies.map((species: Species) => species.activeMap.key);
   const backboneKey = store.state.species?.activeMap.key || 0;
   speciesOrder[backboneKey.toString()] = 0;
-  const comparativeSpecies: Species[] = [];
-  let currentOrder = 0;
+  const comparativeSpecies: Species[] = store.state.comparativeSpecies;
+  let currentOrder = comparativeSpecies.length;
   comparativeSpeciesSelections.value.forEach(s => {
     if (s.typeKey === 0)
     {
@@ -925,7 +928,6 @@ async function updateComparativeSpecies() {
           }
         }
         // TEMP to test visibility display
-        selectedSpecies.visible = !selectedSpecies.visible;
         comparativeSpecies.push(selectedSpecies);
         speciesOrder[selectedSpecies.activeMap.key] = currentOrder;
         break;
@@ -934,6 +936,7 @@ async function updateComparativeSpecies() {
   });
   const newComparativeSpeciesIds = comparativeSpecies.map((species: Species) => species.activeMap.key);
   const newIsSubset = newComparativeSpeciesIds.every((id) => origComparativeSpeciesIds.includes(id));
+  comparativeSpeciesSelections.value = [];
   if (!newIsSubset && store.state.chromosome && store.state.species) {
     const backboneGenes: Gene[] = await GeneApi.getGenesByRegion(
       store.state.chromosome.chromosome,
