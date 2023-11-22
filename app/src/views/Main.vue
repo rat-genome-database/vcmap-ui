@@ -896,8 +896,9 @@ function removeTempComparativeSpecies(index: number)
   comparativeSpeciesSelections.value.splice(index, 1);
 }
 
-function updateComparativeSpecies() {
+async function updateComparativeSpecies() {
   const speciesOrder: any = {};
+  const origComparativeSpeciesIds = store.state.comparativeSpecies.map((species: Species) => species.activeMap.key);
   const backboneKey = store.state.species?.activeMap.key || 0;
   speciesOrder[backboneKey.toString()] = 0;
   const comparativeSpecies: Species[] = [];
@@ -931,6 +932,38 @@ function updateComparativeSpecies() {
       }
     }
   });
+  const newComparativeSpeciesIds = comparativeSpecies.map((species: Species) => species.activeMap.key);
+  const newIsSubset = newComparativeSpeciesIds.every((id) => origComparativeSpeciesIds.includes(id));
+  if (!newIsSubset && store.state.chromosome && store.state.species) {
+    const backboneGenes: Gene[] = await GeneApi.getGenesByRegion(
+      store.state.chromosome.chromosome,
+      0, store.state.chromosome.seqLength,
+      store.state.species.activeMap.key, store.state.species.name,
+      newComparativeSpeciesIds);
+
+    // Process response
+    // TODO: Should we add a "Block" for the backbone first?
+    backboneGenes.forEach((geneData) => {
+      geneList.value.set(geneData.rgdId, geneData);
+    });
+
+    const newSpecies = comparativeSpecies.filter((species: Species) => !origComparativeSpeciesIds.includes(species.activeMap.key));
+    // Preload off-backbone large blocks and genes
+    let threshold = getThreshold(store.state.chromosome.seqLength);
+    const speciesSyntenyDataArray = await SyntenyApi.getSyntenicRegions({
+      backboneChromosome: store.state.chromosome,
+      start: 0,
+      stop: store.state.chromosome.seqLength,
+      optional: {
+        includeGenes: true,
+        includeOrthologs: true,
+        threshold: threshold,
+      },
+      comparativeSpecies: newSpecies,
+    });
+
+    processSynteny(speciesSyntenyDataArray, 0, store.state.chromosome.seqLength);
+  }
   store.dispatch('setSpeciesOrder', speciesOrder);
   store.dispatch('setComparativeSpecies', comparativeSpecies);
 
