@@ -67,6 +67,9 @@
           />
         <small v-if="comparativeSpeciesSelections[index].showWarning" class="warning-text">Warning: Selected same species and assembly as the backbone</small>
       </div>
+      <div>
+        {{ species.visible }}
+      </div>
       <div class="lg:col-1 md:col-1 sm:col-1">
         <Button @click="removeTempComparativeSpecies(index)" label="Remove" icon="pi pi-minus-circle" class="p-button-sm p-button-danger" />
       </div>
@@ -799,6 +802,7 @@ interface ComparativeSpeciesSelection
   typeKey: number;
   mapKey: number;
   showWarning: boolean;
+  visible: boolean;
 }
 const speciesOptions = ref<Species[]>([]);
 const comparativeSpeciesSelections = ref<ComparativeSpeciesSelection[]>([]);
@@ -810,6 +814,7 @@ const initComparativeSpeciesSelections = () => {
     typeKey: species.typeKey,
     mapKey: species.defaultMapKey,
     showWarning: false,
+    visible: species.visible,
   }));
   if (compSpeciesSelections.length > 0) {
     comparativeSpeciesSelections.value = compSpeciesSelections;
@@ -818,13 +823,16 @@ const initComparativeSpeciesSelections = () => {
   }
 }
 initComparativeSpeciesSelections();
+watch(() => store.state.comparativeSpecies, () => {
+  initComparativeSpeciesSelections();
+});
 
 function addTempComparativeSpecies()
 {
   let currLength = comparativeSpeciesSelections.value.length;
   if (currLength < 5)
   {
-    comparativeSpeciesSelections.value.push({ typeKey: 0, mapKey: 0, showWarning: false });
+    comparativeSpeciesSelections.value.push({ typeKey: 0, mapKey: 0, showWarning: false, visible: true });
   }
 }
 
@@ -910,10 +918,13 @@ function updateComparativeSpecies() {
           if (selectedSpecies.maps[j].key === s.mapKey)
           {
             selectedSpecies.activeMap = selectedSpecies.maps[j];
+            selectedSpecies.visible = s.visible;
             currentOrder++;
             break;
           }
         }
+        // TEMP to test visibility display
+        selectedSpecies.visible = !selectedSpecies.visible;
         comparativeSpecies.push(selectedSpecies);
         speciesOrder[selectedSpecies.activeMap.key] = currentOrder;
         break;
@@ -922,7 +933,8 @@ function updateComparativeSpecies() {
   });
   store.dispatch('setSpeciesOrder', speciesOrder);
   store.dispatch('setComparativeSpecies', comparativeSpecies);
-  initVCMapProcessing();
+
+  queryAndProcessSyntenyForBasePairRange(store.state.chromosome, store.state.detailedBasePairRange.start, store.state.detailedBasePairRange.stop);
 }
 
 </script>

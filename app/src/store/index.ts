@@ -1,7 +1,6 @@
 import { ActionContext, createStore, Store } from 'vuex';
 import VuexPersistence from 'vuex-persist';
 import Species from '@/models/Species';
-import type { ComparativeSpecies } from '@/models/Species';
 import Chromosome from '@/models/Chromosome';
 import Gene from '@/models/Gene';
 import BackboneSelection, { BasePairRange } from '@/models/BackboneSelection';
@@ -23,7 +22,7 @@ export interface VCMapState
   gene: Gene | null; // backbone gene
   flankingGene1: Gene | null;
   flankingGene2: Gene | null;
-  comparativeSpecies: ComparativeSpecies[];
+  comparativeSpecies: Species[];
   configMode: ConfigurationMode;
 
   /* Triggers for VCMap processing/rendering */
@@ -137,7 +136,7 @@ export default createStore({
     gene (state: VCMapState, gene: Gene) {
       state.gene = gene;
     },
-    comparativeSpecies (state: VCMapState, speciesArray: ComparativeSpecies[]) {
+    comparativeSpecies (state: VCMapState, speciesArray: Species[]) {
       state.comparativeSpecies = speciesArray;
     },
     configurationLoaded(state: VCMapState, configState: boolean | null) {
@@ -225,7 +224,7 @@ export default createStore({
     setSelectedGeneIds(context: ActionContext<VCMapState, VCMapState>, selectedIds: number[]) {
       context.commit('selectedGeneIds', selectedIds);
     },
-    setComparativeSpecies(context: ActionContext<VCMapState, VCMapState>, species: ComparativeSpecies[]) {
+    setComparativeSpecies(context: ActionContext<VCMapState, VCMapState>, species: Species[]) {
       context.commit('comparativeSpecies', species);
     },
     setIsDetailedPanelUpdating(context: ActionContext<VCMapState, VCMapState>, isUpdating: boolean) {

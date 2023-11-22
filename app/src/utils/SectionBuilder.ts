@@ -35,7 +35,7 @@ export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, 
   // TODO: This code is extremely similar to building synteny blocks WITH datatracks, need to reorganize this...
   let defaultOrder = 1;
   syntenyData.forEach((blocks, mapKey) => {
-    const currSpecies = comparativeSpecies.find((compSpecies) => compSpecies.activeMap.key == mapKey);
+    const currSpecies = comparativeSpecies.find((compSpecies) => compSpecies.activeMap.key == mapKey && compSpecies.visible);
     if (!currSpecies) return;
 
     const speciesPos = speciesOrder[currSpecies.activeMap.key.toString()] ?? defaultOrder;
@@ -123,10 +123,11 @@ export async function createSyntenicRegionSets(syntenyData: Map<number, Block[]>
       // NOTE: In the future we are going to have to address how we will allow the
       //   possibility of a Species with >1 "active" map. For example, loading multiple
       //   assemblies for one Species to allow comparing assembly differences...
-      const species = comparativeSpecies.find((species) => { return species.activeMap.key == mapKey; });
+      const species = comparativeSpecies.find((species) => { return species.activeMap.key == mapKey && species.visible; });
+      // TODO: This used to log an error, but now it might not be worth actually logging
       if (!species)
       {
-        logger.error(`Cannot find Species object for mapKey ${mapKey}!!`);
+        logger.info(`Either annot find Species object for mapKey ${mapKey} or it's hidden`);
         return;
       }
 
@@ -141,6 +142,7 @@ export async function createSyntenicRegionSets(syntenyData: Map<number, Block[]>
 
       // Add this to our final Array
       if (syntenyRegionSet) syntenyRegionSets.push(syntenyRegionSet);
+      // Increment our position to place next species in the next order spot
       defaultPos++;
     });
   }
