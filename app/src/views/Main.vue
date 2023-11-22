@@ -905,7 +905,7 @@ async function updateComparativeSpecies() {
   const backboneKey = store.state.species?.activeMap.key || 0;
   speciesOrder[backboneKey.toString()] = 0;
   const comparativeSpecies: Species[] = store.state.comparativeSpecies;
-  let currentOrder = comparativeSpecies.length;
+  let currentOrder = comparativeSpecies.filter(s => s.visible).length;
   comparativeSpeciesSelections.value.forEach(s => {
     if (s.typeKey === 0)
     {
