@@ -164,12 +164,6 @@
       </template>
     </div>
   </Fieldset>
-
-  <div>
-    <p>
-      Y: {{ detailedSyntenySvgYPosition }}
-    </p>
-  </div>
   
   <!--
   <Button
