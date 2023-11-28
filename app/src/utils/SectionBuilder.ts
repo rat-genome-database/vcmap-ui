@@ -138,7 +138,7 @@ export async function createSyntenicRegionSets(syntenyData: Map<number, Block[]>
       const syntenyRegionSet = syntenicSectionBuilder(speciesSyntenyData, species, speciesPos ?? defaultPos,
           backboneStart, backboneStop, 'detailed', hideDensity);
 
-      logger.log(`Completed build of Synteny for ${syntenyRegionSet?.mapName}, with ${syntenyRegionSet?.regions.length} regions`);
+      logger.info(`Completed build of Synteny for ${syntenyRegionSet?.mapName}, with ${syntenyRegionSet?.regions.length} regions`);
 
       // Add this to our final Array
       if (syntenyRegionSet) syntenyRegionSets.push(syntenyRegionSet);
@@ -224,7 +224,7 @@ logger.timeEnd('createSyntenySectionAndRegion');
 
     // Step 2: Split the gapless Block into multiple GenomicSections based on gaps.
 logger.time("splitBlockWithGaps");
-    logger.log(`Splitting block w/ ${blockGaps.length} gaps`);
+    logger.info(`Splitting block w/ ${blockGaps.length} gaps`);
     currSyntenicRegion.splitBlockWithGaps(factory, blockGaps);
 logger.timeEnd("splitBlockWithGaps");
 
@@ -264,7 +264,7 @@ logger.timeEnd("  filterVisibleGenes");
 let timerLabel = `  syntenicDataTrackBuilder(${visibleGenes.length})`;
 logger.time(timerLabel);
       // const processedGeneInfo = {genomicData: [], orthologLines: [], geneIds: []};
-// logger.log('Visible Gene list: ', visibleGenes);
+// logger.info('Visible Gene list: ', visibleGenes);
       const processedGeneInfo = syntenicDatatrackBuilder(factory, visibleGenes, blockInfo.orientation);
 // FIXME: I have a theory that the "Gene" object used to create the GeneDataTrack may be too heavy and not need references
 //   for things like the Block it is owned by. Would like to explore this next potentially...

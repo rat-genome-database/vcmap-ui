@@ -84,7 +84,7 @@ export default class SyntenyRegion
       .sort((a, b) => a.backboneStart - b.backboneStart);
     logger.timeEnd(`Sort gaps for splitBlockWithGaps`);
 
-    logger.log(` splitBlockWithGaps: filtered ${gaps.length} down gaps to ${sortedGaps.length}`);
+    logger.info(` splitBlockWithGaps: filtered ${gaps.length} down gaps to ${sortedGaps.length}`);
 
     this.syntenyBlocks = [];
     this.syntenyGaps = [];

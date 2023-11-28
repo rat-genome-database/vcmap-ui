@@ -111,7 +111,8 @@ const speciesList = computed(() => {
   const list: any[] = [];
   const speciesOrder = store.state.speciesOrder;
   const backboneSpecies = store.state.species;
-  const comparativeSpecies = store.state.comparativeSpecies;
+  // NOTE: we're only going to count visible species for this list
+  const comparativeSpecies = store.state.comparativeSpecies.filter(s => s.visible);
   const numSpecies = comparativeSpecies.length + 1;
   for (let i = 0; i < numSpecies; i++) {
     Object.keys(speciesOrder).forEach((key) => {

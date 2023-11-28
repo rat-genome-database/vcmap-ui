@@ -514,7 +514,7 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
       if (blockData.block.chainLevel > MAX_CHAINLEVEL_GENES)
       {
         // Skip saving any genes that are above our defined max chainlevel for genes
-        $log.log(`Skipping ${blockData.genes.length} genes due to chain level filter`);
+        $log.info(`Skipping ${blockData.genes.length} genes due to chain level filter`);
         continue;
       }
 
@@ -900,12 +900,19 @@ function removeComparativeSpecies(index: number)
 }
 
 async function updateComparativeSpecies() {
+  isLoading.value = true;
   const speciesOrder: any = {};
   const origComparativeSpeciesIds = store.state.comparativeSpecies.map((species: Species) => species.activeMap.key);
   const backboneKey = store.state.species?.activeMap.key || 0;
   speciesOrder[backboneKey.toString()] = 0;
   const comparativeSpecies: Species[] = store.state.comparativeSpecies;
-  let currentOrder = comparativeSpecies.filter(s => s.visible).length;
+  let currentOrder = 0;
+  comparativeSpecies.forEach((s: Species) => {
+    if (s.visible) {
+      currentOrder++;
+      speciesOrder[s.activeMap.key] = currentOrder;
+    }
+  });
   comparativeSpeciesSelections.value.forEach(s => {
     if (s.typeKey === 0)
     {
@@ -923,13 +930,15 @@ async function updateComparativeSpecies() {
           {
             selectedSpecies.activeMap = selectedSpecies.maps[j];
             selectedSpecies.visible = s.visible;
-            currentOrder++;
+            // Only increment and set order if species is visible
+            if (selectedSpecies.visible) {
+              currentOrder++;
+              speciesOrder[selectedSpecies.activeMap.key] = currentOrder;
+            }
             break;
           }
         }
-        // TEMP to test visibility display
         comparativeSpecies.push(selectedSpecies);
-        speciesOrder[selectedSpecies.activeMap.key] = currentOrder;
         break;
       }
     }
@@ -969,8 +978,8 @@ async function updateComparativeSpecies() {
   }
   store.dispatch('setSpeciesOrder', speciesOrder);
   store.dispatch('setComparativeSpecies', comparativeSpecies);
-
-  queryAndProcessSyntenyForBasePairRange(store.state.chromosome, store.state.detailedBasePairRange.start, store.state.detailedBasePairRange.stop);
+  await queryAndProcessSyntenyForBasePairRange(store.state.chromosome, store.state.detailedBasePairRange.start, store.state.detailedBasePairRange.stop);
+  isLoading.value = false;
 }
 
 </script>

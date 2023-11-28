@@ -109,7 +109,7 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
       const basePairStop = Math.floor((stopDetailedSelectionY.value - SVGConstants.panelTitleHeight) / pixelsPerBpRatio)
           + store.state.detailedBasePairRange.start;
 
-      $log.log(`Requesting zoom to (${basePairStart}, ${basePairStop}) from Y:(${startDetailedSelectionY.value}, ${stopDetailedSelectionY.value})`);
+      $log.info(`Requesting zoom to (${basePairStart}, ${basePairStop}) from Y:(${startDetailedSelectionY.value}, ${stopDetailedSelectionY.value})`);
       store.dispatch('setSelectionToastCount', toastCount + 1);
       store.dispatch('setDetailedBasePairRequest', { start: basePairStart, stop: basePairStop });
       // store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: basePairStop });
