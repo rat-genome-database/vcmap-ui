@@ -37,7 +37,12 @@ defineProps<Props>();
 {
   width: 100px;
   height: 20px;
-  background: linear-gradient(90deg, v-bind(minColor), v-bind(maxColor));
+  background: 
+    linear-gradient(
+      to right in oklch decreasing hue, 
+      oklch(68% 0.19 250) 6% 6%, oklch(68% 0.19 15) 93% 93%
+    )
+  ;
 }
 
 .legend-container

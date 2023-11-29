@@ -121,7 +121,7 @@
                 :species-name="detailedBackboneSet?.speciesName || ''" :map-name="detailedBackboneSet?.mapName"
                 :min-value="0" :max-value="detailedBackboneSet?.maxVariantCount || 0"
                 :bin-size="detailedBackboneSet.variantBinSize"
-                min-color="#0000FF" max-color="#FF0000">
+                min-color="oklch(68% 0.25 315) 99% 99%" max-color="oklch(68% 0.18 15) 7% 7%">
               </GradientLegend>
             </template>
           </div>
@@ -134,7 +134,7 @@
                   :species-name="set.speciesName" :map-name="set.mapName"
                   :min-value="0" :max-value="set.maxVariantCount"
                   :bin-size="set.variantBinSize"
-                  min-color="#0000FF" max-color="#FF0000">
+                  max-color="oklch(68% 0.18 15) 7% 7%" min-color="oklch(68% 0.25 315) 99% 99%">
                 </GradientLegend>
               </template>
             </div>

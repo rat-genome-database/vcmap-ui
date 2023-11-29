@@ -78,14 +78,18 @@ export class VariantDensity extends DatatrackSection
     }
   }
 
+  // TODO: Will need option to adjust color scheme for colorblind users
   setSectionColor(maxCount: number) {
-    const blueVal = Math.round(((maxCount - this.variantCount) / maxCount) * 255);
-    const redVal = Math.round((this.variantCount / maxCount) * 255);
-    let redHex = redVal.toString(16);
-    redHex = redHex.length === 1 ? `0${redHex}` : redHex;
-    let blueHex = blueVal.toString(16);
-    blueHex = blueHex.length === 1 ? `0${blueHex}` : blueHex;
-    this.elementColor = `#${redHex}00${blueHex}`;
+    // Define the hue range for the gradient (e.g., purple to red)
+    const hueRange = { min: 15, max: 250 }; // Example values
+    const hue = ((maxCount - this.variantCount) / maxCount) * (hueRange.max - hueRange.min) + hueRange.min;
+
+    const lightness = 68; // Example value, can be adjusted
+    // const chroma = 0.152; // Example value, can be adjusted
+    const chroma = 0.19;
+
+    // Set the color using OKLCH format
+    this.elementColor = `oklch(${lightness}% ${chroma} ${hue})`;
   }
 
 }
