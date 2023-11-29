@@ -4,6 +4,7 @@
     label="INSPECT (Main)"
     @click="onInspectPressed"
   /> -->
+  <HoveredDataTooltip />
   <div class="grid">
     <div :class="{ 'col-9':panelCollapsed==false, 'col-11':panelCollapsed==true }">
       <SVGViewbox
@@ -59,6 +60,7 @@ import { isGenomicDataInViewport, getThreshold, processAlignmentsOfGeneInsideOfV
 import { buildVariantPositions } from '@/utils/VariantBuilder';
 import VariantPositions from '@/models/VariantPositions';
 import { VCMapLogger } from '@/logger';
+import HoveredDataTooltip from '@/components/HoveredDataTooltip.vue';
 
 // TODO: Can we figure out a better way to handle blocks with a high chainlevel?
 const MAX_CHAINLEVEL = 2;

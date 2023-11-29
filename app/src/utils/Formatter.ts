@@ -27,4 +27,13 @@ export namespace Formatter
     }
     return bp;
   }
+
+  export function truncate(text: string, charsAllowed: number)
+  {
+    if (text.length > charsAllowed) {
+      return text.substring(0, charsAllowed) + '...';
+    }
+
+    return text;
+  }
 }

@@ -57,6 +57,14 @@ export default class BackboneSection extends GenomicSection
     this.backboneGenes = backboneGenes.map(g => g.clone());
   }
 
+  public toHoveredData(): string[] {
+    return [
+      this.speciesName,
+      `Chr${this.chromosome}: ${Formatter.addCommasToBasePair(this.speciesStart)} - ${Formatter.addCommasToBasePair(this.speciesStop)}`,
+      `Orientation: +`,
+    ];
+  }
+
   private createLabels(order: number)
   {
     let startBPLabel: Label;

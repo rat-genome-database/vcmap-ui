@@ -57,6 +57,15 @@ export default class SyntenySection extends GenomicSection
     }
   }
 
+  public toHoveredData(): string[] {
+    return [
+      this.speciesName,
+      `Chr${this.chromosome}: ${Formatter.addCommasToBasePair(this.speciesStart)} - ${Formatter.addCommasToBasePair(this.speciesStop)}`,
+      `Orientation: ${this.orientation}`,
+      `Level: ${this.chainLevel}`,
+    ];
+  }
+
   private createSyntenySectionLabels(labelOnLeft: boolean)
   {
     this.startLabel = new Label({

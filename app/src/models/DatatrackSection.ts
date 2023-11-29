@@ -2,20 +2,17 @@ import Gene from './Gene';
 import Label from './Label';
 import GenomicSection, { BackboneAlignment, GenomicSectionParams, RenderType, WindowBasePairRange } from "./GenomicSection";
 import OrthologLine from './OrthologLine';
+import { Formatter } from '@/utils/Formatter';
 
-export type DatatrackSectionType = 'gene' | 'block' | 'qtl' | 'variant';
-
-export interface LoadedGene
-{
-  genes: {
-    [speciesName:string]: GeneDatatrack[]
-  }
-  backboneOrtholog?: GeneDatatrack,
-}
+export type DatatrackSectionType = 'gene' | 'qtl' | 'variant';
 
 type DatatrackSectionParams = GenomicSectionParams;
 
-export default class DatatrackSection extends GenomicSection
+/**
+ * General representation of a DatatrackSection element. Defined as abstract in order
+ * to force implementation of any abstract methods of GenomicSection in its subclasses.
+ */
+export default abstract class DatatrackSection extends GenomicSection
 {
   label?: Label;
 
@@ -48,6 +45,16 @@ export class GeneDatatrack extends DatatrackSection
 
     this.gene = gene.clone();
     this.opacity = 0.7;
+  }
+
+  public toHoveredData(): string[] {
+    return [
+      this.gene.symbol,
+      Formatter.truncate(this.gene.name, 30),
+      this.speciesName,
+      `Chr${this.chromosome}: ${Formatter.addCommasToBasePair(this.gene.start)} - ${Formatter.addCommasToBasePair(this.gene.stop)}`,
+      `Orthologs: ${this.gene.orthologs.length}`,
+    ];
   }
 }
 
@@ -92,4 +99,10 @@ export class VariantDensity extends DatatrackSection
     this.elementColor = `oklch(${lightness}% ${chroma} ${hue})`;
   }
 
+  public toHoveredData(): string[] {
+    return [
+      `Chr${this.chromosome}: ${Formatter.addCommasToBasePair(this.speciesStart)} - ${Formatter.addCommasToBasePair(this.speciesStop)}`,
+      `Variant Count: ${this.variantCount}`,
+    ];
+  }
 }

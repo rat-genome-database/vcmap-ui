@@ -2,7 +2,6 @@ import SyntenySection from './SyntenySection';
 import DatatrackSection, { DatatrackSectionType } from './DatatrackSection';
 import DatatrackSet from './DatatrackSet';
 import { GeneLabel } from './Label';
-import OrthologLine from './OrthologLine';
 import { GenomicSectionFactory } from './GenomicSectionFactory';
 import { Gap } from "@/models/Block";
 import Gene from './Gene';
@@ -25,7 +24,6 @@ export default class SyntenyRegion
   syntenyGaps: SyntenySection[] = [];       // synteny gaps occupying this region
   syntenyBlocks: SyntenySection[] = [];     // synteny blocks occupying this region
   datatrackSets: DatatrackSet[] = [];       // Set of DatatrackSections belonging to this SytenyRegion
-  orthologLines: OrthologLine[] = [];       // OrthologLines belonging to this SyntenyRegion
   species: string = '';                     // species that this region is from
   mapName: string = '';
   geneDatatrackLabels: GeneLabel[] = [];    // array of Label objects associated with the datatrackSections

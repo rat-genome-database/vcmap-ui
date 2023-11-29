@@ -3,7 +3,7 @@
   <rect v-if="backbone"
     data-test="track-section-svg"
     class="section"
-    @mouseenter="() => onMouseEnter(backbone, 'backbone')"
+    @mouseenter="onMouseEnter($event, backbone, 'backbone')"
     @mouseleave="() => onMouseLeave(backbone)"
     @mousemove="updatePositionLabelFromMouseEvent($event)"
     :fill="backbone.isHovered && showDataOnHover ? HOVER_HIGHLIGHT_COLOR : backbone.elementColor"
@@ -38,7 +38,7 @@
     <template v-for="(datatrack, index) in datatrackSet.datatracks" :key="index">
       <rect
         :class="getSectionClass(datatrackSet)"
-        @mouseenter="() => onMouseEnter(datatrack, 'Gene')"
+        @mouseenter="onMouseEnter($event, datatrack, 'Gene')"
         @mouseleave="() => onMouseLeave(datatrack)"
         @click="onDatatrackSectionClick($event, datatrack, geneList)"
         :y="datatrack.posY1"
@@ -159,7 +159,13 @@ const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
 const store = useStore(key);
 
 const { getBasePairPositionFromMouseEvent, getBasePairPositionFromSVG, mouseYPos, } = useMouseBasePairPos();
-const { setHoverOnGeneLinesAndDatatrackSections, onDatatrackSectionClick, changeHoverElementSize } = useSyntenyAndDataInteraction(store);
+const {
+  setHoverOnGeneLinesAndDatatrackSections,
+  onDatatrackSectionClick,
+  changeHoverElementSize,
+  showHoveredData,
+  hideHoveredData,
+} = useSyntenyAndDataInteraction(store);
 
 interface Props
 {
@@ -232,7 +238,7 @@ onMounted(() => {
   highlightSelections(store.state.selectedGeneIds);
 });
 
-const onMouseEnter = (section: BackboneSection | DatatrackSection, type: SelectedDataType) => {
+const onMouseEnter = (event: MouseEvent, section: BackboneSection | DatatrackSection, type: SelectedDataType) => {
   
   if (section)
   {
@@ -245,13 +251,15 @@ const onMouseEnter = (section: BackboneSection | DatatrackSection, type: Selecte
     return;
   }
 
+  showHoveredData(section, event);
+  changeHoverElementSize(section, true);
+
   // Only set selected data if there are no selected genes
   if (store.state.selectedGeneIds.length === 0 && section.type === 'gene')
   {
     const selectedDataList: SelectedData[] = [];
     const geneSection = section as GeneDatatrack;
     setHoverOnGeneLinesAndDatatrackSections(geneSection?.lines, true);
-    changeHoverElementSize(geneSection, true);
 
     if (geneSection.lines.length > 0)
     {
@@ -290,9 +298,10 @@ const onMouseLeave = (section: BackboneSection | DatatrackSection) => {
   {
     section.isHovered = false;
   }
+  hideHoveredData();
 
-  // NOTE: disable selected data for qtls and variants for now
-  if (section.type === 'qtl' || section.type === 'variant')
+  // NOTE: disable selected data for qtls
+  if (section.type === 'qtl')
   {
     return;
   }

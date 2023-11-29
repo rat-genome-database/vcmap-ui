@@ -78,6 +78,12 @@ export namespace TestUtils
         selectedGeneIds: [],
         isDataPanelCollapsed: false,
 
+        hoveredData: {
+          x: 0,
+          y: 0,
+          data: [],
+        },
+
         isDetailedPanelUpdating: false,
         isOverviewPanelUpdating: false,
         isUpdatingVariants: false,

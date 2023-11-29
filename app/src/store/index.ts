@@ -7,8 +7,8 @@ import BackboneSelection, { BasePairRange } from '@/models/BackboneSelection';
 import SelectedData from '@/models/SelectedData';
 import { InjectionKey } from 'vue';
 import { createLogger } from 'vuex';
-import { LoadedGene } from '@/models/DatatrackSection';
 import { ConfigurationMode } from '@/utils/Types';
+import { IHoveredData } from '@/models/HoveredData';
 
 export const key: InjectionKey<Store<VCMapState>> = Symbol();
 
@@ -40,6 +40,9 @@ export interface VCMapState
   selectedData: SelectedData[] | null;
   isDataPanelCollapsed: boolean;
 
+  /* Hovered data */
+  hoveredData: IHoveredData;
+
   selectionToastCount: number;
   hideBackboneDensityTrack: boolean;
   hiddenDensityTracks: number[];
@@ -60,7 +63,7 @@ const vuexLocal = new VuexPersistence<VCMapState>({
 });
 
 /**
- * Saves VCMap state to session storage so that tabs can have different configurations loaded
+ * Saves VCMap state to session storage so that each open tab can have its own configuration loaded
  */
 const vuexSession = new VuexPersistence<VCMapState>({
   key: 'VCMAP_SESSION',
@@ -104,6 +107,12 @@ export default createStore({
     selectedGeneIds: [],
     selectedData: null,
     isDataPanelCollapsed: false,
+
+    hoveredData: {
+      x: 0,
+      y: 0,
+      data: [],
+    },
 
     selectionToastCount: 0,
 
@@ -193,6 +202,9 @@ export default createStore({
     },
     speciesOrder(state: VCMapState, speciesOrder: any) {
       state.speciesOrder = speciesOrder;
+    },
+    hoveredData(state: VCMapState, hoveredData: IHoveredData) {
+      state.hoveredData = hoveredData;
     },
   },
 
@@ -297,6 +309,9 @@ export default createStore({
     },
     setSpeciesOrder(context: ActionContext<VCMapState, VCMapState>, speciesOrder: any) {
       context.commit('speciesOrder', speciesOrder);
+    },
+    setHoveredData(context: ActionContext<VCMapState, VCMapState>, hoveredData: IHoveredData) {
+      context.commit('hoveredData', hoveredData);
     },
   },
 

@@ -181,10 +181,28 @@ export default function useSyntenyAndDataInteraction(store: Store<VCMapState>) {
     }
   };
 
+  const showHoveredData = (element: VCMapSVGElement | GeneLabel, mouse: MouseEvent) => {
+    store.dispatch('setHoveredData', {
+      x: mouse.pageX,
+      y: mouse.pageY,
+      data: element.toHoveredData(),
+    });
+  };
+
+  const hideHoveredData = () => {
+    store.dispatch('setHoveredData', {
+      x: 0,
+      y: 0,
+      data: [],
+    });
+  };
+
   return {
     setHoverOnGeneLinesAndDatatrackSections,
     onDatatrackSectionClick,
     onGeneLabelClick,
     changeHoverElementSize,
+    showHoveredData,
+    hideHoveredData,
   };
 }
