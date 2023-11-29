@@ -1,5 +1,5 @@
 <template>
-  <div class="col-6 border-400 mt-2 mb-2">
+  <div>
     <div class="col-10 col-offset-1">
       <h2>
         Comparative Species
@@ -10,11 +10,6 @@
         <div class="col-4">
           {{ species.name }} ({{ species.activeMap.name }})
         </div>
-        <div class="col-2">
-          <ToggleButton
-            v-model="species.visible"
-          />
-        </div>
         <div class="lg:col-1 md:col-1 sm:col-1">
           <Button @click="removeComparativeSpecies(index)" label="Remove" icon="pi pi-minus-circle" class="p-button-sm p-button-danger" />
         </div>
@@ -24,7 +19,7 @@
       <Message severity="warn" closeable v-if="comparativeSpeciesSelections.length >= 4">Selecting 4 or more species might cause display errors</Message>
     </div>
     <div class="grid" v-for="(species, index) in comparativeSpeciesSelections" :key="index">
-      <div class="lg:col-offset-1 lg:col-4 md:col-5 sm:col-5 text-left">
+      <div class="col-4">
         <Dropdown 
           v-model="comparativeSpeciesSelections[index].typeKey" 
           :options="speciesOptions"
@@ -34,7 +29,7 @@
           placeholder="Comparative Species"
           />
       </div>
-      <div class="lg:col-4 md:col-5 sm:col-5 text-left">
+      <div class="col-4 text-left">
         <Dropdown 
           v-model="comparativeSpeciesSelections[index].mapKey"
           :disabled="comparativeSpeciesSelections[index].typeKey === 0"
@@ -181,8 +176,6 @@ function updateComparativeSpecies() {
   const backboneKey = store.state.species?.activeMap.key || 0;
   speciesOrder[backboneKey.toString()] = 0;
   const comparativeSpecies: Species[] = [...store.state.comparativeSpecies];
-  console.log('comparativeSpecies at top of updateComparativeSpecies');
-  console.log(comparativeSpecies);
   let currentOrder = 0;
   comparativeSpecies.forEach((s: Species) => {
     if (s.visible) {

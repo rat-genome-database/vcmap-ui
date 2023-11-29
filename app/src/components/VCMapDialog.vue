@@ -2,7 +2,7 @@
   <Dialog 
     :header="props.header" 
     v-model:visible="isActive" 
-    class="vcmap-dialog" 
+    :class="wide ? 'vcmap-dialog-wide' : 'vcmap-dialog'"
     :breakpoints="{'960px': '75vw', '640px': '100vw'}"
     :draggable="false"
     :closable="false"
@@ -39,6 +39,7 @@ interface Props
   show: boolean;
   theme?: 'error' | 'normal';
   showBackButton?: boolean;
+  wide?: boolean;
   onConfirmCallback?: () => void;
 }
 
@@ -88,5 +89,10 @@ const onConfirm = () => {
   {
     margin: 0;
   }
+}
+
+.vcmap-dialog-wide
+{
+  width: 90vw;
 }
 </style>

@@ -15,6 +15,11 @@
             <a href="https://rgd.mcw.edu/" target="_blank"><img class="rgd-logo" src="../assets/images/rgd_logo.png" alt="RGD logo"
               v-tooltip.bottom="`Go to RGD Home Page`"
             ></a>
+            <Button
+              label="Settings"
+              class="p-button-secondary header-btn"
+              @click="openSettingsModal"
+            />
             <router-link to="/" target="_blank" data-test="new-config-btn">
               <Button 
               label="New Configuration"
@@ -55,6 +60,7 @@ import LoadDataTrackControls from '@/components/LoadDataTrackControls.vue';
 interface Props 
 {
   onLoadSyntenyVariants: (mapKeys: number[] | null, triggerUpdate: boolean) => Promise<void>;
+  onShowSettings: () => void;
 }
 
 const props = defineProps<Props>();
@@ -63,6 +69,10 @@ let showLoadDataTrackModal = ref(false);
 
 const openLoadDataTrackModal = () => {
   showLoadDataTrackModal.value = true;
+};
+
+const openSettingsModal = () => {
+  props.onShowSettings();
 };
 
 const onLoadSyntenyVariants = async (mapKeys: number[] | null, triggerUpdate: boolean) => {

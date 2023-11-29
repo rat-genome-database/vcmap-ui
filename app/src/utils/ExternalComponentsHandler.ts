@@ -23,7 +23,7 @@ import Slider from 'primevue/slider';
 import Toast from 'primevue/toast';
 import Tag from 'primevue/tag';
 import RadioButton from 'primevue/radiobutton';
-import ToggleButton from 'primevue/togglebutton';
+import InputSwitch from 'primevue/inputswitch';
 
 /**
  * Add any plugins/configs that you want to be globally registered:
@@ -56,7 +56,7 @@ const COMPONENTS: {[key: string]: Component} = {
   'Toast': Toast,
   'Tag': Tag,
   'RadioButton': RadioButton,
-  'ToggleButton': ToggleButton,
+  'InputSwitch': InputSwitch,
 };
 
 /**
