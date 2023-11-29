@@ -1,7 +1,7 @@
 <template>
   <text
     @click="onGeneLabelClick($event, label, geneList, orthologLines)"
-    @mouseenter="onMouseEnter(label)"
+    @mouseenter="onMouseEnter($event, label)"
     @mouseleave="onMouseLeave(label)"
     :class="(isLabelSelected(label) ? 'bold-label' : 'label small')"
     :x="(label.posX + 5)"
@@ -32,7 +32,11 @@ interface Props
 }
 defineProps<Props>();
 
-const { onGeneLabelClick } = useSyntenyAndDataInteraction(store);
+const {
+  onGeneLabelClick,
+  showHoveredData,
+  hideHoveredData
+} = useSyntenyAndDataInteraction(store);
 
 /**
  * TODO: Documenting a situation that results in some slightly confusing UX that we should
@@ -94,8 +98,9 @@ const getLabelText = (label: GeneLabel) => {
   return labelText;
 };
 
-const onMouseEnter = (label: GeneLabel) => {
+const onMouseEnter = (event: MouseEvent, label: GeneLabel) => {
   label.isHovered = true;
+  showHoveredData(label, event);
 
   // If there are selected genes, don't update the selected data panel
   if (store.state.selectedGeneIds.length === 0) {
@@ -108,7 +113,8 @@ const onMouseEnter = (label: GeneLabel) => {
 
 const onMouseLeave = (label: GeneLabel) => {
   label.isHovered = false;
-  
+  hideHoveredData();
+
   // Only reset data onMouseLeave if there isn't a selected gene
   if (store.state.selectedGeneIds.length === 0) {
     store.dispatch('setSelectedData', null);

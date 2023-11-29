@@ -8,14 +8,9 @@ import SelectedData from '@/models/SelectedData';
 import { InjectionKey } from 'vue';
 import { createLogger } from 'vuex';
 import { ConfigurationMode } from '@/utils/Types';
+import { IHoveredData } from '@/models/HoveredData';
 
 export const key: InjectionKey<Store<VCMapState>> = Symbol();
-
-type HoveredData = {
-  x: number; // mouse x position
-  y: number; // mouse y position
-  data: string[];
-};
 
 export interface VCMapState
 {
@@ -46,7 +41,7 @@ export interface VCMapState
   isDataPanelCollapsed: boolean;
 
   /* Hovered data */
-  hoveredData: HoveredData;
+  hoveredData: IHoveredData;
 
   selectionToastCount: number;
 }
@@ -60,7 +55,7 @@ const vuexLocal = new VuexPersistence<VCMapState>({
 });
 
 /**
- * Saves VCMap state to session storage so that tabs can have different configurations loaded
+ * Saves VCMap state to session storage so that each open tab can have its own configuration loaded
  */
 const vuexSession = new VuexPersistence<VCMapState>({
   key: 'VCMAP_SESSION',
@@ -172,7 +167,7 @@ export default createStore({
     flankingGene2(state: VCMapState, gene: Gene | null) {
       state.flankingGene2 = gene;
     },
-    hoveredData(state: VCMapState, hoveredData: HoveredData) {
+    hoveredData(state: VCMapState, hoveredData: IHoveredData) {
       state.hoveredData = hoveredData;
     },
   },
@@ -267,7 +262,7 @@ export default createStore({
     setDataPanelCollapsed(context: ActionContext<VCMapState, VCMapState>, isCollapsed: boolean) {
       context.commit('isDataPanelCollapsed', isCollapsed);
     },
-    setHoveredData(context: ActionContext<VCMapState, VCMapState>, hoveredData: HoveredData) {
+    setHoveredData(context: ActionContext<VCMapState, VCMapState>, hoveredData: IHoveredData) {
       context.commit('hoveredData', hoveredData);
     },
   },

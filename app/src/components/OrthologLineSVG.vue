@@ -6,7 +6,7 @@
     :x1="line.posX1" :x2="line.posX2"
     :y1="line.posY1" :y2="line.posY2"
     @click="onClick($event, line)"
-    @mouseenter="onMouseEnter(line)"
+    @mouseenter="onMouseEnter($event, line)"
     @mouseleave="onMouseLeave(line)"
   />
 </template>
@@ -18,11 +18,14 @@ import { key } from '@/store';
 import SelectedData from '@/models/SelectedData';
 import { computed } from 'vue';
 import { getSelectedDataAndGeneIdsFromOrthologLine } from '@/utils/OrthologHandler';
+import useSyntenyAndDataInteraction from '@/composables/useSyntenyAndDataInteraction';
 
 const store = useStore(key);
 
 const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
+
+const { showHoveredData, hideHoveredData } = useSyntenyAndDataInteraction(store);
 
 interface Props
 {
@@ -44,13 +47,15 @@ const lineColor = computed(() => {
   return 'lightgray';
 });
 
-const onMouseEnter = (line: OrthologLine) => {
+const onMouseEnter = (event: MouseEvent, line: OrthologLine) => {
 
   if (!line.isSelected) {
     changeHoverStatusOnOrthologLines(line, true);
     changeDatatrackColors(line, HOVER_HIGHLIGHT_COLOR);
     changeHoverLineThickness(line, true);
   }
+
+  showHoveredData(line, event);
 
   // If there are selected genes, don't update the selected data panel
   if (store.state.selectedGeneIds.length === 0) {
@@ -66,6 +71,8 @@ const onMouseLeave = (line: OrthologLine) => {
     changeDatatrackColors(line, '#000000');
     changeHoverLineThickness(line, false);
   }
+
+  hideHoveredData();
 
   // Only reset data onMouseLeave if there isn't a selected gene
   if (store.state.selectedGeneIds.length === 0) {
