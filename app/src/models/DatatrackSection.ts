@@ -50,7 +50,7 @@ export class GeneDatatrack extends DatatrackSection
   public toHoveredData(): string[] {
     return [
       this.gene.symbol,
-      this.gene.name,
+      Formatter.truncate(this.gene.name, 30),
       this.speciesName,
       `Chr${this.chromosome}: ${Formatter.addCommasToBasePair(this.gene.start)} - ${Formatter.addCommasToBasePair(this.gene.stop)}`,
       `Orthologs: ${this.gene.orthologs.length}`,
