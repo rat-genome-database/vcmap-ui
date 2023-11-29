@@ -252,7 +252,10 @@ const onMouseEnter = (event: MouseEvent, section: BackboneSection | DatatrackSec
   }
 
   showHoveredData(section, event);
-  changeHoverElementSize(section, true);
+  if (section.type === 'gene')
+  {
+    changeHoverElementSize(section, true);
+  }
 
   // Only set selected data if there are no selected genes
   if (store.state.selectedGeneIds.length === 0 && section.type === 'gene')
