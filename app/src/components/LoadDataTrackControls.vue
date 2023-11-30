@@ -51,18 +51,18 @@
       </div>
     </div>
     <div class="grid p-d-flex modal-controls-container">
-        <div class="left-align-btn">
-          <Button label="Cancel" class="p-button-danger" @click="close" />
-        </div>
-        <div>
-          <Button label="Load Tracks" class="p-button-secondary" icon="pi pi-arrow-right" @click="onConfirmLoadDataTrack" />
-        </div>
+      <div class="left-align-btn">
+        <Button label="Cancel" class="p-button-danger" @click="close" />
       </div>
+      <div>
+        <Button label="Load Tracks" class="p-button-secondary" icon="pi pi-arrow-right" @click="onConfirmLoadDataTrack" />
+      </div>
+    </div>
   </Dialog>
 </template>
   
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted, watch } from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import Species from '@/models/Species';
@@ -110,6 +110,8 @@ const speciesOptions = ref<Species[]>([]);
 // const dataTypeOptions = [{name: 'QTL', key: 0},{name: 'Variants', key: 1}]
 
 onMounted(prepopulateConfigOptions);
+
+watch(() => store.state.comparativeSpecies, prepopulateConfigOptions);
 
 const isActive = computed({
   get() {

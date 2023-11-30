@@ -156,7 +156,7 @@
         {{ detailedBackboneSet?.speciesName }}
       </Button>
       <template v-for="(set, index) in props.syntenyTree" :key="index">
-        <Button v-if="set[1][0].variantPositions" class="density-toggle-button" icon="pi pi-eye" rounded v-on:click="toggleSyntenicDensityTrack(set[0])">
+        <Button v-if="set[1][0].variantPositions && getVisibility(set[0])" class="density-toggle-button" icon="pi pi-eye" rounded v-on:click="toggleSyntenicDensityTrack(set[0])">
           {{ getSpeciesName(set[0]) }}
         </Button>
       </template>
@@ -416,6 +416,11 @@ const getSpeciesName = (mapKey: number) => {
   const species = store.state.comparativeSpecies.find((species) => species.activeMap.key === mapKey);
   return species?.name ?? '';
 };
+
+const getVisibility = (mapKey: number) => {
+  const species = store.state.comparativeSpecies.find((species) => species.activeMap.key === mapKey);
+  return species?.visible;
+}
 
 const displayVariantLegend = computed(() => {
   const backboneVariantIdx = detailedBackboneSet.value?.datatrackSets.findIndex((set) => set.type === 'variant');
