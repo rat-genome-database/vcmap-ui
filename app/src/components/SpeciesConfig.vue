@@ -94,7 +94,7 @@ const comparativeSpeciesLimitReached = computed(() => {
 
 onMounted(async () => {
   speciesOptions.value = await SpeciesApi.getSpecies();
-})
+});
 
 function addTempComparativeSpecies()
 {

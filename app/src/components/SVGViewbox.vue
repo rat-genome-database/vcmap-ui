@@ -149,20 +149,40 @@
     :show-back-button="showDialogBackButton"
   />
   <LoadingSpinnerMask v-if="arePanelsLoading" :style="getDetailedPosition()"></LoadingSpinnerMask>
-
-  <Fieldset v-if="displayDensityTrackTogglePanel" class="density-toggle-container" legend="Density Tracks" :toggleable="true">
-    <div class="flex-container">
-      <Button v-if="props.variantPositionsList" class="density-toggle-button" icon="pi pi-eye" rounded v-on:click="toggleDensityTrack()">
-        {{ detailedBackboneSet?.speciesName }}
-      </Button>
-      <template v-for="(set, index) in props.syntenyTree" :key="index">
-        <Button v-if="set[1][0].variantPositions && getVisibility(set[0])" class="density-toggle-button" icon="pi pi-eye" rounded v-on:click="toggleSyntenicDensityTrack(set[0])">
-          {{ getSpeciesName(set[0]) }}
+  <!-- TODO: we could probably move this visibility section below to a separate component,
+    once we have a better idea of what we want here -->
+  <div>Visibility Settings</div>
+  <div class="flex-container-start">
+    <Fieldset legend="Species" :toggleable="true">
+      <div>
+        <div v-for="(species, index) in store.state.comparativeSpecies" :key="index">
+          <div class="flex-container">
+            <div>
+              {{ species.name }} ({{ species.activeMap.name }})
+            </div>
+            <div>
+              <InputSwitch
+                v-model="species.visible"
+                @click="toggleSpeciesVisibility(index)"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </Fieldset>
+    <Fieldset v-if="displayDensityTrackTogglePanel" class="density-toggle-container" legend="Density Tracks" :toggleable="true">
+      <div class="flex-container">
+        <Button v-if="props.variantPositionsList" class="density-toggle-button" icon="pi pi-eye" rounded v-on:click="toggleDensityTrack()">
+          {{ detailedBackboneSet?.speciesName }}
         </Button>
-      </template>
-    </div>
-  </Fieldset>
-  
+        <template v-for="(set, index) in props.syntenyTree" :key="index">
+          <Button v-if="set[1][0].variantPositions && getVisibility(set[0])" class="density-toggle-button" icon="pi pi-eye" rounded v-on:click="toggleSyntenicDensityTrack(set[0])">
+            {{ getSpeciesName(set[0]) }}
+          </Button>
+        </template>
+      </div>
+    </Fieldset>
+  </div>
   <!--
   <Button
     style="margin-right: 20px;"
@@ -420,7 +440,7 @@ const getSpeciesName = (mapKey: number) => {
 const getVisibility = (mapKey: number) => {
   const species = store.state.comparativeSpecies.find((species) => species.activeMap.key === mapKey);
   return species?.visible;
-}
+};
 
 const displayVariantLegend = computed(() => {
   const backboneVariantIdx = detailedBackboneSet.value?.datatrackSets.findIndex((set) => set.type === 'variant');
@@ -842,6 +862,23 @@ function logPerformanceReport(title: string, totalTimeMillis: number, detailedTi
   $log.debug(JSON.stringify(performanceReport, null, 2));
 }
 
+function toggleSpeciesVisibility(index: number) {
+  const newComparativeSpecies = [...store.state.comparativeSpecies];
+  const newSpeciesOrder: any = {};
+  const backboneKey = store.state.species?.activeMap.key || 0;
+  newSpeciesOrder[backboneKey.toString()] = 0;
+  newComparativeSpecies[index].visible = !newComparativeSpecies[index].visible;
+  let currentOrder = 0;
+  newComparativeSpecies.forEach((s: Species) => {
+    if (s.visible) {
+      currentOrder++;
+      newSpeciesOrder[s.activeMap.key] = currentOrder;
+    }
+  });
+  store.dispatch('setComparativeSpecies', newComparativeSpecies);
+  store.dispatch('setSpeciesOrder', newSpeciesOrder);
+}
+
 </script>
 
 <style lang="scss" scoped>
@@ -952,6 +989,13 @@ rect.navigation-btn
   flex-direction: row;
   flex-wrap: nowrap;
   justify-content: space-between;
+}
+
+.flex-container-start
+{
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
 }
 .col-4
 {

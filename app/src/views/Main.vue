@@ -25,20 +25,6 @@
       </div>
     </div>
   </div>
-  <div>Visibility Settings</div>
-  <div v-for="(species, index) in store.state.comparativeSpecies" :key="index">
-    <div class="grid">
-      <div class="col-2">
-        {{ species.name }} ({{ species.activeMap.name }})
-      </div>
-      <div class="col-2">
-        <InputSwitch
-          v-model="species.visible"
-          @click="toggleSpeciesVisibility(index)"
-        />
-      </div>
-    </div>
-  </div>
 <!-- 
   <div class="col-12 flex flex-wrap gap-3 justify-content-center border-top-1 border-top-solid">
     <Button
@@ -816,23 +802,6 @@ async function updateComparativeSpecies(newSpeciesOrder: any, newComparativeSpec
   store.dispatch('setComparativeSpecies', newComparativeSpecies);
   await queryAndProcessSyntenyForBasePairRange(store.state.chromosome, store.state.detailedBasePairRange.start, store.state.detailedBasePairRange.stop);
   isLoading.value = false;
-}
-
-function toggleSpeciesVisibility(index: number) {
-  const newComparativeSpecies = [...store.state.comparativeSpecies];
-  const newSpeciesOrder: any = {};
-  const backboneKey = store.state.species?.activeMap.key || 0;
-  newSpeciesOrder[backboneKey.toString()] = 0;
-  newComparativeSpecies[index].visible = !newComparativeSpecies[index].visible;
-  let currentOrder = 0;
-  newComparativeSpecies.forEach((s: Species) => {
-    if (s.visible) {
-      currentOrder++;
-      newSpeciesOrder[s.activeMap.key] = currentOrder;
-    }
-  });
-  store.dispatch('setComparativeSpecies', newComparativeSpecies);
-  store.dispatch('setSpeciesOrder', newSpeciesOrder);
 }
 
 </script>
