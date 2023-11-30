@@ -70,6 +70,7 @@ export default class Gene
       chromosome: this.chromosome,
       start: this.start,
       stop: this.stop,
+      orthologs: this.orthologs,
     });
     if (this.backboneStart) clone.backboneStart = this.backboneStart;
     if (this.backboneStop) clone.backboneStop = this.backboneStop;
