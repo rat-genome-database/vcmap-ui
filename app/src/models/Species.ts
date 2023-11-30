@@ -7,6 +7,7 @@ export default class Species
   name: string = '';
   defaultMapKey: number = 0;
   maps: SpeciesMap[] = [];
+  visible: boolean = true;
 
   constructor(params: {typeKey: number, name: string, defaultMapKey?: number, maps: SpeciesMap[]})
   {

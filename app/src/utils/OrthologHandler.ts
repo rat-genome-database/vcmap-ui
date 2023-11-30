@@ -110,7 +110,8 @@ export function createOrthologLines(geneList: Map<number, Gene>, backboneSet: Ba
       
       if (order == null)
       {
-        logger.error(`No order was returned from speciesPositionMap for ortholog gene rgdId: ${o.rgdId}`);
+        // logger.error(`No order was returned from speciesPositionMap for ortholog gene rgdId: ${o.rgdId}`);
+        // NOTE: if the species is hidden, this will happen so we don't need to log an error
         return;
       }
 

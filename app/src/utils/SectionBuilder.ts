@@ -35,7 +35,7 @@ export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, 
   // TODO: This code is extremely similar to building synteny blocks WITH datatracks, need to reorganize this...
   let defaultOrder = 1;
   syntenyData.forEach((blocks, mapKey) => {
-    const currSpecies = comparativeSpecies.find((compSpecies) => compSpecies.activeMap.key == mapKey);
+    const currSpecies = comparativeSpecies.find((compSpecies) => compSpecies.activeMap.key == mapKey && compSpecies.visible);
     if (!currSpecies) return;
 
     const speciesPos = speciesOrder[currSpecies.activeMap.key.toString()] ?? defaultOrder;
@@ -123,10 +123,11 @@ export async function createSyntenicRegionSets(syntenyData: Map<number, Block[]>
       // NOTE: In the future we are going to have to address how we will allow the
       //   possibility of a Species with >1 "active" map. For example, loading multiple
       //   assemblies for one Species to allow comparing assembly differences...
-      const species = comparativeSpecies.find((species) => { return species.activeMap.key == mapKey; });
+      const species = comparativeSpecies.find((species) => { return species.activeMap.key == mapKey && species.visible; });
+      // TODO: This used to log an error, but now it might not be worth actually logging
       if (!species)
       {
-        logger.error(`Cannot find Species object for mapKey ${mapKey}!!`);
+        logger.info(`Either annot find Species object for mapKey ${mapKey} or it's hidden`);
         return;
       }
 
@@ -137,10 +138,11 @@ export async function createSyntenicRegionSets(syntenyData: Map<number, Block[]>
       const syntenyRegionSet = syntenicSectionBuilder(speciesSyntenyData, species, speciesPos ?? defaultPos,
           backboneStart, backboneStop, 'detailed', hideDensity);
 
-      logger.log(`Completed build of Synteny for ${syntenyRegionSet?.mapName}, with ${syntenyRegionSet?.regions.length} regions`);
+      logger.info(`Completed build of Synteny for ${syntenyRegionSet?.mapName}, with ${syntenyRegionSet?.regions.length} regions`);
 
       // Add this to our final Array
       if (syntenyRegionSet) syntenyRegionSets.push(syntenyRegionSet);
+      // Increment our position to place next species in the next order spot
       defaultPos++;
     });
   }
@@ -222,7 +224,7 @@ logger.timeEnd('createSyntenySectionAndRegion');
 
     // Step 2: Split the gapless Block into multiple GenomicSections based on gaps.
 logger.time("splitBlockWithGaps");
-    logger.log(`Splitting block w/ ${blockGaps.length} gaps`);
+    logger.info(`Splitting block w/ ${blockGaps.length} gaps`);
     currSyntenicRegion.splitBlockWithGaps(factory, blockGaps);
 logger.timeEnd("splitBlockWithGaps");
 
@@ -262,7 +264,7 @@ logger.timeEnd("  filterVisibleGenes");
 let timerLabel = `  syntenicDataTrackBuilder(${visibleGenes.length})`;
 logger.time(timerLabel);
       // const processedGeneInfo = {genomicData: [], orthologLines: [], geneIds: []};
-// logger.log('Visible Gene list: ', visibleGenes);
+// logger.info('Visible Gene list: ', visibleGenes);
       const processedGeneInfo = syntenicDatatrackBuilder(factory, visibleGenes, blockInfo.orientation);
 // FIXME: I have a theory that the "Gene" object used to create the GeneDataTrack may be too heavy and not need references
 //   for things like the Block it is owned by. Would like to explore this next potentially...

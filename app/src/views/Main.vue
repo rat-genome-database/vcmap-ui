@@ -1,5 +1,5 @@
 <template>
-  <HeaderPanel :on-load-synteny-variants="loadSyntenyVariants" />
+  <HeaderPanel :on-load-synteny-variants="loadSyntenyVariants" :on-show-settings="onShowSettings" />
   <!-- <Button
     label="INSPECT (Main)"
     @click="onInspectPressed"
@@ -26,6 +26,19 @@
       </div>
     </div>
   </div>
+<!-- 
+  <div class="col-12 flex flex-wrap gap-3 justify-content-center border-top-1 border-top-solid">
+    <Button
+      @click="clearConfigSelections"
+      label="Clear All"
+      class="p-button-sm p-button-secondary" />
+    <Button 
+      @click="saveConfigToStoreAndGoToMainScreen" 
+      :disabled="!isValidConfig"
+      label="Load VCMap" 
+      icon="pi pi-play" 
+      class="p-button-lg p-button-success" />
+  </div> -->
   <VCMapDialog 
     v-model:show="showDialog" 
     :header="dialogHeader" 
@@ -34,12 +47,29 @@
     :show-back-button="showDialogBackButton"
     :on-confirm-callback="onProceedWithErrors"
   />
+  <VCMapDialog
+    v-model:show="showSettings"
+    header="Settings"
+    :wide="true"
+  >
+    <template #content>
+      <SpeciesConfig :on-update="updateComparativeSpecies" />
+    </template>
+    <template #footer>
+      <Button
+        label="Cancel"
+        class="p-button-danger"
+        @click="() => { showSettings = false }"
+      />
+    </template>
+  </VCMapDialog>
 </template>
 
 <script lang="ts" setup>
 import SVGViewbox from '@/components/SVGViewbox.vue';
 import HeaderPanel from '@/components/HeaderPanel.vue';
 import SelectedDataPanel from '@/components/SelectedDataPanel.vue';
+import SpeciesConfig from '@/components/SpeciesConfig.vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import { onMounted, ref, watch } from 'vue';
@@ -59,6 +89,7 @@ import { backboneOverviewError, missingComparativeSpeciesError, noRegionLengthEr
 import { isGenomicDataInViewport, getThreshold, processAlignmentsOfGeneInsideOfViewport, processAlignmentsOfGeneOutsideOfViewport } from '@/utils/Shared';
 import { buildVariantPositions } from '@/utils/VariantBuilder';
 import VariantPositions from '@/models/VariantPositions';
+import Species from '@/models/Species';
 import { VCMapLogger } from '@/logger';
 import HoveredDataTooltip from '@/components/HoveredDataTooltip.vue';
 
@@ -72,6 +103,7 @@ const toast = useToast();
 
 const { showDialog, dialogHeader, dialogMessage, showDialogBackButton, dialogTheme, onError } = useDialog();
 
+const showSettings = ref(false);
 const isLoading = ref(false);
 const proceedAfterError = ref(false);
 const panelCollapsed = ref(store.state.isDataPanelCollapsed);
@@ -431,7 +463,7 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
       if (blockData.block.chainLevel > MAX_CHAINLEVEL_GENES)
       {
         // Skip saving any genes that are above our defined max chainlevel for genes
-        $log.log(`Skipping ${blockData.genes.length} genes due to chain level filter`);
+        $log.info(`Skipping ${blockData.genes.length} genes due to chain level filter`);
         continue;
       }
 
@@ -721,11 +753,59 @@ async function loadSyntenyVariants(mapKeys: number[] | null, triggerUpdate: bool
   }
 }
 
+function onShowSettings()
+{
+  showSettings.value = true;
+}
+
 function togglePanelCollapse()
 {
   panelCollapsed.value = !panelCollapsed.value;
   store.dispatch('setDataPanelCollapsed', panelCollapsed.value);
 }
+
+async function updateComparativeSpecies(newSpeciesOrder: any, newComparativeSpecies: Species[]) {
+  showSettings.value = false;
+  isLoading.value = true;
+  const origComparativeSpeciesIds = store.state.comparativeSpecies.map((species: Species) => species.activeMap.key);
+  const newComparativeSpeciesIds = newComparativeSpecies.map((species: Species) => species.activeMap.key);
+  const newIsSubset = newComparativeSpeciesIds.every((id) => origComparativeSpeciesIds.includes(id));
+  if (!newIsSubset && store.state.chromosome && store.state.species) {
+    const backboneGenes: Gene[] = await GeneApi.getGenesByRegion(
+      store.state.chromosome.chromosome,
+      0, store.state.chromosome.seqLength,
+      store.state.species.activeMap.key, store.state.species.name,
+      newComparativeSpeciesIds);
+
+    // Process response
+    // TODO: Should we add a "Block" for the backbone first?
+    backboneGenes.forEach((geneData) => {
+      geneList.value.set(geneData.rgdId, geneData);
+    });
+
+    const newSpecies = newComparativeSpecies.filter((species: Species) => !origComparativeSpeciesIds.includes(species.activeMap.key));
+    // Preload off-backbone large blocks and genes
+    let threshold = getThreshold(store.state.chromosome.seqLength);
+    const speciesSyntenyDataArray = await SyntenyApi.getSyntenicRegions({
+      backboneChromosome: store.state.chromosome,
+      start: 0,
+      stop: store.state.chromosome.seqLength,
+      optional: {
+        includeGenes: true,
+        includeOrthologs: true,
+        threshold: threshold,
+      },
+      comparativeSpecies: newSpecies,
+    });
+
+    processSynteny(speciesSyntenyDataArray, 0, store.state.chromosome.seqLength);
+  }
+  store.dispatch('setSpeciesOrder', newSpeciesOrder);
+  store.dispatch('setComparativeSpecies', newComparativeSpecies);
+  await queryAndProcessSyntenyForBasePairRange(store.state.chromosome, store.state.detailedBasePairRange.start, store.state.detailedBasePairRange.stop);
+  isLoading.value = false;
+}
+
 </script>
 
 <style lang="scss" scoped>
