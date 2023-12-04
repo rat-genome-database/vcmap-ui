@@ -3,6 +3,7 @@ import VuexPersistence from 'vuex-persist';
 import Species from '@/models/Species';
 import Chromosome from '@/models/Chromosome';
 import Gene from '@/models/Gene';
+import History from '@/models/UserHistory';
 import BackboneSelection, { BasePairRange } from '@/models/BackboneSelection';
 import SelectedData from '@/models/SelectedData';
 import { InjectionKey } from 'vue';
@@ -52,6 +53,9 @@ export interface VCMapState
   // svgPositions: SVGPositionVariables;
 
   speciesOrder: any;
+
+  /* History */
+  history: [];
 }
 
 /**

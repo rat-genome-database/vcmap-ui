@@ -46,6 +46,9 @@
           </div>
           </div>
         </div>
+        <div class="panel-header-item">
+          <div>History</div>
+        </div>
       </div>
     </template>
     
