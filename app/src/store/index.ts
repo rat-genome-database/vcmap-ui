@@ -3,7 +3,7 @@ import VuexPersistence from 'vuex-persist';
 import Species from '@/models/Species';
 import Chromosome from '@/models/Chromosome';
 import Gene from '@/models/Gene';
-import History from '@/models/UserHistory';
+import UserHistory from '@/models/UserHistory';
 import BackboneSelection, { BasePairRange } from '@/models/BackboneSelection';
 import SelectedData from '@/models/SelectedData';
 import { InjectionKey } from 'vue';
@@ -55,7 +55,7 @@ export interface VCMapState
   speciesOrder: any;
 
   /* History */
-  history: [];
+  history: UserHistory[];
 }
 
 /**
@@ -75,7 +75,7 @@ const vuexSession = new VuexPersistence<VCMapState>({
 });
 
 const actionsToLog = ['setDetailedBasePairRange', 'setDetailedBasePairRequest'];
-const mutationsToLog = ['detailedBasePairRange'];
+const mutationsToLog = ['detailedBasePairRange', 'addToHistory'];
 
 const logger = createLogger({
   // Filter out frequently occurring actions/mutations (makes the console really noisy for not much benefit)
@@ -131,6 +131,7 @@ export default createStore({
 
     hideBackboneDensityTrack: false,
     hiddenDensityTracks: [],
+    history: [],
   }),
 
   mutations: {
@@ -210,6 +211,14 @@ export default createStore({
     hoveredData(state: VCMapState, hoveredData: IHoveredData) {
       state.hoveredData = hoveredData;
     },
+    addToHistory(state: VCMapState, entry: UserHistory) {
+      state.history.unshift(entry);
+      state.history = state.history.slice(0,3);
+    },
+    clearUserHistory(state: VCMapState) {
+      console.log('CLEARED HISTORY');
+      state.history = [];
+    },
   },
 
   actions: {
@@ -274,6 +283,7 @@ export default createStore({
       context.commit('hideBackboneDensityTrack', false);
       context.commit('clearSynthenicDensityTrackVisibility');
       context.commit('setSpeciesOrder', {});
+      context.commit('clearUserHistory');
     },
     clearBackboneSelection(context: ActionContext<VCMapState, VCMapState>) {
       context.commit('selectedBackboneRegion', null);
@@ -293,6 +303,10 @@ export default createStore({
     setDetailedBasePairRequest(context: ActionContext<VCMapState, VCMapState>, range: BasePairRange) {
       // Note: Committing a change to detailedBasePairRange will trigger an update on the Detailed panel
       context.commit('detailedBasePairRequest', range);
+
+      if (range) {
+        context.commit('addToHistory', {timestamp: new Date(), range});
+      }
     },
     setDetailedBasePairRange(context: ActionContext<VCMapState, VCMapState>, range: BasePairRange) {
       // Note: Committing a change to detailedBasePairRange will trigger an update on the Detailed panel
@@ -317,6 +331,9 @@ export default createStore({
     setHoveredData(context: ActionContext<VCMapState, VCMapState>, hoveredData: IHoveredData) {
       context.commit('hoveredData', hoveredData);
     },
+    clearUserHistory(context: ActionContext<VCMapState, VCMapState>) {
+      context.commit('clearUserHistory');
+    }
   },
 
   getters: {

@@ -246,10 +246,11 @@ import GeneApi from '@/api/GeneApi';
 import ChromosomeApi from '@/api/ChromosomeApi';
 import Species from '@/models/Species';
 import Gene from '@/models/Gene';
+import UserHistory from '@/models/UserHistory';
 import SpeciesMap from '@/models/SpeciesMap';
 import Chromosome from '@/models/Chromosome';
 import { useRouter } from 'vue-router';
-import { useStore } from 'vuex';
+import { storeKey, useStore } from 'vuex';
 import { useLogger } from 'vue-logger-plugin';
 import { VERSION } from '@/version';
 import { Formatter } from '@/utils/Formatter';
@@ -308,6 +309,8 @@ const comparativeSpeciesSelections = ref<ComparativeSpeciesSelection[]>([]);
 
 const showError = ref(false);
 const errorMessage = ref('');
+
+const history = ref<UserHistory[]>([]);
 
 onMounted(prepopulateConfigOptions);
 
@@ -724,6 +727,7 @@ function saveConfigToStoreAndGoToMainScreen()
   store.dispatch('setComparativeSpecies', comparativeSpecies);
   store.dispatch('setConfigMode', getConfigModeFromActiveTab(activeTab.value));
   store.dispatch('setConfigurationLoaded', null);
+  store.dispatch('clearUserHistory');
 
   router.push('/main');
 }
@@ -885,6 +889,7 @@ function clearConfigSelections()
   chromosomeOptions.value = [];
   flankingGene1.value = null;
   flankingGene2.value = null;
+  history.value = [];
 
   store.dispatch('clearConfiguration');
 }

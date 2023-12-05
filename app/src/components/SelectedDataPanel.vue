@@ -47,7 +47,7 @@
           </div>
         </div>
         <div class="panel-header-item">
-          <div>History</div>
+          <HistoryPanel />
         </div>
       </div>
     </template>
@@ -116,6 +116,7 @@
 import SelectedData from '@/models/SelectedData';
 import Gene from '@/models/Gene';
 import GeneInfo from '@/components/GeneInfo.vue';
+import HistoryPanel from '@/components/HistoryPanel.vue';
 import { Formatter } from '@/utils/Formatter';
 import { ref, watch, computed } from 'vue';
 import { useStore } from 'vuex';
