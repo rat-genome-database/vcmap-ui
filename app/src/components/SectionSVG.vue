@@ -20,7 +20,7 @@
       @mouseenter="onMouseEnter($event, blockSection, 'trackSection')"
       @mouseleave="onMouseLeave(blockSection)"
       @mousemove="updatePositionLabelFromMouseEvent($event, blockSection)"
-      @click="selectOnClick ? onSyntenyBlockClick(blockSection) : () => {}"
+      @click="onSyntenyBlockClick(blockSection, $event)"
       :y="blockSection.posY1"
       :x="blockSection.posX1"
       :width="blockSection.width"
@@ -176,6 +176,7 @@ import Gene from '@/models/Gene';
 import DatatrackSet from '@/models/DatatrackSet';
 import { getSelectedDataAndGeneIdsFromOrthologLine } from '@/utils/OrthologHandler';
 import useSyntenyAndDataInteraction from '@/composables/useSyntenyAndDataInteraction';
+import ChromosomeApi from '@/api/ChromosomeApi';
 
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
 const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
@@ -340,15 +341,61 @@ const onMouseLeave = (section: DatatrackSection | SyntenySection) => {
   hideHoveredData();
 };
 
-const onSyntenyBlockClick = (section: GenomicSection) => {
-  const selectedBackboneRegion = store.state.selectedBackboneRegion as BackboneSelection;
-  const backboneChromosome = store.state.chromosome;
-  if (backboneChromosome && section.backboneAlignment)
-  {
-    const basePairStart = section.backboneAlignment.start;
-    const basePairStop = section.backboneAlignment.stop;
-    selectedBackboneRegion.setViewportSelection(basePairStart, basePairStop);
-    store.dispatch('setDetailedBasePairRequest', { start: basePairStart, stop: basePairStop });
+const onSyntenyBlockClick = (section: GenomicSection, event: any) => {
+  if (event.shiftKey && section instanceof SyntenySection) {
+    onBackboneSwap(section);
+  } else if (props.selectOnClick) {
+    const selectedBackboneRegion = store.state.selectedBackboneRegion as BackboneSelection;
+    const backboneChromosome = store.state.chromosome;
+    if (backboneChromosome && section.backboneAlignment)
+    {
+      const basePairStart = section.backboneAlignment.start;
+      const basePairStop = section.backboneAlignment.stop;
+      selectedBackboneRegion.setViewportSelection(basePairStart, basePairStop);
+      store.dispatch('setDetailedBasePairRequest', { start: basePairStart, stop: basePairStop });
+    }
+  }
+};
+
+const onBackboneSwap = async (section: SyntenySection) => {
+  const sectionMapName = section.mapName;
+  const oldBackboneSpecies = store.state.species;
+  const selectedSpecies = store.state.comparativeSpecies.find((s) => s.activeMap.name === sectionMapName);
+  if (selectedSpecies && oldBackboneSpecies) {
+    // Get the chromosome from the api
+    const chromosomes = await ChromosomeApi.getChromosomes(selectedSpecies.activeMap.key);
+    const selectedChromosome = chromosomes.find((c) => c.chromosome === section.chromosome);
+    if (selectedChromosome) {
+      store.dispatch('setChromosome', selectedChromosome);
+      const newStart = section.isInverted ? section.speciesStop : section.speciesStart;
+      const newStop = section.isInverted ? section.speciesStart : section.speciesStop;
+      store.dispatch('setStartPosition', newStart);
+      store.dispatch('setStopPosition', newStop);
+
+      // Update comparative species and order
+      const newComparativeSpecies = [...store.state.comparativeSpecies];
+      const newBackboneIndex = newComparativeSpecies.findIndex((s) => s.activeMap.key === selectedSpecies.activeMap.key);
+      newComparativeSpecies.splice(newBackboneIndex, 1);
+      newComparativeSpecies.push(oldBackboneSpecies);
+      store.dispatch('setComparativeSpecies', newComparativeSpecies);
+
+      // Set the new order, swapping the order of the old backbone with the order
+      // of the new backbone species
+      const speciesOrder: any = {...store.state.speciesOrder};
+      const oldOrder = speciesOrder[selectedSpecies.activeMap.key];
+      const newOrder = speciesOrder[oldBackboneSpecies.activeMap.key];
+      speciesOrder[selectedSpecies.activeMap.key] = newOrder;
+      speciesOrder[oldBackboneSpecies.activeMap.key] = oldOrder;
+      store.dispatch('setSpeciesOrder', speciesOrder);
+
+      // NOTE: we may not need to clear these out, but it may not make sense
+      // to keep selected info
+      store.dispatch('setSelectedData', []);
+      store.dispatch('setSelectedGeneIds', []);
+      store.dispatch('setGene', null);
+      // NOTE: do this last because it kicks of reprocessing on Main.vue
+      store.dispatch('setSpecies', selectedSpecies);
+    }
   }
 };
 
