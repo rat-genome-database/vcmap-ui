@@ -196,7 +196,7 @@ watch(() => store.state.detailedBasePairRequest, async () => {
 // NOTE: Just trying out watching for changes in the backbone species to trigger a full reprocessing
 watch(() => store.state.species, () => {
   initVCMapProcessing();
-})
+});
 
 /**
  * Start all processing based on the user's configuration.

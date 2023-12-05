@@ -373,16 +373,20 @@ const onBackboneSwap = async (section: SyntenySection) => {
       store.dispatch('setStopPosition', newStop);
 
       // Update comparative species and order
-      const speciesOrder: any = {...store.state.speciesOrder};
-      const oldOrder = speciesOrder[selectedSpecies.activeMap.key];
-      speciesOrder[selectedSpecies.activeMap.key] = 0;
-      speciesOrder[oldBackboneSpecies.activeMap.key] = oldOrder;
-      store.dispatch('setSpeciesOrder', speciesOrder);
       const newComparativeSpecies = [...store.state.comparativeSpecies];
       const newBackboneIndex = newComparativeSpecies.findIndex((s) => s.activeMap.key === selectedSpecies.activeMap.key);
       newComparativeSpecies.splice(newBackboneIndex, 1);
       newComparativeSpecies.push(oldBackboneSpecies);
       store.dispatch('setComparativeSpecies', newComparativeSpecies);
+
+      // Set the new order, swapping the order of the old backbone with the order
+      // of the new backbone species
+      const speciesOrder: any = {...store.state.speciesOrder};
+      const oldOrder = speciesOrder[selectedSpecies.activeMap.key];
+      const newOrder = speciesOrder[oldBackboneSpecies.activeMap.key];
+      speciesOrder[selectedSpecies.activeMap.key] = newOrder;
+      speciesOrder[oldBackboneSpecies.activeMap.key] = oldOrder;
+      store.dispatch('setSpeciesOrder', speciesOrder);
 
       // NOTE: we may not need to clear these out, but it may not make sense
       // to keep selected info
