@@ -1,41 +1,67 @@
 <template>
     <div class="history-panel">
       History
-      <ul>
+      <!-- <ul>
         <li v-for="(entry, index) in history" :key="index" @click="revertToState(entry)">
           {{ formatHistoryEntry(entry) }}
         </li>
-      </ul>
-      <Button
-              @click="clearHistory"
-            />
+      </ul> -->
+      <Dropdown
+        v-model="selectedHistory"
+        :options="formattedHistory"
+        optionLabel="label"
+        :virtualScrollOptions="{itemSize: 30}"
+        showClear
+        @change="onHistorySelect($event.value)"
+        placeholder="Select From History"
+      />
     </div>
   </template>
 
 <script setup lang="ts">
 import UserHistory from '@/models/UserHistory';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 
 const store = useStore(key);
 
-const history = computed(() => store.state.history);
+const selectedHistory = ref(null);
 
+const history = computed(() => store.state.history);
 console.log('HISTORY', history.value);
 
-const formatHistoryEntry = (entry: UserHistory) => {
-  console.log('ENTRY', entry);
-  return `Entry`;
+const formattedHistory = computed(() => {
+  return store.state.history.map((entry, index) => {
+    return {
+      label: entry.source,
+      value: index
+    };
+  });
+});
+
+const onHistorySelect = ( selectedItem ) => {
+  if (selectedItem && selectedItem.value !== null) {
+    const entry: UserHistory = history.value[selectedItem.value];
+  
+    store.dispatch('setBackboneSelection', entry.backbone);
+    store.dispatch('setDetailedBasePairRange', entry.range);
+  }
 };
 
-const clearHistory = () => {
-  store.dispatch('clearUserHistory');
-};
+// const formatHistoryEntry = (entry: UserHistory) => {
+//   console.log('ENTRY', entry);
+//   return `${entry.source}`;
+// };
 
-const revertToState = (entry: UserHistory) => {
-  // store.dispatch('setDetailedBasePairRequest', entry.range);
-};
+// const clearHistory = () => {
+//   store.dispatch('clearUserHistory');
+// };
+
+// const revertToState = (entry: UserHistory) => {
+//   store.dispatch('setBackboneSelection', entry.backbone);
+//   store.dispatch('setDetailedBasePairRange', entry.range);
+// };
 </script>
 
 <style lang="scss" scoped>
@@ -52,6 +78,6 @@ li {
   cursor: pointer;
 }
 li:hover {
-  background-color: #f0f0f0;
+  background-color: #79b0f4;
 }
 </style>

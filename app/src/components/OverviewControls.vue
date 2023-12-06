@@ -119,7 +119,7 @@ const saveSelectionChange = () => {
     const selectedBackboneRegion = store.state.selectedBackboneRegion;
     selectedBackboneRegion?.setViewportSelection(startPosition.value, stopPosition.value);
 
-    store.dispatch('setDetailedBasePairRequest', { start: startPosition.value, stop: stopPosition.value });
+    store.dispatch('setDetailedBasePairRequest', { range: {start: startPosition.value, stop: stopPosition.value}, source: 'Overview Edit' });
     // store.dispatch('setDetailedBasePairRange', { start: startPosition.value, stop: stopPosition.value });
   }
   showEditModal.value = false;

@@ -1,6 +1,8 @@
-import { BasePairRange } from "./BackboneSelection";
+import BackboneSelection, { BasePairRange } from "./BackboneSelection";
 
 export default interface UserHistory {
-    timestamp: Date;
+    timestamp: Date
     range: BasePairRange
+    source: string
+    backbone: BackboneSelection
 };

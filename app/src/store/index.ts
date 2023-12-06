@@ -74,7 +74,11 @@ const vuexSession = new VuexPersistence<VCMapState>({
   storage: window.sessionStorage,
 });
 
-const actionsToLog = ['setDetailedBasePairRange', 'setDetailedBasePairRequest'];
+const actionsToLog = [
+  'setDetailedBasePairRange', 
+  'setDetailedBasePairRequest', 
+  'setBackboneSelection'
+];
 const mutationsToLog = ['detailedBasePairRange', 'addToHistory'];
 
 const logger = createLogger({
@@ -86,6 +90,9 @@ const logger = createLogger({
     return actionsToLog.includes(action.type);
   },
 });
+
+// Used to hold user history temporarily until fully completed
+let partialHistory: { range: BasePairRange; source: string; } | null = null;
 
 export default createStore({
   state: (): VCMapState => ({
@@ -213,7 +220,7 @@ export default createStore({
     },
     addToHistory(state: VCMapState, entry: UserHistory) {
       state.history.unshift(entry);
-      state.history = state.history.slice(0,3);
+      // state.history = state.history.slice(0,3);
     },
     clearUserHistory(state: VCMapState) {
       console.log('CLEARED HISTORY');
@@ -299,13 +306,25 @@ export default createStore({
       context.commit('selectedBackboneRegion', selection);
       context.commit('detailedBasePairRange', { start: selection.viewportSelection?.basePairStart, stop: selection.viewportSelection?.basePairStop });
       // Note: Committing a change to detailedBasePairRange will trigger an update on the Detailed panel
+
+      if (partialHistory) {
+        const selection = context.state.selectedBackboneRegion;
+        const fullHistory = {
+          ...partialHistory,
+          backbone: selection
+        };
+        context.commit('addToHistory', fullHistory);
+        partialHistory = null;
+      }
     },
-    setDetailedBasePairRequest(context: ActionContext<VCMapState, VCMapState>, range: BasePairRange) {
+    setDetailedBasePairRequest(context: ActionContext<VCMapState, VCMapState>, payload: {range: BasePairRange, source?: string}) {
+      const { range, source = '' } = payload;
       // Note: Committing a change to detailedBasePairRange will trigger an update on the Detailed panel
       context.commit('detailedBasePairRequest', range);
 
+      // Capture source and new entry for user history when a new range and action is performed
       if (range) {
-        context.commit('addToHistory', {timestamp: new Date(), range});
+        partialHistory = { range, source };
       }
     },
     setDetailedBasePairRange(context: ActionContext<VCMapState, VCMapState>, range: BasePairRange) {

@@ -86,8 +86,11 @@ const selectGene = (gene: Gene | null) => {
   }
 
   store.dispatch('setDetailedBasePairRequest', {
-    start: Math.max(gene.backboneStart - (geneLength * SEARCHED_GENE_WINDOW_FACTOR), 0),
-    stop: Math.min(gene.backboneStop + (geneLength * SEARCHED_GENE_WINDOW_FACTOR), store.state.chromosome.seqLength)
+    range: {
+      start: Math.max(gene.backboneStart - (geneLength * SEARCHED_GENE_WINDOW_FACTOR), 0),
+      stop: Math.min(gene.backboneStop + (geneLength * SEARCHED_GENE_WINDOW_FACTOR), store.state.chromosome.seqLength)
+    },
+    source: gene.symbol
   });
 };
 

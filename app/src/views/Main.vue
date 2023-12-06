@@ -184,7 +184,7 @@ watch(() => store.state.detailedBasePairRequest, async () => {
 
     triggerDetailedPanelProcessing(store.state.chromosome, store.state.detailedBasePairRequest.start, store.state.detailedBasePairRequest.stop);
     // Data processing done, ready to complete request
-    store.dispatch('setDetailedBasePairRequest', null);
+    store.dispatch('setDetailedBasePairRequest', {range: null});
   }
   else if (store.state.chromosome == null || store.state.species == null)
   {

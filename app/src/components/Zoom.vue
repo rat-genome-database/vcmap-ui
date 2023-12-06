@@ -69,7 +69,7 @@ const zoom = (newZoomLevel: number) => {
 
   if (newZoomLevel === 1)
   {
-    store.dispatch('setDetailedBasePairRequest', { start: 0, stop: backboneChromosome.seqLength });
+    store.dispatch('setDetailedBasePairRequest', { range: { start: 0, stop: backboneChromosome.seqLength }, source: 'Reset Zoom' });
   }
   else
   {
@@ -80,6 +80,7 @@ const zoom = (newZoomLevel: number) => {
 
     const newRegionLength = currentLength * (currentZoomLevel / newZoomLevel);
     const lengthDiff = currentLength - newRegionLength;
+    const zoom = lengthDiff > 0 ? 'Zoomed In' : 'Zoomed Out';
 
     if (lengthDiff > 0)
     {
@@ -108,7 +109,7 @@ const zoom = (newZoomLevel: number) => {
     }
 
     // Trigger detailed panel update
-    store.dispatch('setDetailedBasePairRequest', { start: zoomedStart, stop: zoomedStop });
+    store.dispatch('setDetailedBasePairRequest', { range: { start: zoomedStart, stop: zoomedStop }, source: zoom });
   }
 };
 

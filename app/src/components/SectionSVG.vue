@@ -348,7 +348,7 @@ const onSyntenyBlockClick = (section: GenomicSection) => {
     const basePairStart = section.backboneAlignment.start;
     const basePairStop = section.backboneAlignment.stop;
     selectedBackboneRegion.setViewportSelection(basePairStart, basePairStop);
-    store.dispatch('setDetailedBasePairRequest', { start: basePairStart, stop: basePairStop });
+    store.dispatch('setDetailedBasePairRequest', { range: { start: basePairStart, stop: basePairStop }, source: 'Synteny Selection'});
   }
 };
 
