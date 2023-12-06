@@ -67,7 +67,7 @@ export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, 
         orientation: blockInfo.orientation,
         chainLevel: blockInfo.chainLevel,
         isGapless: true,
-        labelOnLeft: speciesPos < backbonePos,
+        labelOnLeft: speciesPos > backbonePos,
       });
       // Create the SyntenyRegion that covers the extent of the Block
       // NOTE: This might extend beyond the visible window, but we will try to only create
