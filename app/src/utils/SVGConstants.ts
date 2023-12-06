@@ -8,6 +8,7 @@ const constants = {
   panelTitleHeight: 55, // Constant
   backboneXPosition: 15, // Constant?
   viewboxHeight: 440, // Constant
+  viewboxWidth: 800, // Constant
   trackWidth: 20, // Constant
   dataTrackWidth: 10, // Constant
   overviewTrackYPosition: 70, // Constant

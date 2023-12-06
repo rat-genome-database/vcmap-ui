@@ -10,7 +10,7 @@
 
     <rect id="detailed" class="panel selectable" :class="{'is-loading': arePanelsLoading}" @click.left="(event) => { detailedSelectionHandler(event, getOverviewSelectionStatus()); showToast('info', 'Selection Initiated:', 'Drag and click again to complete the selection or right click to cancel.', 5000)}"
       @mousemove="updateZoomSelection" @contextmenu.prevent @click.right="cancelDetailedSelection" 
-      :x="store.state.svgPositions.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.viewboxHeight" />
+      :x="store.state.svgPositions.overviewPanelWidth" :width="SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth" :height="SVGConstants.viewboxHeight" />
 
     
     <!-- Ortholog Lines -->
@@ -71,10 +71,10 @@
     />
 
     <!-- Navigation buttons -->
-    <rect class="navigation-btn" :class="{'disabled': isNavigationUpDisabled }" @click="navigateUp" :x="store.state.svgPositions.overviewPanelWidth" :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
-    <rect class="navigation-btn" :class="{'disabled': isNavigationDownDisabled }" @click="navigateDown" :x="store.state.svgPositions.overviewPanelWidth" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
-    <image class="nav-btn-img" href="../../node_modules/primeicons/raw-svg/chevron-up.svg" @click="navigateUp" :x="store.state.svgPositions.overviewPanelWidth + (SVGConstants.detailsPanelWidth / 2)" :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
-    <image class="nav-btn-img" href="../../node_modules/primeicons/raw-svg/chevron-down.svg" @click="navigateDown" :x="store.state.svgPositions.overviewPanelWidth + (SVGConstants.detailsPanelWidth / 2)" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
+    <rect class="navigation-btn" :class="{'disabled': isNavigationUpDisabled }" @click="navigateUp" :x="store.state.svgPositions.overviewPanelWidth" :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth" :height="SVGConstants.navigationButtonHeight" />
+    <rect class="navigation-btn" :class="{'disabled': isNavigationDownDisabled }" @click="navigateDown" :x="store.state.svgPositions.overviewPanelWidth" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth" :height="SVGConstants.navigationButtonHeight" />
+    <image class="nav-btn-img" href="../../node_modules/primeicons/raw-svg/chevron-up.svg" @click="navigateUp" :x="store.state.svgPositions.overviewPanelWidth + ((SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth) / 2)" :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
+    <image class="nav-btn-img" href="../../node_modules/primeicons/raw-svg/chevron-down.svg" @click="navigateDown" :x="store.state.svgPositions.overviewPanelWidth + ((SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth) / 2)" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
 
     <!-- Transparent panels that show up once selection starts: Allows for selection on top of the other SVGs -->
     <rect v-if="currentlySelectingRegion()" id="selecting-overview" class="selecting-panel" :class="{'is-loading': arePanelsLoading}" x="0" 
@@ -83,7 +83,7 @@
 
     <rect v-if="currentlySelectingRegion()" id="selecting-detailed" class="selecting-panel" :class="{'is-loading': arePanelsLoading}"
       @mousemove="updateZoomSelection" @contextmenu.prevent @click.right="cancelDetailedSelection" @click.left="(event) => detailedSelectionHandler(event, getOverviewSelectionStatus())"
-      :x="store.state.svgPositions.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.viewboxHeight" />
+      :x="store.state.svgPositions.overviewPanelWidth" :width="SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth" :height="SVGConstants.viewboxHeight" />
 
     <!-- The "gray" selection SVG that shows what area that the user is currently selecting -->
     <!-- Detailed panel selection svg for zoom -->
@@ -96,7 +96,7 @@
       fill="lightgray"
       fill-opacity="0.4"
       :x="store.state.svgPositions.overviewPanelWidth" :y="startDetailedSelectionY"
-      :width="SVGConstants.detailsPanelWidth" :height="stopDetailedSelectionY - startDetailedSelectionY" />
+      :width="SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth" :height="stopDetailedSelectionY - startDetailedSelectionY" />
     <!-- Overview panel selection svg for backbone -->
     <rect v-if="startOverviewSelectionY && stopOverviewSelectionY"
       class="visible-selecting-panel"
