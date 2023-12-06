@@ -15,6 +15,7 @@ beforeEach(() => {
     species: new Species({ typeKey: 1, name: 'Human', maps: [new SpeciesMap({ key: 1, name: 'Map', primaryRefAssembly: true })] }),
     renderType: 'overview',
     order: 0,
+    overviewWidth: 300,
   };
 });
 

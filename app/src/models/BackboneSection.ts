@@ -15,6 +15,7 @@ export type BackboneSectionParams = {
   species: Species;
   renderType: RenderType;
   order: number;
+  overviewWidth: number;
   createLabels?: boolean;
 }
 
@@ -48,7 +49,7 @@ export default class BackboneSection extends GenomicSection
 
     if (this.hasLabels)
     {
-      this.createLabels(params.order);
+      this.createLabels(params.order, params.overviewWidth);
     }
   }
 
@@ -65,7 +66,7 @@ export default class BackboneSection extends GenomicSection
     ];
   }
 
-  private createLabels(order: number)
+  private createLabels(order: number, overviewWidth: number)
   {
     let startBPLabel: Label;
     let stopBPLabel: Label;
@@ -87,13 +88,13 @@ export default class BackboneSection extends GenomicSection
     else
     {
       startBPLabel = new Label({
-        posX: getDetailedPanelXPositionForSynteny(order) - (SVGConstants.trackWidth / 2 ),
+        posX: getDetailedPanelXPositionForSynteny(order, overviewWidth) - (SVGConstants.trackWidth / 2 ),
         posY: this.windowSVGStart + 10,
         text: Formatter.convertBasePairToLabel(this.windowStart) ?? ''
       });
 
       stopBPLabel = new Label({
-        posX: getDetailedPanelXPositionForSynteny(order) - (SVGConstants.trackWidth / 2 ),
+        posX: getDetailedPanelXPositionForSynteny(order, overviewWidth) - (SVGConstants.trackWidth / 2 ),
         posY: this.windowSVGStop - 10,
         text: Formatter.convertBasePairToLabel(this.windowStop) ?? ''
       });

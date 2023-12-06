@@ -28,7 +28,7 @@ import logger from '@/logger';
  *   SyntenyRegionSets representing the off-backbone synteny data in the overview panel
  */
 export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, Block[]>, comparativeSpecies: Species[],
-    backboneChr: Chromosome, speciesOrder: any): Promise<SyntenyRegionSet[]>
+    backboneChr: Chromosome, speciesOrder: any, overviewWidth: number): Promise<SyntenyRegionSet[]>
 {
   const syntenyRegionSets: SyntenyRegionSet[] = [];
 
@@ -84,7 +84,7 @@ export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, 
       processedSyntenicRegions.push(currSyntenicRegion);
     }
 
-    syntenyRegionSets.push(new SyntenyRegionSet(currSpecies.name, currSpecies.activeMap, processedSyntenicRegions, speciesPos, 'overview'));
+    syntenyRegionSets.push(new SyntenyRegionSet(currSpecies.name, currSpecies.activeMap, processedSyntenicRegions, speciesPos, 'overview', overviewWidth));
     defaultOrder++;
   });
 
@@ -110,7 +110,7 @@ export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, 
  *     The processed SyntenicRegionSets for each species.
  */
 export async function createSyntenicRegionSets(syntenyData: Map<number, Block[]>, comparativeSpecies: Species[],
-  backboneStart: number, backboneStop: number, speciesOrder: any, hiddenDensityTracks: number[]): Promise<SyntenyRegionSet[]>
+  backboneStart: number, backboneStop: number, speciesOrder: any, hiddenDensityTracks: number[], overviewWidth: number): Promise<SyntenyRegionSet[]>
 {
   const syntenyRegionSets: SyntenyRegionSet[] = [];
 
@@ -136,7 +136,7 @@ export async function createSyntenicRegionSets(syntenyData: Map<number, Block[]>
 
       const speciesPos = speciesOrder[mapKey.toString()];
       const syntenyRegionSet = syntenicSectionBuilder(speciesSyntenyData, species, speciesPos ?? defaultPos,
-          backboneStart, backboneStop, 'detailed', hideDensity);
+          backboneStart, backboneStop, 'detailed', hideDensity, overviewWidth);
 
       logger.info(`Completed build of Synteny for ${syntenyRegionSet?.mapName}, with ${syntenyRegionSet?.regions.length} regions`);
 
@@ -170,7 +170,7 @@ export async function createSyntenicRegionSets(syntenyData: Map<number, Block[]>
  *   The renderable version of speciesSyntenyData represented as an array of type SyntenyRegion[]
  */
 function syntenicSectionBuilder(speciesSyntenyData: Block[], species: Species, setOrder: number,
-    viewportStart: number,  viewportStop: number, renderType: RenderType, hideDensityTrack: boolean)
+    viewportStart: number,  viewportStop: number, renderType: RenderType, hideDensityTrack: boolean, overviewWidth: number)
 {
   const processedSyntenicRegions: SyntenyRegion[] = [];
 
@@ -307,7 +307,7 @@ logger.timeEnd(timerLabel);
 
   // Finished creating this Set:
 logger.time("createSyntenyRegionSet");
-  const regionSet = new SyntenyRegionSet(currSpecies.name, currSpecies.activeMap, processedSyntenicRegions, setOrder, renderType);
+  const regionSet = new SyntenyRegionSet(currSpecies.name, currSpecies.activeMap, processedSyntenicRegions, setOrder, renderType, overviewWidth);
   regionSet.maxVariantCount = regionMaxCount;
   regionSet.variantBinSize = regionBinSize;
 logger.timeEnd("createSyntenyRegionSet");

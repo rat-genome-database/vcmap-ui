@@ -20,7 +20,7 @@ export interface ProcessedGenomicData
  * Creates a BackboneSection model
  */
 export function createBackboneSection(species: Species, chromosome: Chromosome, startPos: number, stopPos: number,
-                                      renderType: RenderType, order: number)
+                                      renderType: RenderType, order: number, overviewWidth: number)
 {
   return new BackboneSection({
     chromosome: chromosome.chromosome,
@@ -34,6 +34,7 @@ export function createBackboneSection(species: Species, chromosome: Chromosome, 
     renderType: renderType,
     createLabels: true,
     order,
+    overviewWidth,
   });
 }
 
@@ -80,7 +81,7 @@ export function backboneDatatrackBuilder(species: Species, genomicData: Gene[], 
   return { backboneSection, processedGenomicData };
 }
 
-export function createBackboneSet(backbone: BackboneSection, order: number, backboneMap: SpeciesMap, genomicData?: ProcessedGenomicData)
+export function createBackboneSet(backbone: BackboneSection, order: number, backboneMap: SpeciesMap, overviewWidth: number, genomicData?: ProcessedGenomicData)
 {
-  return new BackboneSet(backbone, order, backboneMap, genomicData);
+  return new BackboneSet(backbone, order, backboneMap, overviewWidth, genomicData);
 }
