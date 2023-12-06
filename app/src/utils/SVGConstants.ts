@@ -5,7 +5,7 @@ const constants = {
   detailsTitleXPosition: 310,
   panelTitleYPosition: 15,
   panelTitleHeight: 55,
-  backboneXPosition: 260,
+  backboneXPosition: 15,
   viewboxHeight: 440,
   trackWidth: 20,
   dataTrackWidth: 10,
