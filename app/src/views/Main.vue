@@ -807,9 +807,13 @@ async function updateComparativeSpecies(newSpeciesOrder: any, newComparativeSpec
   }
   // calculate new overview width based on number of species
   const numComparativeSpecies = newComparativeSpecies.length;
-  const overviewWidth = calculateOverviewWidth(numComparativeSpecies);
   store.dispatch('setSpeciesOrder', newSpeciesOrder);
-  store.dispatch('setSvgPositions', { overviewPanelWidth: overviewWidth });
+  // evaluate if we should update overview width
+  const currentOverviewWidth = store.state.svgPositions.overviewPanelWidth;
+  if (currentOverviewWidth > 0) {
+    const overviewWidth = calculateOverviewWidth(numComparativeSpecies);
+    store.dispatch('setSvgPositions', { overviewPanelWidth: overviewWidth });
+  }
   store.dispatch('setComparativeSpecies', newComparativeSpecies);
   await queryAndProcessSyntenyForBasePairRange(store.state.chromosome, store.state.detailedBasePairRange.start, store.state.detailedBasePairRange.stop);
   isLoading.value = false;

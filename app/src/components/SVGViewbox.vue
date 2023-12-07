@@ -4,7 +4,7 @@
     <!-- Outside panel -->
     <rect class="panel" x="0" width="800" :height="SVGConstants.viewboxHeight" />
     <!-- Inner panels -->
-    <rect class="panel selectable" :class="{'is-loading': arePanelsLoading}" x="0" @click.left="(event) => { overviewSelectionHandler(event, getDetailedSelectionStatus(), overviewBackboneSet?.backbone); showToast('info', 'Selection Initiated:', 'Drag and click again to complete the selection or right click to cancel.', 5000)}" 
+    <rect v-if="showOverviewPanel" class="panel selectable" :class="{'is-loading': arePanelsLoading}" x="0" @click.left="(event) => { overviewSelectionHandler(event, getDetailedSelectionStatus(), overviewBackboneSet?.backbone); showToast('info', 'Selection Initiated:', 'Drag and click again to complete the selection or right click to cancel.', 5000)}" 
       @mousemove.stop="(event) => updateOverviewSelection(event)" @contextmenu.prevent @click.right="cancelOverviewSelection"
       :width="store.state.svgPositions.overviewPanelWidth" :height="SVGConstants.viewboxHeight" />
 
@@ -19,14 +19,18 @@
     </template>
     
     <!-- Overview panel SVGs ------------------------------------------->
-    <template v-for="(syntenySet, index) in overviewSyntenySets" :key="index">
-      <template v-for="(region, index) in syntenySet.regions" :key="index">
-        <SectionSVG show-chromosome show-synteny-on-hover :gene-list="geneList" show-start-stop select-on-click :region="region as SyntenyRegion" />
+    <template v-if="showOverviewPanel">
+      <template v-for="(syntenySet, index) in overviewSyntenySets" :key="index">
+        <template v-for="(region, index) in syntenySet.regions" :key="index">
+          <SectionSVG show-chromosome show-synteny-on-hover :gene-list="geneList" show-start-stop select-on-click :region="region as SyntenyRegion" />
+        </template>
       </template>
     </template>
 
-    <template v-if="overviewBackboneSet">
-      <BackboneSetSVG show-data-on-hover :gene-list="geneList" :backbone-set="overviewBackboneSet"/>
+    <template v-if="showOverviewPanel">
+      <template v-if="overviewBackboneSet">
+        <BackboneSetSVG show-data-on-hover :gene-list="geneList" :backbone-set="overviewBackboneSet"/>
+      </template>
     </template>
 
     <!-- Detail panel SVGs ----------------------------------------->
@@ -68,6 +72,7 @@
     <ViewboxTitlesSVG
       :overview-backbone-set="overviewBackboneSet" :overview-synteny-sets="(overviewSyntenySets as SyntenyRegionSet[])"
       :detailed-backbone-set="detailedBackboneSet" :detailed-synteny-sets="(detailedSyntenySets as SyntenyRegionSet[])"
+      :show-overview-panel="showOverviewPanel"
     />
 
     <!-- Navigation buttons -->
@@ -185,6 +190,10 @@
       </div>
     </Fieldset>
   </div>
+  <Button
+    label="Toggle Overview"
+    @click="toggleOverview"
+  />
   <!--
   <Button
     style="margin-right: 20px;"
@@ -299,6 +308,7 @@ import VariantPositions from '@/models/VariantPositions';
 import Species from '@/models/Species';
 import BackboneSection from '@/models/BackboneSection';
 import GradientLegend from './GradientLegend.vue';
+import { calculateOverviewWidth } from '@/utils/Shared';
 
 const SHOW_DEBUG = process.env.NODE_ENV === 'development';
 const NAV_SHIFT_PERCENT = 0.2;
@@ -329,6 +339,9 @@ let overviewSyntenySets = ref<SyntenyRegionSet[]>([]);
 let orthologLines = ref<OrthologLine[]>();
 let detailedSyntenySvgYPosition = ref<number | null>(null);
 let detailedSyntenyBlockYPositions = ref<number[] | null>(null);
+
+// NOTE: This should maybe be on main and passed in as a prop
+let showOverviewPanel = ref<boolean>(true);
 
 ////
 // Debugging helper refs and methods (debug template is currently commented out):
@@ -416,6 +429,7 @@ watch(() => store.state.speciesOrder, () => {
   updateDetailsPanel();
 });
 
+// TODO: this can be redundant when adding/removing species, causes svg to update twice
 watch(() => store.state.svgPositions, () => {
   updateOverviewPanel();
   updateDetailsPanel();
@@ -904,6 +918,19 @@ function toggleSpeciesVisibility(index: number) {
   });
   store.dispatch('setComparativeSpecies', newComparativeSpecies);
   store.dispatch('setSpeciesOrder', newSpeciesOrder);
+}
+
+function toggleOverview() {
+  const oldOverviewPanelWidth = store.state.svgPositions.overviewPanelWidth;
+  if (oldOverviewPanelWidth === 0) {
+    showOverviewPanel.value = true;
+    const numComparativeSpecies = store.state.comparativeSpecies.length;
+    const newOverviewWidth = calculateOverviewWidth(numComparativeSpecies);
+    store.dispatch('setSvgPositions', { overviewPanelWidth: newOverviewWidth });
+  } else {
+    showOverviewPanel.value = false;
+    store.dispatch('setSvgPositions', { overviewPanelWidth: 0 });
+  }
 }
 
 </script>
