@@ -6,17 +6,6 @@
           <b>Selected Data</b>
         </div>
         <div class="panel-header-item">
-          <AutoComplete
-            v-model="searchedGene"
-            :suggestions="geneSuggestions"
-            @complete="searchGene($event)"
-            @item-select="searchSVG($event)"
-            :field="getSuggestionDisplay"
-            :minLength="3"
-            placeholder="Search loaded genes..."
-          />
-        </div>
-        <div class="panel-header-item">
           <div v-if="numberOfResults > 0">
             {{numberOfResults}} Selected Genes
           </div>
@@ -117,7 +106,6 @@ import { Formatter } from '@/utils/Formatter';
 import { ref, watch, computed } from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
-import { getNewSelectedData, sortGeneMatches, adjustSelectionWindow } from '@/utils/DataPanelHelpers';
 
 /**
  * FIXME: This whole component needs to be looked over. There are references to properties on objects that don't exist.
@@ -134,8 +122,6 @@ interface Props
 
 const props = defineProps<Props>();
 
-const searchedGene = ref<Gene | null>(null);
-const geneSuggestions = ref<Gene[]>([]);
 const numberOfResults = ref<number>(0);
 const sortByPosition = ref('off');
 const sortBySymbol = ref(false);
@@ -152,7 +138,6 @@ const clearSelectedGenes = () => {
   store.dispatch('setSelectedGeneIds', []);
   store.dispatch('setSelectedData', null);
   store.dispatch('setGene', null);
-  searchedGene.value = null;
 };
 
 const symbolSort = () => {
@@ -162,34 +147,6 @@ const positionSort = () => {
   const options = ['asc', 'desc', 'off'];
   const current = options.indexOf(sortByPosition.value);
   sortByPosition.value = options[(current + 1) % options.length];
-};
-const searchGene = (event: {query: string}) => {
-  let matches: Gene[] = [];
-  props.geneList.forEach((gene: Gene) => {
-    if (gene.symbol.toLowerCase().includes(event.query.toLowerCase()))
-      matches.push(gene);
-  });
-
-  const searchKey = searchedGene.value;
-  matches = sortGeneMatches(searchKey, matches);
-  geneSuggestions.value = matches;
-};
-
-const searchSVG = (event: { value: Gene }) => {
-  const newData = getNewSelectedData(store, event.value, props.geneList);
-  store.dispatch('setGene', event.value.clone()); // Update store config to see this as last gene selected
-  store.dispatch('setSelectedGeneIds', newData.rgdIds || []);
-  store.dispatch('setSelectedData', newData.selectedData);
-
-  if (event.value)
-  {
-    const newWindow = adjustSelectionWindow(event.value, props.geneList, store);
-    store.dispatch('setDetailedBasePairRequest', newWindow);
-  }
-};
-
-const getSuggestionDisplay = (item: any) => {
-  return `${item.symbol} - ${item.speciesName}`;
 };
 
 const sortedSelectedData = computed(() => {
