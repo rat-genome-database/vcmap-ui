@@ -23,7 +23,7 @@
     <div :class="{ 'col-3':panelCollapsed==false, 'col-1':panelCollapsed==true, 'collapsed': panelCollapsed }">
       <div class="collapse-button-container">
         <button class="collapse-button" @click="togglePanelCollapse">
-          <i class="pi pi-chevron-left" :class="{ 'collapsed': panelCollapsed }"></i>
+          <i class="pi pi-chevron-right" :class="{ 'collapsed': panelCollapsed }"></i>
         </button>
       </div>
       <div class="selected-data-content"  :style="{ 'transition-delay': panelCollapsed ? '.5s' : '0.5s' }">
