@@ -261,3 +261,12 @@ export function processAlignmentsOfGeneOutsideOfViewport(start: number, stop: nu
 
   return { start: backboneStart, stop: backboneStop };
 }
+
+/**
+ * Determines the width of the overview panel based on the number of species visible
+ * @param numComparativeSpecies
+ * @returns width of the overview panel
+ */
+export function calculateOverviewWidth(numComparativeSpecies: number) {
+  return 60 + numComparativeSpecies * 80;
+}

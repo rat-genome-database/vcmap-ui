@@ -257,6 +257,7 @@ import VCMapDialog from '@/components/VCMapDialog.vue';
 import { key } from '@/store';
 import { sortGeneMatches } from '@/utils/DataPanelHelpers';
 import { ConfigurationMode } from '@/utils/Types';
+import { calculateOverviewWidth } from '@/utils/Shared';
 
 interface ComparativeSpeciesSelection
 {
@@ -721,6 +722,10 @@ function saveConfigToStoreAndGoToMainScreen()
   });
 
   store.dispatch('setSpeciesOrder', speciesOrder);
+  // Set over width based on number of species
+  const numComparativeSpecies = comparativeSpecies.length;
+  const overviewWidth = calculateOverviewWidth(numComparativeSpecies);
+  store.dispatch('setSvgPositions', { overviewPanelWidth: overviewWidth });
   store.dispatch('setComparativeSpecies', comparativeSpecies);
   store.dispatch('setConfigMode', getConfigModeFromActiveTab(activeTab.value));
   store.dispatch('setConfigurationLoaded', null);
