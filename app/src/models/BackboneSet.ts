@@ -78,7 +78,7 @@ export default class BackboneSet extends GenomicSet
     // Calculate X positions of this backbone section
     if (this.backbone.renderType === 'overview')
     {
-      this.backbone.posX1 = (this.order * -80) + SVGConstants.backboneXPosition;
+      this.backbone.posX1 = (this.order * 80) + SVGConstants.backboneXPosition;
       this.backbone.posX2 = this.backbone.posX1 + SVGConstants.trackWidth;
     }
     else if (this.backbone.renderType === 'detailed')
