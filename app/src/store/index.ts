@@ -201,6 +201,9 @@ export default createStore({
     hoveredData(state: VCMapState, hoveredData: IHoveredData) {
       state.hoveredData = hoveredData;
     },
+    svgPositions(state: VCMapState, svgPositions: SVGPositionVariables) {
+      state.svgPositions = svgPositions;
+    }
   },
 
   actions: {
@@ -308,6 +311,9 @@ export default createStore({
     setHoveredData(context: ActionContext<VCMapState, VCMapState>, hoveredData: IHoveredData) {
       context.commit('hoveredData', hoveredData);
     },
+    setSvgPositions(context: ActionContext<VCMapState, VCMapState>, svgPositions: SVGPositionVariables) {
+      context.commit('svgPositions', svgPositions);
+    }
   },
 
   getters: {

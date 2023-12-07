@@ -56,9 +56,6 @@ export function getOverviewPanelXPosition(order: number)
 
 export function getDetailedPanelXPositionForSynteny(order: number, overviewWidth: number)
 {
-  console.log('[Trace]: getDetailedPanelXPositionForSynteny');
-  console.log(`[Trace]: Trace 2`);
-  console.log(`[Trace]: Trace 3`);
   return (order * 140) + overviewWidth + SVGConstants.detailedRightPadding;
 }
 

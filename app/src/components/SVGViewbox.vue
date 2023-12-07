@@ -416,6 +416,11 @@ watch(() => store.state.speciesOrder, () => {
   updateDetailsPanel();
 });
 
+watch(() => store.state.svgPositions, () => {
+  updateOverviewPanel();
+  updateDetailsPanel();
+})
+
 // FIXME: check on this (probably needs to be attached to Main props instead):
 const arePanelsLoading = computed(() => {
   // Either panel is processing or API is being queried

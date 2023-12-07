@@ -25,6 +25,10 @@
         <SelectedDataPanel :selected-data="store.state.selectedData" :gene-list="geneList" />
       </div>
     </div>
+    <Button
+      label="Update Overview Size"
+      @click="updateOverviewSize()"
+    />
   </div>
 <!-- 
   <div class="col-12 flex flex-wrap gap-3 justify-content-center border-top-1 border-top-solid">
@@ -809,6 +813,17 @@ async function updateComparativeSpecies(newSpeciesOrder: any, newComparativeSpec
   store.dispatch('setComparativeSpecies', newComparativeSpecies);
   await queryAndProcessSyntenyForBasePairRange(store.state.chromosome, store.state.detailedBasePairRange.start, store.state.detailedBasePairRange.stop);
   isLoading.value = false;
+}
+
+// TEMP:
+const updateOverviewSize = () => {
+  console.log('[Trace]: updatingOverviewSize');
+  const currentSize = store.state.svgPositions.overviewPanelWidth;
+  if (currentSize === 300) {
+    store.dispatch('setSvgPositions', {overviewPanelWidth: 200});
+  } else {
+    store.dispatch('setSvgPositions', {overviewPanelWidth: 300});
+  }
 }
 
 </script>
