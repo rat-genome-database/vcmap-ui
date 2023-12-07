@@ -35,9 +35,9 @@
           </div>
         </template>
         <div class="grid p-d-flex">
-          <OverviewControls />
+          <InfoHeader />
           <Divider layout="vertical" />
-          <DetailsControls />
+          <NavigationHeader :geneList="geneList" :selectedData="selectedData" />
         </div>
       </Panel>
     </div>
@@ -51,8 +51,10 @@
 </template>
 
 <script lang="ts" setup>
-import OverviewControls from '@/components/OverviewControls.vue';
-import DetailsControls from '@/components/DetailsControls.vue';
+import InfoHeader from '@/components/InfoHeader.vue';
+import NavigationHeader from '@/components/NavigationHeader.vue';
+import Gene from '@/models/Gene';
+import SelectedData from '@/models/SelectedData';
 import { VERSION } from '@/version';
 import { ref } from 'vue';
 import LoadDataTrackControls from '@/components/LoadDataTrackControls.vue';
@@ -61,6 +63,8 @@ interface Props
 {
   onLoadSyntenyVariants: (mapKeys: number[] | null, triggerUpdate: boolean) => Promise<void>;
   onShowSettings: () => void;
+  geneList: Map<number, Gene>;
+  selectedData: SelectedData[] | null;
 }
 
 const props = defineProps<Props>();

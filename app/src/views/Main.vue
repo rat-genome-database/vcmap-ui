@@ -1,5 +1,10 @@
 <template>
-  <HeaderPanel :on-load-synteny-variants="loadSyntenyVariants" :on-show-settings="onShowSettings" />
+  <HeaderPanel 
+    :on-load-synteny-variants="loadSyntenyVariants" 
+    :on-show-settings="onShowSettings" 
+    :geneList="geneList"
+    :selected-data="store.state.selectedData"
+  />
   <!-- <Button
     label="INSPECT (Main)"
     @click="onInspectPressed"

@@ -155,23 +155,6 @@
     once we have a better idea of what we want here -->
   <div>Visibility Settings</div>
   <div class="flex-container-start">
-    <Fieldset legend="Species" :toggleable="true">
-      <div>
-        <div v-for="(species, index) in store.state.comparativeSpecies" :key="index">
-          <div class="flex-container">
-            <div>
-              {{ species.name }} ({{ species.activeMap.name }})
-            </div>
-            <div>
-              <InputSwitch
-                v-model="species.visible"
-                @click="toggleSpeciesVisibility(index)"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </Fieldset>
     <Fieldset v-if="displayDensityTrackTogglePanel" class="density-toggle-container" legend="Density Tracks" :toggleable="true">
       <div class="flex-container">
         <Button v-if="props.variantPositionsList" class="density-toggle-button" icon="pi pi-eye" rounded v-on:click="toggleDensityTrack()">
@@ -868,23 +851,6 @@ function logPerformanceReport(title: string, totalTimeMillis: number, detailedTi
   }
 
   $log.debug(JSON.stringify(performanceReport, null, 2));
-}
-
-function toggleSpeciesVisibility(index: number) {
-  const newComparativeSpecies = [...store.state.comparativeSpecies];
-  const newSpeciesOrder: any = {};
-  const backboneKey = store.state.species?.activeMap.key || 0;
-  newSpeciesOrder[backboneKey.toString()] = 0;
-  newComparativeSpecies[index].visible = !newComparativeSpecies[index].visible;
-  let currentOrder = 0;
-  newComparativeSpecies.forEach((s: Species) => {
-    if (s.visible) {
-      currentOrder++;
-      newSpeciesOrder[s.activeMap.key] = currentOrder;
-    }
-  });
-  store.dispatch('setComparativeSpecies', newComparativeSpecies);
-  store.dispatch('setSpeciesOrder', newSpeciesOrder);
 }
 
 </script>
