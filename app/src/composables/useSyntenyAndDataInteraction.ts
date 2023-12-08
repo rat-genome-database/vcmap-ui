@@ -101,7 +101,8 @@ export default function useSyntenyAndDataInteraction(store: Store<VCMapState>) {
         }
       });
     } else if (section.type === 'variant') {
-      newSelectedData.push(new SelectedData(section, 'variantDensity'));
+      // asserted as VariantDensity in the if statement
+      newSelectedData.push(new SelectedData(section as unknown as VariantDensity, 'variantDensity'));
     }
 
     store.dispatch('setSelectedGeneIds', geneIds || []);
