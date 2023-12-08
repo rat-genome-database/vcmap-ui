@@ -20,6 +20,9 @@
           <div v-if="numberOfResults > 0">
             {{numberOfResults}} Selected Genes
           </div>
+          <div v-if="numberOfRegions > 0">
+            {{numberOfRegions}} Selected Regions
+          </div>
           <div class="selected-data-actions">
             <div class="clear-selection-btn">
             <Button
@@ -131,6 +134,7 @@ const props = defineProps<Props>();
 const searchedGene = ref<Gene | null>(null);
 const geneSuggestions = ref<Gene[]>([]);
 const numberOfResults = ref<number>(0);
+const numberOfRegions = ref<number>(0);
 const sortByPosition = ref('off');
 const sortBySymbol = ref(false);
 
@@ -139,6 +143,15 @@ watch(() => props.selectedData, () => {
   if (props.selectedData != null)
   {
     numberOfResults.value = props.selectedData.filter((d: { type: string; }) => d.type === 'Gene').length;
+  }
+});
+
+// add watcher for number of results where type is variantDensity
+watch(() => props.selectedData, () => {
+  numberOfRegions.value = 0;
+  if (props.selectedData != null)
+  {
+    numberOfRegions.value = props.selectedData.filter((d: { type: string; }) => d.type === 'variantDensity').length;
   }
 });
 
