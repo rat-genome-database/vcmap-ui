@@ -1,4 +1,4 @@
-import { GeneDatatrack } from "@/models/DatatrackSection";
+import { GeneDatatrack, VariantDensity } from "@/models/DatatrackSection";
 import Gene from "@/models/Gene";
 import { GeneLabel } from "@/models/Label";
 import OrthologLine from "@/models/OrthologLine";
@@ -34,15 +34,15 @@ export default function useSyntenyAndDataInteraction(store: Store<VCMapState>) {
   };
 
   const onDatatrackSectionClick = (event: any, section: GeneDatatrack, geneList: Map<number, Gene>) => {
-    // NOTE: ignore variant datatrack sections for now
-    if (!section.gene?.rgdId || section.type === 'variant' || section.type === 'qtl') return;
+    if ((!section.gene?.rgdId && section.type !== 'variant') || section.type === 'qtl') return;
 
     section.isHovered = false;
 
     // If clicked section already selected, just reset the selectedGeneId state
-    if (store.state.selectedGeneIds.includes(section.gene?.rgdId || -1)) {
+    if (store.state.selectedGeneIds.includes(section.gene?.rgdId || -1) || (section.type === 'variant' && store.state.selectedVariantSections.includes(section))) {
       store.dispatch('setSelectedGeneIds', []);
       store.dispatch('setSelectedData', null);
+      store.dispatch('setSelectedVariantSections', []);
       return;
     }
 
@@ -100,15 +100,25 @@ export default function useSyntenyAndDataInteraction(store: Store<VCMapState>) {
           });
         }
       });
+    } else if (section.type === 'variant') {
+      // asserted as VariantDensity in the if statement
+      newSelectedData.push(new SelectedData(section as unknown as VariantDensity, 'variantDensity'));
     }
 
     store.dispatch('setSelectedGeneIds', geneIds || []);
     if (event.shiftKey) {
       const selectedDataArray = [...(store.state.selectedData || []), ...newSelectedData];
+      if (section.type === 'variant') {
+        const selectedVariantSections = [...(store.state.selectedVariantSections || []), section];
+        store.dispatch('setSelectedVariantSections', selectedVariantSections);
+      }
       store.dispatch('setSelectedData', selectedDataArray);
     }
     else {
       store.dispatch('setSelectedData', newSelectedData);
+      if (section.type === 'variant') {
+        store.dispatch('setSelectedVariantSections', [section]);
+      }
     }
   };
 

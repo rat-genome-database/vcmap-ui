@@ -9,6 +9,9 @@
           <div v-if="numberOfResults > 0">
             {{numberOfResults}} Selected Genes
           </div>
+          <div v-if="numberOfRegions > 0">
+            {{numberOfRegions}} Selected Regions
+          </div>
           <div class="selected-data-actions">
             <div class="clear-selection-btn">
             <Button
@@ -80,15 +83,9 @@
             />
           </template>
           <template v-else-if="dataObject?.type === 'variantDensity'">
-            <div>
-              <span>Chr{{dataObject.genomicSection.chromosome}}: </span>
-              <span>
-                {{Formatter.addCommasToBasePair(dataObject.genomicSection.speciesStart)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.speciesStop)}}
-              </span>
-            </div>
-            <div>
-              <span>Variant Count: {{ Formatter.addCommasToBasePair(dataObject.genomicSection.variantCount) }}</span>
-            </div>
+            <VariantInfo
+              :variantSection="dataObject"
+            />
           </template>
           <Divider />
         </template>
@@ -102,7 +99,7 @@
 import SelectedData from '@/models/SelectedData';
 import Gene from '@/models/Gene';
 import GeneInfo from '@/components/GeneInfo.vue';
-import { Formatter } from '@/utils/Formatter';
+import VariantInfo from './VariantInfo.vue';
 import { ref, watch, computed } from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
@@ -123,6 +120,7 @@ interface Props
 const props = defineProps<Props>();
 
 const numberOfResults = ref<number>(0);
+const numberOfRegions = ref<number>(0);
 const sortByPosition = ref('off');
 const sortBySymbol = ref(false);
 
@@ -134,8 +132,18 @@ watch(() => props.selectedData, () => {
   }
 });
 
+// add watcher for number of results where type is variantDensity
+watch(() => props.selectedData, () => {
+  numberOfRegions.value = 0;
+  if (props.selectedData != null)
+  {
+    numberOfRegions.value = props.selectedData.filter((d: { type: string; }) => d.type === 'variantDensity').length;
+  }
+});
+
 const clearSelectedGenes = () => {
   store.dispatch('setSelectedGeneIds', []);
+  store.dispatch('setSelectedVariantSections', []);
   store.dispatch('setSelectedData', null);
   store.dispatch('setGene', null);
 };

@@ -76,6 +76,7 @@ const selectGene = (gene: Gene | null) => {
 
   const newData = getNewSelectedData(store, gene, props.geneList);
   store.dispatch('setSelectedGeneIds', []);
+  store.dispatch('setSelectedVariantSections', []);
   store.dispatch('setSelectedGeneIds', newData.rgdIds);
   store.dispatch('setSelectedData', newData.selectedData);
 

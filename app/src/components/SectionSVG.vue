@@ -158,7 +158,7 @@ import { watch, onMounted, ref } from 'vue';
 import SelectedData, { SelectedDataType } from '@/models/SelectedData';
 import SyntenyRegion from '@/models/SyntenyRegion';
 import SyntenySection from '@/models/SyntenySection';
-import DatatrackSection, { GeneDatatrack } from '@/models/DatatrackSection';
+import DatatrackSection, { GeneDatatrack, VariantDensity } from '@/models/DatatrackSection';
 import { computed, toRefs } from '@vue/reactivity';
 import { useStore } from 'vuex';
 import { key } from '@/store';
@@ -271,6 +271,7 @@ const onMouseEnter = (event: MouseEvent, section: SyntenySection | DatatrackSect
   showHoveredData(section, event);
 
   const genesAreSelected = store.state.selectedGeneIds.length > 0;
+  const variantSectionsAreSelected = store.state.selectedVariantSections.length > 0;
   let selectedDataList: SelectedData[] = [];
   if (section.type === 'gene')
   {
@@ -279,8 +280,8 @@ const onMouseEnter = (event: MouseEvent, section: SyntenySection | DatatrackSect
     const geneSection = section as GeneDatatrack;
     setHoverOnGeneLinesAndDatatrackSections(geneSection?.lines, true);
     
-    // Only update the selected data panel if no Genes are already selected
-    if (!genesAreSelected)
+    // Only update the selected data panel if no Genes or Variant sections are already selected
+    if (!genesAreSelected && !variantSectionsAreSelected)
     {
       if (geneSection.lines.length > 0) {
         const {
@@ -293,14 +294,14 @@ const onMouseEnter = (event: MouseEvent, section: SyntenySection | DatatrackSect
       }
     }
   }
-  else
+  else if (!genesAreSelected && !variantSectionsAreSelected)
   {
     //
     // Synteny section
-    if (!genesAreSelected)
     {
       if (section.type === 'variant')
       {
+
         selectedDataList.push(new SelectedData(section, 'variantDensity'));
       } else
       {
@@ -327,8 +328,8 @@ const onMouseLeave = (section: DatatrackSection | SyntenySection) => {
     section.isHovered = false;
   }
   
-  // Only reset data onMouseLeave if there isn't a selected gene
-  if (store.state.selectedGeneIds.length === 0) {
+  // Only reset data onMouseLeave if there isn't a selected gene or variant sections
+  if (store.state.selectedGeneIds.length === 0 && store.state.selectedVariantSections.length === 0) {
     store.dispatch('setSelectedData', null);
   }
 
@@ -437,6 +438,15 @@ const highlightSelections = (selectedGeneIds: number[]) => {
         } 
         else 
         {
+          section.isSelected = false;
+        }
+      });
+    } else if (set.datatracks && set.datatracks.length > 0 && set.datatracks[0].type === 'variant') 
+    {
+      set.datatracks.forEach(section => {
+        if (store.state.selectedVariantSections.some((selectedSection: VariantDensity) => selectedSection.speciesStart === section.speciesStart)) {
+          section.isSelected = true;
+        } else {
           section.isSelected = false;
         }
       });

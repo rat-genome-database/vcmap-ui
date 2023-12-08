@@ -226,6 +226,19 @@ export default class BackboneSet extends GenomicSet
     return 0;
   }
 
+  public get variantDatatrackSetIndex()
+  {
+    for (let i = 0; i < this.datatrackSets.length; i++)
+    {
+      if (this.datatrackSets[i].type === 'variant')
+      {
+        return i;
+      }
+    }
+
+    return null;
+  }
+
   public setOrder(order: number) {
     this.order = order;
   }

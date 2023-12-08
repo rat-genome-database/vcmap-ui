@@ -145,7 +145,7 @@ import { Formatter } from '@/utils/Formatter';
 import BackboneSection from '@/models/BackboneSection';
 import BackboneSet from '@/models/BackboneSet';
 import Gene from '@/models/Gene';
-import DatatrackSection, { GeneDatatrack } from '@/models/DatatrackSection';
+import DatatrackSection, { GeneDatatrack, VariantDensity } from '@/models/DatatrackSection';
 import DatatrackSet from '@/models/DatatrackSet';
 import { VCMapSVGElement } from '@/models/VCMapSVGElement';
 import useMouseBasePairPos from '@/composables/useMouseBasePairPos';
@@ -221,7 +221,7 @@ watch(() => store.state.selectedBackboneRegion, (newVal: BackboneSelection | nul
   }
 }, { deep: true });
 
-watch([() => store.state.selectedGeneIds, () => props.backboneSet], () => {
+watch([() => store.state.selectedGeneIds, () => props.backboneSet, () => store.state.selectedVariantSections], () => {
   highlightSelections(store.state.selectedGeneIds);
 });
 
@@ -258,7 +258,7 @@ const onMouseEnter = (event: MouseEvent, section: BackboneSection | DatatrackSec
   }
 
   // Only set selected data if there are no selected genes
-  if (store.state.selectedGeneIds.length === 0 && section.type === 'gene')
+  if (store.state.selectedGeneIds.length === 0 && section.type === 'gene' && store.state.selectedVariantSections.length === 0)
   {
     const selectedDataList: SelectedData[] = [];
     const geneSection = section as GeneDatatrack;
@@ -278,7 +278,7 @@ const onMouseEnter = (event: MouseEvent, section: BackboneSection | DatatrackSec
 
     store.dispatch('setSelectedData', selectedDataList);
   }
-  else if (store.state.selectedGeneIds.length === 0)
+  else if (store.state.selectedGeneIds.length === 0 && store.state.selectedVariantSections.length === 0)
   {
     if (section.type === 'variant')
     {
@@ -318,7 +318,7 @@ const onMouseLeave = (section: BackboneSection | DatatrackSection) => {
 
 
   // Only reset selected data if there are no selected genes
-  if (store.state.selectedGeneIds.length === 0)
+  if (store.state.selectedGeneIds.length === 0 && store.state.selectedVariantSections.length === 0)
   {
     store.dispatch('setSelectedData', null);
   }
@@ -343,6 +343,8 @@ const getSectionClass = (datatrackSet: DatatrackSet) => {
 
 const highlightSelections = (selectedGeneIds: number[]) => {
   const geneDatatracks = datatrackSets.value[props.backboneSet.geneDatatrackSetIndex]?.datatracks as GeneDatatrack[];
+  const variantDatatracks = datatrackSets.value[props.backboneSet.variantDatatrackSetIndex]?.datatracks as VariantDensity[];
+
   if (!geneDatatracks) {
     return;
   }
@@ -363,6 +365,20 @@ const highlightSelections = (selectedGeneIds: number[]) => {
         section.isSelected = false;
       }
     });
+
+  // Look through the backbone variant datatracks and highlight based on selected variants
+  if (!variantDatatracks) {
+    return;
+  }
+
+  variantDatatracks
+    .forEach(section => {
+      if (store.state.selectedVariantSections.some((selectedSection: VariantDensity) => selectedSection.speciesStart === section.speciesStart)) {
+        section.isSelected = true;
+      } else {
+        section.isSelected = false;
+      }
+  });
 };
 
 const updatePositionLabelFromMouseEvent = (event: MouseEvent) => {
