@@ -246,9 +246,6 @@ const level2Gaps = computed(() => {
 const datatrackSets = computed(() => {
   return (props.region.datatrackSets);
 });
-const variantDatatracks = computed(() => {
-  return (props.region.datatrackSets.find((set) => set.type === 'variant')?.datatracks);
-});
 const isRegionHovered = computed(() => {
   return props.region.syntenyBlocks.some(b => b.isHovered);
 });
