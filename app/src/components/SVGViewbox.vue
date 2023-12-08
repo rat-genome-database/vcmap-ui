@@ -489,13 +489,6 @@ const toggleDensityTrack = () => {
 };
 
 const toggleSyntenicDensityTrack = (mapKey: number) => {
-  console.log(props.syntenyTree);
-  console.log(props.variantPositionsList);
-
-  for (let set of props.syntenyTree.values()) {
-    console.log(set[0].variantPositions);
-  }
-
   store.dispatch('setToggleSyntenicDensityTrackVisibility', mapKey);
   updateDetailsPanel();
 };

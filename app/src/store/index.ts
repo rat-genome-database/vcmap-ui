@@ -37,6 +37,7 @@ export interface VCMapState
 
   /* Selected data */
   selectedGeneIds: number[];
+  selectedVariantSections: any[];
   selectedData: SelectedData[] | null;
   isDataPanelCollapsed: boolean;
 
@@ -105,6 +106,7 @@ export default createStore({
     isUpdatingVariants: false,
 
     selectedGeneIds: [],
+    selectedVariantSections: [],
     selectedData: null,
     isDataPanelCollapsed: false,
 
@@ -168,6 +170,9 @@ export default createStore({
     },
     selectedGeneIds(state: VCMapState, selectedIds: number[]) {
       state.selectedGeneIds = selectedIds;
+    },
+    selectedVariantSections(state: VCMapState, selectedSections: any[]) {
+      state.selectedVariantSections = selectedSections;
     },
     isDetailedPanelUpdating(state: VCMapState, isUpdating: boolean) {
       state.isDetailedPanelUpdating = isUpdating;
@@ -236,6 +241,9 @@ export default createStore({
     setSelectedGeneIds(context: ActionContext<VCMapState, VCMapState>, selectedIds: number[]) {
       context.commit('selectedGeneIds', selectedIds);
     },
+    setSelectedVariantSections(context: ActionContext<VCMapState, VCMapState>, selectedSections: any[]) {
+      context.commit('selectedVariantSections', selectedSections);
+    },
     setComparativeSpecies(context: ActionContext<VCMapState, VCMapState>, species: Species[]) {
       context.commit('comparativeSpecies', species);
     },
@@ -262,6 +270,7 @@ export default createStore({
       context.commit('stopPosition', null);
       context.commit('comparativeSpecies', []);
       context.commit('selectedGeneIds', []);
+      context.commit('selectedVariantSections', []);
       context.commit('selectedData', []);
       context.commit('selectedBackboneRegion', null);
       context.commit('detailedBasePairRange', { start: 0, stop: 0 });

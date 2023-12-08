@@ -91,15 +91,9 @@
             />
           </template>
           <template v-else-if="dataObject?.type === 'variantDensity'">
-            <div>
-              <span>Chr{{dataObject.genomicSection.chromosome}}: </span>
-              <span>
-                {{Formatter.addCommasToBasePair(dataObject.genomicSection.speciesStart)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.speciesStop)}}
-              </span>
-            </div>
-            <div>
-              <span>Variant Count: {{ Formatter.addCommasToBasePair(dataObject.genomicSection.variantCount) }}</span>
-            </div>
+            <VariantInfo
+              :variantSection="dataObject"
+            />
           </template>
           <Divider />
         </template>
@@ -113,7 +107,7 @@
 import SelectedData from '@/models/SelectedData';
 import Gene from '@/models/Gene';
 import GeneInfo from '@/components/GeneInfo.vue';
-import { Formatter } from '@/utils/Formatter';
+import VariantInfo from './VariantInfo.vue';
 import { ref, watch, computed } from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
@@ -150,6 +144,7 @@ watch(() => props.selectedData, () => {
 
 const clearSelectedGenes = () => {
   store.dispatch('setSelectedGeneIds', []);
+  store.dispatch('setSelectedVariantSections', []);
   store.dispatch('setSelectedData', null);
   store.dispatch('setGene', null);
   searchedGene.value = null;
