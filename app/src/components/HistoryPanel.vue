@@ -6,7 +6,7 @@
         optionLabel="label" 
         @change="onHistorySelect($event.value)" 
         @focus="refreshHistory"
-        placeholder="Select From History" 
+        placeholder="Select from history..." 
         :virtualScrollOptions="{itemSize: 30}"
         showClear
       >
