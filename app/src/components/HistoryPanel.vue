@@ -6,7 +6,7 @@
         optionLabel="label" 
         @change="onHistorySelect($event.value)" 
         @focus="refreshHistory"
-        placeholder="Select From History" 
+        placeholder="Select from history..." 
         :virtualScrollOptions="{itemSize: 30}"
         showClear
       >
@@ -65,9 +65,12 @@ const formattedHistory = computed(() => {
 
 const onHistorySelect = ( selectedItem: any ) => {
   if (selectedItem && selectedItem.value !== null) {
+    selectedHistory.value = selectedItem;
     const entry: UserHistory = history.value[selectedItem.value];
     store.dispatch('setBackboneSelection', entry.backbone);
     store.dispatch('setDetailedBasePairRange', entry.range);
+  } else {
+    selectedHistory.value = null;
   }
 };
 

@@ -11,9 +11,8 @@
         <GeneSearch :geneList="props.geneList" :selectedData="props.selectedData" />
       </div>
       <div class="nav-input">
-        <!-- TODO: Swap in history component here -->
         <h5 class="history-title">Viewed Regions <i class="pi pi-info-circle info-icon" 
-          v-tooltip="'History Tooltip'"></i>
+          v-tooltip="'Explore the history of viewed genomic regions. Select an entry to revisit that specific state. Note: Making a new config or switching the backbone will reset the history.'"></i>
         </h5>
         <HistoryPanel />
       </div>

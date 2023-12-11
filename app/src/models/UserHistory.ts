@@ -5,4 +5,4 @@ export default interface UserHistory {
     range: BasePairRange
     source: string
     backbone: BackboneSelection
-};
+}
