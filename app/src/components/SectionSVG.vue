@@ -341,13 +341,11 @@ const onMouseLeave = (section: DatatrackSection | SyntenySection) => {
 };
 
 const onSyntenyBlockClick = (section: GenomicSection) => {
-  const selectedBackboneRegion = store.state.selectedBackboneRegion as BackboneSelection;
   const backboneChromosome = store.state.chromosome;
   if (backboneChromosome && section.backboneAlignment)
   {
     const basePairStart = section.backboneAlignment.start;
     const basePairStop = section.backboneAlignment.stop;
-    selectedBackboneRegion.setViewportSelection(basePairStart, basePairStop);
     store.dispatch('setDetailedBasePairRequest', { range: { start: basePairStart, stop: basePairStop }, source: 'Synteny Selection'});
   }
 };

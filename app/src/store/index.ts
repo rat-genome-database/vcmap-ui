@@ -220,10 +220,8 @@ export default createStore({
     },
     addToHistory(state: VCMapState, entry: UserHistory) {
       state.history.unshift(entry);
-      // state.history = state.history.slice(0,3);
     },
     clearUserHistory(state: VCMapState) {
-      console.log('CLEARED HISTORY');
       state.history = [];
     },
   },
@@ -311,7 +309,8 @@ export default createStore({
         const selection = context.state.selectedBackboneRegion;
         const fullHistory = {
           ...partialHistory,
-          backbone: selection
+          backbone: selection,
+          timestamp: Date.now()
         };
         context.commit('addToHistory', fullHistory);
         partialHistory = null;
@@ -352,7 +351,7 @@ export default createStore({
     },
     clearUserHistory(context: ActionContext<VCMapState, VCMapState>) {
       context.commit('clearUserHistory');
-    }
+    }  
   },
 
   getters: {

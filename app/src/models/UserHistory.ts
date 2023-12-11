@@ -1,7 +1,7 @@
 import BackboneSelection, { BasePairRange } from "./BackboneSelection";
 
 export default interface UserHistory {
-    timestamp: Date
+    timestamp: number
     range: BasePairRange
     source: string
     backbone: BackboneSelection

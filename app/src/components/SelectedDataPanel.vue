@@ -17,6 +17,9 @@
           />
         </div>
         <div class="panel-header-item">
+          <HistoryPanel />
+        </div>
+        <div class="panel-header-item">
           <div v-if="numberOfResults > 0">
             {{numberOfResults}} Selected Genes
           </div>
@@ -45,9 +48,6 @@
             />
           </div>
           </div>
-        </div>
-        <div class="panel-header-item">
-          <HistoryPanel />
         </div>
       </div>
     </template>
@@ -187,7 +187,6 @@ const searchSVG = (event: { value: Gene }) => {
 
   if (event.value)
   {
-    console.log('EVENT VALUE', event.value);
     const newWindow = adjustSelectionWindow(event.value, props.geneList, store);
     store.dispatch('setDetailedBasePairRequest', {range: newWindow, source: `Searched: ${event.value.symbol}`});
   }
