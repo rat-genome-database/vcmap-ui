@@ -111,7 +111,7 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
 
       $log.info(`Requesting zoom to (${basePairStart}, ${basePairStop}) from Y:(${startDetailedSelectionY.value}, ${stopDetailedSelectionY.value})`);
       store.dispatch('setSelectionToastCount', toastCount + 1);
-      store.dispatch('setDetailedBasePairRequest', { start: basePairStart, stop: basePairStop });
+      store.dispatch('setDetailedBasePairRequest', { range: { start: basePairStart, stop: basePairStop }, source: 'Selected Zoom'});
       // store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: basePairStop });
     }
 

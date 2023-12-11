@@ -36,4 +36,23 @@ export namespace Formatter
 
     return text;
   }
+
+  export function timeAgo(timestamp: number) {
+    const now = Date.now();
+    const secondsPast = (now - timestamp) / 1000;
+
+    if (secondsPast < 60) {
+        return `${Math.round(secondsPast)}s ago`;
+    }
+    if (secondsPast < 120) {
+      return `1 min ago`;
+    }
+    if (secondsPast < 3600) {
+
+        return `${Math.round(secondsPast / 60)} mins ago`;
+    }
+    if (secondsPast <= 86400) {
+        return `${Math.round(secondsPast / 3600)} hrs ago`;
+    }
+  }
 }

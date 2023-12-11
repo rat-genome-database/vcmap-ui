@@ -12,10 +12,10 @@
       </div>
       <div class="nav-input">
         <!-- TODO: Swap in history component here -->
-        <h5 class="history-title">History <i class="pi pi-info-circle info-icon" 
+        <h5 class="history-title">Viewed Regions <i class="pi pi-info-circle info-icon" 
           v-tooltip="'History Tooltip'"></i>
         </h5>
-        <AutoComplete />
+        <HistoryPanel />
       </div>
     </div>
     <div class="zoom-col zoom-bar">
@@ -72,6 +72,7 @@ import { useStore } from 'vuex';
 import Zoom from '@/components/Zoom.vue';
 import GeneSearch from '@/components/GeneSearch.vue';
 import VCMapDialog from './VCMapDialog.vue';
+import HistoryPanel from '@/components/HistoryPanel.vue';
 import { Formatter } from '@/utils/Formatter';
 import { key } from '@/store';
 import { useLogger } from 'vue-logger-plugin';
@@ -124,7 +125,7 @@ const saveSelectionChange = () => {
     const selectedBackboneRegion = store.state.selectedBackboneRegion;
     selectedBackboneRegion?.setViewportSelection(startPosition.value, stopPosition.value);
 
-    store.dispatch('setDetailedBasePairRequest', { start: startPosition.value, stop: stopPosition.value });
+    store.dispatch('setDetailedBasePairRequest', { range: {start: startPosition.value, stop: stopPosition.value}, source: 'Overview Edit' });
     // store.dispatch('setDetailedBasePairRange', { start: startPosition.value, stop: stopPosition.value });
   }
   showEditModal.value = false;

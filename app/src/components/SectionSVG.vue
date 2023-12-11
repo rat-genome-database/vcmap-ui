@@ -346,14 +346,12 @@ const onSyntenyBlockClick = (section: GenomicSection, event: any) => {
   if (event.shiftKey && section instanceof SyntenySection) {
     onBackboneSwap(section);
   } else if (props.selectOnClick) {
-    const selectedBackboneRegion = store.state.selectedBackboneRegion as BackboneSelection;
     const backboneChromosome = store.state.chromosome;
     if (backboneChromosome && section.backboneAlignment)
     {
       const basePairStart = section.backboneAlignment.start;
       const basePairStop = section.backboneAlignment.stop;
-      selectedBackboneRegion.setViewportSelection(basePairStart, basePairStop);
-      store.dispatch('setDetailedBasePairRequest', { start: basePairStart, stop: basePairStop });
+      store.dispatch('setDetailedBasePairRequest', { range: { start: basePairStart, stop: basePairStop }, source: 'Synteny Selection'});
     }
   }
 };

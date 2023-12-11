@@ -68,7 +68,7 @@ const searchSVG = (event: { value: Gene }) => {
     //cache our current window so we can go back to it
     const currentWindow = store.state.detailedBasePairRange;
     preSearchViews.value.push(currentWindow);    
-    store.dispatch('setDetailedBasePairRequest', newWindow);
+    store.dispatch('setDetailedBasePairRequest', {range: newWindow, source: `Searched: ${event.value.symbol}`});
   }
 };
 

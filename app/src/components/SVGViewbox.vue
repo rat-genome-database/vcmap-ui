@@ -637,7 +637,7 @@ const navigateUp = () => {
     const currRange = store.state.detailedBasePairRange;
     let adjust = NAV_SHIFT_PERCENT * (currRange.stop - currRange.start);
     if (currRange.start < adjust) adjust = currRange.start;
-    store.dispatch('setDetailedBasePairRequest', { start: currRange.start - adjust, stop: currRange.stop - adjust });
+    store.dispatch('setDetailedBasePairRequest', { range: { start: currRange.start - adjust, stop: currRange.stop - adjust }, source: 'Navigate Up' });
   }
 };
 
@@ -652,7 +652,7 @@ const navigateDown = () => {
     const currRange = store.state.detailedBasePairRange;
     let adjust = NAV_SHIFT_PERCENT * (currRange.stop - currRange.start);
     if (currRange.stop + adjust > chromosome.seqLength) adjust = chromosome.seqLength - currRange.stop;
-    store.dispatch('setDetailedBasePairRequest', { start: currRange.start + adjust, stop: currRange.stop + adjust });
+    store.dispatch('setDetailedBasePairRequest', { range: { start: currRange.start + adjust, stop: currRange.stop + adjust }, source: 'Navigate Down' });
   }
 };
 
