@@ -44,7 +44,11 @@ export namespace Formatter
     if (secondsPast < 60) {
         return `${Math.round(secondsPast)}s ago`;
     }
+    if (secondsPast < 120) {
+      return `1 min ago`;
+    }
     if (secondsPast < 3600) {
+
         return `${Math.round(secondsPast / 60)} mins ago`;
     }
     if (secondsPast <= 86400) {

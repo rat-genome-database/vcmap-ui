@@ -1,7 +1,7 @@
 <template>
     <div class="history-panel">
       <div class="header">
-        History
+        Viewed Regions
       </div>
       <Dropdown
         v-model="selectedHistory" 
@@ -16,10 +16,10 @@
       <template #option="slotProps">
         <div class="history-item">
           <div>
-            {{ formattedHistory.length - slotProps.option.value }} - {{ slotProps.option.label }}
+            {{ formattedHistory.length - slotProps.option.value }}. {{ slotProps.option.label }}
           </div>
           <div class="subscript">
-            {{`${slotProps.option.timestamp} ${slotProps.option.position.start}bp - ${slotProps.option.position.stop}bp `}}
+            {{`${slotProps.option.timestamp}: ${slotProps.option.position.start}bp - ${slotProps.option.position.stop}bp `}}
           </div>
         </div>
       </template>
@@ -69,8 +69,6 @@ const formattedHistory = computed(() => {
 const onHistorySelect = ( selectedItem: any ) => {
   if (selectedItem && selectedItem.value !== null) {
     const entry: UserHistory = history.value[selectedItem.value];
-    console.log('ENTRY SELECTED', entry);
-  
     store.dispatch('setBackboneSelection', entry.backbone);
     store.dispatch('setDetailedBasePairRange', entry.range);
   }
