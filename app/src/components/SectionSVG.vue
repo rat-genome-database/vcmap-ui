@@ -392,6 +392,7 @@ const onBackboneSwap = async (section: SyntenySection) => {
       store.dispatch('setSelectedData', []);
       store.dispatch('setSelectedGeneIds', []);
       store.dispatch('setGene', null);
+      store.dispatch('clearUserHistory');
       // NOTE: do this last because it kicks of reprocessing on Main.vue
       store.dispatch('setSpecies', selectedSpecies);
     }
