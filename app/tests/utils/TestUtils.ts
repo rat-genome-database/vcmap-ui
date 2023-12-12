@@ -97,6 +97,7 @@ export namespace TestUtils
         hideBackboneDensityTrack: false,
         hiddenDensityTracks: [],
         history: [],
+        showOverviewPanel: true,
 
         // Overwrite default state with props passed in by the tester
         ...initialState,

@@ -4,7 +4,7 @@
     <!-- Outside panel -->
     <rect class="panel" x="0" width="800" :height="SVGConstants.viewboxHeight" />
     <!-- Inner panels -->
-    <rect v-if="showOverviewPanel" class="panel selectable" :class="{'is-loading': arePanelsLoading}" x="0" @click.left="(event) => { overviewSelectionHandler(event, getDetailedSelectionStatus(), overviewBackboneSet?.backbone); showToast('info', 'Selection Initiated:', 'Drag and click again to complete the selection or right click to cancel.', 5000)}" 
+    <rect v-if="store.state.showOverviewPanel" class="panel selectable" :class="{'is-loading': arePanelsLoading}" x="0" @click.left="(event) => { overviewSelectionHandler(event, getDetailedSelectionStatus(), overviewBackboneSet?.backbone); showToast('info', 'Selection Initiated:', 'Drag and click again to complete the selection or right click to cancel.', 5000)}" 
       @mousemove.stop="(event) => updateOverviewSelection(event)" @contextmenu.prevent @click.right="cancelOverviewSelection"
       :width="store.state.svgPositions.overviewPanelWidth" :height="SVGConstants.viewboxHeight" />
 
@@ -19,7 +19,7 @@
     </template>
     
     <!-- Overview panel SVGs ------------------------------------------->
-    <template v-if="showOverviewPanel">
+    <template v-if="store.state.showOverviewPanel">
       <template v-for="(syntenySet, index) in overviewSyntenySets" :key="index">
         <template v-for="(region, index) in syntenySet.regions" :key="index">
           <SectionSVG show-chromosome show-synteny-on-hover :gene-list="geneList" show-start-stop select-on-click :region="region as SyntenyRegion" />
@@ -27,7 +27,7 @@
       </template>
     </template>
 
-    <template v-if="showOverviewPanel">
+    <template v-if="store.state.showOverviewPanel">
       <template v-if="overviewBackboneSet">
         <BackboneSetSVG show-data-on-hover :gene-list="geneList" :backbone-set="overviewBackboneSet"/>
       </template>
@@ -72,7 +72,7 @@
     <ViewboxTitlesSVG
       :overview-backbone-set="overviewBackboneSet" :overview-synteny-sets="(overviewSyntenySets as SyntenyRegionSet[])"
       :detailed-backbone-set="detailedBackboneSet" :detailed-synteny-sets="(detailedSyntenySets as SyntenyRegionSet[])"
-      :show-overview-panel="showOverviewPanel"
+      :show-overview-panel="store.state.showOverviewPanel"
     />
 
     <!-- Navigation buttons -->
@@ -120,29 +120,29 @@
       <div class="col-4 plus-half legend-title"><b>Variant counts (per {{ parseFloat(variantBinSize.toPrecision(3)).toLocaleString() }}bp)</b></div>
       <template v-for="speciesIndex in detailedSyntenySets.length + 1" :key="speciesIndex">
         <template v-if="detailedBackboneSet && detailedBackboneSet.order === speciesIndex - 1">
-          <div class="col-2 legend-container">
-            <template v-if="detailedBackboneSet && detailedBackboneSet.maxVariantCount && detailedBackboneSet.variantBinSize && detailedBackboneSet.maxVariantCount > 0">
-              <GradientLegend
-                :species-name="detailedBackboneSet?.speciesName || ''" :map-name="detailedBackboneSet?.mapName"
-                :min-value="0" :max-value="detailedBackboneSet?.maxVariantCount || 0"
-                :bin-size="detailedBackboneSet.variantBinSize"
-                min-color="oklch(68% 0.25 315) 99% 99%" max-color="oklch(68% 0.18 15) 7% 7%">
-              </GradientLegend>
-            </template>
-          </div>
+          <template v-if="detailedBackboneSet && detailedBackboneSet.maxVariantCount && detailedBackboneSet.variantBinSize && detailedBackboneSet.maxVariantCount > 0">
+            <div class="col-2 legend-container">
+                <GradientLegend
+                  :species-name="detailedBackboneSet?.speciesName || ''" :map-name="detailedBackboneSet?.mapName"
+                  :min-value="0" :max-value="detailedBackboneSet?.maxVariantCount || 0"
+                  :bin-size="detailedBackboneSet.variantBinSize"
+                  min-color="oklch(68% 0.25 315) 99% 99%" max-color="oklch(68% 0.18 15) 7% 7%">
+                </GradientLegend>
+            </div>
+          </template>
         </template>
         <template v-for="(set, index) in detailedSyntenySets" :key="index">
           <template v-if="set && set.order === speciesIndex - 1">
-            <div class="col-2 legend-container">
-              <template v-if="set.variantBinSize && set.maxVariantCount && set.maxVariantCount > 0">
-                <GradientLegend
-                  :species-name="set.speciesName" :map-name="set.mapName"
-                  :min-value="0" :max-value="set.maxVariantCount"
-                  :bin-size="set.variantBinSize"
-                  max-color="oklch(68% 0.18 15) 7% 7%" min-color="oklch(68% 0.25 315) 99% 99%">
-                </GradientLegend>
-              </template>
-            </div>
+            <template v-if="set.variantBinSize && set.maxVariantCount && set.maxVariantCount > 0">
+              <div class="col-2 legend-container">
+                  <GradientLegend
+                    :species-name="set.speciesName" :map-name="set.mapName"
+                    :min-value="0" :max-value="set.maxVariantCount"
+                    :bin-size="set.variantBinSize"
+                    max-color="oklch(68% 0.18 15) 7% 7%" min-color="oklch(68% 0.25 315) 99% 99%">
+                  </GradientLegend>
+              </div>
+            </template>
           </template>
         </template>
       </template>
@@ -156,12 +156,6 @@
     :show-back-button="showDialogBackButton"
   />
   <LoadingSpinnerMask v-if="arePanelsLoading" :style="getDetailedPosition()"></LoadingSpinnerMask>
-  <!-- TODO: we could probably move this visibility section below to a separate component,
-    once we have a better idea of what we want here -->
-  <Button
-    label="Toggle Overview"
-    @click="toggleOverview"
-  />
   <div>Visibility Settings</div>
   <div class="flex-container-start">
     <Fieldset v-if="displayDensityTrackTogglePanel" class="density-toggle-container" legend="Density Tracks" :toggleable="true">
@@ -291,7 +285,6 @@ import VariantPositions from '@/models/VariantPositions';
 import Species from '@/models/Species';
 import BackboneSection from '@/models/BackboneSection';
 import GradientLegend from './GradientLegend.vue';
-import { calculateOverviewWidth } from '@/utils/Shared';
 
 const SHOW_DEBUG = process.env.NODE_ENV === 'development';
 const NAV_SHIFT_PERCENT = 0.2;
@@ -322,9 +315,6 @@ let overviewSyntenySets = ref<SyntenyRegionSet[]>([]);
 let orthologLines = ref<OrthologLine[]>();
 let detailedSyntenySvgYPosition = ref<number | null>(null);
 let detailedSyntenyBlockYPositions = ref<number[] | null>(null);
-
-// NOTE: This should maybe be on main and passed in as a prop
-let showOverviewPanel = ref<boolean>(true);
 
 ////
 // Debugging helper refs and methods (debug template is currently commented out):
@@ -877,19 +867,6 @@ function logPerformanceReport(title: string, totalTimeMillis: number, detailedTi
   }
 
   $log.debug(JSON.stringify(performanceReport, null, 2));
-}
-
-function toggleOverview() {
-  const oldOverviewPanelWidth = store.state.svgPositions.overviewPanelWidth;
-  if (oldOverviewPanelWidth === 0) {
-    showOverviewPanel.value = true;
-    const numComparativeSpecies = store.state.comparativeSpecies.length;
-    const newOverviewWidth = calculateOverviewWidth(numComparativeSpecies);
-    store.dispatch('setSvgPositions', { overviewPanelWidth: newOverviewWidth });
-  } else {
-    showOverviewPanel.value = false;
-    store.dispatch('setSvgPositions', { overviewPanelWidth: 0 });
-  }
 }
 
 </script>

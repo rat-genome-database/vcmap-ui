@@ -56,6 +56,9 @@ export interface VCMapState
 
   /* History */
   history: UserHistory[];
+
+  /* Visibility settings */
+  showOverviewPanel: boolean;
 }
 
 /**
@@ -136,6 +139,7 @@ export default createStore({
     hideBackboneDensityTrack: false,
     hiddenDensityTracks: [],
     history: [],
+    showOverviewPanel: true,
   }),
 
   mutations: {
@@ -226,6 +230,9 @@ export default createStore({
     },
     svgPositions(state: VCMapState, svgPositions: SVGPositionVariables) {
       state.svgPositions = svgPositions;
+    },
+    showOverviewPanel(state: VCMapState, showOverviewPanel: boolean) {
+      state.showOverviewPanel = showOverviewPanel;
     }
   },
 
@@ -361,6 +368,9 @@ export default createStore({
     },
     setSvgPositions(context: ActionContext<VCMapState, VCMapState>, svgPositions: SVGPositionVariables) {
       context.commit('svgPositions', svgPositions);
+    },
+    setShowOverviewPanel(context: ActionContext<VCMapState, VCMapState>, showOverviewPanel: boolean) {
+      context.commit('showOverviewPanel', showOverviewPanel);
     }
   },
 

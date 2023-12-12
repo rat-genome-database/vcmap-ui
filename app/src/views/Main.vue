@@ -112,6 +112,7 @@ const showSettings = ref(false);
 const isLoading = ref(false);
 const proceedAfterError = ref(false);
 const panelCollapsed = ref(store.state.isDataPanelCollapsed);
+const showOverviewPanel = ref(true);
 
 // Our synteny tree keyed by MapId
 // TODO: Consider adding a map for mapKey -> Species
