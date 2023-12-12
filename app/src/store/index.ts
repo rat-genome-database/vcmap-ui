@@ -232,7 +232,7 @@ export default createStore({
       state.svgPositions = svgPositions;
     },
     showOverviewPanel(state: VCMapState, showOverviewPanel: boolean) {
-      state.showOverviewPanel = showOverviewPanel
+      state.showOverviewPanel = showOverviewPanel;
     }
   },
 

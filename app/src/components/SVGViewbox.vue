@@ -120,29 +120,29 @@
       <div class="col-4 plus-half legend-title"><b>Variant counts (per {{ parseFloat(variantBinSize.toPrecision(3)).toLocaleString() }}bp)</b></div>
       <template v-for="speciesIndex in detailedSyntenySets.length + 1" :key="speciesIndex">
         <template v-if="detailedBackboneSet && detailedBackboneSet.order === speciesIndex - 1">
-          <div class="col-2 legend-container">
-            <template v-if="detailedBackboneSet && detailedBackboneSet.maxVariantCount && detailedBackboneSet.variantBinSize && detailedBackboneSet.maxVariantCount > 0">
-              <GradientLegend
-                :species-name="detailedBackboneSet?.speciesName || ''" :map-name="detailedBackboneSet?.mapName"
-                :min-value="0" :max-value="detailedBackboneSet?.maxVariantCount || 0"
-                :bin-size="detailedBackboneSet.variantBinSize"
-                min-color="oklch(68% 0.25 315) 99% 99%" max-color="oklch(68% 0.18 15) 7% 7%">
-              </GradientLegend>
-            </template>
-          </div>
+          <template v-if="detailedBackboneSet && detailedBackboneSet.maxVariantCount && detailedBackboneSet.variantBinSize && detailedBackboneSet.maxVariantCount > 0">
+            <div class="col-2 legend-container">
+                <GradientLegend
+                  :species-name="detailedBackboneSet?.speciesName || ''" :map-name="detailedBackboneSet?.mapName"
+                  :min-value="0" :max-value="detailedBackboneSet?.maxVariantCount || 0"
+                  :bin-size="detailedBackboneSet.variantBinSize"
+                  min-color="oklch(68% 0.25 315) 99% 99%" max-color="oklch(68% 0.18 15) 7% 7%">
+                </GradientLegend>
+            </div>
+          </template>
         </template>
         <template v-for="(set, index) in detailedSyntenySets" :key="index">
           <template v-if="set && set.order === speciesIndex - 1">
-            <div class="col-2 legend-container">
-              <template v-if="set.variantBinSize && set.maxVariantCount && set.maxVariantCount > 0">
-                <GradientLegend
-                  :species-name="set.speciesName" :map-name="set.mapName"
-                  :min-value="0" :max-value="set.maxVariantCount"
-                  :bin-size="set.variantBinSize"
-                  max-color="oklch(68% 0.18 15) 7% 7%" min-color="oklch(68% 0.25 315) 99% 99%">
-                </GradientLegend>
-              </template>
-            </div>
+            <template v-if="set.variantBinSize && set.maxVariantCount && set.maxVariantCount > 0">
+              <div class="col-2 legend-container">
+                  <GradientLegend
+                    :species-name="set.speciesName" :map-name="set.mapName"
+                    :min-value="0" :max-value="set.maxVariantCount"
+                    :bin-size="set.variantBinSize"
+                    max-color="oklch(68% 0.18 15) 7% 7%" min-color="oklch(68% 0.25 315) 99% 99%">
+                  </GradientLegend>
+              </div>
+            </template>
           </template>
         </template>
       </template>
