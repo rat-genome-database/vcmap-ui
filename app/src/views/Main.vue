@@ -91,7 +91,7 @@ import VCMapDialog from '@/components/VCMapDialog.vue';
 import useDialog from '@/composables/useDialog';
 import { adjustSelectionWindow, getNewSelectedData } from '@/utils/DataPanelHelpers';
 import { backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError, noSyntenyFoundError } from '@/utils/VCMapErrors';
-import { isGenomicDataInViewport, getThreshold, processAlignmentsOfGeneInsideOfViewport, processAlignmentsOfGeneOutsideOfViewport } from '@/utils/Shared';
+import { isGenomicDataInViewport, getThreshold, processAlignmentsOfGeneInsideOfViewport, processAlignmentsOfGeneOutsideOfViewport, calculateOverviewWidth } from '@/utils/Shared';
 import { buildVariantPositions } from '@/utils/VariantBuilder';
 import VariantPositions from '@/models/VariantPositions';
 import Species from '@/models/Species';
@@ -810,7 +810,15 @@ async function updateComparativeSpecies(newSpeciesOrder: any, newComparativeSpec
 
     processSynteny(speciesSyntenyDataArray, 0, store.state.chromosome.seqLength);
   }
+  // calculate new overview width based on number of species
+  const numComparativeSpecies = newComparativeSpecies.length;
   store.dispatch('setSpeciesOrder', newSpeciesOrder);
+  // evaluate if we should update overview width
+  const currentOverviewWidth = store.state.svgPositions.overviewPanelWidth;
+  if (currentOverviewWidth > 0) {
+    const overviewWidth = calculateOverviewWidth(numComparativeSpecies);
+    store.dispatch('setSvgPositions', { overviewPanelWidth: overviewWidth });
+  }
   store.dispatch('setComparativeSpecies', newComparativeSpecies);
   await queryAndProcessSyntenyForBasePairRange(store.state.chromosome, store.state.detailedBasePairRange.start, store.state.detailedBasePairRange.stop);
   isLoading.value = false;

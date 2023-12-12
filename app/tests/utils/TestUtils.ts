@@ -89,10 +89,9 @@ export namespace TestUtils
         isOverviewPanelUpdating: false,
         isUpdatingVariants: false,
         selectionToastCount: 0,
-        // svgPositions: {
-        //   detailedStart: 320,
-        //   detailedSpeciesGap: 20,
-        // },
+        svgPositions: {
+          overviewPanelWidth: 300,
+        },
         speciesOrder: {},
 
         hideBackboneDensityTrack: false,

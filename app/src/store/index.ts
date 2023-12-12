@@ -10,6 +10,7 @@ import { InjectionKey } from 'vue';
 import { createLogger } from 'vuex';
 import { ConfigurationMode } from '@/utils/Types';
 import { IHoveredData } from '@/models/HoveredData';
+import { SVGPositionVariables } from '@/utils/SVGConstants';
 
 export const key: InjectionKey<Store<VCMapState>> = Symbol();
 
@@ -48,10 +49,8 @@ export interface VCMapState
   selectionToastCount: number;
   hideBackboneDensityTrack: boolean;
   hiddenDensityTracks: number[];
-  // NOTE: I'm commenting these out for now because I'm not using them,
-  // but I think we can use something like this to start setting some variables
-  // to adjust positions and spacing of elements in the svg
-  // svgPositions: SVGPositionVariables;
+
+  svgPositions: SVGPositionVariables;
 
   speciesOrder: any;
 
@@ -129,13 +128,9 @@ export default createStore({
 
     selectionToastCount: 0,
 
-    // NOTE: I'm commenting these out for now because I'm not using them,
-    // but I think we can use something like this to start setting some variables
-    // to adjust positions and spacing of elements in the svg
-    // svgPositions: {
-    //   detailedStart: 320,
-    //   detailedSpeciesGap: 20,
-    // },
+    svgPositions: {
+      overviewPanelWidth: 300,
+    },
     speciesOrder: {},
 
     hideBackboneDensityTrack: false,
@@ -229,6 +224,9 @@ export default createStore({
     clearUserHistory(state: VCMapState) {
       state.history = [];
     },
+    svgPositions(state: VCMapState, svgPositions: SVGPositionVariables) {
+      state.svgPositions = svgPositions;
+    }
   },
 
   actions: {
@@ -360,7 +358,10 @@ export default createStore({
     },
     clearUserHistory(context: ActionContext<VCMapState, VCMapState>) {
       context.commit('clearUserHistory');
-    }  
+    },
+    setSvgPositions(context: ActionContext<VCMapState, VCMapState>, svgPositions: SVGPositionVariables) {
+      context.commit('svgPositions', svgPositions);
+    }
   },
 
   getters: {

@@ -1,17 +1,19 @@
 <template>
   <!-- Title panels -->
-  <rect class="panel" x="0" :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.panelTitleHeight" />
-  <rect class="panel" :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.panelTitleHeight" />
-  <text class="label medium bold" :x="SVGConstants.overviewTitleXPosition" :y="SVGConstants.panelTitleYPosition">Overview</text>
-  <text class="label medium bold" :x="SVGConstants.selectedBackboneXPosition + 30" :y="SVGConstants.panelTitleYPosition">Detailed</text>
+  <rect class="panel" x="0" :width="store.state.svgPositions.overviewPanelWidth" :height="SVGConstants.panelTitleHeight" />
+  <rect class="panel" :x="store.state.svgPositions.overviewPanelWidth" :width="SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth" :height="SVGConstants.panelTitleHeight" />
+  <text v-if="showOverviewPanel" class="label medium bold" :x="SVGConstants.overviewTitleXPosition" :y="SVGConstants.panelTitleYPosition">Overview</text>
+  <text class="label medium bold" :x="store.state.svgPositions.overviewPanelWidth + SVGConstants.detailedRightPadding + 30" :y="SVGConstants.panelTitleYPosition">Detailed</text>
 
   <!-- SyntenyRegionSet Title Labels -->
-  <template v-for="(syntenySet, index) in overviewSyntenySets" :key="index">
-    <template v-for="(label, index) in syntenySet.titleLabels" :key="index">
-      <text :class="`label small ${label.addClass}`" :x="label.posX" :y="label.posY">{{label.text}}</text>
+  <template v-if="showOverviewPanel">
+    <template v-for="(syntenySet, index) in overviewSyntenySets" :key="index">
+      <template v-for="(label, index) in syntenySet.titleLabels" :key="index">
+        <text :class="`label small ${label.addClass}`" :x="label.posX" :y="label.posY">{{label.text}}</text>
+      </template>
     </template>
   </template>
-  <template v-if="overviewBackboneSet">
+  <template v-if="overviewBackboneSet && showOverviewPanel">
     <template v-for="(label, index) in overviewBackboneSet.titleLabels" :key="index">
       <text :class="`label small ${label.addClass}`" :x="label.posX" :y="label.posY">{{label.text}}</text>
     </template>
@@ -85,9 +87,9 @@
       <template v-for="(datatrackSet, index) in syntenySet.regions[0]?.datatrackSets" :key="index">
         <text
             class="label small"
-            :x="getSyntenyDatatrackXPos(syntenySet.order, index)"
+            :x="getSyntenyDatatrackXPos(syntenySet.order, index, store.state.svgPositions.overviewPanelWidth)"
             :y="SVGConstants.panelTitleHeight - 20"
-            :transform="rotateString(TITLE_ROTATION, getSyntenyDatatrackXPos(syntenySet.order, index), SVGConstants.panelTitleHeight - 20)"
+            :transform="rotateString(TITLE_ROTATION, getSyntenyDatatrackXPos(syntenySet.order, index, store.state.svgPositions.overviewPanelWidth), SVGConstants.panelTitleHeight - 20)"
           >
             {{ datatrackSet.getTrackTypeDisplayName() }}
         </text>
@@ -141,6 +143,7 @@ interface Props {
   overviewSyntenySets: SyntenyRegionSet[];
   detailedBackboneSet?: BackboneSet;
   detailedSyntenySets: SyntenyRegionSet[];
+  showOverviewPanel: boolean;
 }
 
 defineProps<Props>();
@@ -150,8 +153,8 @@ function rotateString(degree: number, x: number, y: number): string
   return `rotate(${degree} ${x} ${y})`;
 }
 
-function getSyntenyDatatrackXPos(setOrder: number, datatrackSetIdx: number) {
-  const posX1 = getDetailedPanelXPositionForDatatracks(setOrder, datatrackSetIdx);
+function getSyntenyDatatrackXPos(setOrder: number, datatrackSetIdx: number, overviewWidth: number) {
+  const posX1 = getDetailedPanelXPositionForDatatracks(setOrder, datatrackSetIdx, overviewWidth);
   const xPos = posX1 + SVGConstants.dataTrackWidth / 2;
   return xPos;
 }

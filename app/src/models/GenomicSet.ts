@@ -18,5 +18,5 @@ export abstract class GenomicSet
     this.mapKey = map?.key ?? 0;
   }
 
-  protected abstract createTitleLabels(): void;
+  protected abstract createTitleLabels(overviewWidth: number): void;
 }

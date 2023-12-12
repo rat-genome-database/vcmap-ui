@@ -16,7 +16,8 @@ type OrthologPositionInfo = {
 
 const ORTHOLOG_THRESHOLD_MULTIPLIER = 0.5;
 
-export function createOrthologLines(geneList: Map<number, Gene>, backboneSet: BackboneSet, offBackboneSyntenyRegionSets: SyntenyRegionSet[])
+export function createOrthologLines(geneList: Map<number, Gene>, backboneSet: BackboneSet,
+  offBackboneSyntenyRegionSets: SyntenyRegionSet[], overviewWidth: number)
 { 
   logger.time(`CreateOrthologLines`);
 
@@ -39,7 +40,7 @@ export function createOrthologLines(geneList: Map<number, Gene>, backboneSet: Ba
     endX: backboneGeneStartX + SVGConstants.dataTrackWidth,
   });
   offBackboneSyntenyRegionSets.forEach(set => {
-    const geneStartX = getDetailedPanelXPositionForDatatracks(set.order, set.geneDatatrackSetIndex);
+    const geneStartX = getDetailedPanelXPositionForDatatracks(set.order, set.geneDatatrackSetIndex, overviewWidth);
     const geneEndX = geneStartX + SVGConstants.dataTrackWidth;
     speciesPositionMap.set(set.mapKey, {
       order: set.order,

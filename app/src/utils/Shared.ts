@@ -1,7 +1,6 @@
 /**
  * Shared utility methods that don't necessarily warrant their own file
  */
-
 import Block, { Gap, GenomicPosition } from "@/models/Block";
 import Gene from "@/models/Gene";
 import SVGConstants, { PANEL_SVG_STOP, PANEL_SVG_START, PANEL_HEIGHT } from "./SVGConstants";
@@ -44,9 +43,9 @@ export function isGenomicDataInViewport(targetBlock: Block | Gap | Gene, backbon
     || (targetBlock.backboneStart < backboneStart && targetBlock.backboneStop > backboneStop);
 }
 
-export function getDetailedPanelXPositionForDatatracks(order: number, index: number)
+export function getDetailedPanelXPositionForDatatracks(order: number, index: number, overviewWidth: number)
 {
-  return getDetailedPanelXPositionForSynteny(order) + SVGConstants.trackWidth
+  return getDetailedPanelXPositionForSynteny(order, overviewWidth) + SVGConstants.trackWidth
     + SVGConstants.backboneDatatrackXOffset * (index + 1) + (SVGConstants.backboneDatatrackXOffset * index);
 }
 
@@ -55,9 +54,9 @@ export function getOverviewPanelXPosition(order: number)
   return (order * 80) + SVGConstants.backboneXPosition;
 }
 
-export function getDetailedPanelXPositionForSynteny(order: number)
+export function getDetailedPanelXPositionForSynteny(order: number, overviewWidth: number)
 {
-  return (order * 140) + SVGConstants.selectedBackboneXPosition;
+  return (order * 140) + overviewWidth + SVGConstants.detailedRightPadding;
 }
 
 export function getDetailedPanelXPositionForBackboneDatatracks(backboneX2: number, datatrackSetIndex: number)
@@ -261,4 +260,13 @@ export function processAlignmentsOfGeneOutsideOfViewport(start: number, stop: nu
   if (backboneStop > targetBlock.backboneStop) backboneStop = targetBlock.backboneStop;
 
   return { start: backboneStart, stop: backboneStop };
+}
+
+/**
+ * Determines the width of the overview panel based on the number of species visible
+ * @param numComparativeSpecies
+ * @returns width of the overview panel
+ */
+export function calculateOverviewWidth(numComparativeSpecies: number) {
+  return 60 + numComparativeSpecies * 80;
 }
