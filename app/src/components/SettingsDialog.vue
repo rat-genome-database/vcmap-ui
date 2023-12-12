@@ -1,12 +1,18 @@
 <template>
-  <Dialog
-    v-model:visible="isActive"
-    :draggable="false"
-    :closable="false"
-    :modal="true"
+  <VCMapDialog
+    v-model:show="isActive"
+    :wide="true"
+    header="Settings"
   >
-    <template #header>
-      Settings
+    <template #content>
+      <Accordion :multiple="true">
+        <AccordionTab header="Species Configuration">
+          <SpeciesConfig :on-update="props.onUpdateSpecies"/>
+        </AccordionTab>
+        <AccordionTab header="Data Tracks">
+          <div>Data track component</div>
+        </AccordionTab>
+      </Accordion>
     </template>
     <template #footer>
       <Button
@@ -15,11 +21,14 @@
         @click="close"
       />
     </template>
-  </Dialog>
+  </VCMapDialog>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import SpeciesConfig from './SpeciesConfig.vue';
+import Species from '@/models/Species';
+import VCMapDialog from './VCMapDialog.vue';
 
 /**
  * Can use v-model:show to do 2 way binding
@@ -27,6 +36,7 @@ import { computed } from 'vue';
  interface Props 
 {
   show: boolean;
+  onUpdateSpecies: (newSpeciesOrder: any, newComparativeSpecies: Species[]) => void,
 }
 
 interface Emits

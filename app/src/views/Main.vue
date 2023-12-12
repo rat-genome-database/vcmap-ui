@@ -70,6 +70,7 @@
   </VCMapDialog>
   <SettingsDialog
     v-model:show="showSettings"
+    :on-update-species="updateComparativeSpecies"
   />
 </template>
 

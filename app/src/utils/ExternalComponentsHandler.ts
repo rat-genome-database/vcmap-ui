@@ -22,7 +22,8 @@ import Toast from 'primevue/toast';
 import Tag from 'primevue/tag';
 import RadioButton from 'primevue/radiobutton';
 import InputSwitch from 'primevue/inputswitch';
-import Accordian from 'primevue/accordion';
+import Accordion from 'primevue/accordion';
+import AccordionTab from 'primevue/accordiontab';
 
 /**
  * Add any plugins/configs that you want to be globally registered:
@@ -54,7 +55,8 @@ const COMPONENTS: {[key: string]: Component} = {
   'Tag': Tag,
   'RadioButton': RadioButton,
   'InputSwitch': InputSwitch,
-  'Accordian': Accordian,
+  'Accordion': Accordion,
+  'AccordionTab': AccordionTab,
 };
 
 /**
