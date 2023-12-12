@@ -116,7 +116,7 @@
   </svg>
 
   <template v-if="displayVariantLegend">
-    <div class="grid">
+    <div class="grid flex-end">
       <div class="col-4 plus-half legend-title"><b>Variant counts (per {{ parseFloat(variantBinSize.toPrecision(3)).toLocaleString() }}bp)</b></div>
       <template v-for="speciesIndex in detailedSyntenySets.length + 1" :key="speciesIndex">
         <template v-if="detailedBackboneSet && detailedBackboneSet.order === speciesIndex - 1">
@@ -158,6 +158,10 @@
   <LoadingSpinnerMask v-if="arePanelsLoading" :style="getDetailedPosition()"></LoadingSpinnerMask>
   <!-- TODO: we could probably move this visibility section below to a separate component,
     once we have a better idea of what we want here -->
+  <Button
+    label="Toggle Overview"
+    @click="toggleOverview"
+  />
   <div>Visibility Settings</div>
   <div class="flex-container-start">
     <Fieldset legend="Species" :toggleable="true">
@@ -190,10 +194,6 @@
       </div>
     </Fieldset>
   </div>
-  <Button
-    label="Toggle Overview"
-    @click="toggleOverview"
-  />
   <!--
   <Button
     style="margin-right: 20px;"
@@ -433,7 +433,7 @@ watch(() => store.state.speciesOrder, () => {
 watch(() => store.state.svgPositions, () => {
   updateOverviewPanel();
   updateDetailsPanel();
-})
+});
 
 // FIXME: check on this (probably needs to be attached to Main props instead):
 const arePanelsLoading = computed(() => {
@@ -1056,5 +1056,15 @@ rect.navigation-btn
   &.plus-half{
     width: 37.5%;
   }
+}
+
+.left-padding
+{
+  padding-left: 20%;
+}
+
+.flex-end
+{
+  justify-content: flex-end;
 }
 </style>
