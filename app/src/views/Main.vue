@@ -53,7 +53,7 @@
     :on-confirm-callback="onProceedWithErrors"
   />
   <VCMapDialog
-    v-model:show="showSettings"
+    v-model:show="showDialog"
     header="Settings"
     :wide="true"
   >
@@ -68,6 +68,9 @@
       />
     </template>
   </VCMapDialog>
+  <SettingsDialog
+    v-model:show="showSettings"
+  />
 </template>
 
 <script lang="ts" setup>
@@ -97,6 +100,7 @@ import VariantPositions from '@/models/VariantPositions';
 import Species from '@/models/Species';
 import { VCMapLogger } from '@/logger';
 import HoveredDataTooltip from '@/components/HoveredDataTooltip.vue';
+import SettingsDialog from '@/components/SettingsDialog.vue';
 
 // TODO: Can we figure out a better way to handle blocks with a high chainlevel?
 const MAX_CHAINLEVEL = 2;

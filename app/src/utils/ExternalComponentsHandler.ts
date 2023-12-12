@@ -15,15 +15,14 @@ import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import AutoComplete from 'primevue/autocomplete';
 import Checkbox from 'primevue/checkbox';
-import ColorPicker from 'primevue/colorpicker';
 import Message from 'primevue/message';
-import InlineMessage from 'primevue/inlinemessage';
 import Dialog from 'primevue/dialog';
 import Slider from 'primevue/slider';
 import Toast from 'primevue/toast';
 import Tag from 'primevue/tag';
 import RadioButton from 'primevue/radiobutton';
 import InputSwitch from 'primevue/inputswitch';
+import Accordian from 'primevue/accordion';
 
 /**
  * Add any plugins/configs that you want to be globally registered:
@@ -48,15 +47,14 @@ const COMPONENTS: {[key: string]: Component} = {
   'TabPanel': TabPanel,
   'AutoComplete': AutoComplete,
   'Checkbox': Checkbox,
-  'ColorPicker': ColorPicker,
   'Message': Message,
-  'InlineMessage': InlineMessage,
   'Dialog': Dialog,
   'Slider': Slider,
   'Toast': Toast,
   'Tag': Tag,
   'RadioButton': RadioButton,
   'InputSwitch': InputSwitch,
+  'Accordian': Accordian,
 };
 
 /**
