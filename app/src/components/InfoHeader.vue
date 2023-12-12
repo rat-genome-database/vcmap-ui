@@ -16,7 +16,15 @@
               <span class="toggle-label">{{ species.name }} ({{ species.activeMap.name }})</span>
             </div>
         </div>
-       
+        <div class="col-12 species-toggles">Other:</div>
+        <div class="toggle-container">
+            <InputSwitch
+              v-model="store.state.showOverviewPanel"
+              title="Toggle Species Visibility"
+              @click="toggleOverview()"
+            />
+            <span class="toggle-label">Overview Panel</span>
+        </div>       
       </div>
     </div>
   </div>
@@ -29,6 +37,7 @@ import { useStore } from 'vuex';
 import { useLogger } from 'vue-logger-plugin';
 import { key } from '@/store';
 import Species from '@/models/Species';
+import { calculateOverviewWidth } from '@/utils/Shared';
 
 const store = useStore(key);
 const $log = useLogger();
@@ -67,6 +76,19 @@ function toggleSpeciesVisibility(index: number) {
   });
   store.dispatch('setComparativeSpecies', newComparativeSpecies);
   store.dispatch('setSpeciesOrder', newSpeciesOrder);
+}
+
+function toggleOverview() {
+  const oldOverviewPanelWidth = store.state.svgPositions.overviewPanelWidth;
+  if (oldOverviewPanelWidth === 0) {
+    store.dispatch('setShowOverviewPanel', true);
+    const numComparativeSpecies = store.state.comparativeSpecies.length;
+    const newOverviewWidth = calculateOverviewWidth(numComparativeSpecies);
+    store.dispatch('setSvgPositions', { overviewPanelWidth: newOverviewWidth });
+  } else {
+    store.dispatch('setShowOverviewPanel', false);
+    store.dispatch('setSvgPositions', { overviewPanelWidth: 0 });
+  }
 }
 
 </script>
