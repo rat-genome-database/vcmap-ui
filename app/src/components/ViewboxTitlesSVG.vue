@@ -2,18 +2,18 @@
   <!-- Title panels -->
   <rect class="panel" x="0" :width="store.state.svgPositions.overviewPanelWidth" :height="SVGConstants.panelTitleHeight" />
   <rect class="panel" :x="store.state.svgPositions.overviewPanelWidth" :width="SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth" :height="SVGConstants.panelTitleHeight" />
-  <text v-if="showOverviewPanel" class="label medium bold" :x="SVGConstants.overviewTitleXPosition" :y="SVGConstants.panelTitleYPosition">Overview</text>
+  <text v-if="store.state.showOverviewPanel" class="label medium bold" :x="SVGConstants.overviewTitleXPosition" :y="SVGConstants.panelTitleYPosition">Overview</text>
   <text class="label medium bold" :x="store.state.svgPositions.overviewPanelWidth + SVGConstants.detailedRightPadding + 30" :y="SVGConstants.panelTitleYPosition">Detailed</text>
 
   <!-- SyntenyRegionSet Title Labels -->
-  <template v-if="showOverviewPanel">
+  <template v-if="store.state.showOverviewPanel">
     <template v-for="(syntenySet, index) in overviewSyntenySets" :key="index">
       <template v-for="(label, index) in syntenySet.titleLabels" :key="index">
         <text :class="`label small ${label.addClass}`" :x="label.posX" :y="label.posY">{{label.text}}</text>
       </template>
     </template>
   </template>
-  <template v-if="overviewBackboneSet && showOverviewPanel">
+  <template v-if="overviewBackboneSet && store.state.showOverviewPanel">
     <template v-for="(label, index) in overviewBackboneSet.titleLabels" :key="index">
       <text :class="`label small ${label.addClass}`" :x="label.posX" :y="label.posY">{{label.text}}</text>
     </template>
@@ -143,7 +143,6 @@ interface Props {
   overviewSyntenySets: SyntenyRegionSet[];
   detailedBackboneSet?: BackboneSet;
   detailedSyntenySets: SyntenyRegionSet[];
-  showOverviewPanel: boolean;
 }
 
 defineProps<Props>();

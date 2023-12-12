@@ -72,7 +72,6 @@
     <ViewboxTitlesSVG
       :overview-backbone-set="overviewBackboneSet" :overview-synteny-sets="(overviewSyntenySets as SyntenyRegionSet[])"
       :detailed-backbone-set="detailedBackboneSet" :detailed-synteny-sets="(detailedSyntenySets as SyntenyRegionSet[])"
-      :show-overview-panel="store.state.showOverviewPanel"
     />
 
     <!-- Navigation buttons -->
