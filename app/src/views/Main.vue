@@ -71,6 +71,7 @@
   <SettingsDialog
     v-model:show="showSettings"
     :on-update-species="updateComparativeSpecies"
+    :on-load-synteny-variants="loadSyntenyVariants" 
   />
 </template>
 

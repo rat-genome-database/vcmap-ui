@@ -42,12 +42,6 @@
       </Panel>
     </div>
   </div>
-  <LoadDataTrackControls
-    v-model:show="showLoadDataTrackModal"
-    :on-load-synteny-variants="onLoadSyntenyVariants"
-    :on-close-load-data-track-modal="closeLoadDataTrackModal"
-    header="Load Data Tracks"
-  />
 </template>
 
 <script lang="ts" setup>
@@ -57,7 +51,6 @@ import Gene from '@/models/Gene';
 import SelectedData from '@/models/SelectedData';
 import { VERSION } from '@/version';
 import { ref } from 'vue';
-import LoadDataTrackControls from '@/components/LoadDataTrackControls.vue';
 
 interface Props 
 {

@@ -10,7 +10,9 @@
           <SpeciesConfig :on-update="props.onUpdateSpecies"/>
         </AccordionTab>
         <AccordionTab header="Data Tracks">
-          <div>Data track component</div>
+          <LoadDataTrackControls
+            :on-load-synteny-variants="onLoadSyntenyVariants"
+          />
         </AccordionTab>
       </Accordion>
     </template>
@@ -29,6 +31,7 @@ import { computed } from 'vue';
 import SpeciesConfig from './SpeciesConfig.vue';
 import Species from '@/models/Species';
 import VCMapDialog from './VCMapDialog.vue';
+import LoadDataTrackControls from './LoadDataTrackControls.vue';
 
 /**
  * Can use v-model:show to do 2 way binding
@@ -37,6 +40,7 @@ import VCMapDialog from './VCMapDialog.vue';
 {
   show: boolean;
   onUpdateSpecies: (newSpeciesOrder: any, newComparativeSpecies: Species[]) => void,
+  onLoadSyntenyVariants: (mapKeys: number[] | null, triggerUpdate: boolean) => Promise<void>;
 }
 
 interface Emits

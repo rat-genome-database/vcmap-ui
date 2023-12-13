@@ -1,16 +1,14 @@
 <template>
   <div>
-    <div class="col-10 col-offset-1">
-      <h2>
-        Comparative Species
-      </h2>
-    </div>
+    <h3>
+      Comparative Species
+    </h3>
     <div v-for="(species, index) in store.state.comparativeSpecies" :key="index">
       <div class="grid">
         <div class="col-4">
           {{ species.name }} ({{ species.activeMap.name }})
         </div>
-        <div class="lg:col-1 md:col-1 sm:col-1">
+        <div class="col-1">
           <Button @click="removeComparativeSpecies(index)" label="Remove" icon="pi pi-minus-circle" class="p-button-sm p-button-danger" />
         </div>
       </div>
@@ -42,7 +40,7 @@
           />
         <small v-if="comparativeSpeciesSelections[index].showWarning" class="warning-text">Warning: Selected same species and assembly as the backbone</small>
       </div>
-      <div class="lg:col-1 md:col-1 sm:col-1">
+      <div class="col-1">
         <Button @click="removeTempComparativeSpecies(index)" label="Remove" icon="pi pi-minus-circle" class="p-button-sm p-button-danger" />
       </div>
     </div>
