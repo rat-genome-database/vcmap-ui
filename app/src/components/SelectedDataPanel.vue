@@ -3,7 +3,23 @@
     <template #header>
       <div class="selected-data-header">
         <div class="panel-header-item">
-          <b>Selected Data</b>
+          <div class="title-row">
+            <div><b>Selected Data</b></div>
+            <div class="sort-options">
+              <Button
+                v-tooltip.top="`Sort by Label`"
+                icon="pi pi-sort-alpha-down"
+                :class="{'p-button-sm': true, 'sort-button-inactive': !sortBySymbol}"
+                @click="symbolSort"
+              />
+              <Button 
+                v-tooltip.top="`Sort by Start Position`"
+                :icon="sortByPosition === 'off' ? 'pi pi-sort-alt-slash' : (sortByPosition === 'desc' ? 'pi pi-sort-numeric-down-alt' : 'pi pi-sort-numeric-down')"
+                :class="{'p-button-sm': true, 'sort-button-inactive': sortByPosition === 'off'}"
+                @click="positionSort"
+              />
+            </div>
+          </div>
         </div>
         <div class="panel-header-item">
           <div v-if="numberOfResults > 0">
@@ -11,31 +27,6 @@
           </div>
           <div v-if="numberOfRegions > 0">
             {{numberOfRegions}} Selected Regions
-          </div>
-          <div class="selected-data-actions">
-            <div class="clear-selection-btn">
-            <Button
-                v-tooltip.right="`Clear Selection`"
-                class="p-button-info p-button-sm p-button-warning"
-                icon="pi pi-ban"
-                @click="clearSelectedGenes"
-                rounded
-            />
-          </div>
-          <div class="sort-options">
-            <Button
-              v-tooltip.top="`Sort by Label`"
-              icon="pi pi-sort-alpha-down"
-              :class="{'p-button-sm': true, 'sort-button-inactive': !sortBySymbol}"
-              @click="symbolSort"
-            />
-            <Button 
-              v-tooltip.top="`Sort by Start Position`"
-              :icon="sortByPosition === 'off' ? 'pi pi-sort-alt-slash' : (sortByPosition === 'desc' ? 'pi pi-sort-numeric-down-alt' : 'pi pi-sort-numeric-down')"
-              :class="{'p-button-sm': true, 'sort-button-inactive': sortByPosition === 'off'}"
-              @click="positionSort"
-            />
-          </div>
           </div>
         </div>
       </div>
@@ -141,13 +132,6 @@ watch(() => props.selectedData, () => {
   }
 });
 
-const clearSelectedGenes = () => {
-  store.dispatch('setSelectedGeneIds', []);
-  store.dispatch('setSelectedVariantSections', []);
-  store.dispatch('setSelectedData', null);
-  store.dispatch('setGene', null);
-};
-
 const symbolSort = () => {
   sortBySymbol.value = !sortBySymbol.value;
 };
@@ -194,6 +178,15 @@ const sortedSelectedData = computed(() => {
 .selected-data-header
 {
   flex-direction: column;
+  width: 100%;
+}
+
+.selected-data-header .title-row
+{
+  flex-direction: row;
+  display: flex;
+  justify-content: space-between;
+  gap: 5px;
 }
 
 .panel-header-item
@@ -228,16 +221,6 @@ const sortedSelectedData = computed(() => {
 }
 
 .sort-options {
-  display: flex;
   gap: 5px;
 }
-
-.selected-data-actions {
-  display: flex;
-  align-items: end;
-};
-
-.selected-data-actions > :not(:last-child) {
-  margin-right: 100px;
-};
 </style>
