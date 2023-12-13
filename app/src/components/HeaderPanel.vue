@@ -27,11 +27,6 @@
               class="p-button-secondary header-btn"
               v-tooltip.bottom="`Open Configuration in New Tab`" />
             </router-link>
-            
-            <Button 
-              label="Load Data Track" 
-              class="p-button-secondary header-btn"
-              @click="openLoadDataTrackModal" />
           </div>
         </template>
         <div class="grid p-d-flex">
@@ -54,7 +49,6 @@ import { ref } from 'vue';
 
 interface Props 
 {
-  onLoadSyntenyVariants: (mapKeys: number[] | null, triggerUpdate: boolean) => Promise<void>;
   onShowSettings: () => void;
   geneList: Map<number, Gene>;
   selectedData: SelectedData[] | null;
@@ -62,23 +56,10 @@ interface Props
 
 const props = defineProps<Props>();
 
-let showLoadDataTrackModal = ref(false);
-
-const openLoadDataTrackModal = () => {
-  showLoadDataTrackModal.value = true;
-};
-
 const openSettingsModal = () => {
   props.onShowSettings();
 };
 
-const onLoadSyntenyVariants = async (mapKeys: number[] | null, triggerUpdate: boolean) => {
-  props.onLoadSyntenyVariants(mapKeys, triggerUpdate);
-};
-
-const closeLoadDataTrackModal = () => {
-  showLoadDataTrackModal.value = false;
-};
 </script>
 
 <style lang="scss" scoped>

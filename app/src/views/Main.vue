@@ -1,7 +1,6 @@
 <template>
-  <HeaderPanel 
-    :on-load-synteny-variants="loadSyntenyVariants" 
-    :on-show-settings="onShowSettings" 
+  <HeaderPanel
+    :on-show-settings="onShowSettings"
     :geneList="geneList"
     :selected-data="store.state.selectedData"
   />
@@ -72,6 +71,10 @@
     v-model:show="showSettings"
     :on-update-species="updateComparativeSpecies"
     :on-load-synteny-variants="loadSyntenyVariants" 
+  />
+  <Button
+    label="Log variant positions"
+    @click="logVariantPositions"
   />
 </template>
 
@@ -829,6 +832,10 @@ async function updateComparativeSpecies(newSpeciesOrder: any, newComparativeSpec
   store.dispatch('setComparativeSpecies', newComparativeSpecies);
   await queryAndProcessSyntenyForBasePairRange(store.state.chromosome, store.state.detailedBasePairRange.start, store.state.detailedBasePairRange.stop);
   isLoading.value = false;
+}
+
+const logVariantPositions = () => {
+  console.log(variantPositionsList.value);
 }
 
 </script>
