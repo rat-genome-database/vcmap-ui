@@ -61,13 +61,14 @@ export default class BackboneSet extends GenomicSet
       posX: this.backbone.posX1,
       posY: SVGConstants.trackLabelYPosition,
       text: this.speciesName ?? 'Unknown',
+      addClass: 'backbone',
     });
 
     const mapLabel = new Label({
       posX: this.backbone.posX1,
       posY: SVGConstants.trackMapLabelYPosition,
       text: this.mapName ?? 'Unknown',
-      addClass: 'smaller',
+      addClass: 'backbone smaller',
     });
 
     this.titleLabels = [speciesLabel, mapLabel];
