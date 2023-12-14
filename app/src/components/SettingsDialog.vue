@@ -11,7 +11,7 @@
         </AccordionTab>
         <AccordionTab header="Data Tracks">
           <LoadDataTrackControls
-            :on-load-synteny-variants="onLoadSyntenyVariants"
+            @variant-change="handleVariantChange"
           />
         </AccordionTab>
       </Accordion>
@@ -44,7 +44,6 @@ import LoadDataTrackControls from './LoadDataTrackControls.vue';
  interface Props 
 {
   show: boolean;
-  onLoadSyntenyVariants: (mapKeys: number[] | null, triggerUpdate: boolean) => Promise<void>;
 }
 
 interface Emits
@@ -52,6 +51,7 @@ interface Emits
   // eslint-disable-next-line
   (eventName: 'update:show', value: boolean): void
   (eventName: 'species-change', newSpeciesOrder: any, newComparativeSpecies: Species[]): void,
+  (eventName: 'variant-change', newMapKeys: number[]): void,
   (eventName: 'save-click') : void,
 }
 
@@ -78,6 +78,10 @@ const save = () => {
 
 const handleSpeciesChange = (newSpeciesOrder: any, newComparativeSpecies: Species[]) => {
   emit('species-change', newSpeciesOrder, newComparativeSpecies);
+}
+
+const handleVariantChange = (newMapkeys: number[]) => {
+  emit('variant-change', newMapkeys);
 }
 
 </script>

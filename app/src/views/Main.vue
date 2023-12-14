@@ -72,6 +72,7 @@
     :on-load-synteny-variants="loadSyntenyVariants" 
     @species-change="updateComparativeSpecies"
     @save-click="updateSettings"
+    @variant-change="updateVariantKeys"
   />
   <Button
     label="Log variant positions"
@@ -156,6 +157,7 @@ const variantPositionsList = ref<VariantPositions[]>([]);
 // TODO: do these really need to be refs if they aren't reactive?
 const savedComparativeSpecies = ref<Species[]>([]);
 const savedSpeciesOrder = ref<any>();
+const savedVariantKeys = ref<number[]>([]);
 
 // TODO TEMP
 // TODO: temp ignore here, should remove once this method is actively being used
@@ -714,7 +716,7 @@ async function loadBackboneVariants() {
   // isLoading.value = false;
 }
 
-async function loadSyntenyVariants(mapKeys: number[] | null, triggerUpdate: boolean) {
+async function loadSyntenyVariants(mapKeys: number[] | null,) {
   if (!mapKeys) return;
   // Ensure isUpdatingVariants is false
   store.dispatch('setIsUpdatingVariants', false);
@@ -774,10 +776,7 @@ async function loadSyntenyVariants(mapKeys: number[] | null, triggerUpdate: bool
   {
     showToast('warn', 'No Variants Found', 'There were no variants found for the given regions.', 5000);
   }
-  if (triggerUpdate)
-  {
-    store.dispatch('setIsUpdatingVariants', true);
-  }
+  store.dispatch('setIsUpdatingVariants', true);
 }
 
 function onShowSettings()
@@ -845,11 +844,18 @@ async function updateSettings() {
     savedComparativeSpecies.value = [];
     savedSpeciesOrder.value = {};
   }
+  if (savedVariantKeys.value.length > 0) {
+    loadSyntenyVariants(savedVariantKeys.value);
+  }
 }
 
-async function updateComparativeSpecies(newSpeciesOrder: any, newComparativeSpecies: Species[]) {
+function updateComparativeSpecies(newSpeciesOrder: any, newComparativeSpecies: Species[]) {
   savedComparativeSpecies.value = newComparativeSpecies;
   savedSpeciesOrder.value = newSpeciesOrder;
+}
+
+function updateVariantKeys(newMapKeys: number[]) {
+  savedVariantKeys.value = newMapKeys;
 }
 
 const logVariantPositions = () => {

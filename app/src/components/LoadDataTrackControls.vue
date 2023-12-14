@@ -10,6 +10,7 @@
             optionValue="activeMap"
             optionLabel="label"
             placeholder="Species"
+            @change="onConfirmLoadDataTrack"
           />
         </div>
         <div class="col-1">
@@ -23,14 +24,6 @@
       class="p-button mb-2"
       @click="onAddDataTrack"
     />
-  </div>
-  <div class="grid p-d-flex gap-2 modal-controls-container">
-    <div class="left-align-btn">
-      <Button label="Cancel" class="p-button-danger" @click="close" />
-    </div>
-    <div>
-      <Button label="Load Tracks" class="p-button-secondary" icon="pi pi-arrow-right" @click="onConfirmLoadDataTrack" />
-    </div>
   </div>
 </template>
   
@@ -49,7 +42,11 @@ interface Props
   theme?: 'error' | 'normal';
   showBackButton?: boolean;
   onConfirmCallback?: () => void;
-  onLoadSyntenyVariants: (mapKeys: number[] | null, triggerUpdate: boolean) => Promise<void>;
+}
+
+interface Emits
+{
+  (eventName: 'variant-change', mapKeys: number[]): void,
 }
 
 interface DataTrackItem
@@ -59,6 +56,7 @@ interface DataTrackItem
 
 const props = defineProps<Props>();
 const store = useStore(key);
+const emit = defineEmits<Emits>();
 
 // refs
 const dataTrackItems = ref<DataTrackItem[]>([]);
@@ -81,10 +79,7 @@ const onConfirmLoadDataTrack = () => {
     }
   });
 
-  if (selectedMapKeys.length > 0) {
-    props.onLoadSyntenyVariants(selectedMapKeys, true /* trigger update */);
-    dataTrackItems.value.length = 0;
-  }
+  emit('variant-change', selectedMapKeys);
 };
 
 const onAddDataTrack = () => {
