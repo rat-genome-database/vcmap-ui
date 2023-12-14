@@ -33,7 +33,10 @@ interface Props
 const props = defineProps<Props>();
 const searchedGene = ref<Gene | null>(null);
 const geneSuggestions = ref<Gene[]>([]);
-const preSearchViews = ref<BasePairRange[]>([]);
+// Backlog of previous searches (should not include current search)
+const preSearchViews = ref<{gene: Gene; range: BasePairRange;}[]>([]);
+// Most recent gene search
+let lastSearch: {gene: Gene; range: BasePairRange;} | null = null;
 
 const searchGene = (event: {query: string}) => {
   let matches: Gene[] = [];
@@ -50,9 +53,13 @@ const searchGene = (event: {query: string}) => {
 const goBack = () => {
   const lastView = preSearchViews.value.pop();
   if (lastView) {
+    const newData = getNewSelectedData(store, lastView.gene, props.geneList);
+    store.dispatch('setGene', lastView.gene.clone()); // Update store config to see this as last gene selected
+    store.dispatch('setSelectedGeneIds', newData.rgdIds || []);
+    store.dispatch('setSelectedData', newData.selectedData);
     //clear searched gene
-    searchedGene.value = null;
-    store.dispatch('setDetailedBasePairRequest', lastView);
+    searchedGene.value = lastView.gene;
+    store.dispatch('setDetailedBasePairRequest', {range: lastView.range});
   }
 };
 
@@ -67,8 +74,12 @@ const searchSVG = (event: { value: Gene }) => {
     const newWindow = adjustSelectionWindow(event.value, props.geneList, store);
     //cache our current window so we can go back to it
     const currentWindow = store.state.detailedBasePairRange;
-    preSearchViews.value.push(currentWindow);    
+    if (lastSearch != null) {
+      // Only add the current search if it isn't the first search (no need to add the very first search to the array since the user can only go back)
+      preSearchViews.value.push(lastSearch); 
+    }   
     store.dispatch('setDetailedBasePairRequest', {range: newWindow, source: `Searched: ${event.value.symbol}`});
+    lastSearch = {gene: event.value, range: currentWindow};
   }
 };
 
