@@ -7,7 +7,7 @@
     <template #content>
       <Accordion :multiple="true">
         <AccordionTab header="Species Configuration">
-          <SpeciesConfig :on-update="props.onUpdateSpecies"/>
+          <SpeciesConfig @species-change="handleSpeciesChange"/>
         </AccordionTab>
         <AccordionTab header="Data Tracks">
           <LoadDataTrackControls
@@ -21,6 +21,11 @@
         label="Cancel"
         class="p-button-danger"
         @click="close"
+      />
+      <Button
+        label="Save"
+        class="p-button-success"
+        @click="save"
       />
     </template>
   </VCMapDialog>
@@ -39,7 +44,6 @@ import LoadDataTrackControls from './LoadDataTrackControls.vue';
  interface Props 
 {
   show: boolean;
-  onUpdateSpecies: (newSpeciesOrder: any, newComparativeSpecies: Species[]) => void,
   onLoadSyntenyVariants: (mapKeys: number[] | null, triggerUpdate: boolean) => Promise<void>;
 }
 
@@ -47,6 +51,8 @@ interface Emits
 {
   // eslint-disable-next-line
   (eventName: 'update:show', value: boolean): void
+  (eventName: 'species-change', newSpeciesOrder: any, newComparativeSpecies: Species[]): void,
+  (eventName: 'save-click') : void,
 }
 
 const props = defineProps<Props>();
@@ -63,6 +69,15 @@ const isActive = computed({
 
 const close = () => {
   emit('update:show', false);
+}
+
+const save = () => {
+  emit('save-click');
+  close();
+}
+
+const handleSpeciesChange = (newSpeciesOrder: any, newComparativeSpecies: Species[]) => {
+  emit('species-change', newSpeciesOrder, newComparativeSpecies);
 }
 
 </script>

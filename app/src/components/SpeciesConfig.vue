@@ -53,15 +53,11 @@
         class="p-button mb-2"
       />
     </div>
-    <Button
-      @click="updateComparativeSpecies"
-      label="Update"
-    />
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import Species from '@/models/Species';
@@ -78,11 +74,9 @@ interface ComparativeSpeciesSelection
   visible: boolean;
 }
 
-interface Props
-{
-  onUpdate: (newSpeciesOrder: any, newComparativeSpecies: Species[]) => void,
-}
-const props = defineProps<Props>();
+const emit = defineEmits<{
+  (e: 'species-change', newSpeciesOrder: any, newComparativeSpecies: Species[]): void,
+}>();
 
 const speciesOptions = ref<Species[]>([]);
 const comparativeSpeciesSelections = ref<ComparativeSpeciesSelection[]>([]);
@@ -121,6 +115,7 @@ function setPrimaryAssembly(index: number)
   }
 
   checkAgainstBackboneSpeciesAndAssembly(comparativeSpeciesSelections.value[index]);
+  updateComparativeSpecies();
 }
 
 function checkAgainstBackboneSpeciesAndAssembly(selection: ComparativeSpeciesSelection)
@@ -161,12 +156,14 @@ function getAssemblyOptionLabel(assembly: SpeciesMap)
 function removeTempComparativeSpecies(index: number)
 {
   comparativeSpeciesSelections.value.splice(index, 1);
+  updateComparativeSpecies();
 }
 
 function removeComparativeSpecies(index: number)
 {
   const comparativeSpecies = store.state.comparativeSpecies;
   comparativeSpecies.splice(index, 1);
+  updateComparativeSpecies();
 }
 
 function updateComparativeSpecies() {
@@ -211,7 +208,7 @@ function updateComparativeSpecies() {
       }
     }
   });
-  comparativeSpeciesSelections.value = [];
-  props.onUpdate(speciesOrder, comparativeSpecies);
+  // comparativeSpeciesSelections.value = [];
+  emit('species-change', speciesOrder, comparativeSpecies);
 }
 </script>

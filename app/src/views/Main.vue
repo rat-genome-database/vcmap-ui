@@ -69,8 +69,9 @@
   </VCMapDialog>
   <SettingsDialog
     v-model:show="showSettings"
-    :on-update-species="updateComparativeSpecies"
     :on-load-synteny-variants="loadSyntenyVariants" 
+    @species-change="updateComparativeSpecies"
+    @save-click="updateSettings"
   />
   <Button
     label="Log variant positions"
@@ -149,6 +150,12 @@ const geneList = ref(new Map<number, Gene>());
 
 // Our list of variantPositions that have been loaded/generated
 const variantPositionsList = ref<VariantPositions[]>([]);
+
+
+// Settings refs
+// TODO: do these really need to be refs if they aren't reactive?
+const savedComparativeSpecies = ref<Species[]>([]);
+const savedSpeciesOrder = ref<any>();
 
 // TODO TEMP
 // TODO: temp ignore here, should remove once this method is actively being used
@@ -784,54 +791,65 @@ function togglePanelCollapse()
   store.dispatch('setDataPanelCollapsed', panelCollapsed.value);
 }
 
+async function updateSettings() {
+  if (savedComparativeSpecies.value.length > 0 && savedSpeciesOrder) {
+    showSettings.value = false;
+    isLoading.value = true;
+    const origComparativeSpeciesIds = store.state.comparativeSpecies.map((species: Species) => species.activeMap.key);
+    const newComparativeSpeciesIds = savedComparativeSpecies.value.map((species: Species) => species.activeMap.key);
+    const newIsSubset = newComparativeSpeciesIds.every((id) => origComparativeSpeciesIds.includes(id));
+    if (!newIsSubset && store.state.chromosome && store.state.species) {
+      const backboneGenes: Gene[] = await GeneApi.getGenesByRegion(
+        store.state.chromosome.chromosome,
+        0, store.state.chromosome.seqLength,
+        store.state.species.activeMap.key, store.state.species.name,
+        newComparativeSpeciesIds);
+
+      // Process response
+      // TODO: Should we add a "Block" for the backbone first?
+      backboneGenes.forEach((geneData) => {
+        geneList.value.set(geneData.rgdId, geneData);
+      });
+
+      const newSpecies = savedComparativeSpecies.value.filter((species: Species) => !origComparativeSpeciesIds.includes(species.activeMap.key));
+      // Preload off-backbone large blocks and genes
+      let threshold = getThreshold(store.state.chromosome.seqLength);
+      const speciesSyntenyDataArray = await SyntenyApi.getSyntenicRegions({
+        backboneChromosome: store.state.chromosome,
+        start: 0,
+        stop: store.state.chromosome.seqLength,
+        optional: {
+          includeGenes: true,
+          includeOrthologs: true,
+          threshold: threshold,
+        },
+        comparativeSpecies: newSpecies,
+      });
+
+      processSynteny(speciesSyntenyDataArray, 0, store.state.chromosome.seqLength);
+    }
+
+    // calculate new overview width based on number of species
+    const numComparativeSpecies = savedComparativeSpecies.value.length;
+    store.dispatch('setSpeciesOrder', savedSpeciesOrder.value);
+    // evaluate if we should update overview width
+    const currentOverviewWidth = store.state.svgPositions.overviewPanelWidth;
+    if (currentOverviewWidth > 0) {
+      const overviewWidth = calculateOverviewWidth(numComparativeSpecies);
+      store.dispatch('setSvgPositions', { overviewPanelWidth: overviewWidth });
+    }
+    store.dispatch('setComparativeSpecies', savedComparativeSpecies.value);
+    await queryAndProcessSyntenyForBasePairRange(store.state.chromosome, store.state.detailedBasePairRange.start, store.state.detailedBasePairRange.stop);
+    isLoading.value = false;
+    // Reset saved refs
+    savedComparativeSpecies.value = [];
+    savedSpeciesOrder.value = {};
+  }
+}
+
 async function updateComparativeSpecies(newSpeciesOrder: any, newComparativeSpecies: Species[]) {
-  showSettings.value = false;
-  isLoading.value = true;
-  const origComparativeSpeciesIds = store.state.comparativeSpecies.map((species: Species) => species.activeMap.key);
-  const newComparativeSpeciesIds = newComparativeSpecies.map((species: Species) => species.activeMap.key);
-  const newIsSubset = newComparativeSpeciesIds.every((id) => origComparativeSpeciesIds.includes(id));
-  if (!newIsSubset && store.state.chromosome && store.state.species) {
-    const backboneGenes: Gene[] = await GeneApi.getGenesByRegion(
-      store.state.chromosome.chromosome,
-      0, store.state.chromosome.seqLength,
-      store.state.species.activeMap.key, store.state.species.name,
-      newComparativeSpeciesIds);
-
-    // Process response
-    // TODO: Should we add a "Block" for the backbone first?
-    backboneGenes.forEach((geneData) => {
-      geneList.value.set(geneData.rgdId, geneData);
-    });
-
-    const newSpecies = newComparativeSpecies.filter((species: Species) => !origComparativeSpeciesIds.includes(species.activeMap.key));
-    // Preload off-backbone large blocks and genes
-    let threshold = getThreshold(store.state.chromosome.seqLength);
-    const speciesSyntenyDataArray = await SyntenyApi.getSyntenicRegions({
-      backboneChromosome: store.state.chromosome,
-      start: 0,
-      stop: store.state.chromosome.seqLength,
-      optional: {
-        includeGenes: true,
-        includeOrthologs: true,
-        threshold: threshold,
-      },
-      comparativeSpecies: newSpecies,
-    });
-
-    processSynteny(speciesSyntenyDataArray, 0, store.state.chromosome.seqLength);
-  }
-  // calculate new overview width based on number of species
-  const numComparativeSpecies = newComparativeSpecies.length;
-  store.dispatch('setSpeciesOrder', newSpeciesOrder);
-  // evaluate if we should update overview width
-  const currentOverviewWidth = store.state.svgPositions.overviewPanelWidth;
-  if (currentOverviewWidth > 0) {
-    const overviewWidth = calculateOverviewWidth(numComparativeSpecies);
-    store.dispatch('setSvgPositions', { overviewPanelWidth: overviewWidth });
-  }
-  store.dispatch('setComparativeSpecies', newComparativeSpecies);
-  await queryAndProcessSyntenyForBasePairRange(store.state.chromosome, store.state.detailedBasePairRange.start, store.state.detailedBasePairRange.stop);
-  isLoading.value = false;
+  savedComparativeSpecies.value = newComparativeSpecies;
+  savedSpeciesOrder.value = newSpeciesOrder;
 }
 
 const logVariantPositions = () => {
