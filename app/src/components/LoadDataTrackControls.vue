@@ -1,10 +1,35 @@
 <template>
+  <div class="header-container">
+    <div class="col-6 backbone-info">
+      <div class="grid unpadded">
+        <div class="col-5">Backbone:</div>
+        <div class="col-7 bold">{{store.state.species?.name}}</div>
+        <div class="col-5">Chromosome:</div>
+        <div class="col-7 bold">chr{{store.state.chromosome?.chromosome}}</div>
+        <div class="col-5">Assembly:</div>
+        <div class="col-7 bold">{{store.state.species?.activeMap.name}}</div>
+      </div>
+    </div>
+    <div>
+      <table>
+        <thead>
+          <tr><th>Comparative Species</th><th>Assembly</th></tr>
+        </thead>
+        <tbody>
+          <tr v-for="(species, index) in store.state.comparativeSpecies" :key="index">
+            <td>{{ species.name }}</td>
+            <td>{{ species.activeMap.name }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
   <h3>Variants</h3>
   <div class="content-container">
     <div class="track-item-container">
       <div class="grid" v-for="(species, index) in loadedVariantSpecies" :key="index">
         <div class="col-4">
-          {{ species.name }}
+          {{ species.name }} ({{ species.activeMap.name }})
         </div>
       </div>
       <div class="grid" v-for="(item, index) in dataTrackItems" :key="index">
@@ -178,6 +203,19 @@ function prepopulateConfigOptions()
     margin-top: 1em;
     display: flex;
     justify-content: flex-start;
+  }
+}
+.header-container {
+  border-bottom: 2px grey solid;
+  width: 100%;
+  display: flex;
+  padding-bottom: 1em;
+  align-items: center;
+  justify-content: space-between;
+
+  table, th, td {
+    border: 1px solid grey;
+    border-spacing: 0;
   }
 }
 </style>
