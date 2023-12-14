@@ -166,6 +166,10 @@ function getSyntenyDatatrackXPos(setOrder: number, datatrackSetIdx: number, over
 {
   font-size: 7px;
 }
+.label.backbone
+{
+  font-weight: bold;
+}
 rect.panel
 {
   fill: white;
