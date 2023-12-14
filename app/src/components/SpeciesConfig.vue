@@ -1,16 +1,14 @@
 <template>
   <div>
-    <div class="col-10 col-offset-1">
-      <h2>
-        Comparative Species
-      </h2>
-    </div>
+    <h3>
+      Comparative Species
+    </h3>
     <div v-for="(species, index) in store.state.comparativeSpecies" :key="index">
       <div class="grid">
         <div class="col-4">
           {{ species.name }} ({{ species.activeMap.name }})
         </div>
-        <div class="lg:col-1 md:col-1 sm:col-1">
+        <div class="col-1">
           <Button @click="removeComparativeSpecies(index)" label="Remove" icon="pi pi-minus-circle" class="p-button-sm p-button-danger" />
         </div>
       </div>
@@ -42,7 +40,7 @@
           />
         <small v-if="comparativeSpeciesSelections[index].showWarning" class="warning-text">Warning: Selected same species and assembly as the backbone</small>
       </div>
-      <div class="lg:col-1 md:col-1 sm:col-1">
+      <div class="col-1">
         <Button @click="removeTempComparativeSpecies(index)" label="Remove" icon="pi pi-minus-circle" class="p-button-sm p-button-danger" />
       </div>
     </div>
@@ -55,10 +53,6 @@
         class="p-button mb-2"
       />
     </div>
-    <Button
-      @click="updateComparativeSpecies"
-      label="Update"
-    />
   </div>
 </template>
 
@@ -80,11 +74,9 @@ interface ComparativeSpeciesSelection
   visible: boolean;
 }
 
-interface Props
-{
-  onUpdate: (newSpeciesOrder: any, newComparativeSpecies: Species[]) => void,
-}
-const props = defineProps<Props>();
+const emit = defineEmits<{
+  (e: 'species-change', newSpeciesOrder: any, newComparativeSpecies: Species[]): void,
+}>();
 
 const speciesOptions = ref<Species[]>([]);
 const comparativeSpeciesSelections = ref<ComparativeSpeciesSelection[]>([]);
@@ -135,6 +127,7 @@ function checkAgainstBackboneSpeciesAndAssembly(selection: ComparativeSpeciesSel
   {
     selection.showWarning = false;
   }
+  updateComparativeSpecies();
 }
 
 function getAssemblyOptionsForSpecies(index: number)
@@ -163,12 +156,14 @@ function getAssemblyOptionLabel(assembly: SpeciesMap)
 function removeTempComparativeSpecies(index: number)
 {
   comparativeSpeciesSelections.value.splice(index, 1);
+  updateComparativeSpecies();
 }
 
 function removeComparativeSpecies(index: number)
 {
   const comparativeSpecies = store.state.comparativeSpecies;
   comparativeSpecies.splice(index, 1);
+  updateComparativeSpecies();
 }
 
 function updateComparativeSpecies() {
@@ -213,7 +208,7 @@ function updateComparativeSpecies() {
       }
     }
   });
-  comparativeSpeciesSelections.value = [];
-  props.onUpdate(speciesOrder, comparativeSpecies);
+  // comparativeSpeciesSelections.value = [];
+  emit('species-change', speciesOrder, comparativeSpecies);
 }
 </script>

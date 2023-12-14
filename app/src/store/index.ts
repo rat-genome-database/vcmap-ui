@@ -233,7 +233,10 @@ export default createStore({
     },
     showOverviewPanel(state: VCMapState, showOverviewPanel: boolean) {
       state.showOverviewPanel = showOverviewPanel;
-    }
+    },
+    isDataPanelCollapsed(state: VCMapState, isDataPanelCollapsed: boolean) {
+      state.isDataPanelCollapsed = isDataPanelCollapsed;
+    },
   },
 
   actions: {
