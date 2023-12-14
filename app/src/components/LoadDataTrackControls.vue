@@ -28,21 +28,13 @@
 </template>
   
 <script setup lang="ts">
-import { computed, ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import Species from '@/models/Species';
 // import SpeciesApi from '@/api/SpeciesApi';
 import SpeciesMap from '@/models/SpeciesMap';
 import logger from '@/logger';
-
-interface Props 
-{
-  message?: string;
-  theme?: 'error' | 'normal';
-  showBackButton?: boolean;
-  onConfirmCallback?: () => void;
-}
 
 interface Emits
 {
@@ -54,7 +46,6 @@ interface DataTrackItem
   species: SpeciesMap;
 }
 
-const props = defineProps<Props>();
 const store = useStore(key);
 const emit = defineEmits<Emits>();
 
@@ -94,10 +85,6 @@ const onAddDataTrack = () => {
     // todo: Error Handling
     logger.error("Item Limit Reached");
   }
-};
-
-const close = () => {
-  dataTrackItems.value.length = 0;
 };
 
 function removeDataTrackItem(index: number)
