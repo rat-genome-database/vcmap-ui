@@ -2,6 +2,11 @@
   <h3>Variants</h3>
   <div class="content-container">
     <div class="track-item-container">
+      <div class="grid" v-for="(species, index) in loadedVariantSpecies" :key="index">
+        <div class="col-4">
+          {{ species.name }}
+        </div>
+      </div>
       <div class="grid" v-for="(item, index) in dataTrackItems" :key="index">
         <div class="col-4">
           <Dropdown 
@@ -26,7 +31,7 @@
     />
   </div>
 </template>
-  
+
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import { useStore } from 'vuex';
@@ -35,6 +40,12 @@ import Species from '@/models/Species';
 // import SpeciesApi from '@/api/SpeciesApi';
 import SpeciesMap from '@/models/SpeciesMap';
 import logger from '@/logger';
+import VariantPositions from '@/models/VariantPositions';
+
+interface Props
+{
+  variantPositionsList: VariantPositions[];
+}
 
 interface Emits
 {
@@ -46,12 +57,14 @@ interface DataTrackItem
   species: SpeciesMap;
 }
 
+const props = defineProps<Props>();
 const store = useStore(key);
 const emit = defineEmits<Emits>();
 
 // refs
 const dataTrackItems = ref<DataTrackItem[]>([]);
 const speciesOptions = ref<Species[]>([]);
+const loadedVariantSpecies = ref<Species[]>([]);
 
 // // Dropdown selection options:
 // const sourceOptions = [{name: 'API', key: 0},{name: 'File Upload', key: 1}];
@@ -94,7 +107,8 @@ function removeDataTrackItem(index: number)
 
 function prepopulateConfigOptions()
 {
-  let loadedSpecies = [];
+  const loadedSpecies = [];
+  loadedVariantSpecies.value = [];
   try
   {
     let loadedBackbone = store.state.species;
@@ -102,12 +116,19 @@ function prepopulateConfigOptions()
       logger.warn(`Cannot prepopulate data track config options when loaded backbone is null`);
       return;
     }
-    
     loadedBackbone.label = loadedBackbone.name + ": " + loadedBackbone.activeMap.name;
-    loadedSpecies.push(loadedBackbone);
+    if (!props.variantPositionsList.find((vPos) => vPos.mapKey === loadedBackbone?.activeMap.key)) {
+      loadedSpecies.push(loadedBackbone);
+    } else {
+      loadedVariantSpecies.value.push(loadedBackbone);
+    }
     store.state.comparativeSpecies.forEach((entry) => {
       entry.label = entry.name + ": " + entry.activeMap.name;
-      loadedSpecies.push(entry);
+      if (!props.variantPositionsList.find((vPos) => vPos.mapKey === entry.activeMap.key)) {
+        loadedSpecies.push(entry);
+      } else {
+        loadedVariantSpecies.value.push(entry);
+      }
     });
     speciesOptions.value = loadedSpecies;
   }
@@ -149,8 +170,8 @@ function prepopulateConfigOptions()
 }
 .track-item-container {
   display: grid;
-  padding-left: 1.5em;
   margin-top: 1em;
+  margin-bottom: 1em;
 
     .track-item {
     // width: fit-content;
@@ -159,4 +180,4 @@ function prepopulateConfigOptions()
     justify-content: flex-start;
   }
 }
-      </style>
+</style>

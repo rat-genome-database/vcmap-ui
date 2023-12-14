@@ -375,23 +375,6 @@ watch(() => store.state.detailedBasePairRange, () => {
   }
 });
 
-// TODO: I think every time the variantPositionsList is changed, the updateSyntenyVariants() method
-//   is called - which triggers a detailed panel update. This watch may no longer be needed?
-// TODO: not sure if watch is the best thing for this
-watch(() => props.variantPositionsList, () => {
-  const backboneSpecies = store.state.species;
-  const detailedBackbone = detailedBackboneSet.value?.backbone;
-  if (backboneSpecies && detailedBackbone)
-  {
-    props.variantPositionsList.forEach((variantPositions) => {
-      if (variantPositions.mapKey === backboneSpecies.activeMap.key)
-      {
-        updateBackboneVariants(backboneSpecies, variantPositions, detailedBackbone);
-      }
-    });
-  }
-}, {deep: true});
-
 watch(() => store.state.isUpdatingVariants, () => {
   if (store.state.isUpdatingVariants) updateSyntenyVariants();
 });

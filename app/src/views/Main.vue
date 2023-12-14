@@ -69,14 +69,10 @@
   </VCMapDialog>
   <SettingsDialog
     v-model:show="showSettings"
-    :on-load-synteny-variants="loadSyntenyVariants" 
+    :variant-positions-list="variantPositionsList"
     @species-change="updateComparativeSpecies"
     @save-click="updateSettings"
     @variant-change="updateVariantKeys"
-  />
-  <Button
-    label="Log variant positions"
-    @click="logVariantPositions"
   />
 </template>
 
@@ -123,7 +119,6 @@ const showSettings = ref(false);
 const isLoading = ref(false);
 const proceedAfterError = ref(false);
 const panelCollapsed = ref(store.state.isDataPanelCollapsed);
-const showOverviewPanel = ref(true);
 
 // Our synteny tree keyed by MapId
 // TODO: Consider adding a map for mapKey -> Species
@@ -716,7 +711,7 @@ async function loadBackboneVariants() {
   // isLoading.value = false;
 }
 
-async function loadSyntenyVariants(mapKeys: number[] | null,) {
+async function loadSyntenyVariants(mapKeys: number[] | null, triggerUpdate: boolean) {
   if (!mapKeys) return;
   // Ensure isUpdatingVariants is false
   store.dispatch('setIsUpdatingVariants', false);
@@ -760,7 +755,7 @@ async function loadSyntenyVariants(mapKeys: number[] | null,) {
               // the backbone variants, but if we push the responses here SVGViewbox will
               // update everytime a request completes
               // So we need a better way to tell SVGViewbox to update
-              // variantPositionsList.value.push(variantRes);
+              variantPositionsList.value.push(variantRes);
             }
             return;
           }
@@ -776,7 +771,9 @@ async function loadSyntenyVariants(mapKeys: number[] | null,) {
   {
     showToast('warn', 'No Variants Found', 'There were no variants found for the given regions.', 5000);
   }
-  store.dispatch('setIsUpdatingVariants', true);
+  if (triggerUpdate) {
+    store.dispatch('setIsUpdatingVariants', true);
+  }
 }
 
 function onShowSettings()
@@ -845,7 +842,7 @@ async function updateSettings() {
     savedSpeciesOrder.value = {};
   }
   if (savedVariantKeys.value.length > 0) {
-    loadSyntenyVariants(savedVariantKeys.value);
+    loadSyntenyVariants(savedVariantKeys.value, true);
   }
 }
 
@@ -856,10 +853,6 @@ function updateComparativeSpecies(newSpeciesOrder: any, newComparativeSpecies: S
 
 function updateVariantKeys(newMapKeys: number[]) {
   savedVariantKeys.value = newMapKeys;
-}
-
-const logVariantPositions = () => {
-  console.log(variantPositionsList.value);
 }
 
 </script>

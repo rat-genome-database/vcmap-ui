@@ -11,6 +11,7 @@
         </AccordionTab>
         <AccordionTab header="Data Tracks">
           <LoadDataTrackControls
+            :variant-positions-list="variantPositionsList"
             @variant-change="handleVariantChange"
           />
         </AccordionTab>
@@ -35,6 +36,7 @@
 import { computed } from 'vue';
 import SpeciesConfig from './SpeciesConfig.vue';
 import Species from '@/models/Species';
+import VariantPositions from '@/models/VariantPositions';
 import VCMapDialog from './VCMapDialog.vue';
 import LoadDataTrackControls from './LoadDataTrackControls.vue';
 
@@ -44,6 +46,7 @@ import LoadDataTrackControls from './LoadDataTrackControls.vue';
  interface Props 
 {
   show: boolean;
+  variantPositionsList: VariantPositions[];
 }
 
 interface Emits
