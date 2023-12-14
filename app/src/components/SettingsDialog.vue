@@ -72,19 +72,19 @@ const isActive = computed({
 
 const close = () => {
   emit('update:show', false);
-}
+};
 
 const save = () => {
   emit('save-click');
   close();
-}
+};
 
 const handleSpeciesChange = (newSpeciesOrder: any, newComparativeSpecies: Species[]) => {
   emit('species-change', newSpeciesOrder, newComparativeSpecies);
-}
+};
 
 const handleVariantChange = (newMapkeys: number[]) => {
   emit('variant-change', newMapkeys);
-}
+};
 
 </script>

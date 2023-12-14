@@ -46,7 +46,6 @@ import NavigationHeader from '@/components/NavigationHeader.vue';
 import Gene from '@/models/Gene';
 import SelectedData from '@/models/SelectedData';
 import { VERSION } from '@/version';
-import { ref } from 'vue';
 
 interface Props 
 {
