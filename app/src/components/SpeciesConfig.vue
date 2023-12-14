@@ -115,7 +115,6 @@ function setPrimaryAssembly(index: number)
   }
 
   checkAgainstBackboneSpeciesAndAssembly(comparativeSpeciesSelections.value[index]);
-  updateComparativeSpecies();
 }
 
 function checkAgainstBackboneSpeciesAndAssembly(selection: ComparativeSpeciesSelection)
@@ -128,6 +127,7 @@ function checkAgainstBackboneSpeciesAndAssembly(selection: ComparativeSpeciesSel
   {
     selection.showWarning = false;
   }
+  updateComparativeSpecies();
 }
 
 function getAssemblyOptionsForSpecies(index: number)
