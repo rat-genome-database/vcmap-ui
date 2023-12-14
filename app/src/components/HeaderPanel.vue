@@ -17,13 +17,14 @@
             ></a>
             <Button
               label="Settings"
+              icon="pi pi-cog"
               class="p-button-secondary header-btn"
               @click="openSettingsModal"
             />
             <router-link to="/" target="_blank" data-test="new-config-btn">
               <Button 
               label="New Configuration"
-              icon="pi pi-cog" 
+              icon="pi pi-plus-circle"
               class="p-button-secondary header-btn"
               v-tooltip.bottom="`Open Configuration in New Tab`" />
             </router-link>
