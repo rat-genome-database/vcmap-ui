@@ -5,7 +5,7 @@
     </div>
     <div class="input-col">
       <div class="nav-input">
-        <h5 class="search-title">Search and Select <i class="pi pi-info-circle info-icon" 
+        <h5 class="search-title">Search and Select Gene<i class="pi pi-info-circle info-icon" 
           v-tooltip="'Use the input below to search loaded gene data. Selecting an option will navigate you to the selected gene with its orthologs visible if possible. You can click the back button to return to your previous view after navigating.'"></i>
         </h5>
         <GeneSearch :geneList="props.geneList" :selectedData="props.selectedData" />
