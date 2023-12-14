@@ -92,15 +92,11 @@ import Gene from '@/models/Gene';
 import GeneInfo from '@/components/GeneInfo.vue';
 import VariantInfo from './VariantInfo.vue';
 import { ref, watch, computed } from 'vue';
-import { useStore } from 'vuex';
-import { key } from '@/store';
 
 /**
  * FIXME: This whole component needs to be looked over. There are references to properties on objects that don't exist.
  * The template is full of v-ifs and it can be pretty confusing to wrap your head around what's going on.
  */
-
-const store = useStore(key);
 
 interface Props
 {
@@ -186,7 +182,6 @@ const sortedSelectedData = computed(() => {
   flex-direction: row;
   display: flex;
   justify-content: space-between;
-  gap: 5px;
 }
 
 .panel-header-item
@@ -222,5 +217,6 @@ const sortedSelectedData = computed(() => {
 
 .sort-options {
   gap: 5px;
+  display: flex;
 }
 </style>
