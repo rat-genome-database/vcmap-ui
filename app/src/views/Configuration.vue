@@ -18,7 +18,7 @@
           <Dropdown 
             input-id="backbone-species-dropdown"
             v-model="backboneSpecies" 
-            :options="speciesOptions" 
+            :options="backboneSpeciesOptions" 
             :loading="isLoadingSpecies"
             @change="setAssemblyOptions($event.value)"
             optionLabel="name" />
@@ -32,7 +32,7 @@
             v-model="backboneAssembly" 
             :options="backboneAssemblies" 
             :disabled="!backboneSpecies"
-            @change="setChromosomeOptions($event.value)"
+            @change="onBackboneAssemblyChanged($event.value)"
             :optionLabel="getAssemblyOptionLabel" />
           <label for="backbone-assembly-dropdown">Backbone Assembly</label>
         </p>
@@ -196,7 +196,7 @@
           <Dropdown 
             v-model="comparativeSpeciesSelections[index].typeKey" 
             :loading="isLoadingSpecies"
-            :options="speciesOptions"
+            :options="comparativeSpeciesOptions"
             @change="setPrimaryAssembly(index)"
             optionValue="typeKey"
             optionLabel="name" 
@@ -250,7 +250,7 @@ import UserHistory from '@/models/UserHistory';
 import SpeciesMap from '@/models/SpeciesMap';
 import Chromosome from '@/models/Chromosome';
 import { useRouter } from 'vue-router';
-import { storeKey, useStore } from 'vuex';
+import { useStore } from 'vuex';
 import { useLogger } from 'vue-logger-plugin';
 import { VERSION } from '@/version';
 import { Formatter } from '@/utils/Formatter';
@@ -280,7 +280,7 @@ const TABS: { [key in ConfigurationMode]: number } = {
 
 const activeTab = ref(TABS.gene);
 
-const speciesOptions = ref<Species[]>([]);
+const backboneSpeciesOptions = ref<Species[]>([]);
 const backboneSpecies = ref<Species | null>(null);
 const isLoadingSpecies = ref(false);
 const backboneAssembly = ref<SpeciesMap | null>(null);
@@ -306,6 +306,7 @@ const flankingGene2 = ref<Gene | null>(null);
 const flankingChromosome = ref<Chromosome | null>(null);
 const flankingGeneError = ref<string>('');
 
+const comparativeSpeciesOptions = ref<Species[]>([]);
 const comparativeSpeciesSelections = ref<ComparativeSpeciesSelection[]>([]);
 
 const showError = ref(false);
@@ -404,7 +405,13 @@ function setAssemblyOptions(species: Species | null)
 
   backboneAssemblies.value = species.maps;
   backboneAssembly.value = species.activeMap;
-  setChromosomeOptions(backboneAssembly.value);
+  onBackboneAssemblyChanged(backboneAssembly.value);
+}
+
+function onBackboneAssemblyChanged(map: SpeciesMap | null)
+{
+  setChromosomeOptions(map);
+  setComparativeSpeciesOptions(map);
 }
 
 async function setChromosomeOptions(map: SpeciesMap | null)
@@ -447,6 +454,27 @@ async function setChromosomeOptions(map: SpeciesMap | null)
   {
     backboneChromosome.value = chromosomeOptions.value[0];
     setDefaultStartAndStopPositions(backboneChromosome.value);
+  }
+}
+
+async function setComparativeSpeciesOptions(map: SpeciesMap | null)
+{
+  // Clear out all fields that rely on comparative species options
+  comparativeSpeciesSelections.value = [];
+  
+  if (map == null)
+  {
+    return;
+  }
+
+  try
+  {
+    const comparativeSpecies = await SpeciesApi.getComparativeSpecies(map.key);
+    comparativeSpeciesOptions.value = comparativeSpecies;
+  }
+  catch (err: any)
+  {
+    onApiError(err, 'An error occurred while looking up comparative species for this backbone');
   }
 }
 
@@ -506,7 +534,7 @@ async function prepopulateConfigOptions()
   const backboneSelection = store.state.selectedBackboneRegion;
   try
   {
-    speciesOptions.value = await SpeciesApi.getSpecies();
+    backboneSpeciesOptions.value = await SpeciesApi.getSpecies();
   }
   catch (err: any)
   {
@@ -517,14 +545,14 @@ async function prepopulateConfigOptions()
     isLoadingSpecies.value = false;
   }
 
-  if (speciesOptions.value.length === 0 || store.state.species == null)
+  if (backboneSpeciesOptions.value.length === 0 || store.state.species == null)
   {
     return;
   }
   
   // Avoiding setting the exact object from the store to our ref variable so that it doesn't get mutated on accident
   const prevSpecies = store.state.species;
-  backboneSpecies.value = speciesOptions.value.filter(s => s.typeKey === prevSpecies.typeKey)[0] ?? null;
+  backboneSpecies.value = backboneSpeciesOptions.value.filter(s => s.typeKey === prevSpecies.typeKey)[0] ?? null;
   
   // If no species selected by default, keep all other fields blank and bail
   if (backboneSpecies.value == null)
@@ -546,6 +574,8 @@ async function prepopulateConfigOptions()
   {
     return;
   }
+
+  await setComparativeSpeciesOptions(backboneAssembly.value);
 
   isLoadingChromosome.value = true;
   try
@@ -703,11 +733,11 @@ function saveConfigToStoreAndGoToMainScreen()
       return;
     }
 
-    for (let i = 0; i < speciesOptions.value.length; i++)
+    for (let i = 0; i < backboneSpeciesOptions.value.length; i++)
     {
-      if (speciesOptions.value[i].typeKey === s.typeKey)
+      if (backboneSpeciesOptions.value[i].typeKey === s.typeKey)
       {
-        const selectedSpecies = speciesOptions.value[i].copy();
+        const selectedSpecies = backboneSpeciesOptions.value[i].copy();
         for (let j = 0; j < selectedSpecies.maps.length; j++)
         {
           if (selectedSpecies.maps[j].key === s.mapKey)
@@ -830,11 +860,11 @@ function getAssemblyOptionsForSpecies(index: number)
     return [];
   }
 
-  for (let i = 0; i < speciesOptions.value.length; i++)
+  for (let i = 0; i < comparativeSpeciesOptions.value.length; i++)
   {
-    if (speciesOptions.value[i].typeKey === comparativeSpeciesSelections.value[index].typeKey)
+    if (comparativeSpeciesOptions.value[i].typeKey === comparativeSpeciesSelections.value[index].typeKey)
     {
-      return speciesOptions.value[i].maps;
+      return comparativeSpeciesOptions.value[i].maps;
     }
   }
 
@@ -849,11 +879,11 @@ function getAssemblyOptionLabel(assembly: SpeciesMap)
 function setPrimaryAssembly(index: number)
 {
   let selectedSpecies: Species | undefined;
-  for (let i = 0; i < speciesOptions.value.length; i++)
+  for (let i = 0; i < backboneSpeciesOptions.value.length; i++)
   {
-    if (speciesOptions.value[i].typeKey === comparativeSpeciesSelections.value[index].typeKey)
+    if (backboneSpeciesOptions.value[i].typeKey === comparativeSpeciesSelections.value[index].typeKey)
     {
-      selectedSpecies = speciesOptions.value[i];
+      selectedSpecies = backboneSpeciesOptions.value[i];
       break;
     }
   }
