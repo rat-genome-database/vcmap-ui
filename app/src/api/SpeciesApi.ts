@@ -34,6 +34,14 @@ interface SpeciesMapDTO
   refSeqAssemblyName: string;
   source: string;
 }
+
+interface ComparativeSpeciesDTO
+{
+  speciesTypeKey: number;
+  speciesCommonName: string;
+  mapKey: number;
+  mapName: string;
+}
  
 /**
  * Converts RGD Map model to our internal SpeciesMap model
@@ -81,5 +89,49 @@ export default class SpeciesApi
     const speciesRes = await httpInstance.get<SpeciesDTO[]>(`/vcmap/species`);
     const speciesList: Species[] = speciesRes.data.map(dto => getSpeciesFromDTO(dto));
     return speciesList;
+  }
+
+  static async getComparativeSpecies(backboneMapKey: number): Promise<Species[]>
+  {
+    // Note: Empty response returned if no comparative species with synteny are found
+    const comparativeSpeciesRes = await httpInstance.get<ComparativeSpeciesDTO[] | ''>(`/vcmap/species/pairs/${backboneMapKey}`);
+
+    if (!Array.isArray(comparativeSpeciesRes.data)) {
+      return [];
+    }
+
+    // Create a map of comparative species that have synteny data against the backbone map
+    // (key: speciesTypeKey, value: array of mapKeys)
+    const consolidatedComparativeSpeciesMap = new Map<number, number[]>();
+    comparativeSpeciesRes.data.forEach(s => {
+      if (consolidatedComparativeSpeciesMap.has(s.speciesTypeKey)) {
+        consolidatedComparativeSpeciesMap.get(s.speciesTypeKey)?.push(s.mapKey);
+        return;
+      }
+
+      consolidatedComparativeSpeciesMap.set(s.speciesTypeKey, [s.mapKey]);
+    });
+
+    // Grab the full list of available species from RGD
+    const speciesRes = await httpInstance.get<SpeciesDTO[]>(`/vcmap/species`);
+
+    // Create a list of SpeciesDTO objects that have synteny data available
+    const speciesWithSynteny: SpeciesDTO[] = [];
+    speciesRes.data.forEach(dto => {
+      if (!consolidatedComparativeSpeciesMap.has(dto.speciesTypeKey)) {
+        return;
+      }
+
+      const comparativeMapsWithSynteny = consolidatedComparativeSpeciesMap.get(dto.speciesTypeKey);
+      const dtoMapsWithSynteny = dto.maps.filter(m => comparativeMapsWithSynteny?.includes(m.key));
+      speciesWithSynteny.push({
+        ...dto,
+        maps: dtoMapsWithSynteny,
+      });
+    });
+
+    // Convert them to Species models
+    const comparativeSpeciesList: Species[] = speciesWithSynteny.map(dto => getSpeciesFromDTO(dto));
+    return comparativeSpeciesList;
   }
 }
