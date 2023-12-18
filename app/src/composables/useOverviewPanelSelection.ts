@@ -101,9 +101,11 @@ export default function useOverviewPanelSelection(store: Store<VCMapState>) {
       }
 
       const selectedBackboneRegion = store.state.selectedBackboneRegion;
-      if (selectedBackboneRegion && selectedBackboneRegion.setViewportSelection)
+      if (selectedBackboneRegion 
+        // && selectedBackboneRegion.setViewportSelection
+        )
       {
-        selectedBackboneRegion.setViewportSelection(basePairStart, basePairStop);
+        // selectedBackboneRegion.setViewportSelection(basePairStart, basePairStop);
         //store.dispatch('setBackboneSelection', selectedBackboneRegion);
         store.dispatch('setSelectionToastCount', toastCount + 1);
         store.dispatch('setDetailedBasePairRequest', { range: { start: basePairStart, stop: basePairStop }, source: 'Selected Overview' });
