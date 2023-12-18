@@ -31,35 +31,12 @@
 </template>
 
 <script lang="ts" setup>
-import { Formatter } from '@/utils/Formatter';
-import { computed, ref } from 'vue';
 import { useStore } from 'vuex';
-import { useLogger } from 'vue-logger-plugin';
 import { key } from '@/store';
 import Species from '@/models/Species';
 import { calculateOverviewWidth } from '@/utils/Shared';
 
 const store = useStore(key);
-const $log = useLogger();
-
-let showEditModal = ref(false);
-let startPosition = ref(0);
-let stopPosition = ref(store.state.chromosome?.seqLength ?? 1);
-
-const isValidStartStop = computed(() => {
-  // Do we account for stop positions below start?
-  // originally: return startPosition.value !== stopPosition.value;
-  return startPosition.value < stopPosition.value;
-});
-
-const maxPosition = computed(() => {
-  return store.state.chromosome?.seqLength ?? 0;
-});
-
-
-const closeModal = () => {
-  showEditModal.value = false;
-};
 
 function toggleSpeciesVisibility(index: number) {
   const newComparativeSpecies = [...store.state.comparativeSpecies];
