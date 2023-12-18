@@ -2,32 +2,12 @@
   <div class="grid">
     <div class="col-12">
       <Panel :toggleable="true" class="vcmap-panel">
-        <template #header>
-          <div class="vcmap-header">
-            <router-link to="/" v-tooltip.bottom="`Return to Configuration`">
-              <img alt="VCMap Logo" class="logo" src="../assets/images/vcmap_logo_v2.png">
-            </router-link>
-            <Tag icon="pi pi-tag" severity="info" rounded>v{{ VERSION }}</Tag>
-          </div>
-        </template>
         <template #icons>
-          <div class="icon-container">
-            <a href="https://rgd.mcw.edu/" target="_blank"><img class="rgd-logo" src="../assets/images/rgd_logo.png" alt="RGD logo"
-              v-tooltip.bottom="`Go to RGD Home Page`"
-            ></a>
-            <Button
-              label="Settings"
-              icon="pi pi-cog"
-              class="p-button-secondary header-btn"
-              @click="openSettingsModal"
-            />
-            <router-link to="/" target="_blank" data-test="new-config-btn">
-              <Button 
-              label="New Configuration"
-              icon="pi pi-plus-circle"
-              class="p-button-secondary header-btn"
-              v-tooltip.bottom="`Open Configuration in New Tab`" />
-            </router-link>
+          <div>
+            <button class="p-panel-header-icon p-link mr-2" @click="toggleMenu">
+              <span class="pi pi-cog"></span>
+            </button>
+            <Menu ref="menu" id="config_menu" :model="items" popup />
           </div>
         </template>
         <div class="grid p-d-flex">
@@ -45,7 +25,10 @@ import InfoHeader from '@/components/InfoHeader.vue';
 import NavigationHeader from '@/components/NavigationHeader.vue';
 import Gene from '@/models/Gene';
 import SelectedData from '@/models/SelectedData';
-import { VERSION } from '@/version';
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 
 interface Props 
 {
@@ -55,42 +38,40 @@ interface Props
 }
 
 const props = defineProps<Props>();
+const menu = ref();
+const items = ref<any[]>([
+  {
+    label: 'Settings',
+    icon: 'pi pi-sliders-v',
+    command: () => openSettingsModal(),
+  },
+  {
+    label: 'New Configuration',
+    icon: 'pi pi-external-link',
+    command: () => {
+      const route = router.resolve({path: '/'});
+      window.open(route.href, '_blank');
+    },
+  },
+]);
 
 const openSettingsModal = () => {
   props.onShowSettings();
 };
 
+const toggleMenu = (event: MouseEvent) => {
+  menu.value.toggle(event);
+};
 </script>
 
 <style lang="scss" scoped>
-.vcmap-panel:deep() .p-panel-icons {
-   display: flex;
-   align-items: center;
-}
-
-.vcmap-header
-{
-  display: flex;
-  align-items: center;
-  .header
-  {
-    margin-left: 2rem;
+.vcmap-panel:deep() {
+  >.p-panel-header {
+    justify-content: end;
   }
-  
-}
-
-.p-button.p-component.header-btn
-{
-  margin-right: 1rem;
-}
-
-.icon-container {
-  align-items: center;
-  display: inline-flex;
-  
-  .rgd-logo {
-    padding-right: 1em;
-    width: 70%;
+  .p-panel-icons {
+    display: flex;
+    align-items: center;
   }
 }
 </style>

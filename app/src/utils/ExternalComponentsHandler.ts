@@ -24,6 +24,7 @@ import RadioButton from 'primevue/radiobutton';
 import InputSwitch from 'primevue/inputswitch';
 import Accordion from 'primevue/accordion';
 import AccordionTab from 'primevue/accordiontab';
+import Menu from 'primevue/menu';
 
 /**
  * Add any plugins/configs that you want to be globally registered:
@@ -57,6 +58,7 @@ const COMPONENTS: {[key: string]: Component} = {
   'InputSwitch': InputSwitch,
   'Accordion': Accordion,
   'AccordionTab': AccordionTab,
+  'Menu': Menu,
 };
 
 /**

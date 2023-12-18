@@ -1,4 +1,5 @@
 <template>
+  <AppHeader />
   <HeaderPanel
     :on-show-settings="onShowSettings"
     :geneList="geneList"
@@ -104,6 +105,7 @@ import Species from '@/models/Species';
 import { VCMapLogger } from '@/logger';
 import HoveredDataTooltip from '@/components/HoveredDataTooltip.vue';
 import SettingsDialog from '@/components/SettingsDialog.vue';
+import AppHeader from '@/components/AppHeader.vue';
 
 // TODO: Can we figure out a better way to handle blocks with a high chainlevel?
 const MAX_CHAINLEVEL = 2;

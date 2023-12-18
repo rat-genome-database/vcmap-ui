@@ -167,7 +167,6 @@ import { VCMapSVGElement } from '@/models/VCMapSVGElement';
 import ChromosomeLabelSVG from './ChromosomeLabelSVG.vue';
 import SyntenyLinesSVG from './SyntenyLinesSVG.vue';
 import GapSVG from './GapSVG.vue';
-import BackboneSelection from '@/models/BackboneSelection';
 import OverviewSyntenyLabelsSVG from './OverviewSyntenyLabelsSVG.vue';
 import { PANEL_SVG_START, PANEL_SVG_STOP } from '@/utils/SVGConstants';
 import useMouseBasePairPos from '@/composables/useMouseBasePairPos';

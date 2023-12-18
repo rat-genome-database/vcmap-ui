@@ -11,11 +11,6 @@
   color: #2c3e50;
 }
 
-.logo
-{
-  height: 3.5rem;
-}
-
 .grid
 {
   &.unpadded

@@ -1,9 +1,5 @@
 <template>
-  <div class="configuration-header border-bottom-1 border-bottom-solid">
-    <img alt="VCMap Logo" class="logo" src="../assets/images/vcmap_logo_v2.png">
-    <Tag icon="pi pi-tag" severity="info" rounded>v{{ VERSION }}</Tag>
-    <a  class="logo-link" href="https://rgd.mcw.edu/" target="_blank"><img class="rgd-logo" src="../assets/images/rgd_logo.png" alt="RGD logo"></a>
-  </div>
+  <AppHeader />
   <div class="grid mt-0 text-center">
 
     <!-- Backbone Column -->
@@ -252,9 +248,9 @@ import Chromosome from '@/models/Chromosome';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import { useLogger } from 'vue-logger-plugin';
-import { VERSION } from '@/version';
 import { Formatter } from '@/utils/Formatter';
 import VCMapDialog from '@/components/VCMapDialog.vue';
+import AppHeader from '@/components/AppHeader.vue';
 import { key } from '@/store';
 import { sortGeneMatches } from '@/utils/DataPanelHelpers';
 import { ConfigurationMode } from '@/utils/Types';
@@ -945,23 +941,6 @@ $warning-color: #a3852b;
 .warning-text
 {
   color: $warning-color
-}
-
-.configuration-header
-{
-  display: flex;
-  align-items: center;
-  .header
-  {
-    margin-left: 2rem;
-  }
-  .rgd-logo {
-    margin-left: auto;
-    width: 70%;
-  }
-  .logo-link {
-    margin-left: auto;
-  }
 }
 
 p.label-description
