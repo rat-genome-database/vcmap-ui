@@ -7,6 +7,12 @@
             <div><b>Selected Data</b></div>
             <div class="sort-options">
               <Button
+                v-tooltip.top="`Group Orthologs`"
+                icon="pi pi-list"
+                :class="{'p-button-sm': true, 'sort-button-inactive': !groupBySymbol}"
+                @click="groupSymbol"
+              />
+              <Button
                 v-tooltip.top="`Sort by Label`"
                 icon="pi pi-sort-alpha-down"
                 :class="{'p-button-sm': true, 'sort-button-inactive': !sortBySymbol}"
@@ -110,6 +116,7 @@ const numberOfResults = ref<number>(0);
 const numberOfRegions = ref<number>(0);
 const sortByPosition = ref('off');
 const sortBySymbol = ref(false);
+const groupBySymbol = ref(false);
 
 watch(() => props.selectedData, () => {
   numberOfResults.value = 0;
@@ -130,11 +137,27 @@ watch(() => props.selectedData, () => {
 
 const symbolSort = () => {
   sortBySymbol.value = !sortBySymbol.value;
+  if (sortBySymbol.value) {
+    sortByPosition.value = 'off';
+    groupBySymbol.value = false;
+  }
 };
 const positionSort = () => {
   const options = ['asc', 'desc', 'off'];
   const current = options.indexOf(sortByPosition.value);
   sortByPosition.value = options[(current + 1) % options.length];
+  if (sortByPosition.value !== 'off') {
+    sortBySymbol.value = false;
+    groupBySymbol.value = false;
+  }
+};
+const groupSymbol = () => {
+  groupBySymbol.value = !groupBySymbol.value;
+
+  if (groupBySymbol.value) {
+    sortBySymbol.value = false;
+    sortByPosition.value = 'off';
+  }
 };
 
 const sortedSelectedData = computed(() => {
@@ -144,6 +167,9 @@ const sortedSelectedData = computed(() => {
 
   return [...props.selectedData].sort((a, b) => {
     if (a.type === 'Gene' && b.type === 'Gene') {
+      if (groupBySymbol.value) {
+        return a.genomicSection.symbol.localeCompare(b.genomicSection.symbol);
+      }
       if (a.genomicSection.speciesName === priority && b.genomicSection.speciesName !== priority) {
         return -1;
       }
