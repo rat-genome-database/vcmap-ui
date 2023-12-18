@@ -131,7 +131,7 @@ watch(() => props.selectedData, () => {
   numberOfRegions.value = 0;
   if (props.selectedData != null)
   {
-    numberOfRegions.value = props.selectedData.filter((d: { type: string; }) => d.type === 'variantDensity').length;
+    numberOfRegions.value = props.selectedData.filter((d: { type: string; }) => d.type !== 'Gene').length;
   }
 });
 
@@ -166,27 +166,54 @@ const sortedSelectedData = computed(() => {
   const priority = props.selectedData[0]?.genomicSection?.speciesName;
 
   return [...props.selectedData].sort((a, b) => {
-    if (a.genomicSection.speciesName === priority && b.genomicSection.speciesName !== priority) {
-      return -1;
-    }
-    if (b.genomicSection.speciesName === priority && a.genomicSection.speciesName !== priority) {
-      return 1;
-    }
-    if (a.genomicSection.speciesName === b.genomicSection.speciesName) {
+    if (groupBySymbol.value) {
+      if (a.type === 'Gene' && b.type !== 'Gene') {
+        return -1;
+      }
+      if (b.type === 'Gene' && a.type !== 'Gene') {
+        return 1;
+      }
+      if (a.type === 'Gene' && b.type === 'Gene') {
+        if (sortBySymbol.value) {
+          return a.genomicSection.symbol.localeCompare(b.genomicSection.symbol);
+        }
+        return a.genomicSection.symbol.localeCompare(b.genomicSection.symbol);
+      }
+      if (a.genomicSection.speciesName !== b.genomicSection.speciesName) {
+        return a.genomicSection.speciesName.localeCompare(b.genomicSection.speciesName);
+      }
       if (a.type !== b.type) {
         return a.type.localeCompare(b.type);
       }
+      if (sortByPosition.value === 'asc') {
+        return a.genomicSection.start - b.genomicSection.start;
+      }
+      if (sortByPosition.value === 'desc') {
+        return b.genomicSection.start - a.genomicSection.start;
+      }
+    } else {
+      if (a.genomicSection.speciesName === priority && b.genomicSection.speciesName !== priority) {
+        return -1;
+      }
+      if (b.genomicSection.speciesName === priority && a.genomicSection.speciesName !== priority) {
+        return 1;
+      }
+      if (a.genomicSection.speciesName === b.genomicSection.speciesName) {
+        if (a.type !== b.type) {
+          return a.type.localeCompare(b.type);
+        }
+        if (a.type === 'Gene' && sortBySymbol.value) {
+          return a.genomicSection.symbol.localeCompare(b.genomicSection.symbol);
+        }
+        if (sortByPosition.value === 'asc') {
+          return a.genomicSection.start - b.genomicSection.start;
+        }
+        if (sortByPosition.value === 'desc') {
+          return b.genomicSection.start - a.genomicSection.start;
+        }
+      }
+      return a.genomicSection.speciesName.localeCompare(b.genomicSection.speciesName);
     }
-    if (groupBySymbol.value && a.type === 'Gene' && b.type === 'Gene') {
-      return a.genomicSection.symbol.localeCompare(b.genomicSection.symbol);
-    }
-    if (sortByPosition.value === 'asc') {
-      return a.genomicSection.start - b.genomicSection.start;
-    }
-    if (sortByPosition.value === 'desc') {
-      return b.genomicSection.start - a.genomicSection.start;
-    }
-    return a.genomicSection.speciesName.localeCompare(b.genomicSection.speciesName);
   });
 });
 </script>
