@@ -63,8 +63,10 @@ import { key } from '@/store';
 import Species from '@/models/Species';
 import SpeciesMap from '@/models/SpeciesMap';
 import SpeciesApi from '@/api/SpeciesApi';
+import { useLogger } from 'vue-logger-plugin';
 
 const store = useStore(key);
+const $log = useLogger();
 
 interface ComparativeSpeciesSelection
 {
@@ -85,7 +87,12 @@ const comparativeSpeciesLimitReached = computed(() => {
 });
 
 onMounted(async () => {
-  speciesOptions.value = await SpeciesApi.getSpecies();
+  $log.debug(`SpeciesConfig mounted. Querying for comparative species`);
+  if (store.state.species?.activeMap) {
+    speciesOptions.value = await SpeciesApi.getComparativeSpecies(store.state.species.activeMap.key);
+  } else {
+    $log.error(`Backbone does not have active map specified. Cannot query for species with synteny.`);
+  }
 });
 
 function addTempComparativeSpecies()
