@@ -7,7 +7,7 @@
             <div><b>Selected Data</b></div>
             <div class="sort-options">
               <Button
-                v-tooltip.top="`Group Orthologs`"
+                v-tooltip.top="{ value: (groupBySymbol) ? 'Group by Species' : 'Group Orthologs'}"
                 icon="pi pi-list"
                 :class="{'p-button-sm': true, 'sort-button-inactive': !groupBySymbol}"
                 @click="groupSymbol"
