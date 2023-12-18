@@ -69,8 +69,6 @@ const onHistorySelect = ( selectedItem: any ) => {
     const entry: UserHistory = history.value[selectedItem.value];
     store.dispatch('setBackboneSelection', entry.backbone);
     store.dispatch('setDetailedBasePairRange', entry.range);
-  } else {
-    selectedHistory.value = null;
   }
 };
 
