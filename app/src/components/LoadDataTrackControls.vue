@@ -31,6 +31,9 @@
         <div class="col-4">
           {{ species.name }} ({{ species.activeMap.name }})
         </div>
+        <div class="col-1">
+          <Button @click="removeVariants(species, index)" label="Remove" icon="pi pi-minus-circle" class="p-button-sm p-button-danger" />
+        </div>
       </div>
       <div class="grid" v-for="(item, index) in dataTrackItems" :key="index">
         <div class="col-4">
@@ -75,6 +78,7 @@ interface Props
 interface Emits
 {
   (eventName: 'variant-change', mapKeys: number[]): void,
+  (eventName: 'remove-variants', removedMapKey: number): void,
 }
 
 interface DataTrackItem
@@ -128,6 +132,12 @@ const onAddDataTrack = () => {
 function removeDataTrackItem(index: number)
 {
   dataTrackItems.value.splice(index, 1);
+}
+
+function removeVariants(species: Species, index: number)
+{
+  emit('remove-variants', species.activeMap.key);
+  loadedVariantSpecies.value.splice(index, 1);
 }
 
 function prepopulateConfigOptions()

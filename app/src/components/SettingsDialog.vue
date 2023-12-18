@@ -13,6 +13,7 @@
           <LoadDataTrackControls
             :variant-positions-list="variantPositionsList"
             @variant-change="handleVariantChange"
+            @remove-variants="handleRemovedVariants"
           />
         </AccordionTab>
       </Accordion>
@@ -55,6 +56,7 @@ interface Emits
   (eventName: 'update:show', value: boolean): void
   (eventName: 'species-change', newSpeciesOrder: any, newComparativeSpecies: Species[]): void,
   (eventName: 'variant-change', newMapKeys: number[]): void,
+  (eventName: 'remove-variants', removedMapKey: number): void,
   (eventName: 'save-click') : void,
 }
 
@@ -86,5 +88,9 @@ const handleSpeciesChange = (newSpeciesOrder: any, newComparativeSpecies: Specie
 const handleVariantChange = (newMapkeys: number[]) => {
   emit('variant-change', newMapkeys);
 };
+
+const handleRemovedVariants = (removedMapKey: number) => {
+  emit('remove-variants', removedMapKey);
+}
 
 </script>

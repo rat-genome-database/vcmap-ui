@@ -73,6 +73,7 @@
     @species-change="updateComparativeSpecies"
     @save-click="updateSettings"
     @variant-change="updateVariantKeys"
+    @remove-variants="updateRemovedVariantKeys"
   />
 </template>
 
@@ -153,6 +154,7 @@ const variantPositionsList = ref<VariantPositions[]>([]);
 const savedComparativeSpecies = ref<Species[]>([]);
 const savedSpeciesOrder = ref<any>();
 const savedVariantKeys = ref<number[]>([]);
+const removedVariantKeys = ref<number[]>([]);
 
 // TODO TEMP
 // TODO: temp ignore here, should remove once this method is actively being used
@@ -751,10 +753,7 @@ async function loadSyntenyVariants(mapKeys: number[] | null, triggerUpdate: bool
                 foundSomeVariants = true;
               }
               block.variantPositions = variantRes;
-              // NOTE: adding to variantPositionList is how we tell SVGViewbox to update
-              // the backbone variants, but if we push the responses here SVGViewbox will
-              // update everytime a request completes
-              // So we need a better way to tell SVGViewbox to update
+
               variantPositionsList.value.push(variantRes);
             }
             return;
@@ -767,7 +766,7 @@ async function loadSyntenyVariants(mapKeys: number[] | null, triggerUpdate: bool
   }));
   await Promise.allSettled(variantPromises);
   isLoading.value = false;
-  if (!foundSomeVariants && !loadingBackbone)
+  if (!foundSomeVariants && !loadingBackbone && mapKeys.length > 0)
   {
     showToast('warn', 'No Variants Found', 'There were no variants found for the given regions.', 5000);
   }
@@ -841,8 +840,26 @@ async function updateSettings() {
     savedComparativeSpecies.value = [];
     savedSpeciesOrder.value = {};
   }
-  if (savedVariantKeys.value.length > 0) {
-    loadSyntenyVariants(savedVariantKeys.value, true);
+  if (savedVariantKeys.value.length > 0 || removedVariantKeys.value.length > 0) {
+    if (removedVariantKeys.value.length > 0) {
+      for (let i = variantPositionsList.value.length - 1; i >= 0; i--) {
+        const vPos = variantPositionsList.value[i];
+        if (removedVariantKeys.value.includes(vPos.mapKey)) {
+          variantPositionsList.value.splice(i, 1);
+        }
+      }
+    }
+    removedVariantKeys.value.forEach((removedKey: number) => {
+      const blocks = syntenyTree.value.get(removedKey);
+      if (blocks) {
+        blocks.forEach((block) => {
+          block.variantPositions = undefined;
+        });
+      }
+    });
+    await loadSyntenyVariants(savedVariantKeys.value, true);
+    savedVariantKeys.value = [];
+    removedVariantKeys.value = [];
   }
 }
 
@@ -853,6 +870,10 @@ function updateComparativeSpecies(newSpeciesOrder: any, newComparativeSpecies: S
 
 function updateVariantKeys(newMapKeys: number[]) {
   savedVariantKeys.value = newMapKeys;
+}
+
+function updateRemovedVariantKeys(removedMapKey: number) {
+  removedVariantKeys.value.push(removedMapKey);
 }
 
 </script>
