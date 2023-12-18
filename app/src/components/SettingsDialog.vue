@@ -91,6 +91,6 @@ const handleVariantChange = (newMapkeys: number[]) => {
 
 const handleRemovedVariants = (removedMapKey: number) => {
   emit('remove-variants', removedMapKey);
-}
+};
 
 </script>

@@ -149,12 +149,11 @@ const geneList = ref(new Map<number, Gene>());
 const variantPositionsList = ref<VariantPositions[]>([]);
 
 
-// Settings refs
-// TODO: do these really need to be refs if they aren't reactive?
-const savedComparativeSpecies = ref<Species[]>([]);
-const savedSpeciesOrder = ref<any>();
-const savedVariantKeys = ref<number[]>([]);
-const removedVariantKeys = ref<number[]>([]);
+// Settings edited values
+let savedComparativeSpecies: Species[] = [];
+let savedSpeciesOrder: any;
+let savedVariantKeys: number[] = [];
+let removedVariantKeys: number[] = [];
 
 // TODO TEMP
 // TODO: temp ignore here, should remove once this method is actively being used
@@ -787,11 +786,12 @@ function togglePanelCollapse()
 }
 
 async function updateSettings() {
-  if (savedComparativeSpecies.value.length > 0 && savedSpeciesOrder) {
+  // Check if we need to update comparative species
+  if (savedComparativeSpecies.length > 0 && savedSpeciesOrder) {
     showSettings.value = false;
     isLoading.value = true;
     const origComparativeSpeciesIds = store.state.comparativeSpecies.map((species: Species) => species.activeMap.key);
-    const newComparativeSpeciesIds = savedComparativeSpecies.value.map((species: Species) => species.activeMap.key);
+    const newComparativeSpeciesIds = savedComparativeSpecies.map((species: Species) => species.activeMap.key);
     const newIsSubset = newComparativeSpeciesIds.every((id) => origComparativeSpeciesIds.includes(id));
     if (!newIsSubset && store.state.chromosome && store.state.species) {
       const backboneGenes: Gene[] = await GeneApi.getGenesByRegion(
@@ -806,7 +806,7 @@ async function updateSettings() {
         geneList.value.set(geneData.rgdId, geneData);
       });
 
-      const newSpecies = savedComparativeSpecies.value.filter((species: Species) => !origComparativeSpeciesIds.includes(species.activeMap.key));
+      const newSpecies = savedComparativeSpecies.filter((species: Species) => !origComparativeSpeciesIds.includes(species.activeMap.key));
       // Preload off-backbone large blocks and genes
       let threshold = getThreshold(store.state.chromosome.seqLength);
       const speciesSyntenyDataArray = await SyntenyApi.getSyntenicRegions({
@@ -825,31 +825,34 @@ async function updateSettings() {
     }
 
     // calculate new overview width based on number of species
-    const numComparativeSpecies = savedComparativeSpecies.value.length;
-    store.dispatch('setSpeciesOrder', savedSpeciesOrder.value);
+    const numComparativeSpecies = savedComparativeSpecies.length;
+    store.dispatch('setSpeciesOrder', savedSpeciesOrder);
     // evaluate if we should update overview width
     const currentOverviewWidth = store.state.svgPositions.overviewPanelWidth;
     if (currentOverviewWidth > 0) {
       const overviewWidth = calculateOverviewWidth(numComparativeSpecies);
       store.dispatch('setSvgPositions', { overviewPanelWidth: overviewWidth });
     }
-    store.dispatch('setComparativeSpecies', savedComparativeSpecies.value);
+    store.dispatch('setComparativeSpecies', savedComparativeSpecies);
     await queryAndProcessSyntenyForBasePairRange(store.state.chromosome, store.state.detailedBasePairRange.start, store.state.detailedBasePairRange.stop);
     isLoading.value = false;
-    // Reset saved refs
-    savedComparativeSpecies.value = [];
-    savedSpeciesOrder.value = {};
+    // Reset the edited settings values
+    savedComparativeSpecies = [];
+    savedSpeciesOrder = {};
   }
-  if (savedVariantKeys.value.length > 0 || removedVariantKeys.value.length > 0) {
-    if (removedVariantKeys.value.length > 0) {
+
+  // Check if we have new variants or removed variants
+  if (savedVariantKeys.length > 0 || removedVariantKeys.length > 0) {
+    // First remove the variants we want to remove
+    if (removedVariantKeys.length > 0) {
       for (let i = variantPositionsList.value.length - 1; i >= 0; i--) {
         const vPos = variantPositionsList.value[i];
-        if (removedVariantKeys.value.includes(vPos.mapKey)) {
+        if (removedVariantKeys.includes(vPos.mapKey)) {
           variantPositionsList.value.splice(i, 1);
         }
       }
     }
-    removedVariantKeys.value.forEach((removedKey: number) => {
+    removedVariantKeys.forEach((removedKey: number) => {
       const blocks = syntenyTree.value.get(removedKey);
       if (blocks) {
         blocks.forEach((block) => {
@@ -857,23 +860,26 @@ async function updateSettings() {
         });
       }
     });
-    await loadSyntenyVariants(savedVariantKeys.value, true);
-    savedVariantKeys.value = [];
-    removedVariantKeys.value = [];
+
+    // Second load the new variants
+    await loadSyntenyVariants(savedVariantKeys, true);
+    // Reset the edited settings values
+    savedVariantKeys = [];
+    removedVariantKeys = [];
   }
 }
 
 function updateComparativeSpecies(newSpeciesOrder: any, newComparativeSpecies: Species[]) {
-  savedComparativeSpecies.value = newComparativeSpecies;
-  savedSpeciesOrder.value = newSpeciesOrder;
+  savedComparativeSpecies = newComparativeSpecies;
+  savedSpeciesOrder = newSpeciesOrder;
 }
 
 function updateVariantKeys(newMapKeys: number[]) {
-  savedVariantKeys.value = newMapKeys;
+  savedVariantKeys = newMapKeys;
 }
 
 function updateRemovedVariantKeys(removedMapKey: number) {
-  removedVariantKeys.value.push(removedMapKey);
+  removedVariantKeys.push(removedMapKey);
 }
 
 </script>
