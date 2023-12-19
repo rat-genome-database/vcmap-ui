@@ -67,7 +67,6 @@
 import SVGViewbox from '@/components/SVGViewbox.vue';
 import HeaderPanel from '@/components/HeaderPanel.vue';
 import SelectedDataPanel from '@/components/SelectedDataPanel.vue';
-import SpeciesConfig from '@/components/SpeciesConfig.vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import { onMounted, ref, watch } from 'vue';
