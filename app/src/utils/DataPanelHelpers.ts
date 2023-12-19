@@ -64,13 +64,14 @@ export function sortGeneList(geneList: Gene[]) {
 export function adjustSelectionWindow(searchedGene: Gene, geneList: Map<number, Gene>, store: Store<VCMapState>)
 {
   // New start and stop will be +/- some multiple of the gene's length (currently 2x)
-  const geneBasePairLength = searchedGene.stop - searchedGene.start;
+  // This is based on the backbone start and stop length
+  const geneBasePairLength = searchedGene.backboneStop - searchedGene.backboneStart;
   // Take the max of new start position, and selected region's original start
   // to avoid jumping to outside of loaded region
-  const newInnerStart = Math.max(Math.floor(searchedGene.start
+  const newInnerStart = Math.max(Math.floor(searchedGene.backboneStart
     - SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), 0);
   // Take min of new stop and selected regions original stop
-  const newInnerStop = Math.min(Math.floor(searchedGene.stop
+  const newInnerStop = Math.min(Math.floor(searchedGene.backboneStop
     + SEARCHED_GENE_WINDOW_FACTOR * geneBasePairLength), store.state.chromosome?.seqLength ?? newInnerStart);
   //get orthologs for backbone gene, and determine the relative highest and lowest positioned genes to reset the window
   const reframeGenes: Gene[] = [];

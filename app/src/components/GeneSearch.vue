@@ -16,6 +16,7 @@
 <script lang="ts" setup>
 import SelectedData from '@/models/SelectedData';
 import Gene from '@/models/Gene';
+import Chromosome from '@/models/Chromosome';
 import { BasePairRange } from '@/models/BackboneSelection';
 import { ref,} from 'vue';
 import { useStore } from 'vuex';
@@ -28,6 +29,7 @@ interface Props
 {
   selectedData: SelectedData[] | null;
   geneList: Map<number, Gene>;
+  queryForSynteny: (backboneChromosome: Chromosome, start: number, stop: number, mapKey: number) => Promise<void>;
 }
 
 const props = defineProps<Props>();
@@ -63,7 +65,7 @@ const goBack = () => {
   }
 };
 
-const searchSVG = (event: { value: Gene }) => {
+const searchSVG = async (event: { value: Gene }) => {
   const newData = getNewSelectedData(store, event.value, props.geneList);
   store.dispatch('setGene', event.value.clone()); // Update store config to see this as last gene selected
   store.dispatch('setSelectedGeneIds', newData.rgdIds || []);
@@ -71,13 +73,25 @@ const searchSVG = (event: { value: Gene }) => {
 
   if (event.value)
   {
-    const newWindow = adjustSelectionWindow(event.value, props.geneList, store);
+    // Get the first window to see where we should try to query
+    let newWindow;
+    for (let i = 0; i < 5; i++) {
+      console.log(`Iteration: ${i}`);
+      newWindow = adjustSelectionWindow(event.value, props.geneList, store);
+      await props.queryForSynteny(store.state.chromosome, newWindow.start, newWindow.stop, event.value.mapKey);
+      // This should the updated searched gene after updating resoluiton of the region
+      const searchedGene = props.geneList.get(event.value.rgdId);
+      if (searchedGene && searchedGene.backboneStart > newWindow.start && searchedGene.backboneStop < newWindow.stop) {
+        console.log('going to break loop');
+        break;
+      }
+    }
     //cache our current window so we can go back to it
     const currentWindow = store.state.detailedBasePairRange;
     if (lastSearch != null) {
       // Only add the current search if it isn't the first search (no need to add the very first search to the array since the user can only go back)
-      preSearchViews.value.push(lastSearch); 
-    }   
+      preSearchViews.value.push(lastSearch);
+    }
     store.dispatch('setDetailedBasePairRequest', {range: newWindow, source: `Searched: ${event.value.symbol}`});
     lastSearch = {gene: event.value, range: currentWindow};
   }

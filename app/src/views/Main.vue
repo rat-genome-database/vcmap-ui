@@ -2,6 +2,7 @@
   <AppHeader />
   <HeaderPanel
     :on-show-settings="onShowSettings"
+    :query-for-synteny="querySyntenyForSearchZoom"
     :geneList="geneList"
     :selected-data="store.state.selectedData"
   />
@@ -52,22 +53,6 @@
     :show-back-button="showDialogBackButton"
     :on-confirm-callback="onProceedWithErrors"
   />
-  <VCMapDialog
-    v-model:show="showDialog"
-    header="Settings"
-    :wide="true"
-  >
-    <template #content>
-      <SpeciesConfig :on-update="updateComparativeSpecies" />
-    </template>
-    <template #footer>
-      <Button
-        label="Cancel"
-        class="p-button-danger"
-        @click="() => { showSettings = false }"
-      />
-    </template>
-  </VCMapDialog>
   <SettingsDialog
     v-model:show="showSettings"
     :variant-positions-list="variantPositionsList"
@@ -75,6 +60,10 @@
     @save-click="updateSettings"
     @variant-change="updateVariantKeys"
     @remove-variants="updateRemovedVariantKeys"
+  />
+  <Button
+    label="Inspect Genes"
+    @click="logGenes()"
   />
 </template>
 
@@ -544,6 +533,26 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
   }
 }
 
+async function querySyntenyForSearchZoom(backboneChromosome: Chromosome, start: number, stop: number, mapKey: number)
+{
+  const speciesToQuery = store.state.comparativeSpecies.find((species: Species) => species.activeMap.key === mapKey);
+  let threshold = getThreshold(stop - start);
+  if (speciesToQuery) {
+    const syntenyData = await SyntenyApi.getSyntenicRegions({
+      backboneChromosome: backboneChromosome,
+      start: start,
+      stop: stop,
+      optional: {
+        includeGenes: true,
+        includeOrthologs: false,
+        threshold: threshold,
+      },
+      comparativeSpecies: [speciesToQuery],
+    });
+    processSynteny(syntenyData, start, stop);
+  }
+}
+
 async function queryAndProcessSyntenyForBasePairRange(backboneChromosome: Chromosome, start: number, stop: number)
 {
   $log.debug(`Querying for specific base pair range: ${start} - ${stop}`);
@@ -888,6 +897,16 @@ function updateVariantKeys(newMapKeys: number[]) {
 function updateRemovedVariantKeys(removedMapKey: number) {
   removedVariantKeys.push(removedMapKey);
 }
+
+function logGenes() {
+  geneList.value.forEach((gene) => {
+    if (gene.rgdId === 1604430) {
+      console.log(gene);
+    }
+  })
+}
+
+// RPS26P6 - rgdId = 1604430
 
 </script>
 
