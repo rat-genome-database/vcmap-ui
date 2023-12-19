@@ -8,7 +8,7 @@
         <h5 class="search-title">Search and Select Gene<i class="pi pi-info-circle info-icon" 
           v-tooltip="'Use the input below to search loaded gene data. Selecting an option will navigate you to the selected gene with its orthologs visible if possible. You can click the back button to return to your previous view after navigating.'"></i>
         </h5>
-        <GeneSearch :geneList="props.geneList" :selectedData="props.selectedData" />
+        <GeneSearch :geneList="props.geneList" :selectedData="props.selectedData" :query-for-synteny="props.queryForSynteny" />
       </div>
       <div class="nav-input">
         <h5 class="history-title">Viewed Regions <i class="pi pi-info-circle info-icon" 
@@ -20,7 +20,7 @@
     <div class="zoom-col zoom-bar">
       <div class="bp-edit" @click="openSelectionEditModal">
         {{ displayedSpeciesRegionLabel }}
-        <i class="pi pi-pencil edit-icon"></i>        
+        <i class="pi pi-pencil edit-icon"></i>
       </div>
       <Zoom />
     </div>
@@ -66,6 +66,7 @@
 <script lang="ts" setup>
 import Gene from '@/models/Gene';
 import SelectedData from '@/models/SelectedData';
+import Chromosome from '@/models/Chromosome';
 import { computed, ref } from 'vue';
 import { useStore } from 'vuex';
 import Zoom from '@/components/Zoom.vue';
@@ -83,6 +84,7 @@ interface Props
 {
   geneList: Map<number, Gene>;
   selectedData: SelectedData[] | null;
+  queryForSynteny: (backboneChromosome: Chromosome, start: number, stop: number, mapKey: number) => void;
 }
 
 let showEditModal = ref(false);

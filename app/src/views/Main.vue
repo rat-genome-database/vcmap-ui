@@ -2,6 +2,7 @@
   <AppHeader />
   <HeaderPanel
     :on-show-settings="onShowSettings"
+    :query-for-synteny="querySyntenyForSearchZoom"
     :geneList="geneList"
     :selected-data="store.state.selectedData"
   />
@@ -52,22 +53,6 @@
     :show-back-button="showDialogBackButton"
     :on-confirm-callback="onProceedWithErrors"
   />
-  <VCMapDialog
-    v-model:show="showDialog"
-    header="Settings"
-    :wide="true"
-  >
-    <template #content>
-      <SpeciesConfig :on-update="updateComparativeSpecies" />
-    </template>
-    <template #footer>
-      <Button
-        label="Cancel"
-        class="p-button-danger"
-        @click="() => { showSettings = false }"
-      />
-    </template>
-  </VCMapDialog>
   <SettingsDialog
     v-model:show="showSettings"
     :variant-positions-list="variantPositionsList"
@@ -82,7 +67,6 @@
 import SVGViewbox from '@/components/SVGViewbox.vue';
 import HeaderPanel from '@/components/HeaderPanel.vue';
 import SelectedDataPanel from '@/components/SelectedDataPanel.vue';
-import SpeciesConfig from '@/components/SpeciesConfig.vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import { onMounted, ref, watch } from 'vue';
@@ -542,6 +526,30 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
       $log.timeEnd(`ProcessGenesForBlock`);
     }
   }
+}
+
+async function querySyntenyForSearchZoom(backboneChromosome: Chromosome, start: number, stop: number, mapKey: number)
+{
+  isLoading.value = true;
+  const speciesToQuery = store.state.comparativeSpecies.find((species: Species) => species.activeMap.key === mapKey);
+  let threshold = getThreshold(stop - start);
+  if (speciesToQuery) {
+    const syntenyData = await SyntenyApi.getSyntenicRegions({
+      backboneChromosome: backboneChromosome,
+      start: start,
+      stop: stop,
+      optional: {
+        includeGenes: true,
+        includeOrthologs: false,
+        threshold: threshold,
+      },
+      comparativeSpecies: [speciesToQuery],
+    });
+    processSynteny(syntenyData, start, stop);
+  }
+  // NOTE: we may not want to remove the loading mask here if we iteratively call this function
+  // Depending on speed it might appear to flicker off and on?
+  isLoading.value = false;
 }
 
 async function queryAndProcessSyntenyForBasePairRange(backboneChromosome: Chromosome, start: number, stop: number)
