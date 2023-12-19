@@ -61,10 +61,6 @@
     @variant-change="updateVariantKeys"
     @remove-variants="updateRemovedVariantKeys"
   />
-  <Button
-    label="Inspect Genes"
-    @click="logGenes()"
-  />
 </template>
 
 <script lang="ts" setup>
@@ -897,16 +893,6 @@ function updateVariantKeys(newMapKeys: number[]) {
 function updateRemovedVariantKeys(removedMapKey: number) {
   removedVariantKeys.push(removedMapKey);
 }
-
-function logGenes() {
-  geneList.value.forEach((gene) => {
-    if (gene.rgdId === 1604430) {
-      console.log(gene);
-    }
-  })
-}
-
-// RPS26P6 - rgdId = 1604430
 
 </script>
 

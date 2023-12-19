@@ -24,6 +24,7 @@ import { key } from '@/store';
 import { getNewSelectedData, sortGeneMatches, adjustSelectionWindow } from '@/utils/DataPanelHelpers';
 
 const store = useStore(key);
+const MAX_SEARCH_ITERS = 5;
 
 interface Props
 {
@@ -73,16 +74,17 @@ const searchSVG = async (event: { value: Gene }) => {
 
   if (event.value)
   {
-    // Get the first window to see where we should try to query
+    // Adapatively generate the newWindow based on the searched gene and its new position
+    // when the zoom is increased
     let newWindow;
-    for (let i = 0; i < 5; i++) {
-      console.log(`Iteration: ${i}`);
+    for (let i = 0; i < MAX_SEARCH_ITERS; i++) {
       newWindow = adjustSelectionWindow(event.value, props.geneList, store);
+      // Get new synteny blocks based on the newWindow to check the location of searched gene
       await props.queryForSynteny(store.state.chromosome, newWindow.start, newWindow.stop, event.value.mapKey);
       // This should the updated searched gene after updating resoluiton of the region
       const searchedGene = props.geneList.get(event.value.rgdId);
+      // After the gene is updated, check if it is within the new window
       if (searchedGene && searchedGene.backboneStart > newWindow.start && searchedGene.backboneStop < newWindow.stop) {
-        console.log('going to break loop');
         break;
       }
     }
