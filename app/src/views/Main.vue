@@ -531,6 +531,7 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
 
 async function querySyntenyForSearchZoom(backboneChromosome: Chromosome, start: number, stop: number, mapKey: number)
 {
+  isLoading.value = true;
   const speciesToQuery = store.state.comparativeSpecies.find((species: Species) => species.activeMap.key === mapKey);
   let threshold = getThreshold(stop - start);
   if (speciesToQuery) {
@@ -547,6 +548,9 @@ async function querySyntenyForSearchZoom(backboneChromosome: Chromosome, start: 
     });
     processSynteny(syntenyData, start, stop);
   }
+  // NOTE: we may not want to remove the loading mask here if we iteratively call this function
+  // Depending on speed it might appear to flicker off and on?
+  isLoading.value = false;
 }
 
 async function queryAndProcessSyntenyForBasePairRange(backboneChromosome: Chromosome, start: number, stop: number)
