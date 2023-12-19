@@ -774,6 +774,59 @@ async function loadSyntenyVariants(mapKeys: number[] | null, triggerUpdate: bool
   }
 }
 
+async function loadComparativeSpecies() {
+  isLoading.value = true;
+  const origComparativeSpeciesIds = store.state.comparativeSpecies.map((species: Species) => species.activeMap.key);
+  const newComparativeSpeciesIds = savedComparativeSpecies.map((species: Species) => species.activeMap.key);
+  const newIsSubset = newComparativeSpeciesIds.every((id) => origComparativeSpeciesIds.includes(id));
+  if (!newIsSubset && store.state.chromosome && store.state.species) {
+    const backboneGenes: Gene[] = await GeneApi.getGenesByRegion(
+      store.state.chromosome.chromosome,
+      0, store.state.chromosome.seqLength,
+      store.state.species.activeMap.key, store.state.species.name,
+      newComparativeSpeciesIds);
+
+    // Process response
+    // TODO: Should we add a "Block" for the backbone first?
+    backboneGenes.forEach((geneData) => {
+      geneList.value.set(geneData.rgdId, geneData);
+    });
+
+    const newSpecies = savedComparativeSpecies.filter((species: Species) => !origComparativeSpeciesIds.includes(species.activeMap.key));
+    // Preload off-backbone large blocks and genes
+    let threshold = getThreshold(store.state.chromosome.seqLength);
+    const speciesSyntenyDataArray = await SyntenyApi.getSyntenicRegions({
+      backboneChromosome: store.state.chromosome,
+      start: 0,
+      stop: store.state.chromosome.seqLength,
+      optional: {
+        includeGenes: true,
+        includeOrthologs: true,
+        threshold: threshold,
+      },
+      comparativeSpecies: newSpecies,
+    });
+
+    processSynteny(speciesSyntenyDataArray, 0, store.state.chromosome.seqLength);
+  }
+
+  // calculate new overview width based on number of species
+  const numComparativeSpecies = savedComparativeSpecies.length;
+  store.dispatch('setSpeciesOrder', savedSpeciesOrder);
+  // evaluate if we should update overview width
+  const currentOverviewWidth = store.state.svgPositions.overviewPanelWidth;
+  if (currentOverviewWidth > 0) {
+    const overviewWidth = calculateOverviewWidth(numComparativeSpecies);
+    store.dispatch('setSvgPositions', { overviewPanelWidth: overviewWidth });
+  }
+  store.dispatch('setComparativeSpecies', savedComparativeSpecies);
+  await queryAndProcessSyntenyForBasePairRange(store.state.chromosome, store.state.detailedBasePairRange.start, store.state.detailedBasePairRange.stop);
+  isLoading.value = false;
+  // Reset the edited settings values
+  savedComparativeSpecies = [];
+  savedSpeciesOrder = {};
+}
+
 function onShowSettings()
 {
   showSettings.value = true;
@@ -786,59 +839,11 @@ function togglePanelCollapse()
 }
 
 async function updateSettings() {
+  showSettings.value = false;
+
   // Check if we need to update comparative species
   if (savedComparativeSpecies.length > 0 && savedSpeciesOrder) {
-    showSettings.value = false;
-    isLoading.value = true;
-    const origComparativeSpeciesIds = store.state.comparativeSpecies.map((species: Species) => species.activeMap.key);
-    const newComparativeSpeciesIds = savedComparativeSpecies.map((species: Species) => species.activeMap.key);
-    const newIsSubset = newComparativeSpeciesIds.every((id) => origComparativeSpeciesIds.includes(id));
-    if (!newIsSubset && store.state.chromosome && store.state.species) {
-      const backboneGenes: Gene[] = await GeneApi.getGenesByRegion(
-        store.state.chromosome.chromosome,
-        0, store.state.chromosome.seqLength,
-        store.state.species.activeMap.key, store.state.species.name,
-        newComparativeSpeciesIds);
-
-      // Process response
-      // TODO: Should we add a "Block" for the backbone first?
-      backboneGenes.forEach((geneData) => {
-        geneList.value.set(geneData.rgdId, geneData);
-      });
-
-      const newSpecies = savedComparativeSpecies.filter((species: Species) => !origComparativeSpeciesIds.includes(species.activeMap.key));
-      // Preload off-backbone large blocks and genes
-      let threshold = getThreshold(store.state.chromosome.seqLength);
-      const speciesSyntenyDataArray = await SyntenyApi.getSyntenicRegions({
-        backboneChromosome: store.state.chromosome,
-        start: 0,
-        stop: store.state.chromosome.seqLength,
-        optional: {
-          includeGenes: true,
-          includeOrthologs: true,
-          threshold: threshold,
-        },
-        comparativeSpecies: newSpecies,
-      });
-
-      processSynteny(speciesSyntenyDataArray, 0, store.state.chromosome.seqLength);
-    }
-
-    // calculate new overview width based on number of species
-    const numComparativeSpecies = savedComparativeSpecies.length;
-    store.dispatch('setSpeciesOrder', savedSpeciesOrder);
-    // evaluate if we should update overview width
-    const currentOverviewWidth = store.state.svgPositions.overviewPanelWidth;
-    if (currentOverviewWidth > 0) {
-      const overviewWidth = calculateOverviewWidth(numComparativeSpecies);
-      store.dispatch('setSvgPositions', { overviewPanelWidth: overviewWidth });
-    }
-    store.dispatch('setComparativeSpecies', savedComparativeSpecies);
-    await queryAndProcessSyntenyForBasePairRange(store.state.chromosome, store.state.detailedBasePairRange.start, store.state.detailedBasePairRange.stop);
-    isLoading.value = false;
-    // Reset the edited settings values
-    savedComparativeSpecies = [];
-    savedSpeciesOrder = {};
+    await loadComparativeSpecies();
   }
 
   // Check if we have new variants or removed variants
