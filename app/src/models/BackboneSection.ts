@@ -1,5 +1,5 @@
 import Label from './Label';
-import SVGConstants from '@/utils/SVGConstants';
+import SVGConstants, { SVGPositionVariables } from '@/utils/SVGConstants';
 import { Formatter } from '@/utils/Formatter';
 import Chromosome from './Chromosome';
 import Gene from '@/models/Gene';
@@ -15,7 +15,7 @@ export type BackboneSectionParams = {
   species: Species;
   renderType: RenderType;
   order: number;
-  overviewWidth: number;
+  svgPositions: SVGPositionVariables;
   createLabels?: boolean;
 }
 
@@ -49,7 +49,7 @@ export default class BackboneSection extends GenomicSection
 
     if (this.hasLabels)
     {
-      this.createLabels(params.order, params.overviewWidth);
+      this.createLabels(params.order, params.svgPositions);
     }
   }
 
@@ -66,7 +66,7 @@ export default class BackboneSection extends GenomicSection
     ];
   }
 
-  private createLabels(order: number, overviewWidth: number)
+  private createLabels(order: number, svgPositions: SVGPositionVariables)
   {
     let startBPLabel: Label;
     let stopBPLabel: Label;
@@ -74,13 +74,13 @@ export default class BackboneSection extends GenomicSection
     if (this.renderType === 'overview')
     {
       startBPLabel = new Label({
-        posX: getOverviewPanelXPosition(order) - (SVGConstants.trackWidth / 2 ),
+        posX: getOverviewPanelXPosition(order, svgPositions) - (SVGConstants.trackWidth / 2 ),
         posY: this.windowSVGStart - 3,
         text: Formatter.convertBasePairToLabel(this.windowStart) ?? ''
       });
 
       stopBPLabel = new Label({
-        posX: getOverviewPanelXPosition(order) - (SVGConstants.trackWidth / 2 ),
+        posX: getOverviewPanelXPosition(order, svgPositions) - (SVGConstants.trackWidth / 2 ),
         posY: this.windowSVGStop + 7,
         text: Formatter.convertBasePairToLabel(this.windowStop) ?? ''
       });
@@ -88,13 +88,13 @@ export default class BackboneSection extends GenomicSection
     else
     {
       startBPLabel = new Label({
-        posX: getDetailedPanelXPositionForSynteny(order, overviewWidth) - (SVGConstants.trackWidth / 2 ),
+        posX: getDetailedPanelXPositionForSynteny(order, svgPositions.overviewPanelWidth) - (SVGConstants.trackWidth / 2 ),
         posY: this.windowSVGStart + 10,
         text: Formatter.convertBasePairToLabel(this.windowStart) ?? ''
       });
 
       stopBPLabel = new Label({
-        posX: getDetailedPanelXPositionForSynteny(order, overviewWidth) - (SVGConstants.trackWidth / 2 ),
+        posX: getDetailedPanelXPositionForSynteny(order, svgPositions.overviewPanelWidth) - (SVGConstants.trackWidth / 2 ),
         posY: this.windowSVGStop - 10,
         text: Formatter.convertBasePairToLabel(this.windowStop) ?? ''
       });

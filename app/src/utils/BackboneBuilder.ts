@@ -9,6 +9,7 @@ import { GenomicSectionFactory } from "@/models/GenomicSectionFactory";
 import { getThreshold } from "./Shared";
 import SpeciesMap from "@/models/SpeciesMap";
 import logger from "@/logger";
+import { SVGPositionVariables } from "./SVGConstants";
 
 export interface ProcessedGenomicData
 {
@@ -20,7 +21,7 @@ export interface ProcessedGenomicData
  * Creates a BackboneSection model
  */
 export function createBackboneSection(species: Species, chromosome: Chromosome, startPos: number, stopPos: number,
-                                      renderType: RenderType, order: number, overviewWidth: number)
+                                      renderType: RenderType, order: number, svgPositions: SVGPositionVariables)
 {
   return new BackboneSection({
     chromosome: chromosome.chromosome,
@@ -34,7 +35,7 @@ export function createBackboneSection(species: Species, chromosome: Chromosome, 
     renderType: renderType,
     createLabels: true,
     order,
-    overviewWidth,
+    svgPositions,
   });
 }
 
@@ -81,7 +82,7 @@ export function backboneDatatrackBuilder(species: Species, genomicData: Gene[], 
   return { backboneSection, processedGenomicData };
 }
 
-export function createBackboneSet(backbone: BackboneSection, order: number, backboneMap: SpeciesMap, overviewWidth: number, genomicData?: ProcessedGenomicData)
+export function createBackboneSet(backbone: BackboneSection, order: number, backboneMap: SpeciesMap, svgPositions: SVGPositionVariables, genomicData?: ProcessedGenomicData)
 {
-  return new BackboneSet(backbone, order, backboneMap, overviewWidth, genomicData);
+  return new BackboneSet(backbone, order, backboneMap, svgPositions, genomicData);
 }

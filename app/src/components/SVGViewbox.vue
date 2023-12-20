@@ -492,17 +492,17 @@ const updateOverviewPanel = async () => {
     backboneChromosome.seqLength,
     'overview',
     overviewBackboneOrder ?? 0,
-    store.state.svgPositions.overviewPanelWidth
+    store.state.svgPositions
   );
   overviewBackboneSet.value = createBackboneSet(overviewBackbone, overviewBackboneOrder ?? 0,
-    backboneSpecies.activeMap,  store.state.svgPositions.overviewPanelWidth);
+    backboneSpecies.activeMap,  store.state.svgPositions);
 
   const overviewBackboneCreationTime = Date.now();
 
   // Build overview synteny sets
   const overviewSyntenyTrackCreationTime = Date.now();
   overviewSyntenySets.value = await createOverviewSyntenicRegionSets(props.syntenyTree, store.state.comparativeSpecies,
-    backboneChromosome, store.state.speciesOrder, store.state.svgPositions.overviewPanelWidth);
+    backboneChromosome, store.state.speciesOrder, store.state.svgPositions);
 
   // TODO: request an update to the detailed panel here
 
@@ -564,7 +564,7 @@ const updateDetailsPanel = async () => {
   // First, create the visible backbone elements
   const detailedBackbone = createBackboneSection(backboneSpecies, backboneChromosome,
       store.state.detailedBasePairRange.start, store.state.detailedBasePairRange.stop,
-      'detailed', backboneOrder ?? 0, store.state.svgPositions.overviewPanelWidth);
+      'detailed', backboneOrder ?? 0, store.state.svgPositions);
   const backboneFilterGenesStart = Date.now();
   const backboneGenes: Gene[] = [];
   props.geneList.forEach((gene: Gene) => {
@@ -580,7 +580,7 @@ const updateDetailsPanel = async () => {
   timeCreateBackboneDatatracks = Date.now() - backboneDatatracksStart;
   const backboneSetStart = Date.now();
   detailedBackboneSet.value = createBackboneSet(detailedBackbone, backboneOrder ?? 0, backboneSpecies.activeMap,
-    store.state.svgPositions.overviewPanelWidth, backboneDatatrackInfo.processedGenomicData);
+    store.state.svgPositions, backboneDatatrackInfo.processedGenomicData);
 
   // Now check for other potential datatracks to add to the backbone (like variant positions)
   props.variantPositionsList.forEach((variantPositions) => {
@@ -602,7 +602,7 @@ const updateDetailsPanel = async () => {
       detailedBasePairRange.stop,
       store.state.speciesOrder,
       hiddenDensityTracks,
-      store.state.svgPositions.overviewPanelWidth,
+      store.state.svgPositions,
   );
   timeSyntenyTracks = Date.now() - syntenyTracksStart;
 

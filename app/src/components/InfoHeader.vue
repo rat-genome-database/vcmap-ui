@@ -18,13 +18,21 @@
         </div>
         <div class="col-12 species-toggles">Other:</div>
         <div class="toggle-container">
-            <InputSwitch
-              v-model="store.state.showOverviewPanel"
-              title="Toggle Species Visibility"
-              @click="toggleOverview()"
-            />
-            <span class="toggle-label">Overview Panel</span>
-        </div>       
+          <InputSwitch
+            v-model="store.state.showOverviewPanel"
+            title="Overview Panel"
+            @click="toggleOverview()"
+          />
+          <span class="toggle-label">Overview Panel</span>
+        </div>
+        <div class="toggle-container">
+          <InputSwitch
+            v-model="store.state.svgPositions.mirroredOverivew"
+            title="MirroredOverview"
+            @click="toggleMirroredOverview()"
+          />
+          <span class="toggle-label">Mirrored Overview</span>
+        </div>
       </div>
     </div>
   </div>
@@ -89,6 +97,14 @@ function toggleOverview() {
     store.dispatch('setShowOverviewPanel', false);
     store.dispatch('setSvgPositions', { overviewPanelWidth: 0 });
   }
+}
+
+function toggleMirroredOverview() {
+  const currentMirrored = store.state.svgPositions.mirroredOverivew;
+  store.dispatch('setSvgPositions', {
+    ...store.state.svgPositions,
+    mirroredOverview: !currentMirrored,
+  });
 }
 
 </script>
