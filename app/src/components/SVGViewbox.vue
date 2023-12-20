@@ -22,7 +22,9 @@
     <template v-if="store.state.showOverviewPanel">
       <template v-for="(syntenySet, index) in overviewSyntenySets" :key="index">
         <template v-for="(region, index) in syntenySet.regions" :key="index">
-          <SectionSVG show-chromosome show-synteny-on-hover :gene-list="geneList" show-start-stop select-on-click :region="region as SyntenyRegion" />
+          <g @contextmenu.prevent="showContextMenu($event, region as SyntenyRegion)">
+          <SectionSVG show-chromosome show-synteny-on-hover :gene-list="geneList" show-start-stop select-on-click :region="region as SyntenyRegion"/>
+        </g>
         </template>
       </template>
     </template>
@@ -240,11 +242,12 @@
     </div>
   </div>
   -->
+  <ContextMenu ref="cm" :model="items" class="context-menu"/>
 
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch, nextTick } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import SectionSVG from './SectionSVG.vue';
@@ -284,6 +287,7 @@ import VariantPositions from '@/models/VariantPositions';
 import Species from '@/models/Species';
 import BackboneSection from '@/models/BackboneSection';
 import GradientLegend from './GradientLegend.vue';
+import ContextMenu from 'primevue/contextmenu';
 
 const SHOW_DEBUG = process.env.NODE_ENV === 'development';
 const NAV_SHIFT_PERCENT = 0.2;
@@ -331,6 +335,43 @@ const toggleGenesListForBlock = (debugList: number[], blockIndex: number) => {
   debugList.push(blockIndex);
 };
 ////
+
+/// Context Menu
+interface MenuItem {
+  label: string,
+  command: () => void;
+}
+const cm = ref();
+const items = ref<MenuItem[]>([]);
+
+const createJBrowseLink = (region: SyntenyRegion) => {
+  const assembly = region.mapName === 'GRCh38' ? 'GRCh38.p14' : region.mapName;
+  const chromosome = region.gaplessBlock.chromosome;
+  let start = region.gaplessBlock.speciesStart;
+  let stop = region.gaplessBlock.speciesStop;
+
+  // Invert start/stop if needed
+  if (start > stop) [start, stop] = [stop, start];
+
+  // Base URL for JBrowse - replace with the actual JBrowse base URL
+  const jbrowseBaseUrl = "https://rgd.mcw.edu/jbrowse2/";
+
+  // Construct the full URL
+  const jbrowseUrl = `${jbrowseBaseUrl}?&assembly=${assembly}&loc=chr${chromosome}:${start}-${stop}`;
+
+  return jbrowseUrl;
+};
+
+const showContextMenu = (event: MouseEvent, region: SyntenyRegion) => {
+  cm.value.show(event);
+  items.value = [
+    { 
+      label: 'Link to JBrowse',
+      command: () => { window.open(createJBrowseLink(region)); }
+    },
+  ];
+};
+///
 
 async function attachToProgressLoader(storeLoadingActionName: string, func: () => Promise<any>)
 {
