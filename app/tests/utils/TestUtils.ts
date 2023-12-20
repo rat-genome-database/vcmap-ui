@@ -91,6 +91,7 @@ export namespace TestUtils
         selectionToastCount: 0,
         svgPositions: {
           overviewPanelWidth: 300,
+          mirroredOverivew: false,
         },
         speciesOrder: {},
 

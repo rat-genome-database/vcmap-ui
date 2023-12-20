@@ -133,6 +133,7 @@ export default createStore({
 
     svgPositions: {
       overviewPanelWidth: 300,
+      mirroredOverivew: false,
     },
     speciesOrder: {},
 
