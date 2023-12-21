@@ -26,7 +26,7 @@
             show-chromosome
             show-synteny-on-hover
             :gene-list="geneList"
-            show-start-stop
+            is-overview
             select-on-click
             :region="(region as SyntenyRegion)"
             @show-context-menu="handleShowContextMenu"

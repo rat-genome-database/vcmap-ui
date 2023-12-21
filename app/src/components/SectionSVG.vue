@@ -1,5 +1,5 @@
 <template>
-  <template v-if="showStartStop && region.gaplessBlock.startLabel.isVisible">
+  <template v-if="isOverview && region.gaplessBlock.startLabel.isVisible">
     <OverviewSyntenyLabelsSVG :gapless-block="region.gaplessBlock"/>
   </template>
   <GapSVG v-for="(gapSection,index) in level1Gaps" :key="index" :gap-section="gapSection" />
@@ -65,7 +65,7 @@
   </template>
 
   <!-- Detailed Panel Synteny Postion Labels -->
-  <template v-if="!showStartStop && region.gaplessBlock.startLabel.isVisible && region.gaplessBlock.height > 10 && region.syntenyBlocks.some((section) => section.isHovered)">
+  <template v-if="!isOverview && region.gaplessBlock.startLabel.isVisible && region.gaplessBlock.height > 10 && region.syntenyBlocks.some((section) => section.isHovered)">
     <template v-if="region.gaplessBlock.posY1 < PANEL_SVG_START && region.gaplessBlock.posY2 > PANEL_SVG_START">
       <text
         class="label small"
@@ -197,7 +197,7 @@ const {
 interface Props
 {
   showSyntenyOnHover?: boolean;
-  showStartStop?: boolean;
+  isOverview?: boolean;
   showChromosome?: boolean;
   selectOnClick?: boolean;
   region: SyntenyRegion;
@@ -259,7 +259,7 @@ const isRegionHovered = computed(() => {
 });
 
 const showBasePairLine = computed(() => {
-  return props.syntenyHoverSvgY != null && mouseYPos.value != null && !props.showStartStop
+  return props.syntenyHoverSvgY != null && mouseYPos.value != null && !props.isOverview
     && (isRegionHovered.value || basePairPositionLabel.value !== '');
 });
 
@@ -286,24 +286,38 @@ const createJBrowseLink = (section: SyntenySection) => {
 };
 
 const showContextMenu = (event: MouseEvent, region: SyntenyRegion, section: SyntenySection) => {
-  const items: MenuItem[] = [
-    { 
-      label: 'Link Section to JBrowse',
-      command: () => { window.open(createJBrowseLink(section)); }
-    },
-    {
-      label: 'Link Region to JBrowse',
-      command: () => { window.open(createJBrowseLink(region.gaplessBlock)) }
-    },
-    {
-      label: 'Make Section Backbone',
-      command: () => { onBackboneSwap(section) }
-    },
-    {
-      label: 'Make Region Backbone',
-      command: () => { onBackboneSwap(region.gaplessBlock) }
-    },
-  ];
+  let items: MenuItem[] = [];
+  if (props.isOverview) {
+    items = [
+      {
+        label: 'Link to JBrowse',
+        command: () => { window.open(createJBrowseLink(section)) }
+      },
+      {
+        label: 'Make Backbone',
+        command: () => { onBackboneSwap(section) }
+      },
+    ]
+  } else {
+    items = [
+      { 
+        label: 'Link highlighted section to JBrowse',
+        command: () => { window.open(createJBrowseLink(section)); }
+      },
+      {
+        label: 'Link dotted region to JBrowse',
+        command: () => { window.open(createJBrowseLink(region.gaplessBlock)) }
+      },
+      {
+        label: 'Make highlighted section Backbone',
+        command: () => { onBackboneSwap(section) }
+      },
+      {
+        label: 'Make dotted region Backbone',
+        command: () => { onBackboneSwap(region.gaplessBlock) }
+      },
+    ];
+  }
   emit('show-context-menu', event, items);
 };
 ///
