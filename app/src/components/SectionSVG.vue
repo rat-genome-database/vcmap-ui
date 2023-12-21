@@ -1,33 +1,35 @@
 <template>
-  <template v-if="showStartStop && region.gaplessBlock.startLabel.isVisible">
+  <template v-if="isOverview && region.gaplessBlock.startLabel.isVisible">
     <OverviewSyntenyLabelsSVG :gapless-block="region.gaplessBlock"/>
   </template>
   <GapSVG v-for="(gapSection,index) in level1Gaps" :key="index" :gap-section="gapSection" />
   <GapSVG v-for="(gapSection,index) in level2Gaps" :key="index" :gap-section="gapSection" />
   <template v-for="(blockSection, index) in level1Blocks" :key="index">
-    <rect v-if="blockSection.isHovered"
-      :y="region.gaplessBlock.posY1"
-      :x="region.gaplessBlock.posX1"
-      :width="region.gaplessBlock.width"
-      :height="region.gaplessBlock.height"
-      fill="none"
-      stroke-width=".5"
-      stroke="#0000FF"
-      stroke-dasharray="2,2"
-    />
-    <rect
-      class="block-section"
-      @mouseenter="onMouseEnter($event, blockSection, 'trackSection')"
-      @mouseleave="onMouseLeave(blockSection)"
-      @mousemove="updatePositionLabelFromMouseEvent($event, blockSection)"
-      @click="onSyntenyBlockClick(blockSection, $event)"
-      :y="blockSection.posY1"
-      :x="blockSection.posX1"
-      :width="blockSection.width"
-      :height="blockSection.height"
-      :fill="getSectionFill(blockSection)"
-      :fill-opacity="1"
-    />
+    <g @contextmenu.prevent="showContextMenu($event, region, blockSection)">
+      <rect v-if="blockSection.isHovered"
+        :y="region.gaplessBlock.posY1"
+        :x="region.gaplessBlock.posX1"
+        :width="region.gaplessBlock.width"
+        :height="region.gaplessBlock.height"
+        fill="none"
+        stroke-width=".5"
+        stroke="#0000FF"
+        stroke-dasharray="2,2"
+      />
+      <rect
+        class="block-section"
+        @mouseenter="onMouseEnter($event, blockSection, 'trackSection')"
+        @mouseleave="onMouseLeave(blockSection)"
+        @mousemove="updatePositionLabelFromMouseEvent($event, blockSection)"
+        @click="onSyntenyBlockClick(blockSection, $event)"
+        :y="blockSection.posY1"
+        :x="blockSection.posX1"
+        :width="blockSection.width"
+        :height="blockSection.height"
+        :fill="getSectionFill(blockSection)"
+        :fill-opacity="1"
+      />
+    </g>
 
     <ChromosomeLabelSVG v-if="showChromosome" :synteny-section="blockSection" />
   </template>
@@ -63,7 +65,7 @@
   </template>
 
   <!-- Detailed Panel Synteny Postion Labels -->
-  <template v-if="!showStartStop && region.gaplessBlock.startLabel.isVisible && region.gaplessBlock.height > 10 && region.syntenyBlocks.some((section) => section.isHovered)">
+  <template v-if="!isOverview && region.gaplessBlock.startLabel.isVisible && region.gaplessBlock.height > 10 && region.syntenyBlocks.some((section) => section.isHovered)">
     <template v-if="region.gaplessBlock.posY1 < PANEL_SVG_START && region.gaplessBlock.posY2 > PANEL_SVG_START">
       <text
         class="label small"
@@ -195,7 +197,7 @@ const {
 interface Props
 {
   showSyntenyOnHover?: boolean;
-  showStartStop?: boolean;
+  isOverview?: boolean;
   showChromosome?: boolean;
   selectOnClick?: boolean;
   region: SyntenyRegion;
@@ -203,11 +205,17 @@ interface Props
   geneList: Map<number, Gene>;
 }
 
+interface MenuItem {
+  label: string,
+  command: () => void;
+}
+
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: 'synteny-hover', svgY: number | null): void,
   (e: 'block-hover', startStop: number[] | null): void,
+  (e: 'show-context-menu', event: MouseEvent, items: MenuItem[]): void,
 }>();
 
 //Converts each property in this object to its own reactive prop
@@ -251,13 +259,68 @@ const isRegionHovered = computed(() => {
 });
 
 const showBasePairLine = computed(() => {
-  return props.syntenyHoverSvgY != null && mouseYPos.value != null && !props.showStartStop
+  return props.syntenyHoverSvgY != null && mouseYPos.value != null && !props.isOverview
     && (isRegionHovered.value || basePairPositionLabel.value !== '');
 });
 
 const isDetailed = computed(() => {
   return props.backboneSet.backbone.renderType === 'detailed';
 });
+
+const createJBrowseLink = (section: SyntenySection) => {
+  const assembly = section.mapName === 'GRCh38' ? 'GRCh38.p14' : section.mapName;
+  const chromosome = section.chromosome;
+  let start = section.speciesStart;
+  let stop = section.speciesStop;
+
+  // Invert start/stop if needed
+  if (start > stop) [start, stop] = [stop, start];
+
+  // Base URL for JBrowse - replace with the actual JBrowse base URL
+  const jbrowseBaseUrl = "https://rgd.mcw.edu/jbrowse2/";
+
+  // Construct the full URL
+  const jbrowseUrl = `${jbrowseBaseUrl}?&assembly=${assembly}&loc=chr${chromosome}:${start}-${stop}`;
+
+  return jbrowseUrl;
+};
+
+const showContextMenu = (event: MouseEvent, region: SyntenyRegion, section: SyntenySection) => {
+  let items: MenuItem[] = [];
+  if (props.isOverview) {
+    items = [
+      {
+        label: 'Link to JBrowse',
+        command: () => { window.open(createJBrowseLink(section)); }
+      },
+      {
+        label: 'Make Backbone',
+        command: () => { onBackboneSwap(section); }
+      },
+    ];
+  } else {
+    items = [
+      { 
+        label: 'Link highlighted section to JBrowse',
+        command: () => { window.open(createJBrowseLink(section)); }
+      },
+      {
+        label: 'Link dotted region to JBrowse',
+        command: () => { window.open(createJBrowseLink(region.gaplessBlock)); }
+      },
+      {
+        label: 'Make highlighted section Backbone',
+        command: () => { onBackboneSwap(section); }
+      },
+      {
+        label: 'Make dotted region Backbone',
+        command: () => { onBackboneSwap(region.gaplessBlock); }
+      },
+    ];
+  }
+  emit('show-context-menu', event, items);
+};
+///
 
 const onMouseEnter = (event: MouseEvent, section: SyntenySection | DatatrackSection, type: SelectedDataType) => {
 
