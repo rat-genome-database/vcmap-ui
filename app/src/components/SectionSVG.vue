@@ -270,7 +270,7 @@ const isDetailed = computed(() => {
 const createJBrowseLink = (section: SyntenySection) => {
   const assembly = section.mapName === 'GRCh38' ? 'GRCh38.p14' : section.mapName;
   const chromosome = section.chromosome;
-  let start = section.speciesStart
+  let start = section.speciesStart;
   let stop = section.speciesStop;
 
   // Invert start/stop if needed
@@ -291,13 +291,13 @@ const showContextMenu = (event: MouseEvent, region: SyntenyRegion, section: Synt
     items = [
       {
         label: 'Link to JBrowse',
-        command: () => { window.open(createJBrowseLink(section)) }
+        command: () => { window.open(createJBrowseLink(section)); }
       },
       {
         label: 'Make Backbone',
-        command: () => { onBackboneSwap(section) }
+        command: () => { onBackboneSwap(section); }
       },
-    ]
+    ];
   } else {
     items = [
       { 
@@ -306,15 +306,15 @@ const showContextMenu = (event: MouseEvent, region: SyntenyRegion, section: Synt
       },
       {
         label: 'Link dotted region to JBrowse',
-        command: () => { window.open(createJBrowseLink(region.gaplessBlock)) }
+        command: () => { window.open(createJBrowseLink(region.gaplessBlock)); }
       },
       {
         label: 'Make highlighted section Backbone',
-        command: () => { onBackboneSwap(section) }
+        command: () => { onBackboneSwap(section); }
       },
       {
         label: 'Make dotted region Backbone',
-        command: () => { onBackboneSwap(region.gaplessBlock) }
+        command: () => { onBackboneSwap(region.gaplessBlock); }
       },
     ];
   }

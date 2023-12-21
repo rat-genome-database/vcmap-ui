@@ -432,8 +432,8 @@ const displayDensityTrackTogglePanel = computed(() => {
 
 const handleShowContextMenu = (event: MouseEvent, menuItems: MenuItem[]) => {
   items.value = menuItems;
-  cm.value.show(event)
-}
+  cm.value.show(event);
+};
 
 const getSpeciesName = (mapKey: number) => {
   const species = store.state.comparativeSpecies.find((species) => species.activeMap.key === mapKey);
