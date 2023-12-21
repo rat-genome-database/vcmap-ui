@@ -11,6 +11,7 @@ import { Orientation } from '@/models/SyntenySection';
 import { getThreshold } from './Shared';
 import { createVariantDatatracks } from './VariantBuilder';
 import logger from '@/logger';
+import { SVGPositionVariables } from './SVGConstants';
 
 /**
  * Create the off-backbone visual elements representing the large level 1 synteny
@@ -28,7 +29,7 @@ import logger from '@/logger';
  *   SyntenyRegionSets representing the off-backbone synteny data in the overview panel
  */
 export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, Block[]>, comparativeSpecies: Species[],
-    backboneChr: Chromosome, speciesOrder: any, overviewWidth: number): Promise<SyntenyRegionSet[]>
+    backboneChr: Chromosome, speciesOrder: any, svgPositions: SVGPositionVariables): Promise<SyntenyRegionSet[]>
 {
   const syntenyRegionSets: SyntenyRegionSet[] = [];
 
@@ -67,7 +68,7 @@ export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, 
         orientation: blockInfo.orientation,
         chainLevel: blockInfo.chainLevel,
         isGapless: true,
-        labelOnLeft: speciesPos > backbonePos,
+        labelOnLeft: svgPositions.mirroredOverivew ? speciesPos < backbonePos : speciesPos > backbonePos,
       });
       // Create the SyntenyRegion that covers the extent of the Block
       // NOTE: This might extend beyond the visible window, but we will try to only create
@@ -84,7 +85,7 @@ export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, 
       processedSyntenicRegions.push(currSyntenicRegion);
     }
 
-    syntenyRegionSets.push(new SyntenyRegionSet(currSpecies.name, currSpecies.activeMap, processedSyntenicRegions, speciesPos, 'overview', overviewWidth));
+    syntenyRegionSets.push(new SyntenyRegionSet(currSpecies.name, currSpecies.activeMap, processedSyntenicRegions, speciesPos, 'overview', svgPositions));
     defaultOrder++;
   });
 
@@ -110,7 +111,7 @@ export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, 
  *     The processed SyntenicRegionSets for each species.
  */
 export async function createSyntenicRegionSets(syntenyData: Map<number, Block[]>, comparativeSpecies: Species[],
-  backboneStart: number, backboneStop: number, speciesOrder: any, hiddenDensityTracks: number[], overviewWidth: number): Promise<SyntenyRegionSet[]>
+  backboneStart: number, backboneStop: number, speciesOrder: any, hiddenDensityTracks: number[], svgPositions: SVGPositionVariables): Promise<SyntenyRegionSet[]>
 {
   const syntenyRegionSets: SyntenyRegionSet[] = [];
 
@@ -136,7 +137,7 @@ export async function createSyntenicRegionSets(syntenyData: Map<number, Block[]>
 
       const speciesPos = speciesOrder[mapKey.toString()];
       const syntenyRegionSet = syntenicSectionBuilder(speciesSyntenyData, species, speciesPos ?? defaultPos,
-          backboneStart, backboneStop, 'detailed', hideDensity, overviewWidth);
+          backboneStart, backboneStop, 'detailed', hideDensity, svgPositions);
 
       logger.info(`Completed build of Synteny for ${syntenyRegionSet?.mapName}, with ${syntenyRegionSet?.regions.length} regions`);
 
@@ -170,7 +171,7 @@ export async function createSyntenicRegionSets(syntenyData: Map<number, Block[]>
  *   The renderable version of speciesSyntenyData represented as an array of type SyntenyRegion[]
  */
 function syntenicSectionBuilder(speciesSyntenyData: Block[], species: Species, setOrder: number,
-    viewportStart: number,  viewportStop: number, renderType: RenderType, hideDensityTrack: boolean, overviewWidth: number)
+    viewportStart: number,  viewportStop: number, renderType: RenderType, hideDensityTrack: boolean, svgPositions: SVGPositionVariables)
 {
   const processedSyntenicRegions: SyntenyRegion[] = [];
 
@@ -307,7 +308,7 @@ logger.timeEnd(timerLabel);
 
   // Finished creating this Set:
 logger.time("createSyntenyRegionSet");
-  const regionSet = new SyntenyRegionSet(currSpecies.name, currSpecies.activeMap, processedSyntenicRegions, setOrder, renderType, overviewWidth);
+  const regionSet = new SyntenyRegionSet(currSpecies.name, currSpecies.activeMap, processedSyntenicRegions, setOrder, renderType, svgPositions);
   regionSet.maxVariantCount = regionMaxCount;
   regionSet.variantBinSize = regionBinSize;
 logger.timeEnd("createSyntenyRegionSet");

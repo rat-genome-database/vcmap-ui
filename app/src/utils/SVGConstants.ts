@@ -26,6 +26,7 @@ export const PANEL_HEIGHT = PANEL_SVG_STOP - PANEL_SVG_START;
 
 export type SVGPositionVariables = {
   overviewPanelWidth: number,
+  mirroredOverivew: boolean,
 }
 
 export default constants;

@@ -1,5 +1,5 @@
 import { ProcessedGenomicData } from "@/utils/BackboneBuilder";
-import SVGConstants from "@/utils/SVGConstants";
+import SVGConstants, { SVGPositionVariables } from "@/utils/SVGConstants";
 import { mergeAndCreateGeneLabels } from "@/utils/GeneLabelMerger";
 import BackboneSection from "./BackboneSection";
 import DatatrackSection, { DatatrackSectionType } from "./DatatrackSection";
@@ -11,6 +11,7 @@ import {
   getDetailedPanelXPositionForBackboneDatatracks,
   isGenomicDataInViewport,
   getDetailedPanelXPositionForSynteny,
+  getOverviewPanelXPosition,
 } from "@/utils/Shared";
 import SpeciesMap from "./SpeciesMap";
 import logger from "@/logger";
@@ -29,7 +30,7 @@ export default class BackboneSet extends GenomicSet
   maxVariantCount?: number;
   variantBinSize?: number;
 
-  constructor(backboneSection: BackboneSection, order: number, map: SpeciesMap, overviewWidth: number, processedGenomicData?: ProcessedGenomicData)
+  constructor(backboneSection: BackboneSection, order: number, map: SpeciesMap, svgPositions: SVGPositionVariables, processedGenomicData?: ProcessedGenomicData)
   {
     super(backboneSection.speciesName, map);
 
@@ -43,7 +44,7 @@ export default class BackboneSet extends GenomicSet
     {
       this.backbone.setBackboneGenes(processedGenomicData.genes);
     }
-    this.setBackboneXPositions(overviewWidth);
+    this.setBackboneXPositions(svgPositions);
     this.createTitleLabels();
     this.setDatatrackXPositions();
 
@@ -74,17 +75,17 @@ export default class BackboneSet extends GenomicSet
     this.titleLabels = [speciesLabel, mapLabel];
   }
 
-  private setBackboneXPositions(overviewWidth: number)
+  private setBackboneXPositions(svgPositions: SVGPositionVariables)
   {
     // Calculate X positions of this backbone section
     if (this.backbone.renderType === 'overview')
     {
-      this.backbone.posX1 = (this.order * 80) + SVGConstants.backboneXPosition;
+      this.backbone.posX1 = getOverviewPanelXPosition(this.order, svgPositions);
       this.backbone.posX2 = this.backbone.posX1 + SVGConstants.trackWidth;
     }
     else if (this.backbone.renderType === 'detailed')
     {
-      this.backbone.posX1 = getDetailedPanelXPositionForSynteny(this.order, overviewWidth);
+      this.backbone.posX1 = getDetailedPanelXPositionForSynteny(this.order, svgPositions.overviewPanelWidth);
       this.backbone.posX2 = this.backbone.posX1 + SVGConstants.trackWidth;
     }
 

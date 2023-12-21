@@ -3,7 +3,7 @@
  */
 import Block, { Gap, GenomicPosition } from "@/models/Block";
 import Gene from "@/models/Gene";
-import SVGConstants, { PANEL_SVG_STOP, PANEL_SVG_START, PANEL_HEIGHT } from "./SVGConstants";
+import SVGConstants, { PANEL_SVG_STOP, PANEL_SVG_START, PANEL_HEIGHT, SVGPositionVariables } from "./SVGConstants";
 import { BackboneAlignment } from "@/models/GenomicSection";
 import logger from "@/logger";
 
@@ -49,9 +49,13 @@ export function getDetailedPanelXPositionForDatatracks(order: number, index: num
     + SVGConstants.backboneDatatrackXOffset * (index + 1) + (SVGConstants.backboneDatatrackXOffset * index);
 }
 
-export function getOverviewPanelXPosition(order: number)
+export function getOverviewPanelXPosition(order: number, svgPositions: SVGPositionVariables)
 {
-  return (order * 80) + SVGConstants.backboneXPosition;
+  if (svgPositions.mirroredOverivew) {
+    return (order * -80) + (svgPositions.overviewPanelWidth - 40);
+  } else {
+    return (order * 80) + SVGConstants.backboneXPosition;
+  }
 }
 
 export function getDetailedPanelXPositionForSynteny(order: number, overviewWidth: number)

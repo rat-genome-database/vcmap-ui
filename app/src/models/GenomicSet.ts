@@ -1,3 +1,4 @@
+import { SVGPositionVariables } from "@/utils/SVGConstants";
 import Label from "./Label";
 import SpeciesMap from "./SpeciesMap";
 
@@ -18,5 +19,5 @@ export abstract class GenomicSet
     this.mapKey = map?.key ?? 0;
   }
 
-  protected abstract createTitleLabels(overviewWidth: number): void;
+  protected abstract createTitleLabels(svgPositions: SVGPositionVariables): void;
 }

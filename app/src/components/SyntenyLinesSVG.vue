@@ -2,12 +2,16 @@
   <line v-if="syntenySection.isHovered"
     class="synteny-line"
     :x1="getLineStart(syntenySection)"
-    :x2="syntenySection.startLabel.labelOnLeft ? getOverviewPanelXPosition(backboneOrder) + syntenySection.width : getOverviewPanelXPosition(backboneOrder)"
+    :x2="syntenySection.startLabel.labelOnLeft
+      ? getOverviewPanelXPosition(backboneOrder, store.state.svgPositions) + syntenySection.width
+      : getOverviewPanelXPosition(backboneOrder, store.state.svgPositions)"
     :y1="syntenySection.posY1" :y2="(syntenySection.isInverted) ? syntenySection.posY2 : syntenySection.posY1" />
   <line v-if="syntenySection.isHovered"
     class="synteny-line"
     :x1="getLineStart(syntenySection)"
-    :x2="syntenySection.startLabel.labelOnLeft ? getOverviewPanelXPosition(backboneOrder) + syntenySection.width : getOverviewPanelXPosition(backboneOrder)"
+    :x2="syntenySection.startLabel.labelOnLeft
+      ? getOverviewPanelXPosition(backboneOrder, store.state.svgPositions) + syntenySection.width
+      : getOverviewPanelXPosition(backboneOrder, store.state.svgPositions)"
     :y1="syntenySection.posY2" :y2="(syntenySection.isInverted) ? syntenySection.posY1 : syntenySection.posY2" />
 </template>
 

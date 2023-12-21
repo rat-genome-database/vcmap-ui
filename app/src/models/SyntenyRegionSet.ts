@@ -1,4 +1,4 @@
-import SVGConstants from "@/utils/SVGConstants";
+import SVGConstants, { SVGPositionVariables } from "@/utils/SVGConstants";
 import { GenomicSet } from "./GenomicSet";
 import Label, { GeneLabel, IntermediateGeneLabel } from "./Label";
 import SyntenyRegion from "./SyntenyRegion";
@@ -32,26 +32,26 @@ export default class SyntenyRegionSet extends GenomicSet
   variantBinSize?: number;
 
   constructor(speciesName: string, map: SpeciesMap, regions: SyntenyRegion[],
-    order: number, renderType: 'overview' | 'detailed', overviewWidth: number)
+    order: number, renderType: 'overview' | 'detailed', svgPositions: SVGPositionVariables)
   {
     super(speciesName, map);
     this.regions = regions;
     this.order = order;
     this.renderType = renderType;
 
-    this.setRegionXPositionsBasedOnOrder(overviewWidth);
-    this.createTitleLabels(overviewWidth);
-    this.sortBasePairLabels();
+    this.setRegionXPositionsBasedOnOrder(svgPositions);
+    this.createTitleLabels(svgPositions);
+    this.sortBasePairLabels(svgPositions);
     
     if (renderType === 'detailed')
     {
       logger.time(`Create Gene Labels`);
-      this.generateGeneLabels(overviewWidth);
+      this.generateGeneLabels(svgPositions);
       logger.timeEnd(`Create Gene Labels`);
     }
   }
 
-  private generateGeneLabels(overviewWidth: number)
+  private generateGeneLabels(svgPositions: SVGPositionVariables)
   {
     // Get:
     // + X position based on where the gene datatrack set is positioned in the regions
@@ -73,7 +73,7 @@ export default class SyntenyRegionSet extends GenomicSet
       {
         if (this.regions[i].datatrackSets[j].type === 'gene')
         {
-          xPos = getDetailedPanelXPositionForDatatracks(this.order, j, overviewWidth) + SVGConstants.dataTrackWidth;
+          xPos = getDetailedPanelXPositionForDatatracks(this.order, j, svgPositions.overviewPanelWidth) + SVGConstants.dataTrackWidth;
           break;
         }
       }
@@ -117,22 +117,26 @@ export default class SyntenyRegionSet extends GenomicSet
     this.geneLabels = mergeAndCreateGeneLabels(intermediateLabels);
   }
 
-  public addRegions(regions: SyntenyRegion[], overviewWidth: number)
+  public addRegions(regions: SyntenyRegion[], svgPositions: SVGPositionVariables)
   {
     this.regions.length > 0 ? this.regions = this.regions.concat(regions) : this.regions = regions;
-    this.setRegionXPositionsBasedOnOrder(overviewWidth);
+    this.setRegionXPositionsBasedOnOrder(svgPositions);
   }
 
-  protected createTitleLabels(overviewWidth: number)
+  protected createTitleLabels(svgPositions: SVGPositionVariables)
   {
     const speciesLabel = new Label({
-      posX: (this.renderType === 'overview') ? getOverviewPanelXPosition(this.order) : getDetailedPanelXPositionForSynteny(this.order, overviewWidth),
+      posX: (this.renderType === 'overview')
+        ? getOverviewPanelXPosition(this.order, svgPositions)
+        : getDetailedPanelXPositionForSynteny(this.order, svgPositions.overviewPanelWidth),
       posY: SVGConstants.trackLabelYPosition,
       text: this.speciesName,
     });
 
     const mapLabel = new Label({
-      posX: (this.renderType === 'overview') ? getOverviewPanelXPosition(this.order) : getDetailedPanelXPositionForSynteny(this.order, overviewWidth),
+      posX: (this.renderType === 'overview')
+        ? getOverviewPanelXPosition(this.order, svgPositions)
+        : getDetailedPanelXPositionForSynteny(this.order, svgPositions.overviewPanelWidth),
       posY: SVGConstants.trackMapLabelYPosition,
       text: this.mapName,
       addClass: 'smaller',
@@ -141,30 +145,30 @@ export default class SyntenyRegionSet extends GenomicSet
     this.titleLabels = [speciesLabel, mapLabel];
   }
 
-  private setRegionXPositionsBasedOnOrder(overviewWidth: number)
+  private setRegionXPositionsBasedOnOrder(svgPositions: SVGPositionVariables)
   {
     if (this.regions.length > 0)
     {
       this.regions.forEach(region => {
-        this.setGaplessSyntenyBlockXPositions(region.gaplessBlock, overviewWidth);
-        this.setSyntenyBlockXPositions(region.syntenyBlocks, overviewWidth);
-        this.setSyntenyGapXPositions(region.syntenyGaps, overviewWidth);
-        this.setDatatrackSectionXPositions(region.datatrackSets, overviewWidth);
+        this.setGaplessSyntenyBlockXPositions(region.gaplessBlock, svgPositions);
+        this.setSyntenyBlockXPositions(region.syntenyBlocks, svgPositions);
+        this.setSyntenyGapXPositions(region.syntenyGaps, svgPositions);
+        this.setDatatrackSectionXPositions(region.datatrackSets, svgPositions);
       });
     }
   }
 
-  private setSyntenyGapXPositions(sections: SyntenySection[], overviewWidth: number)
+  private setSyntenyGapXPositions(sections: SyntenySection[], svgPositions: SVGPositionVariables)
   {
     sections.forEach(section => {
       let blockPosX1: number = 0;
       if (this.renderType === 'overview')
       {
-        blockPosX1= getOverviewPanelXPosition(this.order);
+        blockPosX1= getOverviewPanelXPosition(this.order, svgPositions);
       }
       else if (this.renderType === 'detailed')
       {
-        blockPosX1 = getDetailedPanelXPositionForSynteny(this.order, overviewWidth);
+        blockPosX1 = getDetailedPanelXPositionForSynteny(this.order, svgPositions.overviewPanelWidth);
       }
 
       const posX = blockPosX1 + (SVGConstants.trackWidth / 2);
@@ -174,16 +178,16 @@ export default class SyntenyRegionSet extends GenomicSet
     });
   }
 
-  private setSyntenyBlockXPositions(sections: SyntenySection[], overviewWidth: number)
+  private setSyntenyBlockXPositions(sections: SyntenySection[], svgPositions: SVGPositionVariables)
   {
     sections.forEach(section => {
       if (this.renderType === 'overview')
       {
-        section.posX1 = getOverviewPanelXPosition(this.order);
+        section.posX1 = getOverviewPanelXPosition(this.order, svgPositions);
       }
       else if (this.renderType === 'detailed')
       {
-        section.posX1 = getDetailedPanelXPositionForSynteny(this.order, overviewWidth);
+        section.posX1 = getDetailedPanelXPositionForSynteny(this.order, svgPositions.overviewPanelWidth);
       }
 
       let trackWidth = SVGConstants.trackWidth;
@@ -199,25 +203,25 @@ export default class SyntenyRegionSet extends GenomicSet
     });
   }
 
-  private setGaplessSyntenyBlockXPositions(section: SyntenySection, overviewWidth: number)
+  private setGaplessSyntenyBlockXPositions(section: SyntenySection, svgPositions: SVGPositionVariables)
   {
-    this.setSyntenyBlockXPositions([section], overviewWidth);
+    this.setSyntenyBlockXPositions([section], svgPositions);
     section.startLabel.posX = section.posX2;
     section.stopLabel.posX = section.posX2;
   }
 
-  private setDatatrackSectionXPositions(datatrackSets: DatatrackSet[], overviewWidth: number)
+  private setDatatrackSectionXPositions(datatrackSets: DatatrackSet[], svgPositions: SVGPositionVariables)
   {
     // TODO: Skip for overview since datatracks are only shown in Detailed Panel?
     datatrackSets.forEach((set, index) => {
       let posX1 = 0;
       if (this.renderType === 'overview')
       {
-        posX1 = getOverviewPanelXPosition(this.order);
+        posX1 = getOverviewPanelXPosition(this.order, svgPositions);
       }
       else if (this.renderType === 'detailed')
       {
-        posX1 = getDetailedPanelXPositionForDatatracks(this.order, index, overviewWidth);
+        posX1 = getDetailedPanelXPositionForDatatracks(this.order, index, svgPositions.overviewPanelWidth);
       }
 
       set.datatracks.forEach((section) => {
@@ -234,9 +238,9 @@ export default class SyntenyRegionSet extends GenomicSet
     });
   }
 
-  private sortBasePairLabels()
+  private sortBasePairLabels(svgPositions: SVGPositionVariables)
   {
-    const regionPosX2 = getOverviewPanelXPosition(this.order) + SVGConstants.trackWidth;
+    const regionPosX2 = getOverviewPanelXPosition(this.order, svgPositions) + SVGConstants.trackWidth;
     const labelPairs = this.regions.map((region) =>{
       return {startLabel: region.gaplessBlock.startLabel, stopLabel: region.gaplessBlock.stopLabel};
     });
