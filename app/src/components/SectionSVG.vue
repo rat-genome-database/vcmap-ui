@@ -5,29 +5,31 @@
   <GapSVG v-for="(gapSection,index) in level1Gaps" :key="index" :gap-section="gapSection" />
   <GapSVG v-for="(gapSection,index) in level2Gaps" :key="index" :gap-section="gapSection" />
   <template v-for="(blockSection, index) in level1Blocks" :key="index">
-    <rect v-if="blockSection.isHovered"
-      :y="region.gaplessBlock.posY1"
-      :x="region.gaplessBlock.posX1"
-      :width="region.gaplessBlock.width"
-      :height="region.gaplessBlock.height"
-      fill="none"
-      stroke-width=".5"
-      stroke="#0000FF"
-      stroke-dasharray="2,2"
-    />
-    <rect
-      class="block-section"
-      @mouseenter="onMouseEnter($event, blockSection, 'trackSection')"
-      @mouseleave="onMouseLeave(blockSection)"
-      @mousemove="updatePositionLabelFromMouseEvent($event, blockSection)"
-      @click="onSyntenyBlockClick(blockSection, $event)"
-      :y="blockSection.posY1"
-      :x="blockSection.posX1"
-      :width="blockSection.width"
-      :height="blockSection.height"
-      :fill="getSectionFill(blockSection)"
-      :fill-opacity="1"
-    />
+    <g @contextmenu.prevent="showContextMenu($event, region, blockSection)">
+      <rect v-if="blockSection.isHovered"
+        :y="region.gaplessBlock.posY1"
+        :x="region.gaplessBlock.posX1"
+        :width="region.gaplessBlock.width"
+        :height="region.gaplessBlock.height"
+        fill="none"
+        stroke-width=".5"
+        stroke="#0000FF"
+        stroke-dasharray="2,2"
+      />
+      <rect
+        class="block-section"
+        @mouseenter="onMouseEnter($event, blockSection, 'trackSection')"
+        @mouseleave="onMouseLeave(blockSection)"
+        @mousemove="updatePositionLabelFromMouseEvent($event, blockSection)"
+        @click="onSyntenyBlockClick(blockSection, $event)"
+        :y="blockSection.posY1"
+        :x="blockSection.posX1"
+        :width="blockSection.width"
+        :height="blockSection.height"
+        :fill="getSectionFill(blockSection)"
+        :fill-opacity="1"
+      />
+    </g>
 
     <ChromosomeLabelSVG v-if="showChromosome" :synteny-section="blockSection" />
   </template>
@@ -203,11 +205,17 @@ interface Props
   geneList: Map<number, Gene>;
 }
 
+interface MenuItem {
+  label: string,
+  command: () => void;
+}
+
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: 'synteny-hover', svgY: number | null): void,
   (e: 'block-hover', startStop: number[] | null): void,
+  (e: 'show-context-menu', event: MouseEvent, items: MenuItem[]): void,
 }>();
 
 //Converts each property in this object to its own reactive prop
@@ -258,6 +266,47 @@ const showBasePairLine = computed(() => {
 const isDetailed = computed(() => {
   return props.backboneSet.backbone.renderType === 'detailed';
 });
+
+const createJBrowseLink = (section: SyntenySection) => {
+  const assembly = section.mapName === 'GRCh38' ? 'GRCh38.p14' : section.mapName;
+  const chromosome = section.chromosome;
+  let start = section.speciesStart
+  let stop = section.speciesStop;
+
+  // Invert start/stop if needed
+  if (start > stop) [start, stop] = [stop, start];
+
+  // Base URL for JBrowse - replace with the actual JBrowse base URL
+  const jbrowseBaseUrl = "https://rgd.mcw.edu/jbrowse2/";
+
+  // Construct the full URL
+  const jbrowseUrl = `${jbrowseBaseUrl}?&assembly=${assembly}&loc=chr${chromosome}:${start}-${stop}`;
+
+  return jbrowseUrl;
+};
+
+const showContextMenu = (event: MouseEvent, region: SyntenyRegion, section: SyntenySection) => {
+  const items: MenuItem[] = [
+    { 
+      label: 'Link Section to JBrowse',
+      command: () => { window.open(createJBrowseLink(section)); }
+    },
+    {
+      label: 'Link Region to JBrowse',
+      command: () => { window.open(createJBrowseLink(region.gaplessBlock)) }
+    },
+    {
+      label: 'Make Section Backbone',
+      command: () => { onBackboneSwap(section) }
+    },
+    {
+      label: 'Make Region Backbone',
+      command: () => { onBackboneSwap(region.gaplessBlock) }
+    },
+  ];
+  emit('show-context-menu', event, items);
+};
+///
 
 const onMouseEnter = (event: MouseEvent, section: SyntenySection | DatatrackSection, type: SelectedDataType) => {
 

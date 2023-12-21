@@ -22,9 +22,15 @@
     <template v-if="store.state.showOverviewPanel">
       <template v-for="(syntenySet, index) in overviewSyntenySets" :key="index">
         <template v-for="(region, index) in syntenySet.regions" :key="index">
-          <g @contextmenu.prevent="showContextMenu($event, region as SyntenyRegion)">
-          <SectionSVG show-chromosome show-synteny-on-hover :gene-list="geneList" show-start-stop select-on-click :region="region as SyntenyRegion"/>
-        </g>
+          <SectionSVG
+            show-chromosome
+            show-synteny-on-hover
+            :gene-list="geneList"
+            show-start-stop
+            select-on-click
+            :region="(region as SyntenyRegion)"
+            @show-context-menu="handleShowContextMenu"
+          />
         </template>
       </template>
     </template>
@@ -61,7 +67,9 @@
             :synteny-hover-svg-y="detailedSyntenySvgYPosition" 
             :gene-list="geneList"
             @synteny-hover="onDetailedSyntenyHover"
-            @block-hover="onDetailedBlockHover" />
+            @block-hover="onDetailedBlockHover"
+            @show-context-menu="handleShowContextMenu"
+            />
         </template>
         <template v-for="(label, index) in syntenySet.geneLabels" :key="index">
           <template v-if="label.isVisible">
@@ -344,35 +352,6 @@ interface MenuItem {
 const cm = ref();
 const items = ref<MenuItem[]>([]);
 
-const createJBrowseLink = (region: SyntenyRegion) => {
-  const assembly = region.mapName === 'GRCh38' ? 'GRCh38.p14' : region.mapName;
-  const chromosome = region.gaplessBlock.chromosome;
-  let start = region.gaplessBlock.speciesStart;
-  let stop = region.gaplessBlock.speciesStop;
-
-  // Invert start/stop if needed
-  if (start > stop) [start, stop] = [stop, start];
-
-  // Base URL for JBrowse - replace with the actual JBrowse base URL
-  const jbrowseBaseUrl = "https://rgd.mcw.edu/jbrowse2/";
-
-  // Construct the full URL
-  const jbrowseUrl = `${jbrowseBaseUrl}?&assembly=${assembly}&loc=chr${chromosome}:${start}-${stop}`;
-
-  return jbrowseUrl;
-};
-
-const showContextMenu = (event: MouseEvent, region: SyntenyRegion) => {
-  cm.value.show(event);
-  items.value = [
-    { 
-      label: 'Link to JBrowse',
-      command: () => { window.open(createJBrowseLink(region)); }
-    },
-  ];
-};
-///
-
 async function attachToProgressLoader(storeLoadingActionName: string, func: () => Promise<any>)
 {
   try
@@ -450,6 +429,11 @@ const displayDensityTrackTogglePanel = computed(() => {
   }
   return false;
 });
+
+const handleShowContextMenu = (event: MouseEvent, menuItems: MenuItem[]) => {
+  items.value = menuItems;
+  cm.value.show(event)
+}
 
 const getSpeciesName = (mapKey: number) => {
   const species = store.state.comparativeSpecies.find((species) => species.activeMap.key === mapKey);
