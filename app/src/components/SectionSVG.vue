@@ -64,46 +64,9 @@
     <SyntenyLinesSVG v-for="(blockSection, index) in region.syntenyBlocks" :key="index" :synteny-section="blockSection" />
   </template>
 
-  <!-- Detailed Panel Synteny Postion Labels -->
+  <!-- Detailed Panel Synteny Position Labels -->
   <template v-if="!isOverview && region.gaplessBlock.startLabel.isVisible && region.gaplessBlock.height > 10 && region.syntenyBlocks.some((section) => section.isHovered)">
-    <template v-if="region.gaplessBlock.posY1 < PANEL_SVG_START && region.gaplessBlock.posY2 > PANEL_SVG_START">
-      <text
-        class="label small"
-        :x="region.gaplessBlock.posX1 - SYNTENY_LABEL_SHIFT"
-        :y="PANEL_SVG_START + 10"
-      >
-        {{ calculateSectionStartPositionLabel(region.gaplessBlock) }}
-      </text>
-    </template>
-    <template v-else>
-      <text
-        class="label small"
-        dominant-baseline="hanging"
-        :x="region.gaplessBlock.posX1 - SYNTENY_LABEL_SHIFT"
-        :y="region.gaplessBlock.posY1"
-      >
-        {{region.gaplessBlock.startLabel.text}}
-      </text>
-    </template>
-    <template v-if="region.gaplessBlock.posY2 > PANEL_SVG_STOP && region.gaplessBlock.posY1 < PANEL_SVG_STOP">
-      <text
-        class="label small"
-        :x="region.gaplessBlock.posX1 - SYNTENY_LABEL_SHIFT"
-        :y="PANEL_SVG_STOP - 10"
-      >
-        {{ calculateSectionStopPositionLabel(region.gaplessBlock) }}
-      </text>
-    </template>
-    <template v-else>
-      <text
-        class="label small"
-        dominant-baseline="auto"
-        :x="region.gaplessBlock.posX1 - SYNTENY_LABEL_SHIFT"
-        :y="region.gaplessBlock.posY2"
-      >
-        {{region.gaplessBlock.stopLabel.text}}
-      </text>
-    </template>
+    <WindowPositionLabelsSVG :region="region" />
   </template>
   <template v-if="showBasePairLine">
     <text
@@ -170,6 +133,7 @@ import ChromosomeLabelSVG from './ChromosomeLabelSVG.vue';
 import SyntenyLinesSVG from './SyntenyLinesSVG.vue';
 import GapSVG from './GapSVG.vue';
 import OverviewSyntenyLabelsSVG from './OverviewSyntenyLabelsSVG.vue';
+import WindowPositionLabelsSVG from './WindowPositionLabelsSVG.vue';
 import { PANEL_SVG_START, PANEL_SVG_STOP } from '@/utils/SVGConstants';
 import useMouseBasePairPos from '@/composables/useMouseBasePairPos';
 import GenomicSection from '@/models/GenomicSection';
@@ -181,7 +145,6 @@ import ChromosomeApi from '@/api/ChromosomeApi';
 
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
 const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
-const SYNTENY_LABEL_SHIFT = 10;
 
 const store = useStore(key);
 
@@ -513,22 +476,6 @@ const highlightSelections = (selectedGeneIds: number[]) => {
       });
     }
   });
-};
-
-const calculateSectionStartPositionLabel = (section: SyntenySection) => {
-  const hiddenHeight = PANEL_SVG_START - section.posY1;
-  const basePairPerSVG = section.length / section.height;
-  // Subtract or multiple the number of hidden basepairs above the visible window based on inversion
-  const labelBasePair = section.isInverted ? section.speciesStart - (hiddenHeight * basePairPerSVG) : section.speciesStart + (hiddenHeight * basePairPerSVG);
-  return Formatter.convertBasePairToLabel(Math.round(labelBasePair));
-};
-
-const calculateSectionStopPositionLabel = (section: SyntenySection) => {
-  const hiddenHeight = section.posY2 - PANEL_SVG_STOP;
-  const basePairPerSVG = section.length / section.height;
-  // Subtract or multiple the number of hidden basepairs below the visible window based on inversion
-  const labelBasePair = !section.isInverted ? section.speciesStop - (hiddenHeight * basePairPerSVG) : section.speciesStop + (hiddenHeight * basePairPerSVG);
-  return Formatter.convertBasePairToLabel(Math.round(labelBasePair));
 };
 
 const updatePositionLabelFromMouseEvent = (event: MouseEvent, blockSection: SyntenySection) => {
