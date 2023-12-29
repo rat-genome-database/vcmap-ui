@@ -64,7 +64,7 @@
     <SyntenyLinesSVG v-for="(blockSection, index) in region.syntenyBlocks" :key="index" :synteny-section="blockSection" />
   </template>
 
-  <!-- Detailed Panel Synteny Postion Labels -->
+  <!-- Detailed Panel Synteny Position Labels -->
   <template v-if="!isOverview && region.gaplessBlock.startLabel.isVisible && region.gaplessBlock.height > 10 && region.syntenyBlocks.some((section) => section.isHovered)">
     <WindowPositionLabelsSVG :region="region" />
   </template>
