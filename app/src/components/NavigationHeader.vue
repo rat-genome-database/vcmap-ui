@@ -6,7 +6,7 @@
     <div class="input-col">
       <div class="nav-input">
         <h5 class="search-title">Search and Select Gene<i class="pi pi-info-circle info-icon" 
-          v-tooltip="'Use the input below to search loaded gene data. Selecting an option will navigate you to the selected gene with its orthologs visible if possible. You can click the back button to return to your previous view after navigating.'"></i>
+          v-tooltip="'Use the input below to search for a gene on the loaded synteny regions. Selecting an option will navigate you to the selected gene with its orthologs visible if possible. You can click the back button to return to your previous view after navigating.'"></i>
         </h5>
         <GeneSearch :geneList="props.geneList" :selectedData="props.selectedData" :query-for-synteny="props.queryForSynteny" />
       </div>
@@ -84,7 +84,7 @@ interface Props
 {
   geneList: Map<number, Gene>;
   selectedData: SelectedData[] | null;
-  queryForSynteny: (backboneChromosome: Chromosome, start: number, stop: number, mapKey: number) => void;
+  queryForSynteny: (backboneChromosome: Chromosome, start: number, stop: number, mapKey: number) => Promise<void>;
 }
 
 let showEditModal = ref(false);
