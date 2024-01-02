@@ -263,7 +263,7 @@ const showContextMenu = (event: MouseEvent, region: SyntenyRegion, section: Synt
         command: () => { onBackboneSwap(section); }
       },
       {
-        label: 'Make Backbone in new window',
+        label: 'Make Backbone in new tab',
         command: () => { onBackboneSwapNewWindow(section); }
       },
     ];
@@ -286,8 +286,12 @@ const showContextMenu = (event: MouseEvent, region: SyntenyRegion, section: Synt
         command: () => { onBackboneSwap(region.gaplessBlock); }
       },
       {
-        label: 'Make Backbone in new window',
+        label: 'Make highlighted section Backbone in new tab',
         command: () => { onBackboneSwapNewWindow(section); }
+      },
+      {
+        label: 'Make dotted region Backbone in new tab',
+        command: () => { onBackboneSwapNewWindow(region.gaplessBlock); }
       },
     ];
   }
