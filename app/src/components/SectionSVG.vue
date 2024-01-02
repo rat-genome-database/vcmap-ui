@@ -120,6 +120,7 @@
 
 <script lang="ts" setup>
 import { watch, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import SelectedData, { SelectedDataType } from '@/models/SelectedData';
 import SyntenyRegion from '@/models/SyntenyRegion';
 import SyntenySection from '@/models/SyntenySection';
@@ -134,7 +135,6 @@ import SyntenyLinesSVG from './SyntenyLinesSVG.vue';
 import GapSVG from './GapSVG.vue';
 import OverviewSyntenyLabelsSVG from './OverviewSyntenyLabelsSVG.vue';
 import WindowPositionLabelsSVG from './WindowPositionLabelsSVG.vue';
-import { PANEL_SVG_START, PANEL_SVG_STOP } from '@/utils/SVGConstants';
 import useMouseBasePairPos from '@/composables/useMouseBasePairPos';
 import GenomicSection from '@/models/GenomicSection';
 import Gene from '@/models/Gene';
@@ -147,6 +147,7 @@ const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
 const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
 
 const store = useStore(key);
+const router = useRouter();
 
 const { getBasePairPositionFromMouseEvent, getBasePairPositionFromSVG, mouseYPos } = useMouseBasePairPos();
 const {
@@ -260,6 +261,10 @@ const showContextMenu = (event: MouseEvent, region: SyntenyRegion, section: Synt
         label: 'Make Backbone',
         command: () => { onBackboneSwap(section); }
       },
+      {
+        label: 'Make Backbone in new window',
+        command: () => { onBackboneSwapNewWindow(section); }
+      },
     ];
   } else {
     items = [
@@ -278,6 +283,10 @@ const showContextMenu = (event: MouseEvent, region: SyntenyRegion, section: Synt
       {
         label: 'Make dotted region Backbone',
         command: () => { onBackboneSwap(region.gaplessBlock); }
+      },
+      {
+        label: 'Make Backbone in new window',
+        command: () => { onBackboneSwapNewWindow(section); }
       },
     ];
   }
@@ -422,6 +431,23 @@ const onBackboneSwap = async (section: SyntenySection) => {
       store.dispatch('setSpecies', selectedSpecies);
     }
   }
+};
+
+const onBackboneSwapNewWindow = async (section: SyntenySection) => {
+  const sectionMapName = section.mapName;
+  const sectionChr = section.chromosome;
+  const start = section.isInverted ? section.speciesStop : section.speciesStart;
+  const stop = section.isInverted ? section.speciesStart : section.speciesStop;
+  const route = router.resolve({
+    path: '/main',
+    query: {
+      key: sectionMapName,
+      chr: sectionChr,
+      start: start,
+      stop: stop,
+    },
+  });
+  window.open(route.href, '_blank');
 };
 
 const getSectionFill = (section: VCMapSVGElement) => {

@@ -68,13 +68,15 @@ import SVGViewbox from '@/components/SVGViewbox.vue';
 import HeaderPanel from '@/components/HeaderPanel.vue';
 import SelectedDataPanel from '@/components/SelectedDataPanel.vue';
 import { useStore } from 'vuex';
+import { useRoute, useRouter } from 'vue-router';
 import { key } from '@/store';
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch, onBeforeMount } from 'vue';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 import Gene from "@/models/Gene";
 import Block from "@/models/Block";
 import SyntenyApi, {SpeciesSyntenyData} from "@/api/SyntenyApi";
+import ChromosomeApi from '@/api/ChromosomeApi';
 import Chromosome from "@/models/Chromosome";
 import GeneApi from "@/api/GeneApi";
 import {useLogger} from "vue-logger-plugin";
@@ -97,6 +99,8 @@ const MAX_CHAINLEVEL = 2;
 const MAX_CHAINLEVEL_GENES = 1;
 
 const store = useStore(key);
+const route = useRoute();
+const router = useRouter();
 const $log = useLogger() as VCMapLogger;
 const toast = useToast();
 
@@ -166,6 +170,56 @@ const onInspectPressed = () => {
   // });
 };
 // TODO endTEMP
+
+onBeforeMount(async () => {
+  const queryParams = route.query;
+  if (queryParams.key && queryParams.start && queryParams.stop && queryParams.chr) {
+    const sectionMapName = queryParams.key;
+    const oldBackboneSpecies = store.state.species;
+    const selectedSpecies = store.state.comparativeSpecies.find((s) => s.activeMap.name === sectionMapName);
+    if (selectedSpecies && oldBackboneSpecies) {
+      // Get the chromosome from the api
+      const chromosomes = await ChromosomeApi.getChromosomes(selectedSpecies.activeMap.key);
+      const selectedChromosome = chromosomes.find((c) => c.chromosome === queryParams.chr);
+      if (selectedChromosome) {
+        store.dispatch('setChromosome', selectedChromosome);
+        const newStart = queryParams.start;
+        const newStop = queryParams.stop;
+        store.dispatch('setStartPosition', newStart);
+        store.dispatch('setStopPosition', newStop);
+
+        // Update comparative species and order
+        const newComparativeSpecies = [...store.state.comparativeSpecies];
+        const newBackboneIndex = newComparativeSpecies.findIndex((s) => s.activeMap.key === selectedSpecies.activeMap.key);
+        newComparativeSpecies.splice(newBackboneIndex, 1);
+        newComparativeSpecies.push(oldBackboneSpecies);
+        store.dispatch('setComparativeSpecies', newComparativeSpecies);
+
+        // Set the new order, swapping the order of the old backbone with the order
+        // of the new backbone species
+        const speciesOrder: any = {...store.state.speciesOrder};
+        const oldOrder = speciesOrder[selectedSpecies.activeMap.key];
+        const newOrder = speciesOrder[oldBackboneSpecies.activeMap.key];
+        speciesOrder[selectedSpecies.activeMap.key] = newOrder;
+        speciesOrder[oldBackboneSpecies.activeMap.key] = oldOrder;
+        store.dispatch('setSpeciesOrder', speciesOrder);
+
+        // NOTE: we may not need to clear these out, but it may not make sense
+        // to keep selected info
+        store.dispatch('setSelectedData', []);
+        store.dispatch('setSelectedGeneIds', []);
+        store.dispatch('setGene', null);
+        store.dispatch('clearUserHistory');
+        // NOTE: do this last because it kicks of reprocessing on Main.vue
+        store.dispatch('setSpecies', selectedSpecies);
+        // After setting state based on the query params, reload the route without params
+        // to kick of processing
+        const newRoute = router.resolve({ path: '/main' });
+        router.replace(newRoute);
+      }
+    }
+  }
+});
 
 /**
  * Main watches this hook for the appropriate time to query the API and construct our
