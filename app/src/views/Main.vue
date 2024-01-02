@@ -18,6 +18,7 @@
         :synteny-tree="syntenyTree"
         :loading="isLoading"
         :variant-positions-list="variantPositionsList"
+        @swap-backbone="handleSwapBackbone"
       />
       <Toast />
     </div>
@@ -171,63 +172,30 @@ const onInspectPressed = () => {
 };
 // TODO endTEMP
 
-onBeforeMount(async () => {
-  const queryParams = route.query;
-  if (queryParams.key && queryParams.start && queryParams.stop && queryParams.chr) {
-    const sectionMapName = queryParams.key;
-    const oldBackboneSpecies = store.state.species;
-    const selectedSpecies = store.state.comparativeSpecies.find((s) => s.activeMap.name === sectionMapName);
-    if (selectedSpecies && oldBackboneSpecies) {
-      // Get the chromosome from the api
-      const chromosomes = await ChromosomeApi.getChromosomes(selectedSpecies.activeMap.key);
-      const selectedChromosome = chromosomes.find((c) => c.chromosome === queryParams.chr);
-      if (selectedChromosome) {
-        store.dispatch('setChromosome', selectedChromosome);
-        const newStart = queryParams.start;
-        const newStop = queryParams.stop;
-        store.dispatch('setStartPosition', newStart);
-        store.dispatch('setStopPosition', newStop);
-
-        // Update comparative species and order
-        const newComparativeSpecies = [...store.state.comparativeSpecies];
-        const newBackboneIndex = newComparativeSpecies.findIndex((s) => s.activeMap.key === selectedSpecies.activeMap.key);
-        newComparativeSpecies.splice(newBackboneIndex, 1);
-        newComparativeSpecies.push(oldBackboneSpecies);
-        store.dispatch('setComparativeSpecies', newComparativeSpecies);
-
-        // Set the new order, swapping the order of the old backbone with the order
-        // of the new backbone species
-        const speciesOrder: any = {...store.state.speciesOrder};
-        const oldOrder = speciesOrder[selectedSpecies.activeMap.key];
-        const newOrder = speciesOrder[oldBackboneSpecies.activeMap.key];
-        speciesOrder[selectedSpecies.activeMap.key] = newOrder;
-        speciesOrder[oldBackboneSpecies.activeMap.key] = oldOrder;
-        store.dispatch('setSpeciesOrder', speciesOrder);
-
-        // NOTE: we may not need to clear these out, but it may not make sense
-        // to keep selected info
-        store.dispatch('setSelectedData', []);
-        store.dispatch('setSelectedGeneIds', []);
-        store.dispatch('setGene', null);
-        store.dispatch('clearUserHistory');
-        // NOTE: do this last because it kicks of reprocessing on Main.vue
-        store.dispatch('setSpecies', selectedSpecies);
-        // After setting state based on the query params, reload the route without params
-        // to kick of processing
-        const newRoute = router.resolve({ path: '/main' });
-        router.replace(newRoute);
-      }
-    }
-  }
-});
-
 /**
  * Main watches this hook for the appropriate time to query the API and construct our
  * memory models representing the Comparative Map Configuration. If Main is getting
  * mounted, it is safe to clear out our old data structures
  * (Lifecycle hook)
  */
-onMounted(initVCMapProcessing);
+onMounted(async () => {
+  const queryParams = route.query;
+  if (queryParams.key && queryParams.start && queryParams.stop && queryParams.chr) {
+    const sectionMapName = queryParams.key as string;
+    const chr = queryParams.chr as string;
+    const newStart = parseInt(queryParams.start as string, 10);
+    const newStop = parseInt(queryParams.stop as string, 10);
+    await swapBackbone(sectionMapName, chr, newStart, newStop);
+
+    // Replace the route without query parameters now that we've used them
+    // This helps make sure any page reloads don't reuse the query params
+    const newRoute = router.resolve({ path: '/main' });
+    router.replace(newRoute);
+    initVCMapProcessing();
+  } else {
+    initVCMapProcessing();
+  }
+});
 
 /**
  * Watch for requested navigation operations (zoom in/out, navigate up/down stream).
@@ -251,11 +219,6 @@ watch(() => store.state.detailedBasePairRequest, async () => {
     $log.error(`DetailedBasePairRequest: Missing data required for querying and processing synteny`, store.state.chromosome, store.state.species);
   }
   isLoading.value = false;
-});
-
-// NOTE: Just trying out watching for changes in the backbone species to trigger a full reprocessing
-watch(() => store.state.species, () => {
-  initVCMapProcessing();
 });
 
 /**
@@ -935,6 +898,53 @@ async function updateSettings() {
     // Reset the edited settings values
     savedVariantKeys = [];
     removedVariantKeys = [];
+  }
+}
+
+async function handleSwapBackbone(sectionMapName: string, chromosome: string, start: number, stop: number) {
+  await swapBackbone(sectionMapName, chromosome, start, stop);
+  initVCMapProcessing();
+}
+
+async function swapBackbone(sectionMapName: string, chromosome: string, start: number, stop: number) {
+  // Get the chromosome from the api
+  const oldBackboneSpecies = store.state.species;
+  const selectedSpecies = store.state.comparativeSpecies.find((s) => s.activeMap.name === sectionMapName);
+  if (selectedSpecies && oldBackboneSpecies) {
+    const chromosomes = await ChromosomeApi.getChromosomes(selectedSpecies.activeMap.key);
+    const selectedChromosome = chromosomes.find((c) => c.chromosome === chromosome);
+    if (selectedChromosome) {
+      store.dispatch('setChromosome', selectedChromosome);
+      const newStart = start;
+      const newStop = stop;
+      store.dispatch('setStartPosition', newStart);
+      store.dispatch('setStopPosition', newStop);
+
+      // Update comparative species and order
+      const newComparativeSpecies = [...store.state.comparativeSpecies];
+      const newBackboneIndex = newComparativeSpecies.findIndex((s) => s.activeMap.key === selectedSpecies.activeMap.key);
+      newComparativeSpecies.splice(newBackboneIndex, 1);
+      newComparativeSpecies.push(oldBackboneSpecies);
+      store.dispatch('setComparativeSpecies', newComparativeSpecies);
+
+      // Set the new order, swapping the order of the old backbone with the order
+      // of the new backbone species
+      const speciesOrder: any = {...store.state.speciesOrder};
+      const oldOrder = speciesOrder[selectedSpecies.activeMap.key];
+      const newOrder = speciesOrder[oldBackboneSpecies.activeMap.key];
+      speciesOrder[selectedSpecies.activeMap.key] = newOrder;
+      speciesOrder[oldBackboneSpecies.activeMap.key] = oldOrder;
+      store.dispatch('setSpeciesOrder', speciesOrder);
+
+      // NOTE: we may not need to clear these out, but it may not make sense
+      // to keep selected info
+      store.dispatch('setSelectedData', []);
+      store.dispatch('setSelectedGeneIds', []);
+      store.dispatch('setGene', null);
+      store.dispatch('clearUserHistory');
+
+      store.dispatch('setSpecies', selectedSpecies);
+    }
   }
 }
 

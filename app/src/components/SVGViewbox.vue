@@ -30,6 +30,7 @@
             select-on-click
             :region="(region as SyntenyRegion)"
             @show-context-menu="handleShowContextMenu"
+            @swap-backbone="handleSwapBackbone"
           />
         </template>
       </template>
@@ -69,6 +70,7 @@
             @synteny-hover="onDetailedSyntenyHover"
             @block-hover="onDetailedBlockHover"
             @show-context-menu="handleShowContextMenu"
+            @swap-backbone="handleSwapBackbone"
             />
         </template>
         <template v-for="(label, index) in syntenySet.geneLabels" :key="index">
@@ -296,6 +298,7 @@ import Species from '@/models/Species';
 import BackboneSection from '@/models/BackboneSection';
 import GradientLegend from './GradientLegend.vue';
 import ContextMenu from 'primevue/contextmenu';
+import SyntenySection from '@/models/SyntenySection';
 
 const SHOW_DEBUG = process.env.NODE_ENV === 'development';
 const NAV_SHIFT_PERCENT = 0.2;
@@ -318,6 +321,10 @@ interface Props
 }
 
 const props = defineProps<Props>();
+
+const emit = defineEmits<{
+  (e: 'swap-backbone', mapKey: string, chr: string, start: number, stop: number): void,
+}>();
 
 let detailedSyntenySets = ref<SyntenyRegionSet[]>([]); // The currently displayed SyntenicRegions in the detailed panel
 let overviewBackboneSet = ref<BackboneSet>();
@@ -433,6 +440,10 @@ const displayDensityTrackTogglePanel = computed(() => {
 const handleShowContextMenu = (event: MouseEvent, menuItems: MenuItem[]) => {
   items.value = menuItems;
   cm.value.show(event);
+};
+
+const handleSwapBackbone = (mapKey: string, chr: string, start: number, stop: number) => {
+  emit('swap-backbone', mapKey, chr, start, stop);
 };
 
 const getSpeciesName = (mapKey: number) => {

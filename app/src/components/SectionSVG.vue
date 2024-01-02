@@ -180,6 +180,7 @@ const emit = defineEmits<{
   (e: 'synteny-hover', svgY: number | null): void,
   (e: 'block-hover', startStop: number[] | null): void,
   (e: 'show-context-menu', event: MouseEvent, items: MenuItem[]): void,
+  (e: 'swap-backbone', mapKey: string, chr: string, start: number, stop: number): void,
 }>();
 
 //Converts each property in this object to its own reactive prop
@@ -392,45 +393,10 @@ const onSyntenyBlockClick = (section: GenomicSection, event: any) => {
 
 const onBackboneSwap = async (section: SyntenySection) => {
   const sectionMapName = section.mapName;
-  const oldBackboneSpecies = store.state.species;
-  const selectedSpecies = store.state.comparativeSpecies.find((s) => s.activeMap.name === sectionMapName);
-  if (selectedSpecies && oldBackboneSpecies) {
-    // Get the chromosome from the api
-    const chromosomes = await ChromosomeApi.getChromosomes(selectedSpecies.activeMap.key);
-    const selectedChromosome = chromosomes.find((c) => c.chromosome === section.chromosome);
-    if (selectedChromosome) {
-      store.dispatch('setChromosome', selectedChromosome);
-      const newStart = section.isInverted ? section.speciesStop : section.speciesStart;
-      const newStop = section.isInverted ? section.speciesStart : section.speciesStop;
-      store.dispatch('setStartPosition', newStart);
-      store.dispatch('setStopPosition', newStop);
-
-      // Update comparative species and order
-      const newComparativeSpecies = [...store.state.comparativeSpecies];
-      const newBackboneIndex = newComparativeSpecies.findIndex((s) => s.activeMap.key === selectedSpecies.activeMap.key);
-      newComparativeSpecies.splice(newBackboneIndex, 1);
-      newComparativeSpecies.push(oldBackboneSpecies);
-      store.dispatch('setComparativeSpecies', newComparativeSpecies);
-
-      // Set the new order, swapping the order of the old backbone with the order
-      // of the new backbone species
-      const speciesOrder: any = {...store.state.speciesOrder};
-      const oldOrder = speciesOrder[selectedSpecies.activeMap.key];
-      const newOrder = speciesOrder[oldBackboneSpecies.activeMap.key];
-      speciesOrder[selectedSpecies.activeMap.key] = newOrder;
-      speciesOrder[oldBackboneSpecies.activeMap.key] = oldOrder;
-      store.dispatch('setSpeciesOrder', speciesOrder);
-
-      // NOTE: we may not need to clear these out, but it may not make sense
-      // to keep selected info
-      store.dispatch('setSelectedData', []);
-      store.dispatch('setSelectedGeneIds', []);
-      store.dispatch('setGene', null);
-      store.dispatch('clearUserHistory');
-      // NOTE: do this last because it kicks of reprocessing on Main.vue
-      store.dispatch('setSpecies', selectedSpecies);
-    }
-  }
+  const chr = section.chromosome;
+  const newStart = section.isInverted ? section.speciesStop : section.speciesStart;
+  const newStop = section.isInverted ? section.speciesStart : section.speciesStop;
+  emit('swap-backbone', sectionMapName, chr, newStart, newStop);
 };
 
 const onBackboneSwapNewWindow = async (section: SyntenySection) => {
