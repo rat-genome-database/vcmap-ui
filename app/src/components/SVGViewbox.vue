@@ -298,7 +298,6 @@ import Species from '@/models/Species';
 import BackboneSection from '@/models/BackboneSection';
 import GradientLegend from './GradientLegend.vue';
 import ContextMenu from 'primevue/contextmenu';
-import SyntenySection from '@/models/SyntenySection';
 
 const SHOW_DEBUG = process.env.NODE_ENV === 'development';
 const NAV_SHIFT_PERCENT = 0.2;

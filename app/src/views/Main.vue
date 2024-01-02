@@ -71,7 +71,7 @@ import SelectedDataPanel from '@/components/SelectedDataPanel.vue';
 import { useStore } from 'vuex';
 import { useRoute, useRouter } from 'vue-router';
 import { key } from '@/store';
-import { onMounted, ref, watch, onBeforeMount } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 import Gene from "@/models/Gene";
