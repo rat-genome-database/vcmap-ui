@@ -6,6 +6,9 @@
       @complete="searchGene($event)"
       @item-select="searchSVG($event)"
       :field="getSuggestionDisplay"
+      :empty-search-message="`
+        No matching genes found within the loaded synteny data. Try loading a new configuration containing the chromosome of the gene you are searching for.
+      `"
       :minLength="3"
       placeholder="Search loaded genes..."
     />
@@ -72,7 +75,7 @@ const searchSVG = async (event: { value: Gene }) => {
   store.dispatch('setSelectedGeneIds', newData.rgdIds || []);
   store.dispatch('setSelectedData', newData.selectedData);
 
-  if (event.value)
+  if (event.value && store.state.chromosome != null)
   {
     // Adapatively generate the newWindow based on the searched gene and its new position
     // when the zoom is increased

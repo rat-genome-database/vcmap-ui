@@ -112,7 +112,7 @@ const router = useRouter();
 interface Props 
 {
   onShowSettings: () => void;
-  queryForSynteny: (backboneChromosome: Chromosome, start: number, stop: number, mapKey: number) => void;
+  queryForSynteny: (backboneChromosome: Chromosome, start: number, stop: number, mapKey: number) => Promise<void>;
   geneList: Map<number, Gene>;
   selectedData: SelectedData[] | null;
 }
