@@ -120,6 +120,7 @@
 
 <script lang="ts" setup>
 import { watch, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import SelectedData, { SelectedDataType } from '@/models/SelectedData';
 import SyntenyRegion from '@/models/SyntenyRegion';
 import SyntenySection from '@/models/SyntenySection';
@@ -134,19 +135,18 @@ import SyntenyLinesSVG from './SyntenyLinesSVG.vue';
 import GapSVG from './GapSVG.vue';
 import OverviewSyntenyLabelsSVG from './OverviewSyntenyLabelsSVG.vue';
 import WindowPositionLabelsSVG from './WindowPositionLabelsSVG.vue';
-import { PANEL_SVG_START, PANEL_SVG_STOP } from '@/utils/SVGConstants';
 import useMouseBasePairPos from '@/composables/useMouseBasePairPos';
 import GenomicSection from '@/models/GenomicSection';
 import Gene from '@/models/Gene';
 import DatatrackSet from '@/models/DatatrackSet';
 import { getSelectedDataAndGeneIdsFromOrthologLine } from '@/utils/OrthologHandler';
 import useSyntenyAndDataInteraction from '@/composables/useSyntenyAndDataInteraction';
-import ChromosomeApi from '@/api/ChromosomeApi';
 
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
 const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
 
 const store = useStore(key);
+const router = useRouter();
 
 const { getBasePairPositionFromMouseEvent, getBasePairPositionFromSVG, mouseYPos } = useMouseBasePairPos();
 const {
@@ -179,6 +179,7 @@ const emit = defineEmits<{
   (e: 'synteny-hover', svgY: number | null): void,
   (e: 'block-hover', startStop: number[] | null): void,
   (e: 'show-context-menu', event: MouseEvent, items: MenuItem[]): void,
+  (e: 'swap-backbone', mapKey: string, chr: string, start: number, stop: number): void,
 }>();
 
 //Converts each property in this object to its own reactive prop
@@ -260,6 +261,10 @@ const showContextMenu = (event: MouseEvent, region: SyntenyRegion, section: Synt
         label: 'Make Backbone',
         command: () => { onBackboneSwap(section); }
       },
+      {
+        label: 'Make Backbone in new tab',
+        command: () => { onBackboneSwapNewWindow(section); }
+      },
     ];
   } else {
     items = [
@@ -278,6 +283,14 @@ const showContextMenu = (event: MouseEvent, region: SyntenyRegion, section: Synt
       {
         label: 'Make dotted region Backbone',
         command: () => { onBackboneSwap(region.gaplessBlock); }
+      },
+      {
+        label: 'Make highlighted section Backbone in new tab',
+        command: () => { onBackboneSwapNewWindow(section); }
+      },
+      {
+        label: 'Make dotted region Backbone in new tab',
+        command: () => { onBackboneSwapNewWindow(region.gaplessBlock); }
       },
     ];
   }
@@ -383,45 +396,27 @@ const onSyntenyBlockClick = (section: GenomicSection, event: any) => {
 
 const onBackboneSwap = async (section: SyntenySection) => {
   const sectionMapName = section.mapName;
-  const oldBackboneSpecies = store.state.species;
-  const selectedSpecies = store.state.comparativeSpecies.find((s) => s.activeMap.name === sectionMapName);
-  if (selectedSpecies && oldBackboneSpecies) {
-    // Get the chromosome from the api
-    const chromosomes = await ChromosomeApi.getChromosomes(selectedSpecies.activeMap.key);
-    const selectedChromosome = chromosomes.find((c) => c.chromosome === section.chromosome);
-    if (selectedChromosome) {
-      store.dispatch('setChromosome', selectedChromosome);
-      const newStart = section.isInverted ? section.speciesStop : section.speciesStart;
-      const newStop = section.isInverted ? section.speciesStart : section.speciesStop;
-      store.dispatch('setStartPosition', newStart);
-      store.dispatch('setStopPosition', newStop);
+  const chr = section.chromosome;
+  const newStart = section.isInverted ? section.speciesStop : section.speciesStart;
+  const newStop = section.isInverted ? section.speciesStart : section.speciesStop;
+  emit('swap-backbone', sectionMapName, chr, newStart, newStop);
+};
 
-      // Update comparative species and order
-      const newComparativeSpecies = [...store.state.comparativeSpecies];
-      const newBackboneIndex = newComparativeSpecies.findIndex((s) => s.activeMap.key === selectedSpecies.activeMap.key);
-      newComparativeSpecies.splice(newBackboneIndex, 1);
-      newComparativeSpecies.push(oldBackboneSpecies);
-      store.dispatch('setComparativeSpecies', newComparativeSpecies);
-
-      // Set the new order, swapping the order of the old backbone with the order
-      // of the new backbone species
-      const speciesOrder: any = {...store.state.speciesOrder};
-      const oldOrder = speciesOrder[selectedSpecies.activeMap.key];
-      const newOrder = speciesOrder[oldBackboneSpecies.activeMap.key];
-      speciesOrder[selectedSpecies.activeMap.key] = newOrder;
-      speciesOrder[oldBackboneSpecies.activeMap.key] = oldOrder;
-      store.dispatch('setSpeciesOrder', speciesOrder);
-
-      // NOTE: we may not need to clear these out, but it may not make sense
-      // to keep selected info
-      store.dispatch('setSelectedData', []);
-      store.dispatch('setSelectedGeneIds', []);
-      store.dispatch('setGene', null);
-      store.dispatch('clearUserHistory');
-      // NOTE: do this last because it kicks of reprocessing on Main.vue
-      store.dispatch('setSpecies', selectedSpecies);
-    }
-  }
+const onBackboneSwapNewWindow = async (section: SyntenySection) => {
+  const sectionMapName = section.mapName;
+  const sectionChr = section.chromosome;
+  const start = section.isInverted ? section.speciesStop : section.speciesStart;
+  const stop = section.isInverted ? section.speciesStart : section.speciesStop;
+  const route = router.resolve({
+    path: '/main',
+    query: {
+      key: sectionMapName,
+      chr: sectionChr,
+      start: start,
+      stop: stop,
+    },
+  });
+  window.open(route.href, '_blank');
 };
 
 const getSectionFill = (section: VCMapSVGElement) => {

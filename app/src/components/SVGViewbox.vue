@@ -30,6 +30,7 @@
             select-on-click
             :region="(region as SyntenyRegion)"
             @show-context-menu="handleShowContextMenu"
+            @swap-backbone="handleSwapBackbone"
           />
         </template>
       </template>
@@ -69,6 +70,7 @@
             @synteny-hover="onDetailedSyntenyHover"
             @block-hover="onDetailedBlockHover"
             @show-context-menu="handleShowContextMenu"
+            @swap-backbone="handleSwapBackbone"
             />
         </template>
         <template v-for="(label, index) in syntenySet.geneLabels" :key="index">
@@ -319,6 +321,10 @@ interface Props
 
 const props = defineProps<Props>();
 
+const emit = defineEmits<{
+  (e: 'swap-backbone', mapKey: string, chr: string, start: number, stop: number): void,
+}>();
+
 let detailedSyntenySets = ref<SyntenyRegionSet[]>([]); // The currently displayed SyntenicRegions in the detailed panel
 let overviewBackboneSet = ref<BackboneSet>();
 let detailedBackboneSet = ref<BackboneSet>();
@@ -433,6 +439,10 @@ const displayDensityTrackTogglePanel = computed(() => {
 const handleShowContextMenu = (event: MouseEvent, menuItems: MenuItem[]) => {
   items.value = menuItems;
   cm.value.show(event);
+};
+
+const handleSwapBackbone = (mapKey: string, chr: string, start: number, stop: number) => {
+  emit('swap-backbone', mapKey, chr, start, stop);
 };
 
 const getSpeciesName = (mapKey: number) => {
