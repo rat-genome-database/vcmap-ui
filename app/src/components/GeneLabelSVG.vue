@@ -101,14 +101,6 @@ const getLabelText = (label: GeneLabel) => {
 const onMouseEnter = (event: MouseEvent, label: GeneLabel) => {
   label.isHovered = true;
   showHoveredData(label, event);
-
-  // If there are selected genes, don't update the selected data panel
-  if (store.state.selectedGeneIds.length === 0 && store.state.selectedVariantSections.length === 0) {
-    const newSelectedData = label.genes.map((gene) => {
-      return new SelectedData(gene.clone(), 'Gene');
-    });
-    store.dispatch('setSelectedData', newSelectedData);
-  }
 };
 
 const onMouseLeave = (label: GeneLabel) => {
@@ -116,7 +108,7 @@ const onMouseLeave = (label: GeneLabel) => {
   hideHoveredData();
 
   // Only reset data onMouseLeave if there isn't a selected gene
-  if (store.state.selectedGeneIds.length === 0 && store.state.selectedVariantSections.length === 0) {
+  if (store.state.selectedGeneIds.length === 0 && store.state.selectedVariantSections.length === 0 && store.state.selectedBlocks.length === 0) {
     store.dispatch('setSelectedData', null);
   }
 };

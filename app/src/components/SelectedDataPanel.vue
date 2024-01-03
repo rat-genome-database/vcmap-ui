@@ -59,8 +59,9 @@
 
         <template v-else-if="(dataObject.type === 'trackSection' || dataObject.type === 'backbone' || dataObject.type === 'variantDensity')">
           <template v-if="(dataObject.type === 'trackSection')">
-            <GeneInfo
-              :gene="dataObject?.genomicSection.gene ? dataObject?.genomicSection.gene : null"
+            <BlockInfo
+              class="block-info"
+              :block-section="dataObject.genomicSection"
               :chromosome="dataObject.genomicSection.chromosome"
               :start="dataObject.genomicSection.speciesStart"
               :stop="dataObject.genomicSection.speciesStop"
@@ -96,6 +97,7 @@
 import SelectedData from '@/models/SelectedData';
 import Gene from '@/models/Gene';
 import GeneInfo from '@/components/GeneInfo.vue';
+import BlockInfo from '@/components/BlockInfo.vue';
 import VariantInfo from './VariantInfo.vue';
 import { ref, watch, computed } from 'vue';
 
@@ -221,7 +223,7 @@ const sortedSelectedData = computed(() => {
 <style lang="scss" scoped>
 .gene-data
 {
-  overflow-y: scroll;
+  overflow-y: auto;
   height: 550px;
 }
 

@@ -21,7 +21,7 @@
         @mouseenter="onMouseEnter($event, blockSection, 'trackSection')"
         @mouseleave="onMouseLeave(blockSection)"
         @mousemove="updatePositionLabelFromMouseEvent($event, blockSection)"
-        @click="onSyntenyBlockClick(blockSection, $event)"
+        @click="onSyntenyBlockClick(blockSection, $event, region)"
         :y="blockSection.posY1"
         :x="blockSection.posX1"
         :width="blockSection.width"
@@ -50,6 +50,7 @@
       @mouseenter="onMouseEnter($event, blockSection, 'trackSection')"
       @mouseleave="onMouseLeave(blockSection)"
       @mousemove="updatePositionLabelFromMouseEvent($event, blockSection)"
+      @click="onSyntenyBlockClick(blockSection, $event, region)"
       :y="blockSection.posY1"
       :x="blockSection.posX1"
       :width="blockSection.width"
@@ -123,6 +124,7 @@ import { watch, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import SelectedData, { SelectedDataType } from '@/models/SelectedData';
 import SyntenyRegion from '@/models/SyntenyRegion';
+import { SyntenyRegionInfo } from '@/models/SyntenyRegion';
 import SyntenySection from '@/models/SyntenySection';
 import DatatrackSection, { GeneDatatrack, VariantDensity } from '@/models/DatatrackSection';
 import { computed, toRefs } from '@vue/reactivity';
@@ -341,16 +343,8 @@ const onMouseEnter = (event: MouseEvent, section: SyntenySection | DatatrackSect
       {
 
         selectedDataList.push(new SelectedData(section, 'variantDensity'));
-      } else
-      {
-        selectedDataList.push(new SelectedData(section, type));
-      }
+      } 
     }
-  }
-
-  if (selectedDataList.length > 0)
-  {
-    store.dispatch('setSelectedData', selectedDataList);
   }
 };
 
@@ -366,8 +360,8 @@ const onMouseLeave = (section: DatatrackSection | SyntenySection) => {
     section.isHovered = false;
   }
   
-  // Only reset data onMouseLeave if there isn't a selected gene or variant sections
-  if (store.state.selectedGeneIds.length === 0 && store.state.selectedVariantSections.length === 0) {
+  // Only reset data onMouseLeave if there isn't a selected gene or variant sections or block
+  if (store.state.selectedGeneIds.length == 0 && store.state.selectedVariantSections.length == 0 && store.state.selectedBlocks.length == 0) {
     store.dispatch('setSelectedData', null);
   }
 
@@ -380,10 +374,44 @@ const onMouseLeave = (section: DatatrackSection | SyntenySection) => {
   hideHoveredData();
 };
 
-const onSyntenyBlockClick = (section: GenomicSection, event: any) => {
-  if (event.shiftKey && section instanceof SyntenySection) {
-    onBackboneSwap(section);
-  } else if (props.selectOnClick) {
+const onSyntenyBlockClick = (section: SyntenySection, event: any, region:SyntenyRegion ) => {
+  //select the synteny block for display in the selectedDataPanel
+  let selectedDataList: SelectedData[] = [];
+
+  //construct region info
+  //loop loaded data tracks and get variant counts
+  let variantCount = 0;
+  region.datatrackSets.forEach((datatrackSet) => {
+    if (datatrackSet.type === 'variant')
+    {
+      variantCount = datatrackSet.datatracks.length;
+    }
+  });
+
+  const regionInfo: SyntenyRegionInfo = {
+    blockCount: region.syntenyBlocks.length,
+    gapCount: region.syntenyGaps.length,
+    geneCount: region.genes.length,
+    variantCount: variantCount,
+  };
+
+  section.regionInfo = regionInfo;
+  //clear out any selected genes or variant sections
+  store.dispatch('setSelectedGeneIds', []);
+  store.dispatch('setSelectedVariantSections', []);
+  //set our section as selected
+  store.dispatch('setSelectedBlocks', section);
+  selectedDataList.push(new SelectedData(section, 'trackSection'));
+  
+  if (event.shiftKey) {
+    const selectedDataArray = [...(store.state.selectedData || []), ...selectedDataList];
+    store.dispatch('setSelectedData', selectedDataArray);
+  } else if (selectedDataList.length > 0) {
+    store.dispatch('setSelectedData', selectedDataList);
+  }
+
+  
+  if (props.selectOnClick) {
     const backboneChromosome = store.state.chromosome;
     if (backboneChromosome && section.backboneAlignment)
     {

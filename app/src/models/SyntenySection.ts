@@ -2,6 +2,7 @@ import Chromosome from './Chromosome';
 import Label from './Label';
 import { Formatter } from '@/utils/Formatter';
 import GenomicSection, { BackboneAlignment, RenderType, WindowBasePairRange } from './GenomicSection';
+import { SyntenyRegionInfo } from './SyntenyRegion';
 
 export type SyntenySectionType = 'block' | 'gap';
 export type Orientation = '+' | '-';
@@ -30,6 +31,7 @@ export default class SyntenySection extends GenomicSection
   orientation: Orientation = '+';  // orientation of the synteny block
   chainLevel: number = 0;        // level of the chain that this section is on
   isInverted: boolean = false;
+  regionInfo?: SyntenyRegionInfo;
 
   constructor(params: SyntenySectionParams)
   {
