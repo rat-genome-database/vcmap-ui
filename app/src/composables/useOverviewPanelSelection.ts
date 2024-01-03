@@ -13,7 +13,7 @@ export default function useOverviewPanelSelection(store: Store<VCMapState>) {
   let svg: SVGSVGElement | null;
 
   onMounted(() => {
-    svg = document.querySelector('svg');
+    svg = document.querySelector('#svg-wrapper');
   });
 
   const getOverviewSelectionStatus = () => {
