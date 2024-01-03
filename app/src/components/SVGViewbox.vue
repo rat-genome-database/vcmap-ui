@@ -273,7 +273,7 @@ import { key } from '@/store';
 import { createSyntenicRegionSets,  } from '@/utils/SectionBuilder';
 import useOverviewPanelSelection from '@/composables/useOverviewPanelSelection';
 import { useLogger } from 'vue-logger-plugin';
-import Toast from 'primevue/toast';
+import Toast, { ToastMessageOptions } from 'primevue/toast';
 import Fieldset from 'primevue/fieldset';
 import { useToast } from 'primevue/usetoast';
 import { createBackboneSection, backboneDatatrackBuilder, createBackboneSet } from '@/utils/BackboneBuilder';
@@ -851,7 +851,7 @@ window.addEventListener('keyup', function(event) {
     }
 });
 
-const showToast = (severity: string, title: string, details: string, duration: number) => {
+const showToast = (severity: ToastMessageOptions["severity"], title: string, details: string, duration: number) => {
   const toastCount = store.state.selectionToastCount;
   
   if (toastCount % 10 == 0)

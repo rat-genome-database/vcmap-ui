@@ -44,10 +44,15 @@ import { useStore } from 'vuex';
 import { key } from '@/store';
 import { useLogger } from 'vue-logger-plugin';
 import { getNewSelectedData } from '@/utils/DataPanelHelpers';
+import { inject } from 'vue';
+import { querySyntenyForSearchZoomKey } from '@/injection_keys/main';
+import useGeneSearchAndSelect from '@/composables/useGeneSearchAndSelect';
 
 const $log = useLogger();
 const store = useStore(key);
-const SEARCHED_GENE_WINDOW_FACTOR = 3;
+
+const queryForSynteny = inject(querySyntenyForSearchZoomKey);
+const { getWindowBasePairRangeForGene } = useGeneSearchAndSelect(store);
 
 interface Props
 {
@@ -62,14 +67,13 @@ interface Props
 
 const props = defineProps<Props>();
 
-const selectGene = (gene: Gene | null) => {
+const selectGene = async (gene: Gene | null) => {
   if (gene == null)
   {
     $log.warn(`Selected gene is null`);
     return;
   }
 
-  const geneLength = gene.stop - gene.start;
   if (!gene.backboneStart || !gene.backboneStop) {
     return;
   }
@@ -80,17 +84,20 @@ const selectGene = (gene: Gene | null) => {
   store.dispatch('setSelectedGeneIds', newData.rgdIds);
   store.dispatch('setSelectedData', newData.selectedData);
 
-  if (store.state.chromosome == null)
+  if (store.state.chromosome == null || queryForSynteny == null)
   {
-    $log.error(`Chromosome in state is null. Cannot dispatch setDetailedBasePairRequest action.`);
+    $log.error(
+      `Backbone chromosome or queryForSynteny function is not defined or null. Cannot dispatch setDetailedBasePairRequest action.`,
+      store.state.chromosome,
+      queryForSynteny,
+    );
     return;
   }
 
+  const windowRange = await getWindowBasePairRangeForGene(queryForSynteny, store.state.chromosome, gene.rgdId, props.geneList);
+
   store.dispatch('setDetailedBasePairRequest', {
-    range: {
-      start: Math.max(gene.backboneStart - (geneLength * SEARCHED_GENE_WINDOW_FACTOR), 0),
-      stop: Math.min(gene.backboneStop + (geneLength * SEARCHED_GENE_WINDOW_FACTOR), store.state.chromosome.seqLength)
-    },
+    range: windowRange,
     source: gene.symbol
   });
 };

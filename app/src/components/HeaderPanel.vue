@@ -16,7 +16,7 @@
         <div class="grid p-d-flex">
           <InfoHeader />
           <Divider layout="vertical" />
-          <NavigationHeader :geneList="geneList" :selectedData="selectedData" :queryForSynteny="props.queryForSynteny" />
+          <NavigationHeader :geneList="geneList" :selectedData="selectedData" />
         </div>
       </Panel>
     </div>
@@ -32,7 +32,6 @@ import NavigationHeader from '@/components/NavigationHeader.vue';
 import HelpModal from './HelpModal.vue';
 import Gene from '@/models/Gene';
 import SelectedData from '@/models/SelectedData';
-import Chromosome from '@/models/Chromosome';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -41,7 +40,6 @@ const router = useRouter();
 interface Props 
 {
   onShowSettings: () => void;
-  queryForSynteny: (backboneChromosome: Chromosome, start: number, stop: number, mapKey: number) => Promise<void>;
   geneList: Map<number, Gene>;
   selectedData: SelectedData[] | null;
 }
