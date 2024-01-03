@@ -6,7 +6,7 @@ export default function useMouseBasePairPos() {
   const mouseYPos = ref<number>();
 
   onMounted(() => {
-    svg = document.querySelector('svg');
+    svg = document.querySelector('#svg-wrapper');
   });
   
   /**
