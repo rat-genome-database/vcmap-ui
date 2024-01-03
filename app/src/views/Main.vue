@@ -2,7 +2,6 @@
   <AppHeader />
   <HeaderPanel
     :on-show-settings="onShowSettings"
-    :query-for-synteny="querySyntenyForSearchZoom"
     :geneList="geneList"
     :selected-data="store.state.selectedData"
   />
@@ -71,7 +70,7 @@ import SelectedDataPanel from '@/components/SelectedDataPanel.vue';
 import { useStore } from 'vuex';
 import { useRoute, useRouter } from 'vue-router';
 import { key } from '@/store';
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, provide, ref, watch } from 'vue';
 import Toast, { ToastMessageOptions } from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 import Gene from "@/models/Gene";
@@ -94,6 +93,7 @@ import { VCMapLogger } from '@/logger';
 import HoveredDataTooltip from '@/components/HoveredDataTooltip.vue';
 import SettingsDialog from '@/components/SettingsDialog.vue';
 import AppHeader from '@/components/AppHeader.vue';
+import {querySyntenyForSearchZoomKey} from '@/injection_keys/main';
 
 // TODO: Can we figure out a better way to handle blocks with a high chainlevel?
 const MAX_CHAINLEVEL = 2;
@@ -105,7 +105,17 @@ const router = useRouter();
 const $log = useLogger() as VCMapLogger;
 const toast = useToast();
 
-const { showDialog, dialogHeader, dialogMessage, showDialogBackButton, dialogTheme, onError } = useDialog();
+const {
+  showDialog,
+  dialogHeader,
+  dialogMessage, 
+  showDialogBackButton,
+  dialogTheme,
+  onError
+} = useDialog();
+
+// Provide the function for re-querying synteny to any child components that need it
+provide(querySyntenyForSearchZoomKey, querySyntenyForSearchZoom);
 
 const showSettings = ref(false);
 const isLoading = ref(false);
@@ -802,6 +812,11 @@ async function loadSyntenyVariants(mapKeys: number[] | null, triggerUpdate: bool
 }
 
 async function loadComparativeSpecies() {
+  if (store.state.chromosome == null) {
+    $log.error(`No backbone chromosome found on store`);
+    return;
+  }
+
   isLoading.value = true;
   const origComparativeSpeciesIds = store.state.comparativeSpecies.map((species: Species) => species.activeMap.key);
   const newComparativeSpeciesIds = savedComparativeSpecies.map((species: Species) => species.activeMap.key);

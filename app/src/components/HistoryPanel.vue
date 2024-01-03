@@ -28,7 +28,7 @@
   </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import UserHistory from '@/models/UserHistory';
@@ -46,10 +46,6 @@ interface HistoryItem {
 const store = useStore(key);
 
 const selectedHistory = ref<HistoryItem | null>(null);
-
-watch(selectedHistory, (newHistoryItem) => {
-  console.log('watch history', newHistoryItem);
-});
 
 const history = computed(() => store.state.history);
 

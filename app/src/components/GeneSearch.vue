@@ -19,21 +19,23 @@
 <script lang="ts" setup>
 import SelectedData from '@/models/SelectedData';
 import Gene from '@/models/Gene';
-import Chromosome from '@/models/Chromosome';
 import { BasePairRange } from '@/models/BackboneSelection';
-import { ref,} from 'vue';
+import { inject, ref,} from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
-import { getNewSelectedData, sortGeneMatches, adjustSelectionWindow } from '@/utils/DataPanelHelpers';
+import { getNewSelectedData, sortGeneMatches } from '@/utils/DataPanelHelpers';
+import useGeneSearchAndSelect from '@/composables/useGeneSearchAndSelect';
+import { querySyntenyForSearchZoomKey } from '@/injection_keys/main';
 
 const store = useStore(key);
-const MAX_SEARCH_ITERS = 5;
+
+const queryForSynteny = inject(querySyntenyForSearchZoomKey);
+const { getWindowBasePairRangeForGene } = useGeneSearchAndSelect(store);
 
 interface Props
 {
   selectedData: SelectedData[] | null;
   geneList: Map<number, Gene>;
-  queryForSynteny: (backboneChromosome: Chromosome, start: number, stop: number, mapKey: number) => Promise<void>;
 }
 
 const props = defineProps<Props>();
@@ -65,7 +67,7 @@ const goBack = () => {
     store.dispatch('setSelectedData', newData.selectedData);
     //clear searched gene
     searchedGene.value = lastView.gene;
-    store.dispatch('setDetailedBasePairRequest', {range: lastView.range});
+    store.dispatch('setDetailedBasePairRequest', {range: lastView.range, source: `Searched: ${lastView.gene.symbol}`});
   }
 };
 
@@ -75,30 +77,24 @@ const searchSVG = async (event: { value: Gene }) => {
   store.dispatch('setSelectedGeneIds', newData.rgdIds || []);
   store.dispatch('setSelectedData', newData.selectedData);
 
-  if (event.value && store.state.chromosome != null)
+  if (event.value && store.state.chromosome != null && queryForSynteny != null)
   {
-    // Adapatively generate the newWindow based on the searched gene and its new position
-    // when the zoom is increased
-    let newWindow;
-    for (let i = 0; i < MAX_SEARCH_ITERS; i++) {
-      newWindow = adjustSelectionWindow(event.value, props.geneList, store);
-      // Get new synteny blocks based on the newWindow to check the location of searched gene
-      await props.queryForSynteny(store.state.chromosome, newWindow.start, newWindow.stop, event.value.mapKey);
-      // This should the updated searched gene after updating resoluiton of the region
-      const searchedGene = props.geneList.get(event.value.rgdId);
-      // After the gene is updated, check if it is within the new window
-      if (searchedGene && searchedGene.backboneStart > newWindow.start && searchedGene.backboneStop < newWindow.stop) {
-        break;
-      }
-    }
-    //cache our current window so we can go back to it
-    const currentWindow = store.state.detailedBasePairRange;
+    const newWindow = await getWindowBasePairRangeForGene(
+      queryForSynteny,
+      store.state.chromosome,
+      event.value.rgdId,
+      props.geneList
+    );
+
     if (lastSearch != null) {
       // Only add the current search if it isn't the first search (no need to add the very first search to the array since the user can only go back)
       preSearchViews.value.push(lastSearch);
     }
     store.dispatch('setDetailedBasePairRequest', {range: newWindow, source: `Searched: ${event.value.symbol}`});
-    lastSearch = {gene: event.value, range: currentWindow};
+    if (newWindow) {
+      // Now that this search has been completed, store it as the last search
+      lastSearch = {gene: event.value, range: newWindow};
+    }
   }
 };
 
