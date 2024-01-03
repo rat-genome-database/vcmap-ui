@@ -72,7 +72,7 @@ import { useStore } from 'vuex';
 import { useRoute, useRouter } from 'vue-router';
 import { key } from '@/store';
 import { onMounted, ref, watch } from 'vue';
-import Toast from 'primevue/toast';
+import Toast, { ToastMessageOptions } from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 import Gene from "@/models/Gene";
 import Block from "@/models/Block";
@@ -698,7 +698,7 @@ function onProceedWithErrors()
   initVCMapProcessing();
 }
 
-function showToast(severity: string, title: string, details: string, duration: number)
+function showToast(severity: ToastMessageOptions["severity"], title: string, details: string, duration: number)
 {
   toast.add({severity: severity, summary: title, detail: details, life: duration });
 }

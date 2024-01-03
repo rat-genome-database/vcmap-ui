@@ -4,8 +4,7 @@
         v-model="selectedHistory" 
         :options="formattedHistory" 
         optionLabel="label" 
-        @change="onHistorySelect($event.value)" 
-        @focus="refreshHistory"
+        @change="onHistorySelect($event.value)"
         placeholder="Select from history..." 
         :virtualScrollOptions="{itemSize: 30}"
         showClear
@@ -16,7 +15,7 @@
             {{ formattedHistory.length - slotProps.option.value }}. {{ slotProps.option.label }}
           </div>
           <div class="subscript">
-            {{`${slotProps.option.timestamp}: ${slotProps.option.position.start}bp - ${slotProps.option.position.stop}bp `}}
+            {{`${Formatter.timeAgo(slotProps.option.timestamp)}: ${slotProps.option.position.start}bp - ${slotProps.option.position.stop}bp `}}
           </div>
         </div>
       </template>
@@ -34,27 +33,33 @@ import { useStore } from 'vuex';
 import { key } from '@/store';
 import UserHistory from '@/models/UserHistory';
 import { Formatter } from '../utils/Formatter';
+import { BasePairRange } from '@/models/BackboneSelection';
+
+interface HistoryItem {
+  label: string;
+  index: number;
+  timestamp: number;
+  position: BasePairRange;
+  value: number;
+}
 
 const store = useStore(key);
 
-const selectedHistory = ref(null);
+const selectedHistory = ref<HistoryItem | null>(null);
 
-// Used to cause a refresh each time dropdown is used for accurate time
-const refreshCounter = ref(0);
-const refreshHistory = () => refreshCounter.value++;
-watch(refreshCounter, () => {
+watch(selectedHistory, (newHistoryItem) => {
+  console.log('watch history', newHistoryItem);
 });
 
 const history = computed(() => store.state.history);
 
-const formattedHistory = computed(() => {
-  console.log(refreshCounter.value);
+const formattedHistory = computed((): HistoryItem[] => {
   const historyLength = store.state.history.length;
   return store.state.history.map((entry, index) => {
     return {
       label: entry.source,
       index: historyLength - index,
-      timestamp: Formatter.timeAgo(entry.timestamp),
+      timestamp: entry.timestamp,
       position: entry.range,
       value: index
     };
@@ -63,7 +68,7 @@ const formattedHistory = computed(() => {
 
 
 
-const onHistorySelect = ( selectedItem: any ) => {
+const onHistorySelect = ( selectedItem: HistoryItem ) => {
   if (selectedItem && selectedItem.value !== null) {
     selectedHistory.value = selectedItem;
     const entry: UserHistory = history.value[selectedItem.value];
