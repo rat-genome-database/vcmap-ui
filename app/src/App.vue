@@ -55,7 +55,11 @@
   }
 }
 
-button.p-button.p-component
+/**
+ * Give all primevue buttons more of a radius. The :not selector is being used
+ * to exclude buttons that are attached to the number input component
+ */
+button.p-button.p-component:not(.p-inputnumber-button-group button)
 {
   border-radius: 7px;
 }
