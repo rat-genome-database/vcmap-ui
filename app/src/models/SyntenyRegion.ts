@@ -8,6 +8,15 @@ import Gene from './Gene';
 import { isGenomicDataInViewport } from '@/utils/Shared';
 import logger from '@/logger';
 
+//this class is used to store info of interest for synteny regions/associated blocks in the data panel
+export interface SyntenyRegionInfo
+{
+  blockCount?: number
+  gapCount?: number; 
+  geneCount?: number;
+  variantCount?: number;
+}
+
 interface SyntenyRegionParams
 {
   species: string;
