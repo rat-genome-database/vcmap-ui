@@ -90,6 +90,7 @@ import Gene from '@/models/Gene';
 import DatatrackSet from '@/models/DatatrackSet';
 import { getSelectedDataAndGeneIdsFromOrthologLine } from '@/utils/OrthologHandler';
 import useSyntenyAndDataInteraction from '@/composables/useSyntenyAndDataInteraction';
+import { createUrl } from '@/utils/ExternalLinks';
 
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
 const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
@@ -118,7 +119,8 @@ interface Props {
 
 interface MenuItem {
   label: string,
-  command: () => void;
+  command?: () => void;
+  items?: MenuItem[];
 }
 
 interface ContextMenuType {
@@ -185,24 +187,6 @@ const isDetailed = computed(() => {
   return props.backboneSet.backbone.renderType === 'detailed';
 });
 
-const createJBrowseLink = (section: SyntenySection | DatatrackSection) => {
-  const assembly = section.mapName === 'GRCh38' ? 'GRCh38.p14' : section.mapName;
-  const chromosome = section.chromosome;
-  let start = section.speciesStart;
-  let stop = section.speciesStop;
-
-  // Invert start/stop if needed
-  if (start > stop) [start, stop] = [stop, start];
-
-  // Base URL for JBrowse - replace with the actual JBrowse base URL
-  const jbrowseBaseUrl = "https://rgd.mcw.edu/rgdweb/jbrowse2/find.jsp?dest=jbrowse2";
-
-  // Construct the full URL
-  const jbrowseUrl = `${jbrowseBaseUrl}?&assembly=${assembly}&loc=chr${chromosome}:${start}-${stop}`;
-
-  return jbrowseUrl;
-};
-
 const showContextMenu = ({ event, region, section, track }: ContextMenuType) => {
   let items: MenuItem[] = [];
   if (props.isOverview) {
@@ -210,18 +194,24 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
       items = [
         {
           label: 'Link to JBrowse',
-          command: () => { window.open(createJBrowseLink(section)); }
+          command: () => { window.open(createUrl(section)); },
+          icon: 'pi pi-external-link',
         },
         {
           separator: true
         },
         {
-          label: 'Make Backbone',
-          command: () => { onBackboneSwap(section); }
+          label: 'Set as Backbone',
+          command: () => { onBackboneSwap(section); },
+          icon: 'pi pi-sync'
         },
         {
-          label: 'Make Backbone in new tab',
-          command: () => { onBackboneSwapNewWindow(section); }
+          separator: true
+        },
+        {
+          label: 'Set as Backbone (New Tab)',
+          command: () => { onBackboneSwapNewWindow(section); },
+          icon: 'pi pi-window-maximize'
         },
       ];
     }
@@ -229,46 +219,81 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
     if (section && region) {
       items = [
         {
-          label: 'Link highlighted section to JBrowse',
-          command: () => { window.open(createJBrowseLink(section)); }
-        },
-        {
-          label: 'Link dotted region to JBrowse',
-          command: () => { window.open(createJBrowseLink(region.gaplessBlock)); }
+          label: 'Link to JBrowse',
+          icon: 'pi pi-external-link',
+          items: [
+            {
+              label: 'Highlighted Section',
+              command: () => { window.open(createUrl(section)); }
+            },
+            {
+              separator: true
+            },
+            {
+              label: 'Dotted Region',
+              command: () => { window.open(createUrl(region.gaplessBlock)); }
+            }
+          ]
         },
         {
           separator: true
         },
         {
-          label: 'Make highlighted section Backbone',
-          command: () => { onBackboneSwap(section); }
-        },
-        {
-          label: 'Make dotted region Backbone',
-          command: () => { onBackboneSwap(region.gaplessBlock); }
+          label: 'Set as Backbone',
+          icon: 'pi pi-sync',
+          items: [
+            {
+              label: 'Highlighted Section',
+              command: () => { onBackboneSwap(section); },
+            },
+            {
+              separator: true
+            },
+            {
+              label: 'Dotted Region',
+              command: () => { onBackboneSwap(region.gaplessBlock); }
+            },
+          ]
         },
         {
           separator: true
         },
         {
-          label: 'Make highlighted section Backbone in new tab',
-          command: () => { onBackboneSwapNewWindow(section); }
-        },
-        {
-          label: 'Make dotted region Backbone in new tab',
-          command: () => { onBackboneSwapNewWindow(region.gaplessBlock); }
+          label: 'Set as Backbone (New Tab)',
+          icon: 'pi pi-window-maximize',
+          items: [
+            {
+              label: 'Highlighted Section',
+              command: () => { onBackboneSwapNewWindow(section); }
+            },
+            {
+              label: 'Dotted Region',
+              command: () => { onBackboneSwapNewWindow(region.gaplessBlock); }
+            },
+          ]
         },
       ];
     }
   }
 
   if (track) {
-    items = [
-      {
-        label: 'Link to JBrowse',
-        command: () => { window.open(createJBrowseLink(track)); }
-      }
-    ];
+    if (track.type === 'variant') {
+      items = [
+        {
+          label: 'Link to Variant Visualizer',
+          command: () => { window.open(createUrl(track)); },
+          icon: 'pi pi-external-link'
+        }
+      ];
+    } else {
+      items = [
+        {
+          label: 'Link to JBrowse',
+          command: () => { window.open(createUrl(track)); },
+          icon: 'pi pi-external-link'
+        }
+      ];
+    }
   }
   emit('show-context-menu', event, items);
 };

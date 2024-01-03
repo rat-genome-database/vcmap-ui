@@ -93,6 +93,7 @@ import { VCMapSVGElement } from '@/models/VCMapSVGElement';
 import useMouseBasePairPos from '@/composables/useMouseBasePairPos';
 import { getSelectedDataAndGeneIdsFromOrthologLine } from '@/utils/OrthologHandler';
 import useSyntenyAndDataInteraction from '@/composables/useSyntenyAndDataInteraction';
+import { createUrl } from '@/utils/ExternalLinks';
 
 const INNER_SELECTION_EXTRA_WIDTH = 4;
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
@@ -181,31 +182,16 @@ onMounted(() => {
   highlightSelections(store.state.selectedGeneIds);
 });
 
-const createJBrowseLink = (section: any) => {
-  const assembly = section.mapName === 'GRCh38' ? 'GRCh38.p14' : section.mapName;
-  const chromosome = section.chromosome;
-  let start = section.speciesStart;
-  let stop = section.speciesStop;
-
-  // Invert start/stop if needed
-  if (start > stop) [start, stop] = [stop, start];
-
-  // Base URL for JBrowse - replace with the actual JBrowse base URL
-  const jbrowseBaseUrl = "https://rgd.mcw.edu/rgdweb/jbrowse2/find.jsp?dest=jbrowse2";
-
-  // Construct the full URL
-  const jbrowseUrl = `${jbrowseBaseUrl}&assembly=${assembly}&loc=chr${chromosome}:${start}-${stop}`;
-
-  return jbrowseUrl;
-};
-
 const showContextMenu = (event: MouseEvent, datatrack: DatatrackSection) => {
   let items: MenuItem[] = [];
-
-  items = [{
-    label: 'Link to JBrowse',
-    command: () => { window.open(createJBrowseLink(datatrack)); }
-  }];
+  items = [
+    {
+      // Change label depending on if variant or gene
+      label: datatrack.type === 'variant' ? 'Link to Variant Visualizer' : 'Link to JBrowse',
+      command: () => { window.open(createUrl(datatrack)); },
+      icon: 'pi pi-external-link'
+    }
+  ];
   emit('show-context-menu', event, items);
 };
 
