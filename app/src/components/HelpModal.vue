@@ -33,6 +33,10 @@
               The dotted region refers to the entire level 1 block that the highlighted section belongs to. This can also be seen when hovering over the syntenic block.
             </li>
             <li>
+              To change the positions of the comparative species tracks, you can use the gray <span class="pi pi-chevron-left"></span> and <span class="pi pi-chevron-right"></span> buttons
+              above the species names in the <b>Detailed</b> panel.
+            </li>
+            <li>
               To open the configuration page in a new tab, click on the <span class="pi pi-cog"></span> button in the <b>Header Panel</b> and choose <b>New Configuration</b>.
             </li>
             <li>
