@@ -82,7 +82,7 @@
           </template>
           <template v-else-if="dataObject?.type === 'variantDensity'">
             <VariantInfo
-              :variantSection="dataObject"
+              :variantSection="(dataObject.genomicSection as VariantDensity)"
             />
           </template>
           <Divider />
@@ -100,6 +100,7 @@ import GeneInfo from '@/components/GeneInfo.vue';
 import BlockInfo from '@/components/BlockInfo.vue';
 import VariantInfo from './VariantInfo.vue';
 import { ref, watch, computed } from 'vue';
+import { VariantDensity } from '@/models/DatatrackSection';
 
 /**
  * FIXME: This whole component needs to be looked over. There are references to properties on objects that don't exist.

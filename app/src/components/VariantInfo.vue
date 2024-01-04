@@ -2,30 +2,39 @@
     <div class="label-row">
         <div>
             <span class="label">Variant Section:</span>
-            <span>{{ props.variantSection?.genomicSection.speciesName }} </span>
+            <span>{{ props.variantSection?.speciesName }} </span>
         </div>
-        <Button
-            class="p-button-link rgd-link"
-            v-tooltip.left="`View in RGD`"
-            @click="goToRgd()"
-        >
-            <i class="pi pi-external-link external-link"></i>
-        </Button>
     </div>
     <div>
-        <span class="label">Chr{{ props.variantSection?.genomicSection.chromosome }}: </span>
+        <span class="label">Chr{{ props.variantSection?.chromosome }}: </span>
         <Button
             class="p-button-link rgd-link"
             @click="selectRegion()"
             v-tooltip.left="`Zoom to region`"
         >
-            <b>{{ Formatter.addCommasToBasePair(props.variantSection?.genomicSection.speciesStart) }} - {{ Formatter.addCommasToBasePair(props.variantSection?.genomicSection.speciesStop) }}</b>
+            <b>{{ Formatter.addCommasToBasePair(props.variantSection?.speciesStart ?? null) }} - {{ Formatter.addCommasToBasePair(props.variantSection?.speciesStop ?? null) }}</b>
         </Button>
     </div>
     <div>
         <span class="label">Variant Count: </span>
-        <span>{{ Formatter.addCommasToBasePair(props.variantSection?.genomicSection.variantCount) }}</span>
+        <span>{{ Formatter.addCommasToBasePair(props.variantSection?.variantCount ?? null) }}</span>
     </div>
+    <div>
+        <Button
+            class="p-button-link rgd-link secondary-link"
+            @click="goToVariantVisualizer"
+        >
+            <b>View in RGD Variant Visualizer</b>
+        </Button>
+    </div>
+    <div>
+    <Button
+      class="p-button-link rgd-link secondary-link"
+      @click="goToJBrowse2"
+    >
+      <b>View in RGD JBrowse</b>
+    </Button>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -35,6 +44,7 @@ import { key } from '@/store';
 import { useLogger } from 'vue-logger-plugin';
 import { VariantDensity } from '@/models/DatatrackSection';
 import { computed } from 'vue';
+import { urlConstants } from '@/utils/Urls';
 
 const $log = useLogger();
 const store = useStore(key);
@@ -46,18 +56,22 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const mapKey: number = computed(() => {
+const mapKey = computed(() => {
     // iterate through store.state.comparativeSpecies and find the mapKey for the species that matches props.variantSection?.genomicSection.speciesName. If not then return store.state.species.activeMap.key
     for (const species of store.state.comparativeSpecies) {
-        if (species.name === props.variantSection?.genomicSection.speciesName) {
+        if (species.name === props.variantSection?.speciesName) {
             return species.activeMap.key;
         }
     }
-    return store.state.species.activeMap.key;
+    return store.state.species?.activeMap.key ?? null;
 });
 
 const selectRegion = () => {
-    const section = props.variantSection.genomicSection;
+    const section = props.variantSection;
+    if (section == null) {
+        $log.error(`Variant section is null. Cannot select region.`);
+        return;
+    }
 
     const speciesStart = section.speciesStart;
     const speciesStop = section.speciesStop;
@@ -82,12 +96,32 @@ const selectRegion = () => {
     });
 };
 
-const goToRgd = () => {
-    const speciesStart = props.variantSection?.genomicSection.speciesStart;
-    const speciesStop = props.variantSection?.genomicSection.speciesStop;
-    const speciesChromosome = props.variantSection?.genomicSection.chromosome;
-    const rgdUrl = `https://rgd.mcw.edu/rgdweb/front/config.html?mapKey=${mapKey.value}&chr=${speciesChromosome}&start=${speciesStart}&stop=${speciesStop}`;
+const goToVariantVisualizer = () => {
+    const speciesStart = props.variantSection?.speciesStart;
+    const speciesStop = props.variantSection?.speciesStop;
+    const speciesChromosome = props.variantSection?.chromosome;
+    const rgdUrl = `${urlConstants.variantVisualizer}?mapKey=${mapKey?.value}&chr=${speciesChromosome}&start=${speciesStart}&stop=${speciesStop}`;
     window.open(rgdUrl);
+};
+
+const goToJBrowse2 = () => {
+  if (store.state.species == null) {
+    return null;
+  }
+
+  const speciesStart = props.variantSection?.speciesStart;
+  const speciesStop = props.variantSection?.speciesStop;
+  const speciesChromosome = props.variantSection?.chromosome;
+
+  const geneSpecies = [store.state.species, ...store.state.comparativeSpecies]
+    .find(s => s.activeMap.name === props.variantSection?.mapName);
+
+  if (geneSpecies == null) {
+    return null;
+  }
+
+  const url = `${urlConstants.jbrowse2}?dest=jbrowse2&assembly=${geneSpecies.activeMap.name}&loc=chr${speciesChromosome}:${speciesStart}-${speciesStop}`;
+  window.open(url);
 };
 
 </script>
@@ -98,11 +132,19 @@ const goToRgd = () => {
     justify-content: space-between;
 }
 
-.rgd-link {
-    padding-bottom: 0;
-    padding-left: 0;
-    padding-top: 0;
-    overflow: hidden;
+.rgd-link
+{
+  padding-bottom: 0;
+  padding-left: 0;
+  padding-top: 0;
+
+  &.secondary-link {
+    font-size: 12px;
+  }
+
+  &:hover {
+    color: deepskyblue;
+  }
 }
 
 .external-link {

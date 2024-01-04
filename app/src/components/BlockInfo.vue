@@ -58,19 +58,22 @@
       </div>
     </div>
   </div>
+  <div class="divider"></div>
+  <div>
+    <Button
+      class="p-button-link rgd-link secondary-link"
+      @click="goToJBrowse2"
+    >
+      <b>View {{ blockSection.speciesName }} chr{{ blockSection.chromosome}} in RGD JBrowse</b>
+    </Button>
+  </div>
 </template>
 
 
 <script setup lang="ts">
 import SyntenySection from '@/models/SyntenySection';
-import Gene from '@/models/Gene';
 import { Formatter } from '@/utils/Formatter';
-import { useStore } from 'vuex';
-import { key } from '@/store';
-import { useLogger } from 'vue-logger-plugin';
-
-const $log = useLogger();
-const store = useStore(key);
+import { urlConstants } from '@/utils/Urls';
 
 interface Props
 {
@@ -83,6 +86,13 @@ interface Props
 }
 
 const props = defineProps<Props>();
+
+const goToJBrowse2 = () => {
+  const start = (props.blockSection.isInverted) ? props.blockSection.speciesStop : props.blockSection.speciesStart;
+  const stop = (props.blockSection.isInverted) ? props.blockSection.speciesStart : props.blockSection.speciesStop;
+  const url = `${urlConstants.jbrowse2}?dest=jbrowse2&assembly=${props.blockSection.mapName}&loc=chr${props.blockSection.chromosome}:${start}-${stop}`;
+  window.open(url);
+};
 
 </script>
 
@@ -132,5 +142,20 @@ const props = defineProps<Props>();
 }
 .alignment-info, .data-track-info {
   font-size: 0.85em;
+}
+
+.rgd-link
+{
+  padding-bottom: 0;
+  padding-left: 0;
+  padding-top: 0;
+
+  &.secondary-link {
+    font-size: 12px;
+  }
+
+  &:hover {
+    color: deepskyblue;
+  }
 }
 </style>

@@ -10,16 +10,6 @@
         </Button>
         <span v-if="gene" data-test="gene-name">({{gene.name ?? 'N/A'}})</span>
       </div>
-      <div v-if="gene != null">
-        <!-- Using '!' to assert that gene is for sure not null here as it is being checked in the parent div's v-if directive -->
-        <Button
-          class="p-button-link rgd-link"
-          v-tooltip.left="`View in RGD`"
-          @click="goToRgd(gene!.rgdId)"
-        >
-          <i class="pi pi-external-link external-link"></i>
-        </Button>
-      </div>
     </div>
   </div>
 
@@ -35,6 +25,22 @@
     data-test="level">
       Level: {{chainLevel}}
   </div>
+  <div>
+    <Button
+      class="p-button-link rgd-link secondary-link"
+      @click="goToRgdGeneSummary"
+    >
+      <b>View RGD Gene Report</b>
+    </Button>
+  </div>
+  <div>
+    <Button
+      class="p-button-link rgd-link secondary-link"
+      @click="goToJBrowse2"
+    >
+      <b>View in RGD JBrowse</b>
+    </Button>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -47,6 +53,7 @@ import { getNewSelectedData } from '@/utils/DataPanelHelpers';
 import { inject } from 'vue';
 import { querySyntenyForSearchZoomKey } from '@/injection_keys/main';
 import useGeneSearchAndSelect from '@/composables/useGeneSearchAndSelect';
+import { urlConstants } from '@/utils/Urls';
 
 const $log = useLogger();
 const store = useStore(key);
@@ -102,9 +109,29 @@ const selectGene = async (gene: Gene | null) => {
   });
 };
 
-const goToRgd = (rgdId: number) => {
-  const rgdUrl = `https://rgd.mcw.edu/rgdweb/report/gene/main.html?id=${rgdId}`;
+const goToRgdGeneSummary = () => {
+  if (props.gene == null) {
+    return null;
+  }
+
+  const rgdUrl = `${urlConstants.geneReport}?id=${props.gene.rgdId}`;
   window.open(rgdUrl);
+};
+
+const goToJBrowse2 = () => {
+  if (props.gene == null || store.state.species == null) {
+    return null;
+  }
+
+  const geneSpecies = [store.state.species, ...store.state.comparativeSpecies]
+    .find(s => s.activeMap.key === props.gene?.mapKey);
+
+  if (geneSpecies == null) {
+    return null;
+  }
+
+  const url = `${urlConstants.jbrowse2}?dest=jbrowse2&assembly=${geneSpecies.activeMap.name}&loc=chr${props.gene.chromosome}:${props.gene.start}-${props.gene.stop}`;
+  window.open(url);
 };
 
 </script>
@@ -121,6 +148,14 @@ const goToRgd = (rgdId: number) => {
   padding-bottom: 0;
   padding-left: 0;
   padding-top: 0;
+
+  &.secondary-link {
+    font-size: 12px;
+  }
+
+  &:hover {
+    color: deepskyblue;
+  }
 }
 
 .external-link
