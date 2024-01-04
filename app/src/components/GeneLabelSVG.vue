@@ -18,7 +18,6 @@ import { useStore } from 'vuex';
 import { key } from '@/store';
 import { GeneLabel } from '@/models/Label';
 import Gene from '@/models/Gene';
-import SelectedData from '@/models/SelectedData';
 import useSyntenyAndDataInteraction from '@/composables/useSyntenyAndDataInteraction';
 import OrthologLine from '@/models/OrthologLine';
 
