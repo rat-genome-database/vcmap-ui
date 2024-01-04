@@ -182,13 +182,20 @@ onMounted(() => {
   highlightSelections(store.state.selectedGeneIds);
 });
 
+const findMapKey = (name: string) => {
+  for (const species of store.state.comparativeSpecies) {
+    if (name === species.name) return species.activeMap.key;
+  }
+  return store.state.species?.activeMap.key;
+};
+
 const showContextMenu = (event: MouseEvent, datatrack: DatatrackSection) => {
   let items: MenuItem[] = [];
   items = [
     {
       // Change label depending on if variant or gene
       label: datatrack.type === 'variant' ? 'Link to Variant Visualizer' : 'Link to JBrowse',
-      command: () => { window.open(createUrl(datatrack)); },
+      command: () => { window.open(createUrl(datatrack, findMapKey(datatrack.speciesName))); },
       icon: 'pi pi-external-link'
     }
   ];

@@ -187,6 +187,13 @@ const isDetailed = computed(() => {
   return props.backboneSet.backbone.renderType === 'detailed';
 });
 
+const findMapKey = (name: string) => {
+  for (const species of store.state.comparativeSpecies) {
+    if (name === species.name) return species.activeMap.key;
+  }
+  return store.state.species?.activeMap.key;
+};
+
 const showContextMenu = ({ event, region, section, track }: ContextMenuType) => {
   let items: MenuItem[] = [];
   if (props.isOverview) {
@@ -281,7 +288,7 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
       items = [
         {
           label: 'Link to Variant Visualizer',
-          command: () => { window.open(createUrl(track)); },
+          command: () => { window.open(createUrl(track, findMapKey(track.speciesName))); },
           icon: 'pi pi-external-link'
         }
       ];
