@@ -9,7 +9,7 @@
       <rect v-if="blockSection.isHovered" :y="region.gaplessBlock.posY1" :x="region.gaplessBlock.posX1"
         :width="region.gaplessBlock.width" :height="region.gaplessBlock.height" fill="none" stroke-width=".5"
         stroke="#0000FF" stroke-dasharray="2,2" />
-      <rect class="block-section" @mouseenter="onMouseEnter($event, blockSection, 'trackSection')"
+      <rect class="block-section" @mouseenter="onMouseEnter($event, blockSection)" :class="{'is-overview-block':isOverview}"
         @mouseleave="onMouseLeave(blockSection)" @mousemove="updatePositionLabelFromMouseEvent($event, blockSection)"
         @click="onSyntenyBlockClick(blockSection, $event, region)" :y="blockSection.posY1" :x="blockSection.posX1"
         :width="blockSection.width" :height="blockSection.height" :fill="getSectionFill(blockSection)"
@@ -23,7 +23,7 @@
     <rect v-if="blockSection.isHovered" :y="region.gaplessBlock.posY1" :x="region.gaplessBlock.posX1"
       :width="region.gaplessBlock.width" :height="region.gaplessBlock.height" fill="none" stroke-width=".5"
       stroke="#0000FF" stroke-dasharray="2,2" />
-    <rect class="level-2 block-section" @mouseenter="onMouseEnter($event, blockSection, 'trackSection')"
+    <rect class="level-2 block-section" @mouseenter="onMouseEnter($event, blockSection)" :class="{'is-overview-block':isOverview}"
       @mouseleave="onMouseLeave(blockSection)" @mousemove="updatePositionLabelFromMouseEvent($event, blockSection)"
       @click="onSyntenyBlockClick(blockSection, $event, region)" :y="blockSection.posY1" :x="blockSection.posX1"
       :width="blockSection.width" :height="blockSection.height" :fill="getSectionFill(blockSection)" :fill-opacity="1" />
@@ -57,7 +57,7 @@
   <template v-for="(datatrackSet, index) in datatrackSets" :key="index">
     <template v-for="(datatrack, index) in datatrackSet.datatracks" :key="index">
       <g @contextmenu.prevent="showContextMenu({ event: $event, track: datatrack })">
-        <rect :class="getDatatrackClass(datatrackSet)" @mouseenter="onMouseEnter($event, datatrack, 'Gene')"
+        <rect :class="getDatatrackClass(datatrackSet)" @mouseenter="onMouseEnter($event, datatrack)"
           @mouseleave="onMouseLeave(datatrack)" @click="onDatatrackSectionClick($event, datatrack, geneList)"
           :y="datatrack.posY1" :x="datatrack.posX1" :width="datatrack.width" :height="datatrack.height"
           :fill="getSectionFill(datatrack)" :fill-opacity="datatrack.opacity" :stroke="getSectionFill(datatrack)" />
@@ -70,7 +70,7 @@
 <script lang="ts" setup>
 import { watch, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import SelectedData, { SelectedDataType } from '@/models/SelectedData';
+import SelectedData from '@/models/SelectedData';
 import SyntenyRegion from '@/models/SyntenyRegion';
 import { SyntenyRegionInfo } from '@/models/SyntenyRegion';
 import SyntenySection from '@/models/SyntenySection';
@@ -86,7 +86,6 @@ import GapSVG from './GapSVG.vue';
 import OverviewSyntenyLabelsSVG from './OverviewSyntenyLabelsSVG.vue';
 import WindowPositionLabelsSVG from './WindowPositionLabelsSVG.vue';
 import useMouseBasePairPos from '@/composables/useMouseBasePairPos';
-import GenomicSection from '@/models/GenomicSection';
 import Gene from '@/models/Gene';
 import DatatrackSet from '@/models/DatatrackSet';
 import { getSelectedDataAndGeneIdsFromOrthologLine } from '@/utils/OrthologHandler';
@@ -307,7 +306,7 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
 };
 ///
 
-const onMouseEnter = (event: MouseEvent, section: SyntenySection | DatatrackSection, type: SelectedDataType) => {
+const onMouseEnter = (event: MouseEvent, section: SyntenySection | DatatrackSection) => {
 
   section.isHovered = true;
 
@@ -561,6 +560,9 @@ const updatePositionLabelFromSVG = (svgY: number) => {
 
 .block-section:hover {
   cursor: pointer;
+  &.is-overview-block {
+    cursor: zoom-in;
+  }
 }
 
 .position-label {
