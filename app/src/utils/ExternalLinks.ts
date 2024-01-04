@@ -1,8 +1,7 @@
-import DatatrackSection from "@/models/DatatrackSection";
-import SyntenySection from "@/models/SyntenySection";
+import GenomicSection from "@/models/GenomicSection";
 
 export function createUrl(
-  section: SyntenySection | DatatrackSection,
+  section: GenomicSection,
   mapKey?: number
 ) {
   // Comment in to make use of actual species for link out. Currently , only rat works .

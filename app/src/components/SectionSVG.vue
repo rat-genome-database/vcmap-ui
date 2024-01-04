@@ -120,8 +120,9 @@ interface Props {
 
 interface MenuItem {
   label: string,
-  command?: () => void;
-  items?: MenuItem[];
+  command?: () => void,
+  items?: MenuItem[],
+  icon?: string,
 }
 
 interface ContextMenuType {
