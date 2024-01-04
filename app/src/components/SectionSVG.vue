@@ -231,14 +231,14 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
           icon: 'pi pi-external-link',
           items: [
             {
-              label: 'Highlighted Section',
+              label: 'Highlighted Synteny Block',
               command: () => { window.open(createUrl(section)); }
             },
             {
               separator: true
             },
             {
-              label: 'Dotted Region',
+              label: 'Entire Conserved Synteny Block',
               command: () => { window.open(createUrl(region.gaplessBlock)); }
             }
           ]
@@ -251,14 +251,14 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
           icon: 'pi pi-sync',
           items: [
             {
-              label: 'Highlighted Section',
+              label: 'Highlighted Synteny Block',
               command: () => { onBackboneSwap(section); },
             },
             {
               separator: true
             },
             {
-              label: 'Dotted Region',
+              label: 'Entire Conserved Synteny Block',
               command: () => { onBackboneSwap(region.gaplessBlock); }
             },
           ]
@@ -271,11 +271,11 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
           icon: 'pi pi-window-maximize',
           items: [
             {
-              label: 'Highlighted Section',
+              label: 'Highlighted Synteny Block',
               command: () => { onBackboneSwapNewWindow(section); }
             },
             {
-              label: 'Dotted Region',
+              label: 'Entire Conserved Synteny Block',
               command: () => { onBackboneSwapNewWindow(region.gaplessBlock); }
             },
           ]
