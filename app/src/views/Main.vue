@@ -918,7 +918,10 @@ async function updateSettings() {
 
 async function handleSwapBackbone(sectionMapName: string, chromosome: string, start: number, stop: number) {
   await swapBackbone(sectionMapName, chromosome, start, stop);
-  initVCMapProcessing();
+  await initVCMapProcessing();
+  // Reload variants because we clear them out in swapBackbone
+  await loadSyntenyVariants(savedVariantKeys, true);
+  savedVariantKeys = [];
 }
 
 async function swapBackbone(sectionMapName: string, chromosome: string, start: number, stop: number) {
@@ -959,6 +962,15 @@ async function swapBackbone(sectionMapName: string, chromosome: string, start: n
       store.dispatch('clearUserHistory');
 
       store.dispatch('setSpecies', selectedSpecies);
+
+      // Save which species have variants are loaded, and then clear out
+      // current list of loaded variants
+      const loadedVariantKeys = new Set<number>();
+      variantPositionsList.value.forEach((vPos) => {
+        loadedVariantKeys.add(vPos.mapKey);
+      });
+      savedVariantKeys = Array.from(loadedVariantKeys);
+      variantPositionsList.value = [];
     }
   }
 }
