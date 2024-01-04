@@ -120,6 +120,8 @@ interface Props {
 
 interface MenuItem {
   label: string,
+  subtext?: string,
+  icon?: string,
   command?: () => void;
   items?: MenuItem[];
 }
@@ -202,6 +204,7 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
       items = [
         {
           label: 'Link to JBrowse',
+          subtext: 'TESTING',
           command: () => { window.open(createUrl(section)); },
           icon: 'pi pi-external-link',
         },
