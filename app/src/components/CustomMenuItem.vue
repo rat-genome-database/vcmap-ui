@@ -25,26 +25,27 @@ const props = defineProps({
     }
 });
 
-// Computed property to check if the item has a submenu
 const hasSubmenu = computed(() => {
     return props.item.items && props.item.items.length > 0;
 });
+
 </script>
 
-<style>
+<style scoped="scss">
 .menuitem-content {
     display: block;
     /* Change display to block to stack elements vertically */
 }
 
 .custom-subtext {
-    font-size: 0.8em;
-    color: grey;
     display: block;
-    /* Ensure subtext appears on a new line */
+    /* Ensure subtext container appears on a new line */
+    font-size: 0.7em;
+    font-style: italic;
+    color: grey;
 }
 
-/* You might need to adjust the style for the chevron icon */
+/* Style for the chevron icon */
 .p-menuitem-icon.pi.pi-chevron-right {
     margin-left: auto;
     /* Push the icon to the right */

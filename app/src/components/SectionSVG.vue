@@ -204,7 +204,6 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
       items = [
         {
           label: 'Link to JBrowse',
-          subtext: 'TESTING',
           command: () => { window.open(createUrl(section)); },
           icon: 'pi pi-external-link',
         },
@@ -228,6 +227,13 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
     }
   } else {
     if (section && region) {
+      const secChr = section.chromosome;
+      const secStart = Formatter.convertBasePairToLabel(section.speciesStart);
+      const secStop = Formatter.convertBasePairToLabel(section.speciesStop);
+      const regChr = region.gaplessBlock.chromosome;
+      const regStart = Formatter.convertBasePairToLabel(region.gaplessBlock.speciesStart);
+      const regStop = Formatter.convertBasePairToLabel(region.gaplessBlock.speciesStop);
+
       items = [
         {
           label: 'Link to JBrowse',
@@ -235,6 +241,7 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
           items: [
             {
               label: 'Highlighted Synteny Block',
+              subtext: `Chr:${secChr} ${secStart} - ${secStop}`,
               command: () => { window.open(createUrl(section)); }
             },
             {
@@ -242,6 +249,7 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
             },
             {
               label: 'Entire Conserved Synteny Block',
+              subtext: `Chr:${regChr} ${regStart} - ${regStop}`,
               command: () => { window.open(createUrl(region.gaplessBlock)); }
             }
           ]
@@ -255,6 +263,7 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
           items: [
             {
               label: 'Highlighted Synteny Block',
+              subtext: `Chr:${secChr} ${secStart} - ${secStop}`,
               command: () => { onBackboneSwap(section); },
             },
             {
@@ -262,6 +271,7 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
             },
             {
               label: 'Entire Conserved Synteny Block',
+              subtext: `Chr:${regChr} ${regStart} - ${regStop}`,
               command: () => { onBackboneSwap(region.gaplessBlock); }
             },
           ]
@@ -275,9 +285,14 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
           items: [
             {
               label: 'Highlighted Synteny Block',
+              subtext: `Chr:${secChr} ${secStart} - ${secStop}`,
               command: () => { onBackboneSwapNewWindow(section); }
             },
             {
+              separator: true
+            },
+            {
+              subtext: `Chr:${regChr} ${regStart} - ${regStop}`,
               label: 'Entire Conserved Synteny Block',
               command: () => { onBackboneSwapNewWindow(region.gaplessBlock); }
             },
