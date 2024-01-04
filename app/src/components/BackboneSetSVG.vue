@@ -1,7 +1,7 @@
 <template>
   <!-- BackboneSection SVG -->
   <rect v-if="backbone" data-test="track-section-svg" class="section"
-    @mouseenter="onMouseEnter($event, backbone, 'backbone')" @mouseleave="() => onMouseLeave(backbone)"
+    @mouseenter="onMouseEnter($event, backbone)" @mouseleave="() => onMouseLeave(backbone)"
     @mousemove="updatePositionLabelFromMouseEvent($event)"
     :fill="backbone.isHovered && showDataOnHover ? HOVER_HIGHLIGHT_COLOR : backbone.elementColor" :x="backbone.posX1"
     :y="backbone.posY1" :width="backbone.width" :height="backbone.height" />
@@ -24,7 +24,7 @@
   <template v-for="(datatrackSet, index) in datatrackSets" :key="index">
     <template v-for="(datatrack, index) in datatrackSet.datatracks" :key="index">
       <g @contextmenu.prevent="showContextMenu($event, datatrack)">
-        <rect :class="getSectionClass(datatrackSet)" @mouseenter="onMouseEnter($event, datatrack, 'Gene')"
+        <rect :class="getSectionClass(datatrackSet)" @mouseenter="onMouseEnter($event, datatrack)"
           @mouseleave="() => onMouseLeave(datatrack)" @click="onDatatrackSectionClick($event, datatrack, geneList)"
           :y="datatrack.posY1" :x="datatrack.posX1" :width="datatrack.width" :height="datatrack.height"
           :fill="getSectionFill(datatrack)" :fill-opacity="datatrack.opacity" :stroke="getSectionFill(datatrack)" />
@@ -77,7 +77,7 @@
 
 <script lang="ts" setup>
 import BackboneSelection from '@/models/BackboneSelection';
-import SelectedData, { SelectedDataType } from '@/models/SelectedData';
+import SelectedData from '@/models/SelectedData';
 import { computed, toRefs } from '@vue/reactivity';
 import { ref, watch, onMounted } from 'vue';
 import { useStore } from 'vuex';
@@ -202,7 +202,7 @@ const showContextMenu = (event: MouseEvent, datatrack: DatatrackSection) => {
   emit('show-context-menu', event, items);
 };
 
-const onMouseEnter = (event: MouseEvent, section: BackboneSection | DatatrackSection, type: SelectedDataType) => {
+const onMouseEnter = (event: MouseEvent, section: BackboneSection | DatatrackSection) => {
 
   if (section) {
     section.isHovered = true;
@@ -281,7 +281,9 @@ const getSectionClass = (datatrackSet: DatatrackSet) => {
 
 const highlightSelections = (selectedGeneIds: number[]) => {
   const geneDatatracks = datatrackSets.value[props.backboneSet.geneDatatrackSetIndex]?.datatracks as GeneDatatrack[];
-  const variantDatatracks = datatrackSets.value[props.backboneSet.variantDatatrackSetIndex]?.datatracks as VariantDensity[];
+  const variantDatatracks = (props.backboneSet.variantDatatrackSetIndex != null)
+    ? (datatrackSets.value[props.backboneSet.variantDatatrackSetIndex]?.datatracks as VariantDensity[])
+    : [];
 
   if (!geneDatatracks) {
     return;
