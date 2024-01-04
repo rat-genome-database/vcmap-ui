@@ -219,7 +219,7 @@ const onMouseEnter = (event: MouseEvent, section: BackboneSection | DatatrackSec
   }
 
   // Only set selected data if there are no selected genes
-  if (store.state.selectedGeneIds.length === 0 && section.type === 'gene' && store.state.selectedVariantSections.length === 0) {
+  if (store.state.selectedGeneIds.length === 0 && section.type === 'gene' && store.state.selectedVariantSections.length === 0 && store.state.selectedBlocks.length === 0) {
     const selectedDataList: SelectedData[] = [];
     const geneSection = section as GeneDatatrack;
     setHoverOnGeneLinesAndDatatrackSections(geneSection?.lines, true);
@@ -236,14 +236,9 @@ const onMouseEnter = (event: MouseEvent, section: BackboneSection | DatatrackSec
 
     store.dispatch('setSelectedData', selectedDataList);
   }
-  else if (store.state.selectedGeneIds.length === 0 && store.state.selectedVariantSections.length === 0) {
+  else if (store.state.selectedGeneIds.length === 0 && store.state.selectedVariantSections.length === 0 && store.state.selectedBlocks.length === 0 ) {
     if (section.type === 'variant') {
       const selectedData = new SelectedData(section, 'variantDensity');
-      store.dispatch('setSelectedData', [selectedData]);
-    }
-    else {
-      // BackboneSection
-      const selectedData = new SelectedData(section, type);
       store.dispatch('setSelectedData', [selectedData]);
     }
   }
@@ -266,12 +261,6 @@ const onMouseLeave = (section: BackboneSection | DatatrackSection) => {
     const geneSection = section as GeneDatatrack;
     setHoverOnGeneLinesAndDatatrackSections(geneSection?.lines, false);
     changeHoverElementSize(geneSection, false);
-  }
-
-
-  // Only reset selected data if there are no selected genes
-  if (store.state.selectedGeneIds.length === 0 && store.state.selectedVariantSections.length === 0) {
-    store.dispatch('setSelectedData', null);
   }
 };
 
