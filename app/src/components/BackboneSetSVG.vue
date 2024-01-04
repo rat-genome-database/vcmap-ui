@@ -1,16 +1,39 @@
 <template>
   <!-- BackboneSection SVG -->
-  <rect v-if="backbone" data-test="track-section-svg" class="section"
-    @mouseenter="onMouseEnter($event, backbone, 'backbone')" @mouseleave="() => onMouseLeave(backbone)"
-    @mousemove="updatePositionLabelFromMouseEvent($event)"
-    :fill="backbone.isHovered && showDataOnHover ? HOVER_HIGHLIGHT_COLOR : backbone.elementColor" :x="backbone.posX1"
-    :y="backbone.posY1" :width="backbone.width" :height="backbone.height" />
+  <g @contextmenu.prevent="showBackboneContextMenu($event, backbone)">
+    <rect v-if="backbone" data-test="track-section-svg" class="section"
+      @mouseenter="onMouseEnter($event, backbone, 'backbone')" @mouseleave="() => onMouseLeave(backbone)"
+      @mousemove="updatePositionLabelFromMouseEvent($event)"
+      :fill="backbone.isHovered && showDataOnHover ? HOVER_HIGHLIGHT_COLOR : backbone.elementColor" :x="backbone.posX1"
+      :y="backbone.posY1" :width="backbone.width" :height="backbone.height" />
 
-  <!-- Chromosome Label -->
-  <text v-if="backbone" class="chromosome-label" :x="backbone.posX1 + (SVGConstants.trackWidth / 2)"
-    :y="backbone.windowSVGMiddle" dominant-baseline="middle" text-anchor="middle">
-    {{ backbone.chromosome }}
-  </text>
+    <!-- Chromosome Label -->
+    <text v-if="backbone" class="chromosome-label" :x="backbone.posX1 + (SVGConstants.trackWidth / 2)"
+      :y="backbone.windowSVGMiddle" dominant-baseline="middle" text-anchor="middle">
+      {{ backbone.chromosome }}
+    </text>
+
+    <!-- Visible selection that changes depending on Detailed panel zoom -->
+    <template
+      v-if="!isDetailed && selectedRegion?.viewportSelection != null && selectedRegion.viewportSelection.svgHeight > 0">
+      <rect stroke="green" fill="green" fill-opacity="0.5" :x="backbone.posX1 - 2"
+        :y="selectedRegion.viewportSelection.svgYPoint" :width="SVGConstants.trackWidth + INNER_SELECTION_EXTRA_WIDTH"
+        :height="selectedRegion.viewportSelection.svgHeight" />
+
+      <text v-if="selectedRegion.viewportSelection.svgYPoint > backbone.posY1 + 10" class="label small"
+        :x="backbone.posX1 - 5" :y="selectedRegion.viewportSelection.svgYPoint - 2">
+        {{ Formatter.convertBasePairToLabel(selectedRegion.viewportSelection.basePairStart) }}
+      </text>
+
+      <text
+        v-if="selectedRegion.viewportSelection.svgYPoint + selectedRegion.viewportSelection.svgHeight < backbone.posY2 - 10"
+        class="label small" :x="backbone.posX1 - 5"
+        :y="selectedRegion.viewportSelection.svgYPoint + selectedRegion.viewportSelection.svgHeight + 7">
+        {{ Formatter.convertBasePairToLabel(selectedRegion.viewportSelection.basePairStop) }}
+      </text>
+    </template>
+  </g>
+
 
   <!-- BP labels -->
   <template v-for="(label, index) in backbone.labels" :key="index">
@@ -30,26 +53,6 @@
           :fill="getSectionFill(datatrack)" :fill-opacity="datatrack.opacity" :stroke="getSectionFill(datatrack)" />
       </g>
     </template>
-  </template>
-
-  <!-- Visible selection that changes depending on Detailed panel zoom -->
-  <template
-    v-if="!isDetailed && selectedRegion?.viewportSelection != null && selectedRegion.viewportSelection.svgHeight > 0">
-    <rect stroke="green" fill="green" fill-opacity="0.5" :x="backbone.posX1 - 2"
-      :y="selectedRegion.viewportSelection.svgYPoint" :width="SVGConstants.trackWidth + INNER_SELECTION_EXTRA_WIDTH"
-      :height="selectedRegion.viewportSelection.svgHeight" />
-
-    <text v-if="selectedRegion.viewportSelection.svgYPoint > backbone.posY1 + 10" class="label small"
-      :x="backbone.posX1 - 5" :y="selectedRegion.viewportSelection.svgYPoint - 2">
-      {{ Formatter.convertBasePairToLabel(selectedRegion.viewportSelection.basePairStart) }}
-    </text>
-
-    <text
-      v-if="selectedRegion.viewportSelection.svgYPoint + selectedRegion.viewportSelection.svgHeight < backbone.posY2 - 10"
-      class="label small" :x="backbone.posX1 - 5"
-      :y="selectedRegion.viewportSelection.svgYPoint + selectedRegion.viewportSelection.svgHeight + 7">
-      {{ Formatter.convertBasePairToLabel(selectedRegion.viewportSelection.basePairStop) }}
-    </text>
   </template>
 
   <template v-if="showBasePairLine">
@@ -94,6 +97,7 @@ import useMouseBasePairPos from '@/composables/useMouseBasePairPos';
 import { getSelectedDataAndGeneIdsFromOrthologLine } from '@/utils/OrthologHandler';
 import useSyntenyAndDataInteraction from '@/composables/useSyntenyAndDataInteraction';
 import { createUrl } from '@/utils/ExternalLinks';
+import SyntenySection from '@/models/SyntenySection';
 
 const INNER_SELECTION_EXTRA_WIDTH = 4;
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
@@ -120,7 +124,8 @@ interface Props {
 
 interface MenuItem {
   label: string,
-  command: () => void;
+  command: () => void,
+  icon: string,
 }
 
 const props = defineProps<Props>();
@@ -197,6 +202,18 @@ const showContextMenu = (event: MouseEvent, datatrack: DatatrackSection) => {
       label: datatrack.type === 'variant' ? 'Link to Variant Visualizer' : 'Link to JBrowse',
       command: () => { window.open(createUrl(datatrack, findMapKey(datatrack.speciesName))); },
       icon: 'pi pi-external-link'
+    }
+  ];
+  emit('show-context-menu', event, items);
+};
+
+const showBackboneContextMenu = (event: MouseEvent, backboneSection: BackboneSection) => {
+  let items: MenuItem[] = [];
+  items = [
+    {
+      label: 'Link to Jbrowse',
+      command: () => { window.open(createUrl(backboneSection)); },
+      icon: 'pi pi-external-link',
     }
   ];
   emit('show-context-menu', event, items);

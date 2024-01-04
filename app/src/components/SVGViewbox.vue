@@ -37,7 +37,7 @@
 
     <template v-if="store.state.showOverviewPanel">
       <template v-if="overviewBackboneSet">
-        <BackboneSetSVG show-data-on-hover :gene-list="geneList" :backbone-set="overviewBackboneSet" />
+        <BackboneSetSVG show-data-on-hover :gene-list="geneList" :backbone-set="overviewBackboneSet" @show-context-menu="handleShowContextMenu"/>
       </template>
     </template>
 
@@ -345,7 +345,9 @@ const toggleGenesListForBlock = (debugList: number[], blockIndex: number) => {
 /// Context Menu
 interface MenuItem {
   label: string,
-  command: () => void;
+  command: () => void,
+  items?: MenuItem[],
+  icon?: string,
 }
 const cm = ref();
 const items = ref<MenuItem[]>([]);
