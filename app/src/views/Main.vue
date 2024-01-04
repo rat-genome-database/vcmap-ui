@@ -959,7 +959,10 @@ async function swapBackbone(sectionMapName: string, chromosome: string, start: n
       store.dispatch('clearUserHistory');
 
       store.dispatch('setSpecies', selectedSpecies);
+      store.dispatch('setConfigMode', 'position');
     }
+  } else {
+    $log.error('Cannot complete swap backbone operation when selectedSpecies and oldBackboneSpecies are not defined');
   }
 }
 
