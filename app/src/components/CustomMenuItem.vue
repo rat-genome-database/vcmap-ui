@@ -1,7 +1,7 @@
 <template>
     <div class="p-menuitem">
         <a href="#" class="p-menuitem-link">
-            <!-- Rendering the icon, if provided -->
+            <!-- Render icon -->
             <span v-if="item.icon" :class="['p-menuitem-icon', item.icon]"></span>
             <div class="menuitem-content">
                 <!-- Main label -->
@@ -34,20 +34,16 @@ const hasSubmenu = computed(() => {
 <style scoped="scss">
 .menuitem-content {
     display: block;
-    /* Change display to block to stack elements vertically */
 }
 
 .custom-subtext {
     display: block;
-    /* Ensure subtext container appears on a new line */
     font-size: 0.7em;
     font-style: italic;
     color: grey;
 }
 
-/* Style for the chevron icon */
 .p-menuitem-icon.pi.pi-chevron-right {
     margin-left: auto;
-    /* Push the icon to the right */
 }
 </style>
