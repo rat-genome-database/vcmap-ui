@@ -247,7 +247,12 @@
     </div>
   </div>
   -->
-  <ContextMenu ref="cm" :model="items" class="context-menu" />
+
+  <ContextMenu ref="cm" :model="items" class="context-menu">
+    <template v-slot:item="{ item }">
+      <CustomMenuItem :item="item" />
+    </template>
+  </ContextMenu>
 </template>
 
 <script setup lang="ts">
@@ -279,6 +284,7 @@ import OrthologLineSVG from './OrthologLineSVG.vue';
 import LoadingSpinnerMask from './LoadingSpinnerMask.vue';
 import { backboneVariantTrackBuilder } from '@/utils/VariantBuilder';
 import Block from "@/models/Block";
+import CustomMenuItem from './CustomMenuItem.vue';
 
 // import QtlApi from '@/api/QtlApi';
 // import { createQtlDatatracks } from '@/utils/QtlBuilder';

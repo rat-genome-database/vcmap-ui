@@ -9,8 +9,9 @@
       <rect v-if="blockSection.isHovered" :y="region.gaplessBlock.posY1" :x="region.gaplessBlock.posX1"
         :width="region.gaplessBlock.width" :height="region.gaplessBlock.height" fill="none" stroke-width=".5"
         stroke="#0000FF" stroke-dasharray="2,2" />
-      <rect class="block-section" @mouseenter="onMouseEnter($event, blockSection)" :class="{'is-overview-block':isOverview}"
-        @mouseleave="onMouseLeave(blockSection)" @mousemove="updatePositionLabelFromMouseEvent($event, blockSection)"
+      <rect class="block-section" @mouseenter="onMouseEnter($event, blockSection)"
+        :class="{ 'is-overview-block': isOverview }" @mouseleave="onMouseLeave(blockSection)"
+        @mousemove="updatePositionLabelFromMouseEvent($event, blockSection)"
         @click="onSyntenyBlockClick(blockSection, $event, region)" :y="blockSection.posY1" :x="blockSection.posX1"
         :width="blockSection.width" :height="blockSection.height" :fill="getSectionFill(blockSection)"
         :fill-opacity="1" />
@@ -23,8 +24,9 @@
     <rect v-if="blockSection.isHovered" :y="region.gaplessBlock.posY1" :x="region.gaplessBlock.posX1"
       :width="region.gaplessBlock.width" :height="region.gaplessBlock.height" fill="none" stroke-width=".5"
       stroke="#0000FF" stroke-dasharray="2,2" />
-    <rect class="level-2 block-section" @mouseenter="onMouseEnter($event, blockSection)" :class="{'is-overview-block':isOverview}"
-      @mouseleave="onMouseLeave(blockSection)" @mousemove="updatePositionLabelFromMouseEvent($event, blockSection)"
+    <rect class="level-2 block-section" @mouseenter="onMouseEnter($event, blockSection)"
+      :class="{ 'is-overview-block': isOverview }" @mouseleave="onMouseLeave(blockSection)"
+      @mousemove="updatePositionLabelFromMouseEvent($event, blockSection)"
       @click="onSyntenyBlockClick(blockSection, $event, region)" :y="blockSection.posY1" :x="blockSection.posX1"
       :width="blockSection.width" :height="blockSection.height" :fill="getSectionFill(blockSection)" :fill-opacity="1" />
     <ChromosomeLabelSVG v-if="showChromosome" :synteny-section="blockSection" />
@@ -119,9 +121,10 @@ interface Props {
 
 interface MenuItem {
   label: string,
-  command?: () => void,
-  items?: MenuItem[],
+  subtext?: string,
   icon?: string,
+  command?: () => void;
+  items?: MenuItem[];
 }
 
 interface ContextMenuType {
@@ -225,20 +228,29 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
     }
   } else {
     if (section && region) {
+      const secChr = section.chromosome;
+      const secStart = Formatter.convertBasePairToLabel(section.speciesStart);
+      const secStop = Formatter.convertBasePairToLabel(section.speciesStop);
+      const regChr = region.gaplessBlock.chromosome;
+      const regStart = Formatter.convertBasePairToLabel(region.gaplessBlock.speciesStart);
+      const regStop = Formatter.convertBasePairToLabel(region.gaplessBlock.speciesStop);
+
       items = [
         {
           label: 'Link to JBrowse',
           icon: 'pi pi-external-link',
           items: [
             {
-              label: 'Highlighted Section',
+              label: 'Highlighted Synteny Block',
+              subtext: `Chr:${secChr} ${secStart} - ${secStop}`,
               command: () => { window.open(createUrl(section)); }
             },
             {
               separator: true
             },
             {
-              label: 'Dotted Region',
+              label: 'Entire Conserved Synteny Block',
+              subtext: `Chr:${regChr} ${regStart} - ${regStop}`,
               command: () => { window.open(createUrl(region.gaplessBlock)); }
             }
           ]
@@ -251,14 +263,16 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
           icon: 'pi pi-sync',
           items: [
             {
-              label: 'Highlighted Section',
+              label: 'Highlighted Synteny Block',
+              subtext: `Chr:${secChr} ${secStart} - ${secStop}`,
               command: () => { onBackboneSwap(section); },
             },
             {
               separator: true
             },
             {
-              label: 'Dotted Region',
+              label: 'Entire Conserved Synteny Block',
+              subtext: `Chr:${regChr} ${regStart} - ${regStop}`,
               command: () => { onBackboneSwap(region.gaplessBlock); }
             },
           ]
@@ -271,11 +285,16 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
           icon: 'pi pi-window-maximize',
           items: [
             {
-              label: 'Highlighted Section',
+              label: 'Highlighted Synteny Block',
+              subtext: `Chr:${secChr} ${secStart} - ${secStop}`,
               command: () => { onBackboneSwapNewWindow(section); }
             },
             {
-              label: 'Dotted Region',
+              separator: true
+            },
+            {
+              subtext: `Chr:${regChr} ${regStart} - ${regStop}`,
+              label: 'Entire Conserved Synteny Block',
               command: () => { onBackboneSwapNewWindow(region.gaplessBlock); }
             },
           ]
@@ -561,6 +580,7 @@ const updatePositionLabelFromSVG = (svgY: number) => {
 
 .block-section:hover {
   cursor: pointer;
+
   &.is-overview-block {
     cursor: zoom-in;
   }
@@ -569,5 +589,4 @@ const updatePositionLabelFromSVG = (svgY: number) => {
 .position-label {
   stroke: black;
   pointer-events: none;
-}
-</style>
+}</style>

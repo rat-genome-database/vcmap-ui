@@ -4,10 +4,8 @@ export function createUrl(
   section: GenomicSection,
   mapKey?: number
 ) {
-  // Comment in to make use of actual species for link out. Currently , only rat works .
-  //   const assembly =
-  //     section.mapName === "GRCh38" ? "GRCh38.p14" : section.mapName;
-  const assembly = "mRatBN7.2";
+  const assembly =
+    section.mapName === "GRCh38" ? "GRCh38.p14" : section.mapName;
   const chromosome = section.chromosome;
   let start = section.speciesStart;
   let stop = section.speciesStop;
