@@ -11,6 +11,7 @@ import { createLogger } from 'vuex';
 import { ConfigurationMode } from '@/utils/Types';
 import { IHoveredData } from '@/models/HoveredData';
 import { SVGPositionVariables } from '@/utils/SVGConstants';
+import SyntenySection from '@/models/SyntenySection';
 
 export const key: InjectionKey<Store<VCMapState>> = Symbol();
 
@@ -40,7 +41,7 @@ export interface VCMapState
   /* Selected data */
   selectedGeneIds: number[];
   selectedVariantSections: any[];
-  selectedBlocks: any[];
+  selectedBlocks: SyntenySection[];
   selectedData: SelectedData[] | null;
   isDataPanelCollapsed: boolean;
 
@@ -188,7 +189,7 @@ export default createStore({
     selectedVariantSections(state: VCMapState, selectedSections: any[]) {
       state.selectedVariantSections = selectedSections;
     },
-    selectedBlocks(state: VCMapState, selectedBlocks: any[]) {
+    selectedBlocks(state: VCMapState, selectedBlocks: SyntenySection[]) {
       state.selectedBlocks = selectedBlocks;
     },
     isDetailedPanelUpdating(state: VCMapState, isUpdating: boolean) {
@@ -276,7 +277,7 @@ export default createStore({
     setSelectedVariantSections(context: ActionContext<VCMapState, VCMapState>, selectedSections: any[]) {
       context.commit('selectedVariantSections', selectedSections);
     },
-    setSelectedBlocks(context: ActionContext<VCMapState, VCMapState>, selectedBlocks: any[]) {
+    setSelectedBlocks(context: ActionContext<VCMapState, VCMapState>, selectedBlocks: SyntenySection[]) {
       context.commit('selectedBlocks', selectedBlocks);
     },
     setComparativeSpecies(context: ActionContext<VCMapState, VCMapState>, species: Species[]) {

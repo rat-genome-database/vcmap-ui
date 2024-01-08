@@ -29,8 +29,8 @@
       <template v-for="(syntenySet, index) in overviewSyntenySets" :key="index">
         <template v-for="(region, index) in syntenySet.regions" :key="index">
           <SectionSVG show-chromosome show-synteny-on-hover :gene-list="geneList" is-overview select-on-click
-            :region="(region as SyntenyRegion)" @show-context-menu="handleShowContextMenu"
-            @swap-backbone="handleSwapBackbone" />
+            :region="(region as SyntenyRegion)" @show-context-menu="handleShowContextMenu" :context-menu-open="contextMenuOpen"
+            @swap-backbone="handleSwapBackbone" :selected-blocks="selectedBlocks" @select-blocks="handleSelectedBlocks"/>
         </template>
       </template>
     </template>
@@ -61,7 +61,8 @@
           <SectionSVG show-chromosome :region="(syntenicRegion as SyntenyRegion)"
             :synteny-hover-svg-y="detailedSyntenySvgYPosition" :gene-list="geneList"
             @synteny-hover="onDetailedSyntenyHover" @block-hover="onDetailedBlockHover"
-            @show-context-menu="handleShowContextMenu" @swap-backbone="handleSwapBackbone" />
+            @show-context-menu="handleShowContextMenu" @swap-backbone="handleSwapBackbone"
+            :context-menu-open="contextMenuOpen" :selected-blocks="selectedBlocks" @select-blocks="handleSelectedBlocks"/>
         </template>
         <template v-for="(label, index) in syntenySet.geneLabels" :key="index">
           <template v-if="label.isVisible">
@@ -248,7 +249,7 @@
   </div>
   -->
 
-  <ContextMenu ref="cm" :model="items" class="context-menu">
+  <ContextMenu ref="cm" :model="items" class="context-menu" @hide="onHideContextMenu">
     <template v-slot:item="{ item }">
       <CustomMenuItem :item="item" />
     </template>
@@ -296,8 +297,10 @@ import { createOrthologLines } from '@/utils/OrthologHandler';
 import VariantPositions from '@/models/VariantPositions';
 import Species from '@/models/Species';
 import BackboneSection from '@/models/BackboneSection';
+import SyntenySection from '@/models/SyntenySection';
 import GradientLegend from './GradientLegend.vue';
 import ContextMenu from 'primevue/contextmenu';
+import GenomicSection from '@/models/GenomicSection';
 
 const SHOW_DEBUG = process.env.NODE_ENV === 'development';
 const NAV_SHIFT_PERCENT = 0.2;
@@ -331,6 +334,9 @@ let overviewSyntenySets = ref<SyntenyRegionSet[]>([]);
 let orthologLines = ref<OrthologLine[]>();
 let detailedSyntenySvgYPosition = ref<number | null>(null);
 let detailedSyntenyBlockYPositions = ref<number[] | null>(null);
+let contextMenuOpen = ref<boolean>(false);
+let selectedBlocks = ref<SyntenySection[]>([]);
+let contextMenuSection = ref<GenomicSection | null>(null);
 
 ////
 // Debugging helper refs and methods (debug template is currently commented out):
@@ -428,13 +434,31 @@ const displayDensityTrackTogglePanel = computed(() => {
   return false;
 });
 
-const handleShowContextMenu = (event: MouseEvent, menuItems: MenuItem[]) => {
+const handleShowContextMenu = (event: MouseEvent, menuItems: MenuItem[], contextSection?: GenomicSection) => {
   items.value = menuItems;
   cm.value.show(event);
+  contextMenuOpen.value = true;
+  if (contextSection) {
+    contextMenuSection.value = contextSection;
+  }
+};
+
+const onHideContextMenu = () => {
+  contextMenuOpen.value = false;
+  if (contextMenuSection.value) {
+    contextMenuSection.value.isHovered = false;
+    contextMenuSection.value = null;
+  }
+  onDetailedBlockHover(null);
+  onDetailedSyntenyHover(null);
 };
 
 const handleSwapBackbone = (mapKey: string, chr: string, start: number, stop: number) => {
   emit('swap-backbone', mapKey, chr, start, stop);
+};
+
+const handleSelectedBlocks = (sections: SyntenySection[]) => {
+  selectedBlocks.value = sections;
 };
 
 const getSpeciesName = (mapKey: number) => {
