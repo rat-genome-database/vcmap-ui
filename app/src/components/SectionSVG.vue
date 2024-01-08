@@ -93,7 +93,7 @@ import Gene from '@/models/Gene';
 import DatatrackSet from '@/models/DatatrackSet';
 import { getSelectedDataAndGeneIdsFromOrthologLine } from '@/utils/OrthologHandler';
 import useSyntenyAndDataInteraction from '@/composables/useSyntenyAndDataInteraction';
-import { createUrl } from '@/utils/ExternalLinks';
+import { createJBrowse2UrlForGene, createJBrowse2UrlForGenomicSection, createUrl, createVariantVisualizerUrl } from '@/utils/ExternalLinks';
 
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
 const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
@@ -209,7 +209,7 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
       items = [
         {
           label: 'Link to RGD JBrowse',
-          command: () => { window.open(createUrl(section)); },
+          command: () => { window.open(createJBrowse2UrlForGenomicSection(section)); },
           icon: 'pi pi-external-link',
         },
         {
@@ -247,7 +247,7 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
             {
               label: 'Highlighted Synteny Block',
               subtext: `Chr:${secChr} ${secStart} - ${secStop}`,
-              command: () => { window.open(createUrl(section)); }
+              command: () => { window.open(createJBrowse2UrlForGenomicSection(section)); }
             },
             {
               separator: true
@@ -255,7 +255,7 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
             {
               label: 'Entire Conserved Synteny Block',
               subtext: `Chr:${regChr} ${regStart} - ${regStop}`,
-              command: () => { window.open(createUrl(region.gaplessBlock)); }
+              command: () => { window.open(createJBrowse2UrlForGenomicSection(region.gaplessBlock)); }
             }
           ]
         },
@@ -309,23 +309,36 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
 
   if (track) {
     if (track.type === 'variant') {
-      items = [
-        {
+      // Variant track...
+      const variantMapKey = findMapKey(track.speciesName);
+      if (variantMapKey != null) {
+        items.push({
           label: 'Link to RGD Variant Visualizer',
-          command: () => { window.open(createUrl(track, findMapKey(track.speciesName))); },
+          command: () => { window.open(createVariantVisualizerUrl(track, variantMapKey)); },
           icon: 'pi pi-external-link'
-        }
-      ];
-    } else {
-      items = [
-        {
+        });
+        items.push({
           label: 'Link to RGD JBrowse',
-          command: () => { window.open(createUrl(track)); },
-          icon: 'pi pi-external-link'
-        }
-      ];
+          command: () => { window.open(createJBrowse2UrlForGenomicSection(track)); },
+          icon: 'pi pi-external-link',
+        });
+      }
+    } else if (store.state.species != null) {
+      // Is non-variant datatrack (likely a GeneDatatrack) and the backbone species is defined so that we can use it
+      // to search for the species model associated with the gene
+      const geneSpecies = [store.state.species, ...store.state.comparativeSpecies]
+        .find(s => s.activeMap.key === (track as GeneDatatrack).gene.mapKey);
+
+      if (geneSpecies != null) {
+        items.push({
+          label: 'Link to RGD JBrowse',
+          command: () => {window.open(createJBrowse2UrlForGene((track as GeneDatatrack).gene, geneSpecies))},
+          icon: 'pi pi-external-link',
+        });
+      }
     }
   }
+
   // Emit the appropriate selected GenomicSection when showing the menu
   if (section) {
     emit('show-context-menu', event, items, section);

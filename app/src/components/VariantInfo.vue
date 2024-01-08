@@ -44,7 +44,7 @@ import { key } from '@/store';
 import { useLogger } from 'vue-logger-plugin';
 import { VariantDensity } from '@/models/DatatrackSection';
 import { computed } from 'vue';
-import { urlConstants } from '@/utils/Urls';
+import { createJBrowse2UrlForGenomicSection, createVariantVisualizerUrl } from '@/utils/ExternalLinks';
 
 const $log = useLogger();
 const store = useStore(key);
@@ -97,30 +97,21 @@ const selectRegion = () => {
 };
 
 const goToVariantVisualizer = () => {
-    const speciesStart = props.variantSection?.speciesStart;
-    const speciesStop = props.variantSection?.speciesStop;
-    const speciesChromosome = props.variantSection?.chromosome;
-    const rgdUrl = `${urlConstants.variantVisualizer}?mapKey=${mapKey?.value}&chr=${speciesChromosome}&start=${speciesStart}&stop=${speciesStop}`;
+    if (props.variantSection == null || mapKey.value == null) {
+        return;
+    }
+
+    const rgdUrl = createVariantVisualizerUrl(props.variantSection, mapKey.value);
     window.open(rgdUrl);
 };
 
 const goToJBrowse2 = () => {
-  if (store.state.species == null) {
+
+  if (props.variantSection == null) {
     return null;
   }
 
-  const speciesStart = props.variantSection?.speciesStart;
-  const speciesStop = props.variantSection?.speciesStop;
-  const speciesChromosome = props.variantSection?.chromosome;
-
-  const geneSpecies = [store.state.species, ...store.state.comparativeSpecies]
-    .find(s => s.activeMap.name === props.variantSection?.mapName);
-
-  if (geneSpecies == null) {
-    return null;
-  }
-
-  const url = `${urlConstants.jbrowse2}?dest=jbrowse2&assembly=${geneSpecies.activeMap.name}&loc=chr${speciesChromosome}:${speciesStart}-${speciesStop}`;
+  const url = createJBrowse2UrlForGenomicSection(props.variantSection);
   window.open(url);
 };
 
