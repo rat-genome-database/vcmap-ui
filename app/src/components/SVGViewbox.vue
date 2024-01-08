@@ -125,7 +125,7 @@
   </svg>
 
   <template v-if="displayVariantLegend">
-    <div class="grid flex-end">
+    <div class="grid">
       <div class="col-4 plus-half legend-title"><b>Variant counts (per {{
         parseFloat(variantBinSize.toPrecision(3)).toLocaleString() }}bp)</b></div>
       <template v-for="speciesIndex in detailedSyntenySets.length + 1" :key="speciesIndex">
@@ -159,23 +159,6 @@
   <VCMapDialog v-model:show="showDialog" :header="dialogHeader" :message="dialogMessage" :theme="dialogTheme"
     :show-back-button="showDialogBackButton" />
   <LoadingSpinnerMask v-if="arePanelsLoading" :style="getDetailedPosition()"></LoadingSpinnerMask>
-  <div class="flex-container-start">
-    <Fieldset v-if="displayDensityTrackTogglePanel" class="density-toggle-container" legend="Density Tracks"
-      :toggleable="true">
-      <div class="flex-container">
-        <Button v-if="props.variantPositionsList" class="density-toggle-button" icon="pi pi-eye" rounded
-          v-on:click="toggleDensityTrack()">
-          {{ detailedBackboneSet?.speciesName }}
-        </Button>
-        <template v-for="(set, index) in props.syntenyTree" :key="index">
-          <Button v-if="set[1][0].variantPositions && getVisibility(set[0])" class="density-toggle-button"
-            icon="pi pi-eye" rounded v-on:click="toggleSyntenicDensityTrack(set[0])">
-            {{ getSpeciesName(set[0]) }}
-          </Button>
-        </template>
-      </div>
-    </Fieldset>
-  </div>
   <!--
   <Button
     style="margin-right: 20px;"

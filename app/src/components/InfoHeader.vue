@@ -117,11 +117,6 @@ const disableBackboneVariantCheckbox = () => {
   return !variantPositions;
 };
 
-const getVisibility = (mapKey: number) => {
-  const species = store.state.comparativeSpecies.find((species: { activeMap: { key: number; }; }) => species.activeMap.key === mapKey);
-  return species?.visible;
-};
-
 const getDensityTrackVisibility = (mapKey: number) => {
   const variantPositions = props.variantPositionsList.find((variantPositions: { mapKey: number; }) => variantPositions.mapKey === mapKey);
   const hiddenDensityTracks = store.state.hiddenDensityTracks;
@@ -129,7 +124,8 @@ const getDensityTrackVisibility = (mapKey: number) => {
 };
 
 const getBackboneDensityTrackVisibility = () => {
-  const variantPositions = props.variantPositionsList.find((variantPositions: { mapKey: number; }) => variantPositions.mapKey === store.state.species.activeMap.key);
+  const variantPositions = props.variantPositionsList.some((variantPositions: { mapKey: number; }) => variantPositions.mapKey === store.state.species.activeMap.key);
+  console.log('getBackboneDensityTrackVisibility', variantPositions);
   return variantPositions;
 };
 
