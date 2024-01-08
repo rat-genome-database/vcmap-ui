@@ -37,7 +37,7 @@
 
     <template v-if="store.state.showOverviewPanel">
       <template v-if="overviewBackboneSet">
-        <BackboneSetSVG show-data-on-hover :gene-list="geneList" :backbone-set="overviewBackboneSet" @show-context-menu="handleShowContextMenu"/>
+        <BackboneSetSVG show-data-on-hover :gene-list="geneList" :backbone-set="overviewBackboneSet" @show-context-menu="handleShowContextMenu"  :context-menu-open="contextMenuOpen"/>
       </template>
     </template>
 
@@ -45,7 +45,7 @@
     <template v-if="detailedBackboneSet">
       <BackboneSetSVG show-data-on-hover :backbone-set="detailedBackboneSet"
         :synteny-hover-svg-y="detailedSyntenySvgYPosition" @synteny-hover="onDetailedSyntenyHover" :gene-list="geneList"
-        @show-context-menu="handleShowContextMenu" :synteny-hover-backbone-y-values="detailedSyntenyBlockYPositions" />
+        @show-context-menu="handleShowContextMenu" :synteny-hover-backbone-y-values="detailedSyntenyBlockYPositions" :context-menu-open="contextMenuOpen" />
       <template v-if="detailedBackboneSet.geneLabels">
         <template v-for="(label, index) in detailedBackboneSet.geneLabels" :key="index">
           <template v-if="(label.isVisible)">

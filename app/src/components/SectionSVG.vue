@@ -443,15 +443,19 @@ const onSyntenyBlockClick = (section: SyntenySection, event: any, region: Synten
     selectedBlocks.push(section);
     emit('select-blocks', selectedBlocks);
   } else if (selectedDataList.length > 0) {
-    console.log('should set isSelected to true');
-    console.log(selectedBlocks);
+    const blockIsSelcted = section.isSelected;
     if (selectedBlocks.length > 0) {
       selectedBlocks.forEach((block) => block.isSelected = false);
     }
-    section.isSelected = !section.isSelected;
-    store.dispatch('setSelectedData', selectedDataList);
-    // store.dispatch('setSelectedBlocks', [section]);
-    emit('select-blocks', [section]);
+    section.isSelected = !blockIsSelcted;
+    if (section.isSelected) {
+      store.dispatch('setSelectedData', selectedDataList);
+      // store.dispatch('setSelectedBlocks', [section]);
+      emit('select-blocks', [section]);
+    } else {
+      store.dispatch('setSelectedData', []);
+      emit('select-blocks', []);
+    }
   }
 
 
