@@ -326,7 +326,13 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
       ];
     }
   }
-  emit('show-context-menu', event, items, section);
+  if (section) {
+    emit('show-context-menu', event, items, section);
+  } else if (track) {
+    emit('show-context-menu', event, items, track);
+  } else {
+    emit('show-context-menu', event, items);
+  }
 };
 ///
 

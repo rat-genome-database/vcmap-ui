@@ -301,6 +301,8 @@ import SyntenySection from '@/models/SyntenySection';
 import GradientLegend from './GradientLegend.vue';
 import ContextMenu from 'primevue/contextmenu';
 import GenomicSection from '@/models/GenomicSection';
+import useSyntenyAndDataInteraction from '@/composables/useSyntenyAndDataInteraction';
+import { GeneDatatrack } from '@/models/DatatrackSection';
 
 const SHOW_DEBUG = process.env.NODE_ENV === 'development';
 const NAV_SHIFT_PERCENT = 0.2;
@@ -313,6 +315,7 @@ const toast = useToast();
 const { showDialog, dialogHeader, dialogMessage, showDialogBackButton, dialogTheme, onError } = useDialog();
 const { startDetailedSelectionY, stopDetailedSelectionY, updateZoomSelection, detailedSelectionHandler, cancelDetailedSelection, getDetailedSelectionStatus } = useDetailedPanelZoom(store);
 const { startOverviewSelectionY, stopOverviewSelectionY, updateOverviewSelection, overviewSelectionHandler, cancelOverviewSelection, getOverviewSelectionStatus } = useOverviewPanelSelection(store);
+const { setHoverOnGeneLinesAndDatatrackSections } = useSyntenyAndDataInteraction(store);
 
 interface Props {
   geneList: Map<number, Gene>;
@@ -447,6 +450,9 @@ const onHideContextMenu = () => {
   contextMenuOpen.value = false;
   if (contextMenuSection.value) {
     contextMenuSection.value.isHovered = false;
+    if (contextMenuSection.value instanceof GeneDatatrack) {
+      setHoverOnGeneLinesAndDatatrackSections(contextMenuSection.value.lines, false);
+    }
     contextMenuSection.value = null;
   }
   onDetailedBlockHover(null);
