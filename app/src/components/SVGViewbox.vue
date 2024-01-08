@@ -337,8 +337,11 @@ let overviewSyntenySets = ref<SyntenyRegionSet[]>([]);
 let orthologLines = ref<OrthologLine[]>();
 let detailedSyntenySvgYPosition = ref<number | null>(null);
 let detailedSyntenyBlockYPositions = ref<number[] | null>(null);
-let contextMenuOpen = ref<boolean>(false);
+let contextMenuOpen = ref<boolean>(false); // Tracks if the context menu is open, to share with child components
+// Keeps list of selected blocks to share with all children when necessary
 let selectedBlocks = ref<SyntenySection[]>([]);
+// The section that was clicked to open the context menu
+// Storing here so we can handle any side effects we want when the context menu closes
 let contextMenuSection = ref<GenomicSection | null>(null);
 
 ////
@@ -450,11 +453,13 @@ const onHideContextMenu = () => {
   contextMenuOpen.value = false;
   if (contextMenuSection.value) {
     contextMenuSection.value.isHovered = false;
+    // If the context menu was for a gene, we'll want to remove hover for gene and orthologs
     if (contextMenuSection.value instanceof GeneDatatrack) {
       setHoverOnGeneLinesAndDatatrackSections(contextMenuSection.value.lines, false);
     }
     contextMenuSection.value = null;
   }
+  // Remove any hover mouse location information for mouse position-based labels
   onDetailedBlockHover(null);
   onDetailedSyntenyHover(null);
 };

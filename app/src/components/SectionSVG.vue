@@ -326,6 +326,7 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
       ];
     }
   }
+  // Emit the appropriate selected GenomicSection when showing the menu
   if (section) {
     emit('show-context-menu', event, items, section);
   } else if (track) {
@@ -434,7 +435,7 @@ const onSyntenyBlockClick = (section: SyntenySection, event: any, region: Synten
   store.dispatch('setSelectedVariantSections', []);
   //set our section as selected
   selectedDataList.push(new SelectedData(section, 'trackSection'));
-  const selectedBlocks = props.selectedBlocks
+  const selectedBlocks = props.selectedBlocks;
   if (event.shiftKey) {
     const selectedDataArray = [...(store.state.selectedData || []), ...selectedDataList];
     section.isSelected = !section.isSelected;
