@@ -96,6 +96,7 @@ import useMouseBasePairPos from '@/composables/useMouseBasePairPos';
 import { getSelectedDataAndGeneIdsFromOrthologLine } from '@/utils/OrthologHandler';
 import useSyntenyAndDataInteraction from '@/composables/useSyntenyAndDataInteraction';
 import { createUrl } from '@/utils/ExternalLinks';
+import GenomicSection from '@/models/GenomicSection';
 
 const INNER_SELECTION_EXTRA_WIDTH = 4;
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
@@ -118,6 +119,7 @@ interface Props {
   syntenyHoverSvgY?: number | null;
   geneList: Map<number, Gene>;
   syntenyHoverBackboneYValues?: number[] | null;
+  contextMenuOpen: boolean;
 }
 
 interface MenuItem {
@@ -130,7 +132,7 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: 'synteny-hover', svgY: number | null): void,
-  (e: 'show-context-menu', event: MouseEvent, items: MenuItem[]): void
+  (e: 'show-context-menu', event: MouseEvent, items: MenuItem[], section?: GenomicSection): void
 }>();
 
 const backbone = computed(() => {
@@ -202,7 +204,7 @@ const showContextMenu = (event: MouseEvent, datatrack: DatatrackSection) => {
       icon: 'pi pi-external-link'
     }
   ];
-  emit('show-context-menu', event, items);
+  emit('show-context-menu', event, items, datatrack);
 };
 
 const showBackboneContextMenu = (event: MouseEvent, backboneSection: BackboneSection) => {
@@ -214,67 +216,73 @@ const showBackboneContextMenu = (event: MouseEvent, backboneSection: BackboneSec
       icon: 'pi pi-external-link',
     }
   ];
-  emit('show-context-menu', event, items);
+  emit('show-context-menu', event, items, backboneSection);
 };
 
 const onMouseEnter = (event: MouseEvent, section: BackboneSection | DatatrackSection) => {
+  if (!props.contextMenuOpen) {
+    if (section) {
+      section.isHovered = true;
+    }
 
-  if (section) {
-    section.isHovered = true;
+    // NOTE: disable selected data for qtls for now
+    if (section.type === 'qtl') {
+      return;
+    }
+
+    showHoveredData(section, event);
+
+    // Only set selected data if there are no selected genes
+    if (store.state.selectedGeneIds.length === 0 && section.type === 'gene' && store.state.selectedVariantSections.length === 0 && store.state.selectedBlocks.length === 0) {
+      const selectedDataList: SelectedData[] = [];
+      const geneSection = section as GeneDatatrack;
+      setHoverOnGeneLinesAndDatatrackSections(geneSection?.lines, true);
+
+      if (geneSection.lines.length > 0) {
+        const {
+          selectedData: selectedOrthologs,
+        } = getSelectedDataAndGeneIdsFromOrthologLine(geneSection.lines[0]);
+        selectedDataList.push(...selectedOrthologs);
+      }
+      else {
+        selectedDataList.push(new SelectedData(geneSection.gene.clone(), 'Gene'));
+      }
+
+      store.dispatch('setSelectedData', selectedDataList);
+    }
+    else if (store.state.selectedGeneIds.length === 0 && store.state.selectedVariantSections.length === 0 && store.state.selectedBlocks.length === 0 ) {
+      if (section.type === 'variant') {
+        const selectedData = new SelectedData(section, 'variantDensity');
+        store.dispatch('setSelectedData', [selectedData]);
+      }
+    }
   }
 
-  // NOTE: disable selected data for qtls for now
-  if (section.type === 'qtl') {
-    return;
-  }
-
-  showHoveredData(section, event);
   if (section.type === 'gene') {
     changeHoverElementSize(section, true);
-  }
-
-  // Only set selected data if there are no selected genes
-  if (store.state.selectedGeneIds.length === 0 && section.type === 'gene' && store.state.selectedVariantSections.length === 0 && store.state.selectedBlocks.length === 0) {
-    const selectedDataList: SelectedData[] = [];
-    const geneSection = section as GeneDatatrack;
-    setHoverOnGeneLinesAndDatatrackSections(geneSection?.lines, true);
-
-    if (geneSection.lines.length > 0) {
-      const {
-        selectedData: selectedOrthologs,
-      } = getSelectedDataAndGeneIdsFromOrthologLine(geneSection.lines[0]);
-      selectedDataList.push(...selectedOrthologs);
-    }
-    else {
-      selectedDataList.push(new SelectedData(geneSection.gene.clone(), 'Gene'));
-    }
-
-    store.dispatch('setSelectedData', selectedDataList);
-  }
-  else if (store.state.selectedGeneIds.length === 0 && store.state.selectedVariantSections.length === 0 && store.state.selectedBlocks.length === 0 ) {
-    if (section.type === 'variant') {
-      const selectedData = new SelectedData(section, 'variantDensity');
-      store.dispatch('setSelectedData', [selectedData]);
-    }
   }
 };
 
 const onMouseLeave = (section: BackboneSection | DatatrackSection) => {
-  emit('synteny-hover', null);
+  if (!props.contextMenuOpen) {
+    emit('synteny-hover', null);
 
-  if (section && section.isHovered == true) {
-    section.isHovered = false;
+    if (section && section.isHovered == true) {
+      section.isHovered = false;
+    }
+    hideHoveredData();
+
+    // NOTE: disable selected data for qtls
+    if (section.type === 'qtl') {
+      return;
+    }
+    if (section.type === 'gene') {
+      const geneSection = section as GeneDatatrack;
+      setHoverOnGeneLinesAndDatatrackSections(geneSection?.lines, false);
+    }
   }
-  hideHoveredData();
-
-  // NOTE: disable selected data for qtls
-  if (section.type === 'qtl') {
-    return;
-  }
-
   if (section.type === 'gene') {
     const geneSection = section as GeneDatatrack;
-    setHoverOnGeneLinesAndDatatrackSections(geneSection?.lines, false);
     changeHoverElementSize(geneSection, false);
   }
 };

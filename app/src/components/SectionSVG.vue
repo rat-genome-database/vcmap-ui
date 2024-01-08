@@ -76,6 +76,7 @@ import SelectedData from '@/models/SelectedData';
 import SyntenyRegion from '@/models/SyntenyRegion';
 import { SyntenyRegionInfo } from '@/models/SyntenyRegion';
 import SyntenySection from '@/models/SyntenySection';
+import GenomicSection from '@/models/GenomicSection';
 import DatatrackSection, { GeneDatatrack, VariantDensity } from '@/models/DatatrackSection';
 import { computed, toRefs } from '@vue/reactivity';
 import { useStore } from 'vuex';
@@ -117,6 +118,8 @@ interface Props {
   region: SyntenyRegion;
   syntenyHoverSvgY?: number | null;
   geneList: Map<number, Gene>;
+  contextMenuOpen: boolean;
+  selectedBlocks: SyntenySection[];
 }
 
 interface MenuItem {
@@ -139,8 +142,9 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: 'synteny-hover', svgY: number | null): void,
   (e: 'block-hover', startStop: number[] | null): void,
-  (e: 'show-context-menu', event: MouseEvent, items: MenuItem[]): void,
+  (e: 'show-context-menu', event: MouseEvent, items: MenuItem[], section?: GenomicSection): void,
   (e: 'swap-backbone', mapKey: string, chr: string, start: number, stop: number): void,
+  (e: 'select-blocks', sections: SyntenySection[]): void,
 }>();
 
 //Converts each property in this object to its own reactive prop
@@ -322,81 +326,92 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
       ];
     }
   }
-  emit('show-context-menu', event, items);
+  // Emit the appropriate selected GenomicSection when showing the menu
+  if (section) {
+    emit('show-context-menu', event, items, section);
+  } else if (track) {
+    emit('show-context-menu', event, items, track);
+  } else {
+    emit('show-context-menu', event, items);
+  }
 };
 ///
 
 const onMouseEnter = (event: MouseEvent, section: SyntenySection | DatatrackSection) => {
+  if (!props.contextMenuOpen) {
+    section.isHovered = true;
 
-  section.isHovered = true;
+    // NOTE: ignore qtl datatracks for now
+    if (section.type === 'qtl') return;
 
-  // NOTE: ignore qtl datatracks for now
-  if (section.type === 'qtl') return;
+    showHoveredData(section, event);
 
+    const genesAreSelected = store.state.selectedGeneIds.length > 0;
+    const variantSectionsAreSelected = store.state.selectedVariantSections.length > 0;
+    let selectedDataList: SelectedData[] = [];
+    if (section.type === 'gene') {
+      //
+      // Gene datatrack section
+      const geneSection = section as GeneDatatrack;
+      setHoverOnGeneLinesAndDatatrackSections(geneSection?.lines, true);
+
+      // Only update the selected data panel if no Genes or Variant sections are already selected
+      if (!genesAreSelected && !variantSectionsAreSelected) {
+        if (geneSection.lines.length > 0) {
+          const {
+            selectedData: selectedOrthologs,
+          } = getSelectedDataAndGeneIdsFromOrthologLine(geneSection.lines[0]);
+          selectedDataList.push(...selectedOrthologs);
+        }
+        else {
+          selectedDataList.push(new SelectedData(geneSection.gene.clone(), 'Gene'));
+        }
+      }
+    }
+    else if (!genesAreSelected && !variantSectionsAreSelected) {
+      //
+      // Synteny section
+      {
+        if (section.type === 'variant') {
+
+          selectedDataList.push(new SelectedData(section, 'variantDensity'));
+        }
+      }
+    }
+  }
   changeHoverElementSize(section, true);
-  showHoveredData(section, event);
-
-  const genesAreSelected = store.state.selectedGeneIds.length > 0;
-  const variantSectionsAreSelected = store.state.selectedVariantSections.length > 0;
-  let selectedDataList: SelectedData[] = [];
-  if (section.type === 'gene') {
-    //
-    // Gene datatrack section
-    const geneSection = section as GeneDatatrack;
-    setHoverOnGeneLinesAndDatatrackSections(geneSection?.lines, true);
-
-    // Only update the selected data panel if no Genes or Variant sections are already selected
-    if (!genesAreSelected && !variantSectionsAreSelected) {
-      if (geneSection.lines.length > 0) {
-        const {
-          selectedData: selectedOrthologs,
-        } = getSelectedDataAndGeneIdsFromOrthologLine(geneSection.lines[0]);
-        selectedDataList.push(...selectedOrthologs);
-      }
-      else {
-        selectedDataList.push(new SelectedData(geneSection.gene.clone(), 'Gene'));
-      }
-    }
-  }
-  else if (!genesAreSelected && !variantSectionsAreSelected) {
-    //
-    // Synteny section
-    {
-      if (section.type === 'variant') {
-
-        selectedDataList.push(new SelectedData(section, 'variantDensity'));
-      }
-    }
-  }
 };
 
 const onMouseLeave = (section: DatatrackSection | SyntenySection) => {
-  emit('synteny-hover', null);
-  if (isDetailed) {
-    emit('block-hover', null);
-  }
-  basePairPositionLabel.value = '';
+  if (!props.contextMenuOpen) {
+    emit('synteny-hover', null);
+    if (isDetailed) {
+      emit('block-hover', null);
+    }
+    basePairPositionLabel.value = '';
 
-  if (section) {
-    section.isHovered = false;
-  }
+    if (section) {
+      section.isHovered = false;
+    }
 
-  // Only reset data onMouseLeave if there isn't a selected gene or variant sections or block
-  if (store.state.selectedGeneIds.length == 0 && store.state.selectedVariantSections.length == 0 && store.state.selectedBlocks.length == 0) {
-    store.dispatch('setSelectedData', null);
-  }
+    // Only reset data onMouseLeave if there isn't a selected gene or variant sections or block
+    if (store.state.selectedGeneIds.length == 0 && store.state.selectedVariantSections.length == 0 && store.state.selectedBlocks.length == 0) {
+      store.dispatch('setSelectedData', null);
+    }
 
-  if (section.type === 'gene') {
-    const geneSection = section as GeneDatatrack;
-    setHoverOnGeneLinesAndDatatrackSections(geneSection.lines, false);
+    if (section.type === 'gene') {
+      const geneSection = section as GeneDatatrack;
+      setHoverOnGeneLinesAndDatatrackSections(geneSection.lines, false);
+    }
+    hideHoveredData();
   }
   changeHoverElementSize(section, false);
-  hideHoveredData();
 };
 
 const onSyntenyBlockClick = (section: SyntenySection, event: any, region: SyntenyRegion) => {
   //select the synteny block for display in the selectedDataPanel
   let selectedDataList: SelectedData[] = [];
+  // const origSelectedBlocks = store.state.selectedBlocks;
 
   //construct region info
   //loop loaded data tracks and get variant counts
@@ -419,14 +434,29 @@ const onSyntenyBlockClick = (section: SyntenySection, event: any, region: Synten
   store.dispatch('setSelectedGeneIds', []);
   store.dispatch('setSelectedVariantSections', []);
   //set our section as selected
-  store.dispatch('setSelectedBlocks', section);
   selectedDataList.push(new SelectedData(section, 'trackSection'));
-
+  const selectedBlocks = props.selectedBlocks;
   if (event.shiftKey) {
     const selectedDataArray = [...(store.state.selectedData || []), ...selectedDataList];
+    section.isSelected = !section.isSelected;
     store.dispatch('setSelectedData', selectedDataArray);
+    // store.dispatch('setSelectedBlocks', origSelectedBlocks.push(section));
+    selectedBlocks.push(section);
+    emit('select-blocks', selectedBlocks);
   } else if (selectedDataList.length > 0) {
-    store.dispatch('setSelectedData', selectedDataList);
+    const blockIsSelcted = section.isSelected;
+    if (selectedBlocks.length > 0) {
+      selectedBlocks.forEach((block) => block.isSelected = false);
+    }
+    section.isSelected = !blockIsSelcted;
+    if (section.isSelected) {
+      store.dispatch('setSelectedData', selectedDataList);
+      // store.dispatch('setSelectedBlocks', [section]);
+      emit('select-blocks', [section]);
+    } else {
+      store.dispatch('setSelectedData', []);
+      emit('select-blocks', []);
+    }
   }
 
 

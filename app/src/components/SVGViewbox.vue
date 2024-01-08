@@ -29,15 +29,15 @@
       <template v-for="(syntenySet, index) in overviewSyntenySets" :key="index">
         <template v-for="(region, index) in syntenySet.regions" :key="index">
           <SectionSVG show-chromosome show-synteny-on-hover :gene-list="geneList" is-overview select-on-click
-            :region="(region as SyntenyRegion)" @show-context-menu="handleShowContextMenu"
-            @swap-backbone="handleSwapBackbone" />
+            :region="(region as SyntenyRegion)" @show-context-menu="handleShowContextMenu" :context-menu-open="contextMenuOpen"
+            @swap-backbone="handleSwapBackbone" :selected-blocks="selectedBlocks" @select-blocks="handleSelectedBlocks"/>
         </template>
       </template>
     </template>
 
     <template v-if="store.state.showOverviewPanel">
       <template v-if="overviewBackboneSet">
-        <BackboneSetSVG show-data-on-hover :gene-list="geneList" :backbone-set="overviewBackboneSet" @show-context-menu="handleShowContextMenu"/>
+        <BackboneSetSVG show-data-on-hover :gene-list="geneList" :backbone-set="overviewBackboneSet" @show-context-menu="handleShowContextMenu"  :context-menu-open="contextMenuOpen"/>
       </template>
     </template>
 
@@ -45,7 +45,7 @@
     <template v-if="detailedBackboneSet">
       <BackboneSetSVG show-data-on-hover :backbone-set="detailedBackboneSet"
         :synteny-hover-svg-y="detailedSyntenySvgYPosition" @synteny-hover="onDetailedSyntenyHover" :gene-list="geneList"
-        @show-context-menu="handleShowContextMenu" :synteny-hover-backbone-y-values="detailedSyntenyBlockYPositions" />
+        @show-context-menu="handleShowContextMenu" :synteny-hover-backbone-y-values="detailedSyntenyBlockYPositions" :context-menu-open="contextMenuOpen" />
       <template v-if="detailedBackboneSet.geneLabels">
         <template v-for="(label, index) in detailedBackboneSet.geneLabels" :key="index">
           <template v-if="(label.isVisible)">
@@ -61,7 +61,8 @@
           <SectionSVG show-chromosome :region="(syntenicRegion as SyntenyRegion)"
             :synteny-hover-svg-y="detailedSyntenySvgYPosition" :gene-list="geneList"
             @synteny-hover="onDetailedSyntenyHover" @block-hover="onDetailedBlockHover"
-            @show-context-menu="handleShowContextMenu" @swap-backbone="handleSwapBackbone" />
+            @show-context-menu="handleShowContextMenu" @swap-backbone="handleSwapBackbone"
+            :context-menu-open="contextMenuOpen" :selected-blocks="selectedBlocks" @select-blocks="handleSelectedBlocks"/>
         </template>
         <template v-for="(label, index) in syntenySet.geneLabels" :key="index">
           <template v-if="label.isVisible">
@@ -248,7 +249,7 @@
   </div>
   -->
 
-  <ContextMenu ref="cm" :model="items" class="context-menu">
+  <ContextMenu ref="cm" :model="items" class="context-menu" @hide="onHideContextMenu">
     <template v-slot:item="{ item }">
       <CustomMenuItem :item="item" />
     </template>
@@ -296,8 +297,12 @@ import { createOrthologLines } from '@/utils/OrthologHandler';
 import VariantPositions from '@/models/VariantPositions';
 import Species from '@/models/Species';
 import BackboneSection from '@/models/BackboneSection';
+import SyntenySection from '@/models/SyntenySection';
 import GradientLegend from './GradientLegend.vue';
 import ContextMenu from 'primevue/contextmenu';
+import GenomicSection from '@/models/GenomicSection';
+import useSyntenyAndDataInteraction from '@/composables/useSyntenyAndDataInteraction';
+import { GeneDatatrack } from '@/models/DatatrackSection';
 
 const SHOW_DEBUG = process.env.NODE_ENV === 'development';
 const NAV_SHIFT_PERCENT = 0.2;
@@ -310,6 +315,7 @@ const toast = useToast();
 const { showDialog, dialogHeader, dialogMessage, showDialogBackButton, dialogTheme, onError } = useDialog();
 const { startDetailedSelectionY, stopDetailedSelectionY, updateZoomSelection, detailedSelectionHandler, cancelDetailedSelection, getDetailedSelectionStatus } = useDetailedPanelZoom(store);
 const { startOverviewSelectionY, stopOverviewSelectionY, updateOverviewSelection, overviewSelectionHandler, cancelOverviewSelection, getOverviewSelectionStatus } = useOverviewPanelSelection(store);
+const { setHoverOnGeneLinesAndDatatrackSections } = useSyntenyAndDataInteraction(store);
 
 interface Props {
   geneList: Map<number, Gene>;
@@ -331,6 +337,12 @@ let overviewSyntenySets = ref<SyntenyRegionSet[]>([]);
 let orthologLines = ref<OrthologLine[]>();
 let detailedSyntenySvgYPosition = ref<number | null>(null);
 let detailedSyntenyBlockYPositions = ref<number[] | null>(null);
+let contextMenuOpen = ref<boolean>(false); // Tracks if the context menu is open, to share with child components
+// Keeps list of selected blocks to share with all children when necessary
+let selectedBlocks = ref<SyntenySection[]>([]);
+// The section that was clicked to open the context menu
+// Storing here so we can handle any side effects we want when the context menu closes
+let contextMenuSection = ref<GenomicSection | null>(null);
 
 ////
 // Debugging helper refs and methods (debug template is currently commented out):
@@ -428,13 +440,36 @@ const displayDensityTrackTogglePanel = computed(() => {
   return false;
 });
 
-const handleShowContextMenu = (event: MouseEvent, menuItems: MenuItem[]) => {
+const handleShowContextMenu = (event: MouseEvent, menuItems: MenuItem[], contextSection?: GenomicSection) => {
   items.value = menuItems;
   cm.value.show(event);
+  contextMenuOpen.value = true;
+  if (contextSection) {
+    contextMenuSection.value = contextSection;
+  }
+};
+
+const onHideContextMenu = () => {
+  contextMenuOpen.value = false;
+  if (contextMenuSection.value) {
+    contextMenuSection.value.isHovered = false;
+    // If the context menu was for a gene, we'll want to remove hover for gene and orthologs
+    if (contextMenuSection.value instanceof GeneDatatrack) {
+      setHoverOnGeneLinesAndDatatrackSections(contextMenuSection.value.lines, false);
+    }
+    contextMenuSection.value = null;
+  }
+  // Remove any hover mouse location information for mouse position-based labels
+  onDetailedBlockHover(null);
+  onDetailedSyntenyHover(null);
 };
 
 const handleSwapBackbone = (mapKey: string, chr: string, start: number, stop: number) => {
   emit('swap-backbone', mapKey, chr, start, stop);
+};
+
+const handleSelectedBlocks = (sections: SyntenySection[]) => {
+  selectedBlocks.value = sections;
 };
 
 const getSpeciesName = (mapKey: number) => {
