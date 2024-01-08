@@ -216,7 +216,7 @@ const showBackboneContextMenu = (event: MouseEvent, backboneSection: BackboneSec
       icon: 'pi pi-external-link',
     }
   ];
-  emit('show-context-menu', event, items);
+  emit('show-context-menu', event, items, backboneSection);
 };
 
 const onMouseEnter = (event: MouseEvent, section: BackboneSection | DatatrackSection) => {
