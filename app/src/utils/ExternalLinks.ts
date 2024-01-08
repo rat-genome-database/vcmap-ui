@@ -4,8 +4,7 @@ export function createUrl(
   section: GenomicSection,
   mapKey?: number
 ) {
-  const assembly =
-    section.mapName === "GRCh38" ? "GRCh38.p14" : section.mapName;
+  const assembly = section.mapName;
   const chromosome = section.chromosome;
   let start = section.speciesStart;
   let stop = section.speciesStop;

@@ -208,7 +208,7 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
     if (section) {
       items = [
         {
-          label: 'Link to JBrowse',
+          label: 'Link to RGD JBrowse',
           command: () => { window.open(createUrl(section)); },
           icon: 'pi pi-external-link',
         },
@@ -241,7 +241,7 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
 
       items = [
         {
-          label: 'Link to JBrowse',
+          label: 'Link to RGD JBrowse',
           icon: 'pi pi-external-link',
           items: [
             {
@@ -311,7 +311,7 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
     if (track.type === 'variant') {
       items = [
         {
-          label: 'Link to Variant Visualizer',
+          label: 'Link to RGD Variant Visualizer',
           command: () => { window.open(createUrl(track, findMapKey(track.speciesName))); },
           icon: 'pi pi-external-link'
         }
@@ -319,7 +319,7 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
     } else {
       items = [
         {
-          label: 'Link to JBrowse',
+          label: 'Link to RGD JBrowse',
           command: () => { window.open(createUrl(track)); },
           icon: 'pi pi-external-link'
         }

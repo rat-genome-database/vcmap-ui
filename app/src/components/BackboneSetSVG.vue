@@ -199,7 +199,7 @@ const showContextMenu = (event: MouseEvent, datatrack: DatatrackSection) => {
   items = [
     {
       // Change label depending on if variant or gene
-      label: datatrack.type === 'variant' ? 'Link to Variant Visualizer' : 'Link to JBrowse',
+      label: datatrack.type === 'variant' ? 'Link to RGD Variant Visualizer' : 'Link to RGD JBrowse',
       command: () => { window.open(createUrl(datatrack, findMapKey(datatrack.speciesName))); },
       icon: 'pi pi-external-link'
     }
@@ -211,7 +211,7 @@ const showBackboneContextMenu = (event: MouseEvent, backboneSection: BackboneSec
   let items: MenuItem[] = [];
   items = [
     {
-      label: 'Link to Jbrowse',
+      label: 'Link to RGD Jbrowse',
       command: () => { window.open(createUrl(backboneSection)); },
       icon: 'pi pi-external-link',
     }
