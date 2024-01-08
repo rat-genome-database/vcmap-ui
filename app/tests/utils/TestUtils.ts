@@ -89,6 +89,9 @@ export namespace TestUtils
         isDetailedPanelUpdating: false,
         isOverviewPanelUpdating: false,
         isUpdatingVariants: false,
+
+        shouldUpdateDetailedPanel: false,
+
         selectionToastCount: 0,
         svgPositions: {
           overviewPanelWidth: 300,

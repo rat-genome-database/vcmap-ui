@@ -4,6 +4,8 @@
     :on-show-settings="onShowSettings"
     :geneList="geneList"
     :selected-data="store.state.selectedData"
+    :variant-positions-list="variantPositionsList"
+    :variant-track-status="variantTrackStatus"
   />
   <!-- <Button
     label="INSPECT (Main)"
@@ -70,7 +72,7 @@ import SelectedDataPanel from '@/components/SelectedDataPanel.vue';
 import { useStore } from 'vuex';
 import { useRoute, useRouter } from 'vue-router';
 import { key } from '@/store';
-import { onMounted, provide, ref, watch } from 'vue';
+import { onMounted, provide, ref, watch, computed } from 'vue';
 import Toast, { ToastMessageOptions } from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 import Gene from "@/models/Gene";
@@ -127,6 +129,15 @@ const panelCollapsed = ref(store.state.isDataPanelCollapsed);
 // TODO: Where to keep the backbone? Always index == 0?? (confusing)
 // TODO: Combined with above, we could create a structure that has these properties
 const syntenyTree = ref(new Map<number, Block[]>());
+
+const variantTrackStatus = computed(() => {
+  return Array.from(syntenyTree.value).map((set) => {
+    return {
+      key: set[0],
+      variantPositions: set[1][0].variantPositions,
+    };
+  });
+});
 
 
 // Our gene list keyed by rgdId
@@ -189,6 +200,9 @@ const onInspectPressed = () => {
  * (Lifecycle hook)
  */
 onMounted(async () => {
+  store.dispatch('setShouldUpdateDetailedPanel', false);
+  store.dispatch('clearSynthenicDensityTrackVisibility');
+
   const queryParams = route.query;
   if (queryParams.key && queryParams.start && queryParams.stop && queryParams.chr) {
     const sectionMapName = queryParams.key as string;

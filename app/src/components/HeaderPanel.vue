@@ -14,7 +14,10 @@
           </div>
         </template>
         <div class="grid p-d-flex">
-          <InfoHeader />
+          <InfoHeader 
+            :variant-positions-list="variantPositionsList"
+            :variant-track-status="variantTrackStatus"
+            @update-details-panel="$emit('update-details-panel')" />
           <Divider layout="vertical" />
           <NavigationHeader :geneList="geneList" :selectedData="selectedData" />
         </div>
@@ -34,6 +37,7 @@ import Gene from '@/models/Gene';
 import SelectedData from '@/models/SelectedData';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import VariantPositions from '@/models/VariantPositions';
 
 const router = useRouter();
 
@@ -42,6 +46,8 @@ interface Props
   onShowSettings: () => void;
   geneList: Map<number, Gene>;
   selectedData: SelectedData[] | null;
+  variantPositionsList: VariantPositions[];
+  variantTrackStatus: any;
 }
 
 const props = defineProps<Props>();
