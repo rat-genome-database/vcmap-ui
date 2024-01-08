@@ -126,7 +126,7 @@ const getDensityTrackVisibility = (mapKey: number) => {
 const getBackboneDensityTrackVisibility = () => {
   const variantPositions = props.variantPositionsList.some((variantPositions: { mapKey: number; }) => variantPositions.mapKey === store.state.species.activeMap.key);
   console.log('getBackboneDensityTrackVisibility', variantPositions);
-  return variantPositions;
+  return variantPositions && !store.state.hideBackboneDensityTrack;
 };
 
 function toggleSyntenicDensityTrack(mapKey: number) {
