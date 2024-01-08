@@ -159,7 +159,6 @@
   <VCMapDialog v-model:show="showDialog" :header="dialogHeader" :message="dialogMessage" :theme="dialogTheme"
     :show-back-button="showDialogBackButton" />
   <LoadingSpinnerMask v-if="arePanelsLoading" :style="getDetailedPosition()"></LoadingSpinnerMask>
-  <div>Visibility Settings</div>
   <div class="flex-container-start">
     <Fieldset v-if="displayDensityTrackTogglePanel" class="density-toggle-container" legend="Density Tracks"
       :toggleable="true">
@@ -402,6 +401,14 @@ watch(() => store.state.isUpdatingVariants, () => {
 watch(() => store.state.speciesOrder, () => {
   updateOverviewPanel();
   updateDetailsPanel();
+});
+
+watch(() => store.state.shouldUpdateDetailedPanel, () => {
+  const shouldUpdate = store.state.shouldUpdateDetailedPanel;
+  if (shouldUpdate) {
+    updateDetailsPanel();
+    store.dispatch('setShouldUpdateDetailedPanel', false);
+  }
 });
 
 // TODO: this can be redundant when adding/removing species, causes svg to update twice

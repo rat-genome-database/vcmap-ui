@@ -1,37 +1,57 @@
 <template>
   <div class="grid unpadded col-4">
-    <div class="col-12">
-      <h4 class="select-text">Selection Info</h4>
-      <div class="grid unpadded">
-        <div class="col-3">Backbone:</div>
-        <div class="col-9 bold" data-test="backbone-overview-display">{{store.state.species?.name}} chr{{ store.state.chromosome?.chromosome }} ({{ store.state.species?.activeMap.name }})</div>
-        <div class="col-12 species-toggles">Comparative Species:</div>
-          <div v-for="(species, index) in store.state.comparativeSpecies" :key="index">
-            <div class="toggle-container">
-              <InputSwitch
-                v-model="species.visible"
-                title="Toggle Species Visibility"
-                @click="toggleSpeciesVisibility(index)"
-              />
-              <span class="toggle-label">{{ species.name }} ({{ species.activeMap.name }})</span>
+    <div class="col-8">
+      <div><h4 class="visibility-text">Visibility</h4></div>
+      <div class="flex-down">
+        <div class="label-row">
+          <div class="setting-label" />
+          <div class="checkbox-row">
+            <div class="species-name-label bold-text">{{ store.state.species?.name }}</div>
+            <div v-for="(species, index) in store.state.comparativeSpecies" :key="index">
+              <div class="species-name-label">{{ species.name }}</div>
             </div>
+          </div>
+        </div> 
+
+        <div class="setting-row">
+          <div class="setting-label bold-text">Species:</div>
+          <div class="checkbox-row">
+            <div>
+              <Checkbox :modelValue="store.state.species.visible" disabled binary />
+            </div>
+            <div v-for="(species, index) in store.state.comparativeSpecies" :key="index">
+              <Checkbox :modelValue="species.visible" @update:modelValue="() => toggleSpeciesVisibility(index)" binary />
+            </div>
+          </div>
         </div>
-        <div class="col-12 species-toggles">Other:</div>
+
+        <div v-if="displayDensityTrackTogglePanel" class="setting-row">
+          <div class="setting-label bold-text">Variants:</div>
+          <div class="checkbox-row">
+            <div>
+              <Checkbox :modelValue="getBackboneDensityTrackVisibility()" @update:modelValue="() => toggleBackboneDensityTrack()" :disabled="disableBackboneVariantCheckbox()" binary />
+            </div>
+            <div v-for="(species, index) in store.state.comparativeSpecies" :key="index">
+              <Checkbox :modelValue="getDensityTrackVisibility(species.activeMap.key)" @update:modelValue="() => toggleSyntenicDensityTrack(species.activeMap.key)" :disabled="disableVariantCheckbox(species)" binary />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-4">
+      <div class="flex-down height-100">
         <div class="toggle-container">
-          <InputSwitch
-            v-model="store.state.showOverviewPanel"
-            title="Overview Panel"
-            @click="toggleOverview()"
-          />
-          <span class="toggle-label">Overview Panel</span>
+          <div class="checkbox-row">
+            <Checkbox v-model="store.state.showOverviewPanel" @update:modelValue="toggleOverview()" binary />
+            <span class="toggle-label bold-text">Overview Panel</span>
+          </div>
         </div>
         <div class="toggle-container">
-          <InputSwitch
-            v-model="store.state.svgPositions.mirroredOverivew"
-            title="MirroredOverview"
-            @click="toggleMirroredOverview()"
-          />
-          <span class="toggle-label">Mirrored Overview</span>
+          <div class="checkbox-row">
+            <Checkbox v-model="store.state.svgPositions.mirroredOverivew" @update:modelValue="toggleMirroredOverview()" binary />
+            <span class="toggle-label bold-text">Mirrored Overview</span>
+          </div>
         </div>
       </div>
     </div>
@@ -43,7 +63,16 @@ import { useStore } from 'vuex';
 import { key } from '@/store';
 import Species from '@/models/Species';
 import { calculateOverviewWidth } from '@/utils/Shared';
+import Checkbox from 'primevue/checkbox';
+import { computed } from 'vue';
+import VariantPositions from '@/models/VariantPositions';
 
+interface Props {
+  variantPositionsList: VariantPositions[];
+  variantTrackStatus: any;
+}
+
+const props = defineProps<Props>();
 const store = useStore(key);
 
 function toggleSpeciesVisibility(index: number) {
@@ -61,6 +90,58 @@ function toggleSpeciesVisibility(index: number) {
   });
   store.dispatch('setComparativeSpecies', newComparativeSpecies);
   store.dispatch('setSpeciesOrder', newSpeciesOrder);
+}
+
+const displayDensityTrackTogglePanel = computed(() => {
+  if (props.variantPositionsList.length > 0) {
+    return true;
+  }
+  return false;
+});
+
+const disableVariantCheckbox = (species: Species) => {
+  const variantPositions = props.variantPositionsList.some((variantPositions: { mapKey: number; }) => variantPositions.mapKey === species.activeMap.key);
+  const hiddenDensityTracks = store.state.hiddenDensityTracks;
+
+  // disabled if track is not visible
+  if (!species.visible) {
+    return true;
+  }
+
+  // check if variant track is loaded but hidden
+  return !(variantPositions || hiddenDensityTracks.includes(species.activeMap.key));
+};
+
+const disableBackboneVariantCheckbox = () => {
+  const variantPositions = props.variantPositionsList.some((variantPositions: { mapKey: number; }) => variantPositions.mapKey === store.state.species.activeMap.key);
+  return !variantPositions;
+};
+
+const getVisibility = (mapKey: number) => {
+  const species = store.state.comparativeSpecies.find((species: { activeMap: { key: number; }; }) => species.activeMap.key === mapKey);
+  return species?.visible;
+};
+
+const getDensityTrackVisibility = (mapKey: number) => {
+  const variantPositions = props.variantPositionsList.find((variantPositions: { mapKey: number; }) => variantPositions.mapKey === mapKey);
+  const hiddenDensityTracks = store.state.hiddenDensityTracks;
+  return variantPositions && !hiddenDensityTracks.includes(mapKey);
+};
+
+const getBackboneDensityTrackVisibility = () => {
+  const variantPositions = props.variantPositionsList.find((variantPositions: { mapKey: number; }) => variantPositions.mapKey === store.state.species.activeMap.key);
+  return variantPositions;
+};
+
+function toggleSyntenicDensityTrack(mapKey: number) {
+  store.dispatch('setToggleSyntenicDensityTrackVisibility', mapKey);
+  store.dispatch('setShouldUpdateDetailedPanel', true);
+}
+
+function toggleBackboneDensityTrack() {
+  const hideDensityTrack: boolean = store.state.hideBackboneDensityTrack;
+  store.dispatch('setHideBackboneDensityTrack', !hideDensityTrack);
+  store.dispatch('setShouldUpdateDetailedPanel', true);
 }
 
 function toggleOverview() {
@@ -139,10 +220,11 @@ p.label-description
   height: 2rem;
 }
 
-.select-text
+.visibility-text
 {
   margin-top: .5em;
-
+  margin-left: .5em;
+  pointer-events: none;
 }
 
 .p-inputswitch{
@@ -154,6 +236,7 @@ p.label-description
   margin-left: 10px;
   //move the label down a bit to align with the toggle
   margin-top: 5px;
+  font-size: 0.85em;
 }
 
 .toggle-container {
@@ -170,5 +253,56 @@ p.label-description
   display: flex;
   width: 50%; 
   border: 1px solid blue;
+}
+
+.setting-row {
+  display: flex;
+  margin-top: 5px;
+  width: 100%;
+  align-items: center;
+}
+
+.label-row {
+  display: flex;
+  margin-top: 5px;
+  width: 100%;
+  align-items: center;
+  margin-bottom: 1em;
+}
+
+.checkbox-row {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  align-items: center;
+}
+
+.setting-label {
+  margin-left: 0.5rem;
+  min-width: 25%;
+  font-size: 0.85em;
+  pointer-events: none;
+}
+
+// tilt labels upwards 45 degrees
+.species-name-label {
+  transform: rotate(-45deg);
+  font-size: 0.75em;
+  pointer-events: none;
+}
+
+.bold-text {
+  font-weight: bold;
+}
+
+.flex-down {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: flex-start;
+}
+
+.height-100 {
+  height: 100%;
 }
 </style>

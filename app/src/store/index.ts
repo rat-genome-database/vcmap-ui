@@ -37,6 +37,8 @@ export interface VCMapState
   isOverviewPanelUpdating: boolean;
   isUpdatingVariants: boolean;
 
+  shouldUpdateDetailedPanel: boolean;
+
   /* Selected data */
   selectedGeneIds: number[];
   selectedVariantSections: any[];
@@ -118,6 +120,8 @@ export default createStore({
     isDetailedPanelUpdating: false,
     isOverviewPanelUpdating: false,
     isUpdatingVariants: false,
+
+    shouldUpdateDetailedPanel: false,
 
     selectedGeneIds: [],
     selectedVariantSections: [],
@@ -243,6 +247,9 @@ export default createStore({
     isDataPanelCollapsed(state: VCMapState, isDataPanelCollapsed: boolean) {
       state.isDataPanelCollapsed = isDataPanelCollapsed;
     },
+    shouldUpdateDetailedPanel(state: VCMapState, shouldUpdateDetailedPanel: boolean) {
+      state.shouldUpdateDetailedPanel = shouldUpdateDetailedPanel;
+    },
   },
 
   actions: {
@@ -317,6 +324,9 @@ export default createStore({
       context.commit('setSpeciesOrder', {});
       context.commit('clearUserHistory');
     },
+    clearSynthenicDensityTrackVisibility(context: ActionContext<VCMapState, VCMapState>) {
+      context.commit('clearSynthenicDensityTrackVisibility');
+    },
     clearBackboneSelection(context: ActionContext<VCMapState, VCMapState>) {
       context.commit('selectedBackboneRegion', null);
       context.commit('detailedBasePairRange', { start: 0, stop: 0 });
@@ -384,6 +394,9 @@ export default createStore({
     },
     setShowOverviewPanel(context: ActionContext<VCMapState, VCMapState>, showOverviewPanel: boolean) {
       context.commit('showOverviewPanel', showOverviewPanel);
+    },
+    setShouldUpdateDetailedPanel(context: ActionContext<VCMapState, VCMapState>, shouldUpdateDetailedPanel: boolean) {
+      context.commit('shouldUpdateDetailedPanel', shouldUpdateDetailedPanel);
     }
   },
 
