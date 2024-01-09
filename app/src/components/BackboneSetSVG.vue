@@ -95,7 +95,7 @@ import { VCMapSVGElement } from '@/models/VCMapSVGElement';
 import useMouseBasePairPos from '@/composables/useMouseBasePairPos';
 import { getSelectedDataAndGeneIdsFromOrthologLine } from '@/utils/OrthologHandler';
 import useSyntenyAndDataInteraction from '@/composables/useSyntenyAndDataInteraction';
-import { createUrl } from '@/utils/ExternalLinks';
+import { createJBrowse2UrlForGene, createJBrowse2UrlForGenomicSection, createUrl, createVariantVisualizerUrl } from '@/utils/ExternalLinks';
 import GenomicSection from '@/models/GenomicSection';
 
 const INNER_SELECTION_EXTRA_WIDTH = 4;
@@ -196,14 +196,37 @@ const findMapKey = (name: string) => {
 
 const showContextMenu = (event: MouseEvent, datatrack: DatatrackSection) => {
   let items: MenuItem[] = [];
-  items = [
-    {
-      // Change label depending on if variant or gene
-      label: datatrack.type === 'variant' ? 'Link to Variant Visualizer' : 'Link to JBrowse',
-      command: () => { window.open(createUrl(datatrack, findMapKey(datatrack.speciesName))); },
-      icon: 'pi pi-external-link'
+  if (datatrack.type === 'variant') {
+    // Variant track...
+    const variantMapKey = findMapKey(datatrack.speciesName);
+    if (variantMapKey != null) {
+      items.push({
+        label: 'Link to RGD Variant Visualizer',
+        command: () => { window.open(createVariantVisualizerUrl(datatrack, variantMapKey)); },
+        icon: 'pi pi-external-link',
+      });
     }
-  ];
+
+    items.push({
+      label: 'Link to RGD JBrowse',
+        command: () => { window.open(createJBrowse2UrlForGenomicSection(datatrack)); },
+        icon: 'pi pi-external-link',
+    });
+  } else if (store.state.species != null) {
+    // Is non-variant datatrack (likely a GeneDatatrack) and the backbone species is defined so that we can use it
+    // to search for the species model associated with the gene
+    const geneSpecies = [store.state.species, ...store.state.comparativeSpecies]
+      .find(s => s.activeMap.key === (datatrack as GeneDatatrack).gene.mapKey);
+
+    if (geneSpecies != null) {
+      items.push({
+        label: 'Link to RGD JBrowse',
+        command: () => {window.open(createJBrowse2UrlForGene((datatrack as GeneDatatrack).gene, geneSpecies))},
+        icon: 'pi pi-external-link',
+      });
+    }
+  }
+  
   emit('show-context-menu', event, items, datatrack);
 };
 
@@ -211,8 +234,8 @@ const showBackboneContextMenu = (event: MouseEvent, backboneSection: BackboneSec
   let items: MenuItem[] = [];
   items = [
     {
-      label: 'Link to Jbrowse',
-      command: () => { window.open(createUrl(backboneSection)); },
+      label: 'Link to RGD Jbrowse',
+      command: () => { window.open(createJBrowse2UrlForGenomicSection(backboneSection)); },
       icon: 'pi pi-external-link',
     }
   ];

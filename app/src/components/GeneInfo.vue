@@ -53,7 +53,7 @@ import { getNewSelectedData } from '@/utils/DataPanelHelpers';
 import { inject } from 'vue';
 import { querySyntenyForSearchZoomKey } from '@/injection_keys/main';
 import useGeneSearchAndSelect from '@/composables/useGeneSearchAndSelect';
-import { urlConstants } from '@/utils/Urls';
+import { createGeneReportUrl, createJBrowse2UrlForGene } from '@/utils/ExternalLinks';
 
 const $log = useLogger();
 const store = useStore(key);
@@ -114,7 +114,7 @@ const goToRgdGeneSummary = () => {
     return null;
   }
 
-  const rgdUrl = `${urlConstants.geneReport}?id=${props.gene.rgdId}`;
+  const rgdUrl = createGeneReportUrl(props.gene.rgdId);
   window.open(rgdUrl);
 };
 
@@ -130,7 +130,7 @@ const goToJBrowse2 = () => {
     return null;
   }
 
-  const url = `${urlConstants.jbrowse2}?dest=jbrowse2&assembly=${geneSpecies.activeMap.name}&loc=chr${props.gene.chromosome}:${props.gene.start}-${props.gene.stop}`;
+  const url = createJBrowse2UrlForGene(props.gene, geneSpecies);
   window.open(url);
 };
 

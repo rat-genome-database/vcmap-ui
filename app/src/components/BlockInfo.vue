@@ -72,8 +72,8 @@
 
 <script setup lang="ts">
 import SyntenySection from '@/models/SyntenySection';
+import { createJBrowse2UrlForGenomicSection } from '@/utils/ExternalLinks';
 import { Formatter } from '@/utils/Formatter';
-import { urlConstants } from '@/utils/Urls';
 
 interface Props
 {
@@ -88,9 +88,7 @@ interface Props
 const props = defineProps<Props>();
 
 const goToJBrowse2 = () => {
-  const start = (props.blockSection.isInverted) ? props.blockSection.speciesStop : props.blockSection.speciesStart;
-  const stop = (props.blockSection.isInverted) ? props.blockSection.speciesStart : props.blockSection.speciesStop;
-  const url = `${urlConstants.jbrowse2}?dest=jbrowse2&assembly=${props.blockSection.mapName}&loc=chr${props.blockSection.chromosome}:${start}-${stop}`;
+  const url = createJBrowse2UrlForGenomicSection(props.blockSection);
   window.open(url);
 };
 
