@@ -7,7 +7,7 @@
   <template v-for="(blockSection, index) in level1Blocks" :key="index">
     <g @contextmenu.prevent="showContextMenu({ event: $event, region, section: blockSection })">
       <rect v-if="blockSection.isHovered" :y="region.gaplessBlock.posY1" :x="region.gaplessBlock.posX1"
-        :width="region.gaplessBlock.width" :height="region.gaplessBlock.height" fill="none" stroke-width=".5"
+        :width="region.gaplessBlock.width" :height="region.gaplessBlock.height" fill="none" stroke-width="1.25"
         stroke="#0000FF" stroke-dasharray="2,2" />
       <rect class="block-section" @mouseenter="onMouseEnter($event, blockSection)"
         :class="{ 'is-overview-block': isOverview }" @mouseleave="onMouseLeave(blockSection)"
@@ -22,7 +22,7 @@
 
   <template v-for="(blockSection, index) in level2Blocks" :key="index">
     <rect v-if="blockSection.isHovered" :y="region.gaplessBlock.posY1" :x="region.gaplessBlock.posX1"
-      :width="region.gaplessBlock.width" :height="region.gaplessBlock.height" fill="none" stroke-width=".5"
+      :width="region.gaplessBlock.width" :height="region.gaplessBlock.height" fill="none" stroke-width="1.25"
       stroke="#0000FF" stroke-dasharray="2,2" />
     <rect class="level-2 block-section" @mouseenter="onMouseEnter($event, blockSection)"
       :class="{ 'is-overview-block': isOverview }" @mouseleave="onMouseLeave(blockSection)"
@@ -93,7 +93,7 @@ import Gene from '@/models/Gene';
 import DatatrackSet from '@/models/DatatrackSet';
 import { getSelectedDataAndGeneIdsFromOrthologLine } from '@/utils/OrthologHandler';
 import useSyntenyAndDataInteraction from '@/composables/useSyntenyAndDataInteraction';
-import { createJBrowse2UrlForGene, createJBrowse2UrlForGenomicSection, createUrl, createVariantVisualizerUrl } from '@/utils/ExternalLinks';
+import { createJBrowse2UrlForGene, createJBrowse2UrlForGenomicSection, createVariantVisualizerUrl } from '@/utils/ExternalLinks';
 
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
 const SELECTED_HIGHLIGHT_COLOR = '#FF4822';

@@ -256,7 +256,6 @@ import { createSyntenicRegionSets, } from '@/utils/SectionBuilder';
 import useOverviewPanelSelection from '@/composables/useOverviewPanelSelection';
 import { useLogger } from 'vue-logger-plugin';
 import Toast, { ToastMessageOptions } from 'primevue/toast';
-import Fieldset from 'primevue/fieldset';
 import { useToast } from 'primevue/usetoast';
 import { createBackboneSection, backboneDatatrackBuilder, createBackboneSet } from '@/utils/BackboneBuilder';
 import BackboneSetSVG from './BackboneSetSVG.vue';

@@ -95,7 +95,7 @@ import { VCMapSVGElement } from '@/models/VCMapSVGElement';
 import useMouseBasePairPos from '@/composables/useMouseBasePairPos';
 import { getSelectedDataAndGeneIdsFromOrthologLine } from '@/utils/OrthologHandler';
 import useSyntenyAndDataInteraction from '@/composables/useSyntenyAndDataInteraction';
-import { createJBrowse2UrlForGene, createJBrowse2UrlForGenomicSection, createUrl, createVariantVisualizerUrl } from '@/utils/ExternalLinks';
+import { createJBrowse2UrlForGene, createJBrowse2UrlForGenomicSection, createVariantVisualizerUrl } from '@/utils/ExternalLinks';
 import GenomicSection from '@/models/GenomicSection';
 
 const INNER_SELECTION_EXTRA_WIDTH = 4;
