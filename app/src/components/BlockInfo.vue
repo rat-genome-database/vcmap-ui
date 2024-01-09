@@ -37,7 +37,17 @@
         </div>
       </div>
       <div class="column data-track-info">
-        <div class="column-header">Region Info</div>
+        <div class="column-header">
+          Region Info
+          <i
+            class="pi pi-info-circle info-icon" 
+            v-tooltip.left="`Aggregate data for the entire conserved synteny region that this synteny block is contained in.\n
+              Gene Count: # of genes present in this region\n
+              Block Count: # of syntenic blocks in this region\n
+              Gap Count: # of gaps in this region\n
+              Variant Count: # of variants loaded in this region`"
+          ></i>
+        </div>
         <!-- Data Track Information -->
         <div class="info-item">
           <span class="info-label">Gene Count:</span> 

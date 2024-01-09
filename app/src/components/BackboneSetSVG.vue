@@ -95,7 +95,7 @@ import { VCMapSVGElement } from '@/models/VCMapSVGElement';
 import useMouseBasePairPos from '@/composables/useMouseBasePairPos';
 import { getSelectedDataAndGeneIdsFromOrthologLine } from '@/utils/OrthologHandler';
 import useSyntenyAndDataInteraction from '@/composables/useSyntenyAndDataInteraction';
-import { createJBrowse2UrlForGene, createJBrowse2UrlForGenomicSection, createUrl, createVariantVisualizerUrl } from '@/utils/ExternalLinks';
+import { createJBrowse2UrlForGene, createJBrowse2UrlForGenomicSection, createVariantVisualizerUrl } from '@/utils/ExternalLinks';
 import GenomicSection from '@/models/GenomicSection';
 
 const INNER_SELECTION_EXTRA_WIDTH = 4;
@@ -221,7 +221,7 @@ const showContextMenu = (event: MouseEvent, datatrack: DatatrackSection) => {
     if (geneSpecies != null) {
       items.push({
         label: 'Link to RGD JBrowse',
-        command: () => {window.open(createJBrowse2UrlForGene((datatrack as GeneDatatrack).gene, geneSpecies))},
+        command: () => { window.open(createJBrowse2UrlForGene((datatrack as GeneDatatrack).gene, geneSpecies)); },
         icon: 'pi pi-external-link',
       });
     }
