@@ -9,7 +9,7 @@
       <p class="zoom-out-label">Zoom Out</p>
     </div>
     <div class="zoom-level-container">
-      <p class="zoom-level-label">{{ Math.round(zoomLevel * 100) / 100.0 }}x</p>
+      <p class="zoom-level-label" data-test="zoom-level-label">{{ Math.round(zoomLevel * 100) / 100.0 }}x</p>
     </div>
     <div class="zoom-in-container">
       <div class="zoom-options" v-for="interval in zoomIntervals" :key="interval">
@@ -69,7 +69,7 @@ const zoom = (newZoomLevel: number) => {
 
   if (newZoomLevel === 1)
   {
-    store.dispatch('setDetailedBasePairRequest', { start: 0, stop: backboneChromosome.seqLength });
+    store.dispatch('setDetailedBasePairRequest', { range: { start: 0, stop: backboneChromosome.seqLength }, source: 'Reset Zoom' });
   }
   else
   {
@@ -80,6 +80,7 @@ const zoom = (newZoomLevel: number) => {
 
     const newRegionLength = currentLength * (currentZoomLevel / newZoomLevel);
     const lengthDiff = currentLength - newRegionLength;
+    const zoom = lengthDiff > 0 ? 'Zoomed In' : 'Zoomed Out';
 
     if (lengthDiff > 0)
     {
@@ -108,7 +109,7 @@ const zoom = (newZoomLevel: number) => {
     }
 
     // Trigger detailed panel update
-    store.dispatch('setDetailedBasePairRequest', { start: zoomedStart, stop: zoomedStop });
+    store.dispatch('setDetailedBasePairRequest', { range: { start: zoomedStart, stop: zoomedStop }, source: zoom });
   }
 };
 
@@ -155,7 +156,10 @@ function getZoomStepFromZoomLevel(zoomLevel: number)
   const selectedRegion = store.state.selectedBackboneRegion;
   if (selectedRegion == null || selectedRegion.viewportSelection == null)
   {
-    $log.error('Could not calculate zoom step from zoom level');
+    // This is expected on initial load of a new configuration because of this method
+    // gets called immediately in the watcher. So the first execution will likely not have the
+    // selectedRegion defined yet, but the next execution should once the detailedBasePairRange
+    // is calculated and set in Main.vue
     return 0;
   }
 

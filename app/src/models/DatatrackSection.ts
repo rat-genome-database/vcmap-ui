@@ -2,20 +2,17 @@ import Gene from './Gene';
 import Label from './Label';
 import GenomicSection, { BackboneAlignment, GenomicSectionParams, RenderType, WindowBasePairRange } from "./GenomicSection";
 import OrthologLine from './OrthologLine';
+import { Formatter } from '@/utils/Formatter';
 
-export type DatatrackSectionType = 'gene' | 'block' | 'qtl' | 'variant';
-
-export interface LoadedGene
-{
-  genes: {
-    [speciesName:string]: GeneDatatrack[]
-  }
-  backboneOrtholog?: GeneDatatrack,
-}
+export type DatatrackSectionType = 'gene' | 'qtl' | 'variant';
 
 type DatatrackSectionParams = GenomicSectionParams;
 
-export default class DatatrackSection extends GenomicSection
+/**
+ * General representation of a DatatrackSection element. Defined as abstract in order
+ * to force implementation of any abstract methods of GenomicSection in its subclasses.
+ */
+export default abstract class DatatrackSection extends GenomicSection
 {
   label?: Label;
 
@@ -49,6 +46,16 @@ export class GeneDatatrack extends DatatrackSection
     this.gene = gene.clone();
     this.opacity = 0.7;
   }
+
+  public toHoveredData(): string[] {
+    return [
+      this.gene.symbol,
+      Formatter.truncate(this.gene.name, 30),
+      this.speciesName,
+      `Chr${this.chromosome}: ${Formatter.addCommasToBasePair(this.gene.start)} - ${Formatter.addCommasToBasePair(this.gene.stop)}`,
+      `Orthologs: ${this.gene.orthologs.length}`,
+    ];
+  }
 }
 
 export class VariantDensity extends DatatrackSection
@@ -78,14 +85,24 @@ export class VariantDensity extends DatatrackSection
     }
   }
 
+  // TODO: Will need option to adjust color scheme for colorblind users
   setSectionColor(maxCount: number) {
-    const blueVal = Math.round(((maxCount - this.variantCount) / maxCount) * 255);
-    const redVal = Math.round((this.variantCount / maxCount) * 255);
-    let redHex = redVal.toString(16);
-    redHex = redHex.length === 1 ? `0${redHex}` : redHex;
-    let blueHex = blueVal.toString(16);
-    blueHex = blueHex.length === 1 ? `0${blueHex}` : blueHex;
-    this.elementColor = `#${redHex}00${blueHex}`;
+    // Define the hue range for the gradient (e.g., purple to red)
+    const hueRange = { min: 15, max: 250 }; // Example values
+    const hue = ((maxCount - this.variantCount) / maxCount) * (hueRange.max - hueRange.min) + hueRange.min;
+
+    const lightness = 68; // Example value, can be adjusted
+    // const chroma = 0.152; // Example value, can be adjusted
+    const chroma = 0.19;
+
+    // Set the color using OKLCH format
+    this.elementColor = `oklch(${lightness}% ${chroma} ${hue})`;
   }
 
+  public toHoveredData(): string[] {
+    return [
+      `Chr${this.chromosome}: ${Formatter.addCommasToBasePair(this.speciesStart)} - ${Formatter.addCommasToBasePair(this.speciesStop)}`,
+      `Variant Count: ${this.variantCount}`,
+    ];
+  }
 }

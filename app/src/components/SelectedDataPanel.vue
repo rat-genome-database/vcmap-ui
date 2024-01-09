@@ -3,31 +3,36 @@
     <template #header>
       <div class="selected-data-header">
         <div class="panel-header-item">
-          <b>Selected Data</b>
-        </div>
-        <div class="panel-header-item">
-          <AutoComplete
-            v-model="searchedGene"
-            :suggestions="geneSuggestions"
-            @complete="searchGene($event)"
-            @item-select="searchSVG($event)"
-            :field="getSuggestionDisplay"
-            :minLength="3"
-            placeholder="Search loaded genes..."
-          />
+          <div class="title-row">
+            <div><b>Selected Data</b></div>
+            <div class="sort-options">
+              <Button
+                v-tooltip.top="{ value: (groupBySymbol) ? 'Group by Species' : 'Group Orthologs'}"
+                icon="pi pi-list"
+                :class="{'p-button-sm': true, 'sort-button-inactive': !groupBySymbol}"
+                @click="groupSymbol"
+              />
+              <Button
+                v-tooltip.top="`Sort by Label`"
+                icon="pi pi-sort-alpha-down"
+                :class="{'p-button-sm': true, 'sort-button-inactive': !sortBySymbol}"
+                @click="symbolSort"
+              />
+              <Button 
+                v-tooltip.top="`Sort by Start Position`"
+                :icon="sortByPosition === 'off' ? 'pi pi-sort-alt-slash' : (sortByPosition === 'desc' ? 'pi pi-sort-numeric-down-alt' : 'pi pi-sort-numeric-down')"
+                :class="{'p-button-sm': true, 'sort-button-inactive': sortByPosition === 'off'}"
+                @click="positionSort"
+              />
+            </div>
+          </div>
         </div>
         <div class="panel-header-item">
           <div v-if="numberOfResults > 0">
             {{numberOfResults}} Selected Genes
           </div>
-          <div class="clear-selection-btn">
-            <Button
-                v-tooltip.right="`Clear Selection`"
-                class="p-button-info p-button-sm p-button-warning"
-                icon="pi pi-ban"
-                @click="clearSelectedGenes"
-                rounded
-            />
+          <div v-if="numberOfRegions > 0">
+            {{numberOfRegions}} Selected Regions
           </div>
         </div>
       </div>
@@ -40,7 +45,7 @@
           <p class="placeholder-msg-txt">Select data by clicking or hovering drawn elements, or searching by gene symbol above</p>
         </div>
       </template>
-      <template v-for="dataObject in props.selectedData" :key="dataObject">
+      <template v-for="dataObject in sortedSelectedData" :key="dataObject">
         <template v-if="dataObject.type === 'Gene'">
           <GeneInfo
             :gene="dataObject.genomicSection.gene ? dataObject.genomicSection.gene : dataObject.genomicSection"
@@ -54,8 +59,9 @@
 
         <template v-else-if="(dataObject.type === 'trackSection' || dataObject.type === 'backbone' || dataObject.type === 'variantDensity')">
           <template v-if="(dataObject.type === 'trackSection')">
-            <GeneInfo
-              :gene="dataObject?.genomicSection.gene ? dataObject?.genomicSection.gene : null"
+            <BlockInfo
+              class="block-info"
+              :block-section="dataObject.genomicSection"
               :chromosome="dataObject.genomicSection.chromosome"
               :start="dataObject.genomicSection.speciesStart"
               :stop="dataObject.genomicSection.speciesStop"
@@ -75,15 +81,9 @@
             />
           </template>
           <template v-else-if="dataObject?.type === 'variantDensity'">
-            <div>
-              <span>Chr{{dataObject.genomicSection.chromosome}}: </span>
-              <span>
-                {{Formatter.addCommasToBasePair(dataObject.genomicSection.speciesStart)}} - {{Formatter.addCommasToBasePair(dataObject.genomicSection.speciesStop)}}
-              </span>
-            </div>
-            <div>
-              <span>Variant Count: {{ Formatter.addCommasToBasePair(dataObject.genomicSection.variantCount) }}</span>
-            </div>
+            <VariantInfo
+              :variantSection="(dataObject.genomicSection as VariantDensity)"
+            />
           </template>
           <Divider />
         </template>
@@ -97,18 +97,15 @@
 import SelectedData from '@/models/SelectedData';
 import Gene from '@/models/Gene';
 import GeneInfo from '@/components/GeneInfo.vue';
-import { Formatter } from '@/utils/Formatter';
-import { ref, watch} from 'vue';
-import { useStore } from 'vuex';
-import { key } from '@/store';
-import { getNewSelectedData, sortGeneMatches, adjustSelectionWindow } from '@/utils/DataPanelHelpers';
+import BlockInfo from '@/components/BlockInfo.vue';
+import VariantInfo from './VariantInfo.vue';
+import { ref, watch, computed } from 'vue';
+import { VariantDensity } from '@/models/DatatrackSection';
 
 /**
  * FIXME: This whole component needs to be looked over. There are references to properties on objects that don't exist.
  * The template is full of v-ifs and it can be pretty confusing to wrap your head around what's going on.
  */
-
-const store = useStore(key);
 
 interface Props
 {
@@ -118,65 +115,130 @@ interface Props
 
 const props = defineProps<Props>();
 
-const searchedGene = ref<Gene | null>(null);
-const geneSuggestions = ref<Gene[]>([]);
 const numberOfResults = ref<number>(0);
+const numberOfRegions = ref<number>(0);
+const sortByPosition = ref('off');
+const sortBySymbol = ref(false);
+const groupBySymbol = ref(false);
 
 watch(() => props.selectedData, () => {
   numberOfResults.value = 0;
   if (props.selectedData != null)
   {
-    numberOfResults.value = props.selectedData.filter(d => d.type === 'Gene').length;
+    numberOfResults.value = props.selectedData.filter((d: { type: string; }) => d.type === 'Gene').length;
   }
 });
 
-const clearSelectedGenes = () => {
-  store.dispatch('setSelectedGeneIds', []);
-  store.dispatch('setSelectedData', null);
-  store.dispatch('setGene', null);
-  searchedGene.value = null;
-};
-
-const searchGene = (event: {query: string}) => {
-  let matches: Gene[] = [];
-  props.geneList.forEach((gene) => {
-    if (gene.symbol.toLowerCase().includes(event.query.toLowerCase()))
-      matches.push(gene);
-  });
-
-  const searchKey = searchedGene.value;
-  matches = sortGeneMatches(searchKey, matches);
-  geneSuggestions.value = matches;
-};
-
-const searchSVG = (event: { value: Gene }) => {
-  const newData = getNewSelectedData(store, event.value, props.geneList);
-  store.dispatch('setGene', event.value.clone()); // Update store config to see this as last gene selected
-  store.dispatch('setSelectedGeneIds', newData.rgdIds || []);
-  store.dispatch('setSelectedData', newData.selectedData);
-
-  if (event.value)
+// add watcher for number of results where type is variantDensity
+watch(() => props.selectedData, () => {
+  numberOfRegions.value = 0;
+  if (props.selectedData != null)
   {
-    const newWindow = adjustSelectionWindow(event.value, props.geneList, store);
-    store.dispatch('setDetailedBasePairRequest', newWindow);
+    numberOfRegions.value = props.selectedData.filter((d: { type: string; }) => d.type !== 'Gene').length;
+  }
+});
+
+const symbolSort = () => {
+  sortBySymbol.value = !sortBySymbol.value;
+  if (sortBySymbol.value) {
+    sortByPosition.value = 'off';
+    groupBySymbol.value = false;
+  }
+};
+const positionSort = () => {
+  const options = ['asc', 'desc', 'off'];
+  const current = options.indexOf(sortByPosition.value);
+  sortByPosition.value = options[(current + 1) % options.length];
+  if (sortByPosition.value !== 'off') {
+    sortBySymbol.value = false;
+    groupBySymbol.value = false;
+  }
+};
+const groupSymbol = () => {
+  groupBySymbol.value = !groupBySymbol.value;
+
+  if (groupBySymbol.value) {
+    sortBySymbol.value = false;
+    sortByPosition.value = 'off';
   }
 };
 
-const getSuggestionDisplay = (item: any) => {
-  return `${item.symbol} - ${item.speciesName}`;
-};
+const sortedSelectedData = computed(() => {
+  if (!props.selectedData || props.selectedData.length === 0) return [];
+
+  const priority = props.selectedData[0]?.genomicSection?.speciesName;
+
+  return [...props.selectedData].sort((a, b) => {
+    if (groupBySymbol.value) {
+      if (a.type === 'Gene' && b.type !== 'Gene') {
+        return -1;
+      }
+      if (b.type === 'Gene' && a.type !== 'Gene') {
+        return 1;
+      }
+      if (a.type === 'Gene' && b.type === 'Gene') {
+        if (sortBySymbol.value) {
+          return a.genomicSection.symbol.localeCompare(b.genomicSection.symbol);
+        }
+        return a.genomicSection.symbol.localeCompare(b.genomicSection.symbol);
+      }
+      if (a.genomicSection.speciesName !== b.genomicSection.speciesName) {
+        return a.genomicSection.speciesName.localeCompare(b.genomicSection.speciesName);
+      }
+      if (a.type !== b.type) {
+        return a.type.localeCompare(b.type);
+      }
+      if (sortByPosition.value === 'asc') {
+        return a.genomicSection.start - b.genomicSection.start;
+      }
+      if (sortByPosition.value === 'desc') {
+        return b.genomicSection.start - a.genomicSection.start;
+      }
+    } else {
+      if (a.genomicSection.speciesName === priority && b.genomicSection.speciesName !== priority) {
+        return -1;
+      }
+      if (b.genomicSection.speciesName === priority && a.genomicSection.speciesName !== priority) {
+        return 1;
+      }
+      if (a.genomicSection.speciesName === b.genomicSection.speciesName) {
+        if (a.type !== b.type) {
+          return a.type.localeCompare(b.type);
+        }
+        if (a.type === 'Gene' && sortBySymbol.value) {
+          return a.genomicSection.symbol.localeCompare(b.genomicSection.symbol);
+        }
+        if (sortByPosition.value === 'asc') {
+          return a.genomicSection.start - b.genomicSection.start;
+        }
+        if (sortByPosition.value === 'desc') {
+          return b.genomicSection.start - a.genomicSection.start;
+        }
+      }
+      return a.genomicSection.speciesName.localeCompare(b.genomicSection.speciesName);
+    }
+  });
+});
 </script>
 
 <style lang="scss" scoped>
 .gene-data
 {
-  overflow-y: scroll;
+  overflow-y: auto;
   height: 550px;
 }
 
 .selected-data-header
 {
   flex-direction: column;
+  width: 100%;
+}
+
+.selected-data-header .title-row
+{
+  flex-direction: row;
+  display: flex;
+  justify-content: space-between;
 }
 
 .panel-header-item
@@ -204,5 +266,14 @@ const getSuggestionDisplay = (item: any) => {
   font-size: .9rem;
   font-style: italic;
   margin-top: .5em;
+}
+
+.sort-button-inactive {
+  opacity: 0.6
+}
+
+.sort-options {
+  gap: 5px;
+  display: flex;
 }
 </style>

@@ -3,6 +3,7 @@ module.exports = {
   transform: {
     '^.+\\.vue$': '@vue/vue3-jest'
   },
+  // eslint-disable-next-line
   transformIgnorePatterns: ['/node_modules\/(?!axios)(.*)'],
   testEnvironment: 'jsdom'
 };

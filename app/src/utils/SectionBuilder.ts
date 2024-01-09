@@ -11,6 +11,7 @@ import { Orientation } from '@/models/SyntenySection';
 import { getThreshold } from './Shared';
 import { createVariantDatatracks } from './VariantBuilder';
 import logger from '@/logger';
+import { SVGPositionVariables } from './SVGConstants';
 
 /**
  * Create the off-backbone visual elements representing the large level 1 synteny
@@ -28,15 +29,18 @@ import logger from '@/logger';
  *   SyntenyRegionSets representing the off-backbone synteny data in the overview panel
  */
 export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, Block[]>, comparativeSpecies: Species[],
-    backboneChr: Chromosome): Promise<SyntenyRegionSet[]>
+    backboneChr: Chromosome, speciesOrder: any, svgPositions: SVGPositionVariables): Promise<SyntenyRegionSet[]>
 {
   const syntenyRegionSets: SyntenyRegionSet[] = [];
 
   // TODO: This code is extremely similar to building synteny blocks WITH datatracks, need to reorganize this...
-  let setOrder = 1;
+  let defaultOrder = 1;
   syntenyData.forEach((blocks, mapKey) => {
-    const currSpecies = comparativeSpecies.find((compSpecies) => compSpecies.activeMap.key == mapKey);
+    const currSpecies = comparativeSpecies.find((compSpecies) => compSpecies.activeMap.key == mapKey && compSpecies.visible);
     if (!currSpecies) return;
+
+    const speciesPos = speciesOrder[currSpecies.activeMap.key.toString()] ?? defaultOrder;
+    const backbonePos = speciesOrder[backboneChr.mapKey.toString()] ?? 0;
 
     const processedSyntenicRegions: SyntenyRegion[] = [];
     for (let blockIdx = 0; blockIdx < blocks.length; blockIdx++)
@@ -64,6 +68,7 @@ export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, 
         orientation: blockInfo.orientation,
         chainLevel: blockInfo.chainLevel,
         isGapless: true,
+        labelOnLeft: svgPositions.mirroredOverivew ? speciesPos < backbonePos : speciesPos > backbonePos,
       });
       // Create the SyntenyRegion that covers the extent of the Block
       // NOTE: This might extend beyond the visible window, but we will try to only create
@@ -79,8 +84,9 @@ export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, 
 
       processedSyntenicRegions.push(currSyntenicRegion);
     }
-    syntenyRegionSets.push(new SyntenyRegionSet(currSpecies.name, currSpecies.activeMap, processedSyntenicRegions, setOrder, 'overview'));
-    setOrder++;
+
+    syntenyRegionSets.push(new SyntenyRegionSet(currSpecies.name, currSpecies.activeMap, processedSyntenicRegions, speciesPos, 'overview', svgPositions));
+    defaultOrder++;
   });
 
   return syntenyRegionSets;
@@ -105,33 +111,40 @@ export async function createOverviewSyntenicRegionSets(syntenyData: Map<number, 
  *     The processed SyntenicRegionSets for each species.
  */
 export async function createSyntenicRegionSets(syntenyData: Map<number, Block[]>, comparativeSpecies: Species[],
-  backboneStart: number, backboneStop: number): Promise<SyntenyRegionSet[]>
+  backboneStart: number, backboneStop: number, speciesOrder: any, hiddenDensityTracks: number[], svgPositions: SVGPositionVariables): Promise<SyntenyRegionSet[]>
 {
   const syntenyRegionSets: SyntenyRegionSet[] = [];
 
   // Process each species of our synteny Tree separately
   if (syntenyData && syntenyData.size > 0)
   {
-    let pos = 1;
+    // NOTE: keep a track of default track order position incase the speciesOrder isn't set correctly
+    let defaultPos = 1;
     syntenyData.forEach((speciesSyntenyData, mapKey) => {
       // NOTE: In the future we are going to have to address how we will allow the
       //   possibility of a Species with >1 "active" map. For example, loading multiple
       //   assemblies for one Species to allow comparing assembly differences...
-      const species = comparativeSpecies.find((species) => { return species.activeMap.key == mapKey; });
+      const species = comparativeSpecies.find((species) => { return species.activeMap.key == mapKey && species.visible; });
+      // TODO: This used to log an error, but now it might not be worth actually logging
       if (!species)
       {
-        logger.error(`Cannot find Species object for mapKey ${mapKey}!!`);
+        logger.info(`Either annot find Species object for mapKey ${mapKey} or it's hidden`);
         return;
       }
 
-      const syntenyRegionSet = syntenicSectionBuilder(speciesSyntenyData, species, pos,
-          backboneStart, backboneStop, 'detailed');
+      // check whether to ignore variant data
+      const hideDensity = hiddenDensityTracks.includes(species.activeMap.key);
 
-      logger.log(`Completed build of Synteny for ${syntenyRegionSet?.mapName}, with ${syntenyRegionSet?.regions.length} regions`);
+      const speciesPos = speciesOrder[mapKey.toString()];
+      const syntenyRegionSet = syntenicSectionBuilder(speciesSyntenyData, species, speciesPos ?? defaultPos,
+          backboneStart, backboneStop, 'detailed', hideDensity, svgPositions);
+
+      logger.info(`Completed build of Synteny for ${syntenyRegionSet?.mapName}, with ${syntenyRegionSet?.regions.length} regions`);
 
       // Add this to our final Array
       if (syntenyRegionSet) syntenyRegionSets.push(syntenyRegionSet);
-      pos++;
+      // Increment our position to place next species in the next order spot
+      defaultPos++;
     });
   }
 
@@ -158,12 +171,12 @@ export async function createSyntenicRegionSets(syntenyData: Map<number, Block[]>
  *   The renderable version of speciesSyntenyData represented as an array of type SyntenyRegion[]
  */
 function syntenicSectionBuilder(speciesSyntenyData: Block[], species: Species, setOrder: number,
-    viewportStart: number,  viewportStop: number, renderType: RenderType)
+    viewportStart: number,  viewportStop: number, renderType: RenderType, hideDensityTrack: boolean, svgPositions: SVGPositionVariables)
 {
   const processedSyntenicRegions: SyntenyRegion[] = [];
 
   const currSpecies = species;
-  const processVariantDensity = speciesSyntenyData.some((block) => block.variantPositions && block.variantPositions.positions.length > 0);
+  const processVariantDensity = speciesSyntenyData.some((block) => block.variantPositions && block.variantPositions.positions.length > 0) && !hideDensityTrack;
   let regionMaxCount = 0;
   let regionBinSize = 0;
   // const allGeneLabels: Label[] = [];
@@ -212,13 +225,14 @@ logger.timeEnd('createSyntenySectionAndRegion');
 
     // Step 2: Split the gapless Block into multiple GenomicSections based on gaps.
 logger.time("splitBlockWithGaps");
-    logger.log(`Splitting block w/ ${blockGaps.length} gaps`);
+    logger.info(`Splitting block w/ ${blockGaps.length} gaps`);
     currSyntenicRegion.splitBlockWithGaps(factory, blockGaps);
 logger.timeEnd("splitBlockWithGaps");
 
     // Check if there are variants and build those data tracks
     if (blockVariantPositions && processVariantDensity)
     {
+
       const variantDatatracks = createVariantDatatracks(factory, blockVariantPositions.positions,
         blockInfo.start, blockInfo.stop, blockInfo.backboneStart, blockInfo.backboneStop, blockInfo.isBlockInverted(), blockInfo);
       currSyntenicRegion.addDatatrackSections(variantDatatracks.datatracks, 0, 'variant');
@@ -251,7 +265,7 @@ logger.timeEnd("  filterVisibleGenes");
 let timerLabel = `  syntenicDataTrackBuilder(${visibleGenes.length})`;
 logger.time(timerLabel);
       // const processedGeneInfo = {genomicData: [], orthologLines: [], geneIds: []};
-// logger.log('Visible Gene list: ', visibleGenes);
+// logger.info('Visible Gene list: ', visibleGenes);
       const processedGeneInfo = syntenicDatatrackBuilder(factory, visibleGenes, blockInfo.orientation);
 // FIXME: I have a theory that the "Gene" object used to create the GeneDataTrack may be too heavy and not need references
 //   for things like the Block it is owned by. Would like to explore this next potentially...
@@ -294,7 +308,7 @@ logger.timeEnd(timerLabel);
 
   // Finished creating this Set:
 logger.time("createSyntenyRegionSet");
-  const regionSet = new SyntenyRegionSet(currSpecies.name, currSpecies.activeMap, processedSyntenicRegions, setOrder, renderType);
+  const regionSet = new SyntenyRegionSet(currSpecies.name, currSpecies.activeMap, processedSyntenicRegions, setOrder, renderType, svgPositions);
   regionSet.maxVariantCount = regionMaxCount;
   regionSet.variantBinSize = regionBinSize;
 logger.timeEnd("createSyntenyRegionSet");

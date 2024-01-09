@@ -26,6 +26,7 @@ export default class OrthologLine implements VCMapSVGElement
   isHovered: boolean = false;
   isSelected: boolean = false;
   elementColor: string = '';
+  thickness: number = 1;
 
   startGene: Gene;
   endGene: Gene;
@@ -48,5 +49,25 @@ export default class OrthologLine implements VCMapSVGElement
     // Associate this line with its gene datatracks if possible
     this.startGeneDatatrack?.lines.push(this);
     this.endGeneDatatrack?.lines.push(this);
+  }
+
+  public toHoveredData(): string[] {
+    const orthologMap = new Map<number, Gene>();
+    orthologMap.set(this.startGene.rgdId, this.startGene);
+    orthologMap.set(this.endGene.rgdId, this.endGene);
+    this.chainedOrthologLines.forEach(l => {
+      orthologMap.set(l.startGene.rgdId, l.startGene);
+      orthologMap.set(l.endGene.rgdId, l.endGene);
+    });
+
+    const orthologHoveredText: string[] = [];
+    orthologMap.forEach((gene) => {
+      orthologHoveredText.push(`${gene.symbol} (${gene.speciesName})`);
+    });
+
+    return [
+      `Orthologs:`,
+      ...orthologHoveredText,
+    ];
   }
 }

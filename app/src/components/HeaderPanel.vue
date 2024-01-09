@@ -2,111 +2,94 @@
   <div class="grid">
     <div class="col-12">
       <Panel :toggleable="true" class="vcmap-panel">
-        <template #header>
-          <div class="vcmap-header">
-            <img alt="VCMap Logo" class="logo" src="../assets/images/vcmap_logo_v2.png">
-            <Tag icon="pi pi-tag" severity="info" rounded>v{{ VERSION }}</Tag>
-          </div>
-        </template>
         <template #icons>
-          <div class="icon-container">
-            <a  href="https://rgd.mcw.edu/" target="_blank"><img class="rgd-logo" src="../assets/images/rgd_logo.png" alt="RGD logo"
-              v-tooltip.bottom="`Go to RGD Home Page`"
-            ></a>
-            <Button 
-              label="New Configuration"
-              icon="pi pi-cog" 
-              class="p-button-secondary header-btn"
-              @click="goToConfigurationScreen"
-              data-test="load-config-btn" />
-            <Button 
-              label="Load Data Track" 
-              class="p-button-secondary header-btn"
-              @click="openLoadDataTrackModal"
-              data-test="load-config-btn" />
+          <div>
+            <button class="p-panel-header-icon p-link mr-2" @click="toggleMenu">
+              <span class="pi pi-cog"></span>
+            </button>
+            <Menu ref="menu" id="config_menu" :model="items" popup />
+            <button class="p-panel-header-icon p-link mr-2" @click="openHelp">
+              <span class="pi pi-question-circle"></span>
+            </button>
           </div>
         </template>
         <div class="grid p-d-flex">
-          <OverviewControls />
+          <InfoHeader 
+            :variant-positions-list="variantPositionsList"
+            :variant-track-status="variantTrackStatus"
+            @update-details-panel="$emit('update-details-panel')" />
           <Divider layout="vertical" />
-          <DetailsControls />
+          <NavigationHeader :geneList="geneList" :selectedData="selectedData" />
         </div>
       </Panel>
     </div>
   </div>
-  <LoadDataTrackControls
-    v-model:show="showLoadDataTrackModal"
-    :on-load-synteny-variants="onLoadSyntenyVariants"
-    :on-close-load-data-track-modal="closeLoadDataTrackModal"
-    header="Load Data Tracks"
-  />
+
+  <HelpModal v-model:show="isHelpActive" />
+  
 </template>
 
 <script lang="ts" setup>
-import { useRouter } from 'vue-router';
-import OverviewControls from '@/components/OverviewControls.vue';
-import DetailsControls from '@/components/DetailsControls.vue';
-import { VERSION } from '@/version';
+import InfoHeader from '@/components/InfoHeader.vue';
+import NavigationHeader from '@/components/NavigationHeader.vue';
+import HelpModal from './HelpModal.vue';
+import Gene from '@/models/Gene';
+import SelectedData from '@/models/SelectedData';
 import { ref } from 'vue';
-import LoadDataTrackControls from '@/components/LoadDataTrackControls.vue';
-
-interface Props 
-{
-  onLoadSyntenyVariants: (mapKeys: number[] | null, triggerUpdate: boolean) => Promise<void>;
-}
-
-const props = defineProps<Props>();
+import { useRouter } from 'vue-router';
+import VariantPositions from '@/models/VariantPositions';
 
 const router = useRouter();
 
-let showLoadDataTrackModal = ref(false);
+interface Props 
+{
+  onShowSettings: () => void;
+  geneList: Map<number, Gene>;
+  selectedData: SelectedData[] | null;
+  variantPositionsList: VariantPositions[];
+  variantTrackStatus: any;
+}
 
-const openLoadDataTrackModal = () => {
-  showLoadDataTrackModal.value = true;
+const props = defineProps<Props>();
+const menu = ref();
+const items = ref<any[]>([
+  {
+    label: 'Settings',
+    icon: 'pi pi-sliders-v',
+    command: () => openSettingsModal(),
+  },
+  {
+    label: 'New Configuration',
+    icon: 'pi pi-external-link',
+    command: () => {
+      const route = router.resolve({path: '/'});
+      window.open(route.href, '_blank');
+    },
+  },
+]);
+const isHelpActive = ref(false);
+
+const openSettingsModal = () => {
+  props.onShowSettings();
 };
 
-const onLoadSyntenyVariants = async (mapKeys: number[] | null, triggerUpdate: boolean) => {
-  props.onLoadSyntenyVariants(mapKeys, triggerUpdate);
+const toggleMenu = (event: MouseEvent) => {
+  menu.value.toggle(event);
 };
 
-const closeLoadDataTrackModal = () => {
-  showLoadDataTrackModal.value = false;
-};
-
-const goToConfigurationScreen = () => {
-  router.push('/');
+const openHelp = () => {
+  isHelpActive.value = true;
 };
 </script>
 
 <style lang="scss" scoped>
-.vcmap-panel:deep() .p-panel-icons {
-   display: flex;
-   align-items: center;
-}
-
-.vcmap-header
-{
-  display: flex;
-  align-items: center;
-  .header
-  {
-    margin-left: 2rem;
+.vcmap-panel:deep() {
+  >.p-panel-header {
+    justify-content: end;
   }
-  
-}
-
-.p-button.p-component.header-btn
-{
-  margin-right: 1rem;
-}
-
-.icon-container {
-  align-items: center;
-  display: inline-flex;
-  
-  .rgd-logo {
-    padding-right: 1em;
-    width: 80%;
+  .p-panel-icons {
+    display: flex;
+    align-items: center;
   }
 }
 </style>

@@ -64,6 +64,8 @@ export namespace TestUtils
         startPos: null,
         stopPos: null,
         gene: null,
+        flankingGene1: null,
+        flankingGene2: null,
         comparativeSpecies: [],
         configMode: 'gene',
 
@@ -73,13 +75,34 @@ export namespace TestUtils
         detailedBasePairRange: { start: 0, stop: 0 },
 
         selectedData: null,
-        loadedGenes: null,
         selectedGeneIds: [],
+        selectedVariantSections: [],
+        selectedBlocks: [],
+        isDataPanelCollapsed: false,
+
+        hoveredData: {
+          x: 0,
+          y: 0,
+          data: [],
+        },
 
         isDetailedPanelUpdating: false,
         isOverviewPanelUpdating: false,
         isUpdatingVariants: false,
+
+        shouldUpdateDetailedPanel: false,
+
         selectionToastCount: 0,
+        svgPositions: {
+          overviewPanelWidth: 300,
+          mirroredOverivew: false,
+        },
+        speciesOrder: {},
+
+        hideBackboneDensityTrack: false,
+        hiddenDensityTracks: [],
+        history: [],
+        showOverviewPanel: true,
 
         // Overwrite default state with props passed in by the tester
         ...initialState,

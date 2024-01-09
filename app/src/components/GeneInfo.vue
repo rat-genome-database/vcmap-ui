@@ -10,16 +10,6 @@
         </Button>
         <span v-if="gene" data-test="gene-name">({{gene.name ?? 'N/A'}})</span>
       </div>
-      <div v-if="gene != null">
-        <!-- Using '!' to assert that gene is for sure not null here as it is being checked in the parent div's v-if directive -->
-        <Button
-          class="p-button-link rgd-link"
-          v-tooltip.left="`View in RGD`"
-          @click="goToRgd(gene!.rgdId)"
-        >
-          <i class="pi pi-external-link external-link"></i>
-        </Button>
-      </div>
     </div>
   </div>
 
@@ -35,6 +25,22 @@
     data-test="level">
       Level: {{chainLevel}}
   </div>
+  <div>
+    <Button
+      class="p-button-link rgd-link secondary-link"
+      @click="goToRgdGeneSummary"
+    >
+      <b>View RGD Gene Report</b>
+    </Button>
+  </div>
+  <div>
+    <Button
+      class="p-button-link rgd-link secondary-link"
+      @click="goToJBrowse2"
+    >
+      <b>View in RGD JBrowse</b>
+    </Button>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -44,10 +50,16 @@ import { useStore } from 'vuex';
 import { key } from '@/store';
 import { useLogger } from 'vue-logger-plugin';
 import { getNewSelectedData } from '@/utils/DataPanelHelpers';
+import { inject } from 'vue';
+import { querySyntenyForSearchZoomKey } from '@/injection_keys/main';
+import useGeneSearchAndSelect from '@/composables/useGeneSearchAndSelect';
+import { createGeneReportUrl, createJBrowse2UrlForGene } from '@/utils/ExternalLinks';
 
 const $log = useLogger();
 const store = useStore(key);
-const SEARCHED_GENE_WINDOW_FACTOR = 3;
+
+const queryForSynteny = inject(querySyntenyForSearchZoomKey);
+const { getWindowBasePairRangeForGene } = useGeneSearchAndSelect(store);
 
 interface Props
 {
@@ -62,38 +74,64 @@ interface Props
 
 const props = defineProps<Props>();
 
-const selectGene = (gene: Gene | null) => {
+const selectGene = async (gene: Gene | null) => {
   if (gene == null)
   {
     $log.warn(`Selected gene is null`);
     return;
   }
 
-  const geneLength = gene.stop - gene.start;
   if (!gene.backboneStart || !gene.backboneStop) {
     return;
   }
 
   const newData = getNewSelectedData(store, gene, props.geneList);
   store.dispatch('setSelectedGeneIds', []);
+  store.dispatch('setSelectedVariantSections', []);
   store.dispatch('setSelectedGeneIds', newData.rgdIds);
   store.dispatch('setSelectedData', newData.selectedData);
 
-  if (store.state.chromosome == null)
+  if (store.state.chromosome == null || queryForSynteny == null)
   {
-    $log.error(`Chromosome in state is null. Cannot dispatch setDetailedBasePairRequest action.`);
+    $log.error(
+      `Backbone chromosome or queryForSynteny function is not defined or null. Cannot dispatch setDetailedBasePairRequest action.`,
+      store.state.chromosome,
+      queryForSynteny,
+    );
     return;
   }
 
+  const windowRange = await getWindowBasePairRangeForGene(queryForSynteny, store.state.chromosome, gene.rgdId, props.geneList);
+
   store.dispatch('setDetailedBasePairRequest', {
-    start: Math.max(gene.backboneStart - (geneLength * SEARCHED_GENE_WINDOW_FACTOR), 0),
-    stop: Math.min(gene.backboneStop + (geneLength * SEARCHED_GENE_WINDOW_FACTOR), store.state.chromosome.seqLength)
+    range: windowRange,
+    source: gene.symbol
   });
 };
 
-const goToRgd = (rgdId: number) => {
-  const rgdUrl = `https://rgd.mcw.edu/rgdweb/report/gene/main.html?id=${rgdId}`;
+const goToRgdGeneSummary = () => {
+  if (props.gene == null) {
+    return null;
+  }
+
+  const rgdUrl = createGeneReportUrl(props.gene.rgdId);
   window.open(rgdUrl);
+};
+
+const goToJBrowse2 = () => {
+  if (props.gene == null || store.state.species == null) {
+    return null;
+  }
+
+  const geneSpecies = [store.state.species, ...store.state.comparativeSpecies]
+    .find(s => s.activeMap.key === props.gene?.mapKey);
+
+  if (geneSpecies == null) {
+    return null;
+  }
+
+  const url = createJBrowse2UrlForGene(props.gene, geneSpecies);
+  window.open(url);
 };
 
 </script>
@@ -110,6 +148,14 @@ const goToRgd = (rgdId: number) => {
   padding-bottom: 0;
   padding-left: 0;
   padding-top: 0;
+
+  &.secondary-link {
+    font-size: 12px;
+  }
+
+  &:hover {
+    color: deepskyblue;
+  }
 }
 
 .external-link

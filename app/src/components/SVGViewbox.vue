@@ -1,46 +1,55 @@
 <template>
   <Toast />
-  <svg :viewBox="'0 0 800 ' + SVGConstants.viewboxHeight" xmlns="http://www.w3.org/2000/svg" id="svg-wrapper" width="100%">
-
+  <svg :viewBox="'0 0 800 ' + SVGConstants.viewboxHeight" xmlns="http://www.w3.org/2000/svg" id="svg-wrapper"
+    width="100%">
     <!-- Outside panel -->
     <rect class="panel" x="0" width="800" :height="SVGConstants.viewboxHeight" />
     <!-- Inner panels -->
-    <rect class="panel selectable" :class="{'is-loading': arePanelsLoading}" x="0" @click.left="(event) => { overviewSelectionHandler(event, getDetailedSelectionStatus(), overviewBackboneSet?.backbone); showToast('info', 'Selection Initiated:', 'Drag and click again to complete the selection or right click to cancel.', 5000)}" 
-      @mousemove.stop="(event) => updateOverviewSelection(event)" @contextmenu.prevent @click.right="cancelOverviewSelection"
-      :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.viewboxHeight" />
+    <rect v-if="store.state.showOverviewPanel" class="panel selectable" :class="{ 'is-loading': arePanelsLoading }" x="0"
+      @click.left="(event) => { overviewSelectionHandler(event, getDetailedSelectionStatus(), overviewBackboneSet?.backbone); showToast('info', 'Selection Initiated:', 'Drag and click again to complete the selection or right click to cancel.', 5000) }"
+      @mousemove.stop="(event) => updateOverviewSelection(event)" @contextmenu.prevent
+      @click.right="cancelOverviewSelection" :width="store.state.svgPositions.overviewPanelWidth"
+      :height="SVGConstants.viewboxHeight" />
 
-    <rect id="detailed" class="panel selectable" :class="{'is-loading': arePanelsLoading}" @click.left="(event) => { detailedSelectionHandler(event, getOverviewSelectionStatus()); showToast('info', 'Selection Initiated:', 'Drag and click again to complete the selection or right click to cancel.', 5000)}"
-      @mousemove="updateZoomSelection" @contextmenu.prevent @click.right="cancelDetailedSelection" 
-      :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.viewboxHeight" />
+    <rect id="detailed" class="panel selectable" :class="{ 'is-loading': arePanelsLoading }"
+      @click.left="(event) => { detailedSelectionHandler(event, getOverviewSelectionStatus()); showToast('info', 'Selection Initiated:', 'Drag and click again to complete the selection or right click to cancel.', 5000) }"
+      @mousemove="updateZoomSelection" @contextmenu.prevent @click.right="cancelDetailedSelection"
+      :x="store.state.svgPositions.overviewPanelWidth"
+      :width="SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth"
+      :height="SVGConstants.viewboxHeight" />
 
-    
+
     <!-- Ortholog Lines -->
     <template v-for="(line, index) in orthologLines" :key="index">
       <OrthologLineSVG :line="line" />
     </template>
-    
+
     <!-- Overview panel SVGs ------------------------------------------->
-    <template v-for="(syntenySet, index) in overviewSyntenySets" :key="index">
-      <template v-for="(region, index) in syntenySet.regions" :key="index">
-        <SectionSVG show-chromosome show-synteny-on-hover :gene-list="geneList" show-start-stop select-on-click :region="region as SyntenyRegion" />
+    <template v-if="store.state.showOverviewPanel">
+      <template v-for="(syntenySet, index) in overviewSyntenySets" :key="index">
+        <template v-for="(region, index) in syntenySet.regions" :key="index">
+          <SectionSVG show-chromosome show-synteny-on-hover :gene-list="geneList" is-overview select-on-click
+            :region="(region as SyntenyRegion)" @show-context-menu="handleShowContextMenu" :context-menu-open="contextMenuOpen"
+            @swap-backbone="handleSwapBackbone" :selected-blocks="selectedBlocks" @select-blocks="handleSelectedBlocks"/>
+        </template>
       </template>
     </template>
 
-    <template v-if="overviewBackboneSet">
-      <BackboneSetSVG show-data-on-hover :gene-list="geneList" :backbone-set="overviewBackboneSet"/>
+    <template v-if="store.state.showOverviewPanel">
+      <template v-if="overviewBackboneSet">
+        <BackboneSetSVG show-data-on-hover :gene-list="geneList" :backbone-set="overviewBackboneSet" @show-context-menu="handleShowContextMenu"  :context-menu-open="contextMenuOpen"/>
+      </template>
     </template>
 
     <!-- Detail panel SVGs ----------------------------------------->
     <template v-if="detailedBackboneSet">
-      <BackboneSetSVG 
-        show-data-on-hover
-        :backbone-set="detailedBackboneSet" 
-        :synteny-hover-svg-y="detailedSyntenySvgYPosition"
-        @synteny-hover="onDetailedSyntenyHover" :gene-list="geneList" />
+      <BackboneSetSVG show-data-on-hover :backbone-set="detailedBackboneSet"
+        :synteny-hover-svg-y="detailedSyntenySvgYPosition" @synteny-hover="onDetailedSyntenyHover" :gene-list="geneList"
+        @show-context-menu="handleShowContextMenu" :synteny-hover-backbone-y-values="detailedSyntenyBlockYPositions" :context-menu-open="contextMenuOpen" />
       <template v-if="detailedBackboneSet.geneLabels">
         <template v-for="(label, index) in detailedBackboneSet.geneLabels" :key="index">
           <template v-if="(label.isVisible)">
-            <GeneLabelSVG :label="(label as GeneLabel)" :gene-list="geneList" :ortholog-lines="orthologLines ?? []"/>
+            <GeneLabelSVG :label="(label as GeneLabel)" :gene-list="geneList" :ortholog-lines="orthologLines ?? []" />
           </template>
         </template>
       </template>
@@ -49,12 +58,11 @@
     <template v-if="detailedSyntenySets.length">
       <template v-for="(syntenySet, index) in detailedSyntenySets" :key="index">
         <template v-for="(syntenicRegion, index) in syntenySet.regions" :key="index">
-          <SectionSVG 
-            show-chromosome
-            :region="(syntenicRegion as SyntenyRegion)" 
-            :synteny-hover-svg-y="detailedSyntenySvgYPosition" 
-            :gene-list="geneList"
-            @synteny-hover="onDetailedSyntenyHover" />
+          <SectionSVG show-chromosome :region="(syntenicRegion as SyntenyRegion)"
+            :synteny-hover-svg-y="detailedSyntenySvgYPosition" :gene-list="geneList"
+            @synteny-hover="onDetailedSyntenyHover" @block-hover="onDetailedBlockHover"
+            @show-context-menu="handleShowContextMenu" @swap-backbone="handleSwapBackbone"
+            :context-menu-open="contextMenuOpen" :selected-blocks="selectedBlocks" @select-blocks="handleSelectedBlocks"/>
         </template>
         <template v-for="(label, index) in syntenySet.geneLabels" :key="index">
           <template v-if="label.isVisible">
@@ -64,85 +72,93 @@
       </template>
     </template>
 
-    <ViewboxTitlesSVG
-      :overview-backbone-set="overviewBackboneSet" :overview-synteny-sets="(overviewSyntenySets as SyntenyRegionSet[])"
-      :detailed-backbone-set="detailedBackboneSet" :detailed-synteny-sets="(detailedSyntenySets as SyntenyRegionSet[])"
-    />
+    <ViewboxTitlesSVG :overview-backbone-set="overviewBackboneSet"
+      :overview-synteny-sets="(overviewSyntenySets as SyntenyRegionSet[])" :detailed-backbone-set="detailedBackboneSet"
+      :detailed-synteny-sets="(detailedSyntenySets as SyntenyRegionSet[])" />
 
     <!-- Navigation buttons -->
-    <rect class="navigation-btn" :class="{'disabled': isNavigationUpDisabled }" @click="navigateUp" :x="SVGConstants.overviewPanelWidth" :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
-    <rect class="navigation-btn" :class="{'disabled': isNavigationDownDisabled }" @click="navigateDown" :x="SVGConstants.overviewPanelWidth" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.navigationButtonHeight" />
-    <image class="nav-btn-img" href="../../node_modules/primeicons/raw-svg/chevron-up.svg" @click="navigateUp" :x="SVGConstants.overviewPanelWidth + (SVGConstants.detailsPanelWidth / 2)" :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
-    <image class="nav-btn-img" href="../../node_modules/primeicons/raw-svg/chevron-down.svg" @click="navigateDown" :x="SVGConstants.overviewPanelWidth + (SVGConstants.detailsPanelWidth / 2)" :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
+    <rect class="navigation-btn" :class="{ 'disabled': isNavigationUpDisabled }" @click="navigateUp"
+      :x="store.state.svgPositions.overviewPanelWidth"
+      :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight"
+      :width="SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth"
+      :height="SVGConstants.navigationButtonHeight" />
+    <rect class="navigation-btn" :class="{ 'disabled': isNavigationDownDisabled }" @click="navigateDown"
+      :x="store.state.svgPositions.overviewPanelWidth"
+      :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight"
+      :width="SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth"
+      :height="SVGConstants.navigationButtonHeight" />
+    <image class="nav-btn-img" href="../../node_modules/primeicons/raw-svg/chevron-up.svg" @click="navigateUp"
+      :x="store.state.svgPositions.overviewPanelWidth + ((SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth) / 2)"
+      :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
+    <image class="nav-btn-img" href="../../node_modules/primeicons/raw-svg/chevron-down.svg" @click="navigateDown"
+      :x="store.state.svgPositions.overviewPanelWidth + ((SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth) / 2)"
+      :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
 
     <!-- Transparent panels that show up once selection starts: Allows for selection on top of the other SVGs -->
-    <rect v-if="currentlySelectingRegion()" id="selecting-overview" class="selecting-panel" :class="{'is-loading': arePanelsLoading}" x="0" 
-      @mousemove="updateOverviewSelection" @contextmenu.prevent @click.right="cancelOverviewSelection" @click.left="(event) => overviewSelectionHandler(event, getDetailedSelectionStatus(), overviewBackboneSet?.backbone)"
-      :width="SVGConstants.overviewPanelWidth" :height="SVGConstants.viewboxHeight" />
+    <rect v-if="currentlySelectingRegion()" id="selecting-overview" class="selecting-panel"
+      :class="{ 'is-loading': arePanelsLoading }" x="0" @mousemove="updateOverviewSelection" @contextmenu.prevent
+      @click.right="cancelOverviewSelection"
+      @click.left="(event) => overviewSelectionHandler(event, getDetailedSelectionStatus(), overviewBackboneSet?.backbone)"
+      :width="store.state.svgPositions.overviewPanelWidth" :height="SVGConstants.viewboxHeight" />
 
-    <rect v-if="currentlySelectingRegion()" id="selecting-detailed" class="selecting-panel" :class="{'is-loading': arePanelsLoading}"
-      @mousemove="updateZoomSelection" @contextmenu.prevent @click.right="cancelDetailedSelection" @click.left="(event) => detailedSelectionHandler(event, getOverviewSelectionStatus())"
-      :x="SVGConstants.overviewPanelWidth" :width="SVGConstants.detailsPanelWidth" :height="SVGConstants.viewboxHeight" />
+    <rect v-if="currentlySelectingRegion()" id="selecting-detailed" class="selecting-panel"
+      :class="{ 'is-loading': arePanelsLoading }" @mousemove="updateZoomSelection" @contextmenu.prevent
+      @click.right="cancelDetailedSelection"
+      @click.left="(event) => detailedSelectionHandler(event, getOverviewSelectionStatus())"
+      :x="store.state.svgPositions.overviewPanelWidth"
+      :width="SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth"
+      :height="SVGConstants.viewboxHeight" />
 
     <!-- The "gray" selection SVG that shows what area that the user is currently selecting -->
     <!-- Detailed panel selection svg for zoom -->
-    <rect v-if="startDetailedSelectionY && stopDetailedSelectionY" 
-      class="visible-selecting-panel"
+    <rect v-if="startDetailedSelectionY && stopDetailedSelectionY" class="visible-selecting-panel"
       @mousedown.left="(event) => detailedSelectionHandler(event, getOverviewSelectionStatus())"
-      @click.right="cancelDetailedSelection"
-      @mousemove="updateZoomSelection"
-      @contextmenu.prevent
-      fill="lightgray"
-      fill-opacity="0.4"
-      :x="SVGConstants.overviewPanelWidth" :y="startDetailedSelectionY"
-      :width="SVGConstants.detailsPanelWidth" :height="stopDetailedSelectionY - startDetailedSelectionY" />
+      @click.right="cancelDetailedSelection" @mousemove="updateZoomSelection" @contextmenu.prevent fill="lightgray"
+      fill-opacity="0.4" :x="store.state.svgPositions.overviewPanelWidth" :y="startDetailedSelectionY"
+      :width="SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth"
+      :height="stopDetailedSelectionY - startDetailedSelectionY" />
     <!-- Overview panel selection svg for backbone -->
-    <rect v-if="startOverviewSelectionY && stopOverviewSelectionY"
-      class="visible-selecting-panel"
-      @mousemove="(event) => updateOverviewSelection(event)"
-      @contextmenu.prevent
-      @mousedown.left="(event) => overviewSelectionHandler(event, getDetailedSelectionStatus(), overviewBackboneSet?.backbone)" 
-      @click.right="cancelOverviewSelection"
-      fill="lightgray"
-      fill-opacity="0.4"
-      :x="0" :y="startOverviewSelectionY"
-      :width="SVGConstants.overviewPanelWidth" :height="stopOverviewSelectionY - startOverviewSelectionY" />
+    <rect v-if="startOverviewSelectionY && stopOverviewSelectionY" class="visible-selecting-panel"
+      @mousemove="(event) => updateOverviewSelection(event)" @contextmenu.prevent
+      @mousedown.left="(event) => overviewSelectionHandler(event, getDetailedSelectionStatus(), overviewBackboneSet?.backbone)"
+      @click.right="cancelOverviewSelection" fill="lightgray" fill-opacity="0.4" :x="0" :y="startOverviewSelectionY"
+      :width="store.state.svgPositions.overviewPanelWidth" :height="stopOverviewSelectionY - startOverviewSelectionY" />
   </svg>
 
   <template v-if="displayVariantLegend">
     <div class="grid">
-      <div class="col-4 plus-half legend-title"><b>Variant counts (per {{ parseFloat(variantBinSize.toPrecision(3)).toLocaleString() }}bp)</b></div>
-      <div class="col-2 legend-container">
-        <template v-if="detailedBackboneSet && detailedBackboneSet.maxVariantCount && detailedBackboneSet.variantBinSize && detailedBackboneSet.maxVariantCount > 0">
-          <GradientLegend
-            :species-name="detailedBackboneSet?.speciesName || ''" :map-name="detailedBackboneSet?.mapName"
-            :min-value="0" :max-value="detailedBackboneSet?.maxVariantCount || 0"
-            :bin-size="detailedBackboneSet.variantBinSize"
-            min-color="#0000FF" max-color="#FF0000">
-          </GradientLegend>
-        </template>
-      </div>
-      <template v-for="(set, index) in detailedSyntenySets" :key="index">
-        <div class="col-2 legend-container">
-          <template v-if="set.variantBinSize && set.maxVariantCount && set.maxVariantCount > 0">
-            <GradientLegend
-              :species-name="set.speciesName" :map-name="set.mapName"
-              :min-value="0" :max-value="set.maxVariantCount"
-              :bin-size="set.variantBinSize"
-              min-color="#0000FF" max-color="#FF0000">
-            </GradientLegend>
+      <div class="col-4 plus-half legend-title"><b>Variant counts (per {{
+        parseFloat(variantBinSize.toPrecision(3)).toLocaleString() }}bp)</b></div>
+      <template v-for="speciesIndex in detailedSyntenySets.length + 1" :key="speciesIndex">
+        <template v-if="detailedBackboneSet && detailedBackboneSet.order === speciesIndex - 1">
+          <template
+            v-if="detailedBackboneSet && detailedBackboneSet.maxVariantCount && detailedBackboneSet.variantBinSize && detailedBackboneSet.maxVariantCount > 0">
+            <div class="col-2 legend-container">
+              <GradientLegend :species-name="detailedBackboneSet?.speciesName || ''"
+                :map-name="detailedBackboneSet?.mapName" :min-value="0"
+                :max-value="detailedBackboneSet?.maxVariantCount || 0" :bin-size="detailedBackboneSet.variantBinSize"
+                min-color="oklch(68% 0.25 315) 99% 99%" max-color="oklch(68% 0.18 15) 7% 7%">
+              </GradientLegend>
+            </div>
           </template>
-        </div>
+        </template>
+        <template v-for="(set, index) in detailedSyntenySets" :key="index">
+          <template v-if="set && set.order === speciesIndex - 1">
+            <template v-if="set.variantBinSize && set.maxVariantCount && set.maxVariantCount > 0">
+              <div class="col-2 legend-container">
+                <GradientLegend :species-name="set.speciesName" :map-name="set.mapName" :min-value="0"
+                  :max-value="set.maxVariantCount" :bin-size="set.variantBinSize" max-color="oklch(68% 0.18 15) 7% 7%"
+                  min-color="oklch(68% 0.25 315) 99% 99%">
+                </GradientLegend>
+              </div>
+            </template>
+          </template>
+        </template>
       </template>
     </div>
   </template>
-  <VCMapDialog 
-    v-model:show="showDialog" 
-    :header="dialogHeader" 
-    :message="dialogMessage"
-    :theme="dialogTheme"
-    :show-back-button="showDialogBackButton"
-  />
+  <VCMapDialog v-model:show="showDialog" :header="dialogHeader" :message="dialogMessage" :theme="dialogTheme"
+    :show-back-button="showDialogBackButton" />
   <LoadingSpinnerMask v-if="arePanelsLoading" :style="getDetailedPosition()"></LoadingSpinnerMask>
   <!--
   <Button
@@ -215,6 +231,11 @@
   </div>
   -->
 
+  <ContextMenu ref="cm" :model="items" class="context-menu" @hide="onHideContextMenu">
+    <template v-slot:item="{ item }">
+      <CustomMenuItem :item="item" />
+    </template>
+  </ContextMenu>
 </template>
 
 <script setup lang="ts">
@@ -231,23 +252,25 @@ import Gene from '@/models/Gene';
 import OrthologLine from '@/models/OrthologLine';
 import useDetailedPanelZoom from '@/composables/useDetailedPanelZoom';
 import { key } from '@/store';
-import { createSyntenicRegionSets,  } from '@/utils/SectionBuilder';
+import { createSyntenicRegionSets, } from '@/utils/SectionBuilder';
 import useOverviewPanelSelection from '@/composables/useOverviewPanelSelection';
 import { useLogger } from 'vue-logger-plugin';
-import Toast from 'primevue/toast';
+import Toast, { ToastMessageOptions } from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 import { createBackboneSection, backboneDatatrackBuilder, createBackboneSet } from '@/utils/BackboneBuilder';
 import BackboneSetSVG from './BackboneSetSVG.vue';
 import SyntenyRegionSet from '@/models/SyntenyRegionSet';
-import QtlApi from '@/api/QtlApi';
 import BackboneSet from '@/models/BackboneSet';
 import { createOverviewSyntenicRegionSets } from '@/utils/SectionBuilder';
 import OrthologLineSVG from './OrthologLineSVG.vue';
 import LoadingSpinnerMask from './LoadingSpinnerMask.vue';
-import { createQtlDatatracks } from '@/utils/QtlBuilder';
 import { backboneVariantTrackBuilder } from '@/utils/VariantBuilder';
-import { GenomicSectionFactory } from '@/models/GenomicSectionFactory';
 import Block from "@/models/Block";
+import CustomMenuItem from './CustomMenuItem.vue';
+
+// import QtlApi from '@/api/QtlApi';
+// import { createQtlDatatracks } from '@/utils/QtlBuilder';
+// import { GenomicSectionFactory } from '@/models/GenomicSectionFactory';
 
 import { GeneLabel } from '@/models/Label';
 import SyntenyRegion from '@/models/SyntenyRegion';
@@ -255,7 +278,12 @@ import { createOrthologLines } from '@/utils/OrthologHandler';
 import VariantPositions from '@/models/VariantPositions';
 import Species from '@/models/Species';
 import BackboneSection from '@/models/BackboneSection';
+import SyntenySection from '@/models/SyntenySection';
 import GradientLegend from './GradientLegend.vue';
+import ContextMenu from 'primevue/contextmenu';
+import GenomicSection from '@/models/GenomicSection';
+import useSyntenyAndDataInteraction from '@/composables/useSyntenyAndDataInteraction';
+import { GeneDatatrack } from '@/models/DatatrackSection';
 
 const SHOW_DEBUG = process.env.NODE_ENV === 'development';
 const NAV_SHIFT_PERCENT = 0.2;
@@ -266,11 +294,11 @@ const router = useRouter();
 const toast = useToast();
 
 const { showDialog, dialogHeader, dialogMessage, showDialogBackButton, dialogTheme, onError } = useDialog();
-const { startDetailedSelectionY, stopDetailedSelectionY, updateZoomSelection, detailedSelectionHandler, cancelDetailedSelection, getDetailedSelectionStatus} = useDetailedPanelZoom(store);
+const { startDetailedSelectionY, stopDetailedSelectionY, updateZoomSelection, detailedSelectionHandler, cancelDetailedSelection, getDetailedSelectionStatus } = useDetailedPanelZoom(store);
 const { startOverviewSelectionY, stopOverviewSelectionY, updateOverviewSelection, overviewSelectionHandler, cancelOverviewSelection, getOverviewSelectionStatus } = useOverviewPanelSelection(store);
+const { setHoverOnGeneLinesAndDatatrackSections } = useSyntenyAndDataInteraction(store);
 
-interface Props
-{
+interface Props {
   geneList: Map<number, Gene>;
   syntenyTree: Map<number, Block[]>;
   loading: boolean;
@@ -279,12 +307,23 @@ interface Props
 
 const props = defineProps<Props>();
 
+const emit = defineEmits<{
+  (e: 'swap-backbone', mapKey: string, chr: string, start: number, stop: number): void,
+}>();
+
 let detailedSyntenySets = ref<SyntenyRegionSet[]>([]); // The currently displayed SyntenicRegions in the detailed panel
 let overviewBackboneSet = ref<BackboneSet>();
 let detailedBackboneSet = ref<BackboneSet>();
 let overviewSyntenySets = ref<SyntenyRegionSet[]>([]);
 let orthologLines = ref<OrthologLine[]>();
 let detailedSyntenySvgYPosition = ref<number | null>(null);
+let detailedSyntenyBlockYPositions = ref<number[] | null>(null);
+let contextMenuOpen = ref<boolean>(false); // Tracks if the context menu is open, to share with child components
+// Keeps list of selected blocks to share with all children when necessary
+let selectedBlocks = ref<SyntenySection[]>([]);
+// The section that was clicked to open the context menu
+// Storing here so we can handle any side effects we want when the context menu closes
+let contextMenuSection = ref<GenomicSection | null>(null);
 
 ////
 // Debugging helper refs and methods (debug template is currently commented out):
@@ -292,8 +331,7 @@ const enabledBlockIndicesForGeneDebugList = ref<number[]>([]);
 const enabledRegionIndicesForGeneDebugList = ref<number[]>([]);
 const toggleGenesListForBlock = (debugList: number[], blockIndex: number) => {
   const elementIndex = debugList.findIndex((val) => val === blockIndex);
-  if (elementIndex !== -1)
-  {
+  if (elementIndex !== -1) {
     // Toggle off
     debugList.splice(elementIndex, 1);
     return;
@@ -303,19 +341,25 @@ const toggleGenesListForBlock = (debugList: number[], blockIndex: number) => {
 };
 ////
 
-async function attachToProgressLoader(storeLoadingActionName: string, func: () => Promise<any>)
-{
-  try
-  {
+/// Context Menu
+interface MenuItem {
+  label: string,
+  command: () => void,
+  items?: MenuItem[],
+  icon?: string,
+}
+const cm = ref();
+const items = ref<MenuItem[]>([]);
+
+async function attachToProgressLoader(storeLoadingActionName: string, func: () => Promise<any>) {
+  try {
     store.dispatch(storeLoadingActionName, true);
     await func();
   }
-  catch (err)
-  {
+  catch (err) {
     onError(err, 'An error occurred while updating the overview panel', false);
   }
-  finally
-  {
+  finally {
     store.dispatch(storeLoadingActionName, false);
   }
 }
@@ -330,8 +374,7 @@ onMounted(async () => {
 });
 
 watch(() => store.state.configurationLoaded, () => {
-  if (store.state.configurationLoaded)
-  {
+  if (store.state.configurationLoaded) {
     attachToProgressLoader('setIsOverviewPanelUpdating', updateOverviewPanel);
   }
 });
@@ -340,31 +383,32 @@ watch(() => store.state.configurationLoaded, () => {
  * Have a progress loader for the Details Panel update process.
  */
 watch(() => store.state.detailedBasePairRange, () => {
-  if (store.state.configurationLoaded)
-  {
+  if (store.state.configurationLoaded) {
     attachToProgressLoader('setIsDetailedPanelUpdating', updateDetailsPanel);
   }
 });
 
-// TODO: I think every time the variantPositionsList is changed, the updateSyntenyVariants() method
-//   is called - which triggers a detailed panel update. This watch may no longer be needed?
-// TODO: not sure if watch is the best thing for this
-watch(() => props.variantPositionsList, () => {
-  const backboneSpecies = store.state.species;
-  const detailedBackbone = detailedBackboneSet.value?.backbone;
-  if (backboneSpecies && detailedBackbone)
-  {
-    props.variantPositionsList.forEach((variantPositions) => {
-      if (variantPositions.mapKey === backboneSpecies.activeMap.key)
-      {
-        updateBackboneVariants(backboneSpecies, variantPositions, detailedBackbone);
-      }
-    });
-  }
-}, {deep: true});
-
 watch(() => store.state.isUpdatingVariants, () => {
   if (store.state.isUpdatingVariants) updateSyntenyVariants();
+});
+
+watch(() => store.state.speciesOrder, () => {
+  updateOverviewPanel();
+  updateDetailsPanel();
+});
+
+watch(() => store.state.shouldUpdateDetailedPanel, () => {
+  const shouldUpdate = store.state.shouldUpdateDetailedPanel;
+  if (shouldUpdate) {
+    updateDetailsPanel();
+    store.dispatch('setShouldUpdateDetailedPanel', false);
+  }
+});
+
+// TODO: this can be redundant when adding/removing species, causes svg to update twice
+watch(() => store.state.svgPositions, () => {
+  updateOverviewPanel();
+  updateDetailsPanel();
 });
 
 // FIXME: check on this (probably needs to be attached to Main props instead):
@@ -373,19 +417,48 @@ const arePanelsLoading = computed(() => {
   return store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating || props.loading;
 });
 
+const handleShowContextMenu = (event: MouseEvent, menuItems: MenuItem[], contextSection?: GenomicSection) => {
+  items.value = menuItems;
+  cm.value.show(event);
+  contextMenuOpen.value = true;
+  if (contextSection) {
+    contextMenuSection.value = contextSection;
+  }
+};
+
+const onHideContextMenu = () => {
+  contextMenuOpen.value = false;
+  if (contextMenuSection.value) {
+    contextMenuSection.value.isHovered = false;
+    // If the context menu was for a gene, we'll want to remove hover for gene and orthologs
+    if (contextMenuSection.value instanceof GeneDatatrack) {
+      setHoverOnGeneLinesAndDatatrackSections(contextMenuSection.value.lines, false);
+    }
+    contextMenuSection.value = null;
+  }
+  // Remove any hover mouse location information for mouse position-based labels
+  onDetailedBlockHover(null);
+  onDetailedSyntenyHover(null);
+};
+
+const handleSwapBackbone = (mapKey: string, chr: string, start: number, stop: number) => {
+  emit('swap-backbone', mapKey, chr, start, stop);
+};
+
+const handleSelectedBlocks = (sections: SyntenySection[]) => {
+  selectedBlocks.value = sections;
+};
+
 const displayVariantLegend = computed(() => {
   const backboneVariantIdx = detailedBackboneSet.value?.datatrackSets.findIndex((set) => set.type === 'variant');
-  if (backboneVariantIdx !== undefined && backboneVariantIdx !== -1)
-  {
+  if (backboneVariantIdx !== undefined && backboneVariantIdx !== -1) {
     return true;
   }
-  for (let i = 0; i < detailedSyntenySets.value.length; i++)
-  {
+  for (let i = 0; i < detailedSyntenySets.value.length; i++) {
     const hasVariantTracks = detailedSyntenySets.value[i].regions.some((region) =>
       region.datatrackSets.findIndex((set) => set.type === 'variant') !== -1
     );
-    if (hasVariantTracks)
-    {
+    if (hasVariantTracks) {
       return true;
     }
   }
@@ -393,12 +466,10 @@ const displayVariantLegend = computed(() => {
 });
 
 const variantBinSize = computed(() => {
-  if (detailedBackboneSet.value?.variantBinSize)
-  {
+  if (detailedBackboneSet.value?.variantBinSize) {
     return detailedBackboneSet.value.variantBinSize;
   }
-  else if (detailedSyntenySets.value.some((set) => set.variantBinSize))
-  {
+  else if (detailedSyntenySets.value.some((set) => set.variantBinSize)) {
     const setWithVariants = detailedSyntenySets.value.find((set) => set.variantBinSize && set.variantBinSize > 0);
     return setWithVariants?.variantBinSize ?? 0;
   }
@@ -417,8 +488,7 @@ const updateOverviewPanel = async () => {
   const backboneSpecies = store.state.species;
   const backboneChromosome = store.state.chromosome;
 
-  if (backboneSpecies == null || backboneChromosome == null)
-  {
+  if (backboneSpecies == null || backboneChromosome == null) {
     $log.error('Backbone species or chromosome is null during overview panel update');
     overviewSyntenySets.value = [];
     return;
@@ -426,14 +496,25 @@ const updateOverviewPanel = async () => {
 
   // Build backbone set
   overviewSyntenySets.value = [];
-  const overviewBackbone = createBackboneSection(backboneSpecies, backboneChromosome, 0, backboneChromosome.seqLength, 'overview');
-  overviewBackboneSet.value = createBackboneSet(overviewBackbone, backboneSpecies.activeMap);
+  const overviewBackboneOrder = store.state.speciesOrder[backboneSpecies.activeMap.key.toString()];
+  const overviewBackbone = createBackboneSection(
+    backboneSpecies,
+    backboneChromosome,
+    0,
+    backboneChromosome.seqLength,
+    'overview',
+    overviewBackboneOrder ?? 0,
+    store.state.svgPositions
+  );
+  overviewBackboneSet.value = createBackboneSet(overviewBackbone, overviewBackboneOrder ?? 0,
+    backboneSpecies.activeMap, store.state.svgPositions);
 
   const overviewBackboneCreationTime = Date.now();
 
   // Build overview synteny sets
   const overviewSyntenyTrackCreationTime = Date.now();
-  overviewSyntenySets.value = await createOverviewSyntenicRegionSets(props.syntenyTree, store.state.comparativeSpecies, backboneChromosome);
+  overviewSyntenySets.value = await createOverviewSyntenicRegionSets(props.syntenyTree, store.state.comparativeSpecies,
+    backboneChromosome, store.state.speciesOrder, store.state.svgPositions);
 
   // TODO: request an update to the detailed panel here
 
@@ -462,10 +543,11 @@ const updateDetailsPanel = async () => {
   const backboneSpecies = store.state.species;
   const backboneChromosome = store.state.chromosome;
   const detailedBasePairRange = store.state.detailedBasePairRange;
+  const hiddenDensityTracks = store.state.hiddenDensityTracks;
 
   // Get comparison species Ids for ortholog API call parameter
   const comparativeSpeciesIds: number[] = [];
-  store.state.comparativeSpecies.map(species => comparativeSpeciesIds.push(species.defaultMapKey));
+  store.state.comparativeSpecies.filter(species => species.visible).map(species => comparativeSpeciesIds.push(species.defaultMapKey));
 
   // debug timers
   let timeSyntenyTracks = 0;
@@ -475,8 +557,7 @@ const updateDetailsPanel = async () => {
   let timeAdjustVisibleRegion = 0;
 
   // error if invalid base pair range
-  if (detailedBasePairRange.stop - detailedBasePairRange.start <= 0)
-  {
+  if (detailedBasePairRange.stop - detailedBasePairRange.start <= 0) {
     // Clear out our detailed synteny sets
     $log.error(`Invalid detailedBasePairRange?? (${detailedBasePairRange.start}, ${detailedBasePairRange.stop})`);
     detailedSyntenySets.value = [];
@@ -484,21 +565,20 @@ const updateDetailsPanel = async () => {
   }
 
   //error if no backbone species or chromosome
-  if (backboneSpecies == null || backboneChromosome == null)
-  {
+  if (backboneSpecies == null || backboneChromosome == null) {
     detailedSyntenySets.value = [];
     return;
   }
-
+  const backboneOrder = store.state.speciesOrder[backboneSpecies.activeMap.key];
   //
   // First, create the visible backbone elements
   const detailedBackbone = createBackboneSection(backboneSpecies, backboneChromosome,
-      store.state.detailedBasePairRange.start, store.state.detailedBasePairRange.stop, 'detailed');
+    store.state.detailedBasePairRange.start, store.state.detailedBasePairRange.stop,
+    'detailed', backboneOrder ?? 0, store.state.svgPositions);
   const backboneFilterGenesStart = Date.now();
   const backboneGenes: Gene[] = [];
   props.geneList.forEach((gene: Gene) => {
-    if (gene.mapKey == backboneSpecies.activeMap.key && isBpRangeVisible(gene.start, gene.stop))
-    {
+    if (gene.mapKey == backboneSpecies.activeMap.key && isBpRangeVisible(gene.start, gene.stop)) {
       // Only add visible genes
       backboneGenes.push(gene);
     }
@@ -508,12 +588,12 @@ const updateDetailsPanel = async () => {
   const backboneDatatrackInfo = backboneDatatrackBuilder(backboneSpecies, backboneGenes, detailedBackbone);
   timeCreateBackboneDatatracks = Date.now() - backboneDatatracksStart;
   const backboneSetStart = Date.now();
-  detailedBackboneSet.value = createBackboneSet(detailedBackbone, backboneSpecies.activeMap, backboneDatatrackInfo.processedGenomicData);
+  detailedBackboneSet.value = createBackboneSet(detailedBackbone, backboneOrder ?? 0, backboneSpecies.activeMap,
+    store.state.svgPositions, backboneDatatrackInfo.processedGenomicData);
 
   // Now check for other potential datatracks to add to the backbone (like variant positions)
   props.variantPositionsList.forEach((variantPositions) => {
-    if (variantPositions.mapKey === backboneSpecies.activeMap.key)
-    {
+    if (variantPositions.mapKey === backboneSpecies.activeMap.key && !store.state.hideBackboneDensityTrack) {
       updateBackboneVariants(backboneSpecies, variantPositions, detailedBackbone);
     }
   });
@@ -524,10 +604,13 @@ const updateDetailsPanel = async () => {
   // Next, the visible Synteny elements
   const syntenyTracksStart = Date.now();
   detailedSyntenySets.value = await createSyntenicRegionSets(
-      props.syntenyTree,
-      store.state.comparativeSpecies,
-      detailedBasePairRange.start,
-      detailedBasePairRange.stop,
+    props.syntenyTree,
+    store.state.comparativeSpecies,
+    detailedBasePairRange.start,
+    detailedBasePairRange.stop,
+    store.state.speciesOrder,
+    hiddenDensityTracks,
+    store.state.svgPositions,
   );
   timeSyntenyTracks = Date.now() - syntenyTracksStart;
 
@@ -535,15 +618,16 @@ const updateDetailsPanel = async () => {
   // Create ortholog lines
   // NOTE: Casting the type here since .value can't "unpack" the private methods on the object and thus,
   //  doesn't see it as equaling the SyntenyRegionSet type
-  orthologLines.value = createOrthologLines(props.geneList, detailedBackboneSet.value, detailedSyntenySets.value as SyntenyRegionSet[]);
-  
+  orthologLines.value = createOrthologLines(props.geneList, detailedBackboneSet.value,
+    detailedSyntenySets.value as SyntenyRegionSet[], store.state.svgPositions.overviewPanelWidth);
+
   // Report timing data
-  const timeDetailedUpdate= Date.now() - detailedUpdateStart;
+  const timeDetailedUpdate = Date.now() - detailedUpdateStart;
   const timeDetailedUpdateOther = timeDetailedUpdate - (
     + timeBackboneFilterGenes
     + timeCreateBackboneDatatracks
     + timeCreateBackboneSet
-    + timeSyntenyTracks 
+    + timeSyntenyTracks
     + timeAdjustVisibleRegion);
   logPerformanceReport('Update Detailed Time', timeDetailedUpdate, {
     'Filter Backbone Genes': timeBackboneFilterGenes,
@@ -561,12 +645,11 @@ const navigateUp = () => {
   if (isNavigationUpDisabled.value || selectedRegion?.viewportSelection == null) return;
   // const chromosome = selectedRegion.chromosome;
 
-  if (store.state.detailedBasePairRange)
-  {
+  if (store.state.detailedBasePairRange) {
     const currRange = store.state.detailedBasePairRange;
     let adjust = NAV_SHIFT_PERCENT * (currRange.stop - currRange.start);
     if (currRange.start < adjust) adjust = currRange.start;
-    store.dispatch('setDetailedBasePairRequest', { start: currRange.start - adjust, stop: currRange.stop - adjust });
+    store.dispatch('setDetailedBasePairRequest', { range: { start: currRange.start - adjust, stop: currRange.stop - adjust }, source: 'Navigate Up' });
   }
 };
 
@@ -576,26 +659,23 @@ const navigateDown = () => {
   if (isNavigationDownDisabled.value || selectedRegion?.viewportSelection == null) return;
   const chromosome = selectedRegion.chromosome;
 
-  if (store.state.detailedBasePairRange)
-  {
+  if (store.state.detailedBasePairRange) {
     const currRange = store.state.detailedBasePairRange;
     let adjust = NAV_SHIFT_PERCENT * (currRange.stop - currRange.start);
     if (currRange.stop + adjust > chromosome.seqLength) adjust = chromosome.seqLength - currRange.stop;
-    store.dispatch('setDetailedBasePairRequest', { start: currRange.start + adjust, stop: currRange.stop + adjust });
+    store.dispatch('setDetailedBasePairRequest', { range: { start: currRange.start + adjust, stop: currRange.stop + adjust }, source: 'Navigate Down' });
   }
 };
 
 
 const isNavigationUpDisabled = computed(() => {
-  if (arePanelsLoading.value)
-  {
+  if (arePanelsLoading.value) {
     return true;
   }
 
   const selectedRegion = store.state.selectedBackboneRegion;
 
-  if (selectedRegion && selectedRegion.viewportSelection)
-  {
+  if (selectedRegion && selectedRegion.viewportSelection) {
     return 0 > selectedRegion.viewportSelection.basePairStart;
   }
 
@@ -603,15 +683,13 @@ const isNavigationUpDisabled = computed(() => {
 });
 
 const isNavigationDownDisabled = computed(() => {
-  if (arePanelsLoading.value)
-  {
+  if (arePanelsLoading.value) {
     return true;
   }
-  
+
   const selectedRegion = store.state.selectedBackboneRegion;
-  
-  if (selectedRegion && selectedRegion.viewportSelection)
-  {
+
+  if (selectedRegion && selectedRegion.viewportSelection) {
     return 0 >= selectedRegion.viewportSelection.basePairStop;
   }
 
@@ -622,23 +700,25 @@ const onDetailedSyntenyHover = (svgY: number | null) => {
   detailedSyntenySvgYPosition.value = svgY;
 };
 
+const onDetailedBlockHover = (startStopY: number[] | null) => {
+  detailedSyntenyBlockYPositions.value = startStopY;
+};
 
-const getDetailedPosition = () =>
-{
+
+const getDetailedPosition = () => {
   const detailedPanel = document.getElementById('detailed');
   const scrollY = window.scrollY;
   const scrollX = window.scrollX;
-  if (detailedPanel)
-  {
+  if (detailedPanel) {
     const detailedPanelDomPositions = detailedPanel.getBoundingClientRect();
     return {
       position: 'absolute',
-      top: String(detailedPanelDomPositions.top + scrollY)+ 'px',
-      bottom: String(detailedPanelDomPositions.bottom ) + 'px',
+      top: String(detailedPanelDomPositions.top + scrollY) + 'px',
+      bottom: String(detailedPanelDomPositions.bottom) + 'px',
       right: String(detailedPanelDomPositions.right) + 'px',
       left: String(detailedPanelDomPositions.left + scrollX) + 'px',
       width: String(detailedPanelDomPositions.width) + 'px',
-      height: String(detailedPanelDomPositions.height ) + 'px',
+      height: String(detailedPanelDomPositions.height) + 'px',
     };
   }
 };
@@ -667,47 +747,35 @@ const isBpRangeVisible = (start: number, stop: number) => {
 
 // TODO: temp ignore here, should remove once this method is actively being used
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const loadBackboneQtls = async () => {
-  const chromosome = store.state.chromosome;
-  const backboneSpecies = store.state.species;
-  const backboneRegion = store.state.selectedBackboneRegion;
-  const start = backboneRegion?.viewportSelection?.basePairStart;
-  const stop = backboneRegion?.viewportSelection?.basePairStop;
-  const speciesMap = store.state.species?.activeMap;
+// const loadBackboneQtls = async () => {
+//   const chromosome = store.state.chromosome;
+//   const backboneSpecies = store.state.species;
+//   const backboneRegion = store.state.selectedBackboneRegion;
+//   const start = backboneRegion?.viewportSelection?.basePairStart;
+//   const stop = backboneRegion?.viewportSelection?.basePairStop;
+//   const speciesMap = store.state.species?.activeMap;
 
-  if (chromosome && stop && speciesMap && backboneSpecies)
-  {
-    const factory = new GenomicSectionFactory(
-      backboneSpecies.name,
-      speciesMap.name,
-      chromosome.chromosome,
-      { start: start || 0, stop: stop },
-      'detailed'
-    );
-    const qtls = await QtlApi.getQtls(chromosome.chromosome, start || 0, stop, speciesMap.key);
-    const qtlDatatracks = createQtlDatatracks(factory, qtls, backboneSpecies, chromosome);
-    detailedBackboneSet.value?.addNewDatatrackSetToStart(qtlDatatracks, 'qtl');
-  }
-};
+//   if (chromosome && stop && speciesMap && backboneSpecies)
+//   {
+//     const factory = new GenomicSectionFactory(
+//       backboneSpecies.name,
+//       speciesMap.name,
+//       chromosome.chromosome,
+//       { start: start || 0, stop: stop },
+//       'detailed'
+//     );
+//     const qtls = await QtlApi.getQtls(chromosome.chromosome, start || 0, stop, speciesMap.key);
+//     const qtlDatatracks = createQtlDatatracks(factory, qtls, backboneSpecies, chromosome);
+//     detailedBackboneSet.value?.addNewDatatrackSetToStart(qtlDatatracks, 'qtl');
+//   }
+// };
 
 const updateBackboneVariants = (backboneSpecies: Species, variantPositions: VariantPositions, detailedBackbone: BackboneSection) => {
   const variantDatatrackInfo = backboneVariantTrackBuilder(backboneSpecies, variantPositions, detailedBackbone);
-  if (detailedBackboneSet.value)
-  {
+  if (detailedBackboneSet.value) {
     detailedBackboneSet.value?.addNewDatatrackSetToStart(variantDatatrackInfo.datatracks, 'variant');
     detailedBackboneSet.value.maxVariantCount = variantDatatrackInfo.maxCount;
     detailedBackboneSet.value.variantBinSize = variantDatatrackInfo.binSize;
-
-    // TODO: I believe this code is no longer needed since ortholog lines get rebuilt every time the details panel is updated
-    // NOTE: we can do this because we always know the variant track is first and then the genes
-    // When variants are displayed, lines should start two gaps and two track widths from the right of the backbone
-    const xPos = detailedBackboneSet.value.backbone.posX2 + SVGConstants.backboneDatatrackXOffset * 2 + SVGConstants.dataTrackWidth * 2;
-    orthologLines.value?.forEach((line) => {
-      if (line.startGene.mapKey === detailedBackboneSet.value?.mapKey)
-      {
-        line.posX1 = xPos;
-      }
-    });
   }
 };
 
@@ -716,55 +784,48 @@ const updateSyntenyVariants = () => {
   store.dispatch('setIsUpdatingVariants', false);
 };
 
-document.addEventListener('scroll' , getDetailedPosition);
+document.addEventListener('scroll', getDetailedPosition);
 
 //Back button handling from svg page.  User must confirm they want to leave the page.
 router.beforeEach((to, from, next) => {
-  if (window && window.event && window.event.type == 'popstate')
-  {  
+  if (window && window.event && window.event.type == 'popstate') {
     const response = confirm('Are you sure you want to leave this page? You may lose progress.');
-    if (response == true)
-    {
+    if (response == true) {
       next();
     }
-    else
-    {
+    else {
       next(false);
     }
   }
-  else
-  {
+  else {
     next();
   }
 });
 
 // listen for escape press, cancel overview/detailed panel selection if active.
-window.addEventListener('keyup', function(event) {
-    // If  ESC key was pressed...
-    if (event.keyCode === 27) {
-      cancelOverviewSelection();
-      cancelDetailedSelection();
-    }
+window.addEventListener('keyup', function (event) {
+  // If  ESC key was pressed...
+  if (event.keyCode === 27) {
+    cancelOverviewSelection();
+    cancelDetailedSelection();
+  }
 });
 
-const showToast = (severity: string, title: string, details: string, duration: number) => {
+const showToast = (severity: ToastMessageOptions["severity"], title: string, details: string, duration: number) => {
   const toastCount = store.state.selectionToastCount;
-  
-  if (toastCount % 10 == 0)
-  {
-    toast.add({severity: severity, summary: title, detail: details, life: duration });
+
+  if (toastCount % 10 == 0) {
+    toast.add({ severity: severity, summary: title, detail: details, life: duration });
   }
 };
 
-function logPerformanceReport(title: string, totalTimeMillis: number, detailedTimeReportObject: { [key:string]: number} )
-{
+function logPerformanceReport(title: string, totalTimeMillis: number, detailedTimeReportObject: { [key: string]: number }) {
   const performanceReport: any = {
     [title]: totalTimeMillis + ' ms',
     Details: {}
   };
 
-  for (const detailTitle in detailedTimeReportObject)
-  {
+  for (const detailTitle in detailedTimeReportObject) {
     performanceReport.Details[detailTitle] = detailedTimeReportObject[detailTitle] + ' ms | ' + ((detailedTimeReportObject[detailTitle] / totalTimeMillis * 100).toFixed(2) + '%');
   }
 
@@ -774,95 +835,117 @@ function logPerformanceReport(title: string, totalTimeMillis: number, detailedTi
 </script>
 
 <style lang="scss" scoped>
-#svg-wrapper
-{
-  user-select: none ;
+#svg-wrapper {
+  user-select: none;
   z-index: -1;
 }
 
 
-rect.panel
-{
+rect.panel {
   fill: white;
   stroke-width: 2;
   stroke: lightgray;
   z-index: 0;
 
-  &.selectable:not(.is-loading)
-  {
+  &.selectable:not(.is-loading) {
     cursor: crosshair;
   }
 
-  &.is-loading
-  {
+  &.is-loading {
     cursor: wait;
   }
 }
 
-rect.selecting-panel
-{
+rect.selecting-panel {
   fill: white;
   opacity: 0;
   position: absolute;
   z-index: 1;
 
-  &:not(.is-loading)
-  {
+  &:not(.is-loading) {
     cursor: crosshair;
   }
 
-  &.is-loading
-  {
+  &.is-loading {
     cursor: wait;
   }
 }
 
-rect.visible-selecting-panel
-{
+rect.visible-selecting-panel {
   cursor: crosshair;
 }
 
-.vcmap-loader.p-progressbar
-{
+.vcmap-loader.p-progressbar {
   height: 0.25em;
 }
 
-rect.navigation-btn
-{
+rect.navigation-btn {
   fill: lightgray;
   stroke-width: 1;
   stroke: lightslategray;
-  &:hover:not(.disabled)
-  {
+
+  &:hover:not(.disabled) {
     fill: whitesmoke;
     cursor: pointer;
   }
 
-  &.disabled
-  {
+  &.disabled {
     cursor: not-allowed;
   }
 }
 
-.nav-btn-img
-{
+.nav-btn-img {
   cursor: pointer;
   pointer-events: none;
 }
-.legend-title
-{
+
+.legend-title {
   text-align: right;
   margin-top: auto;
   margin-bottom: auto;
 }
-.legend-container
-{
+
+.legend-container {
   margin-left: 1%;
 }
-.col-4
-{
-  &.plus-half{
+
+.density-toggle-container {
+  margin-top: 1%;
+  margin-bottom: 1%;
+  width: fit-content;
+}
+
+.density-toggle-button {
+  margin-left: 2%;
+  margin-right: 2%;
+  width: fit-content;
+  min-width: 4em;
+}
+
+.flex-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+}
+
+.flex-container-start {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+}
+
+.col-4 {
+  &.plus-half {
     width: 37.5%;
   }
+}
+
+.left-padding {
+  padding-left: 20%;
+}
+
+.flex-end {
+  justify-content: flex-end;
 }
 </style>

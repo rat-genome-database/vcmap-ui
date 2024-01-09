@@ -1,10 +1,11 @@
-import { GeneDatatrack } from "@/models/DatatrackSection";
+import { GeneDatatrack, VariantDensity } from "@/models/DatatrackSection";
 import Gene from "@/models/Gene";
 import { GeneLabel } from "@/models/Label";
 import OrthologLine from "@/models/OrthologLine";
 import SelectedData from "@/models/SelectedData";
 import { VCMapState } from "@/store";
 import { sortGeneList } from "@/utils/DataPanelHelpers";
+import { VCMapSVGElement } from '@/models/VCMapSVGElement';
 import { getSelectedDataAndGeneIdsFromOrthologLine } from "@/utils/OrthologHandler";
 import { Store } from "vuex";
 
@@ -24,16 +25,24 @@ export default function useSyntenyAndDataInteraction(store: Store<VCMapState>) {
     }
   };
 
+  const changeHoverElementSize = (element: VCMapSVGElement, isHovered: boolean) => {
+    //make our element bigger when hovered
+    element.width = isHovered ? element.width + 6 : element.width - 6;
+    //make sure the element is centered
+    element.posX1 = isHovered ? element.posX1 - 3 : element.posX1 + 3;
+    element.posX2 = isHovered ? element.posX2 + 3 : element.posX2 - 3;
+  };
+
   const onDatatrackSectionClick = (event: any, section: GeneDatatrack, geneList: Map<number, Gene>) => {
-    // NOTE: ignore variant datatrack sections for now
-    if (!section.gene?.rgdId || section.type === 'variant' || section.type === 'qtl') return;
+    if ((!section.gene?.rgdId && section.type !== 'variant') || section.type === 'qtl') return;
 
     section.isHovered = false;
 
     // If clicked section already selected, just reset the selectedGeneId state
-    if (store.state.selectedGeneIds.includes(section.gene?.rgdId || -1)) {
+    if (store.state.selectedGeneIds.includes(section.gene?.rgdId || -1) || (section.type === 'variant' && store.state.selectedVariantSections.includes(section)) /* || section.type === 'block' && store.state.selectedBlocks.includes(section) */) {
       store.dispatch('setSelectedGeneIds', []);
       store.dispatch('setSelectedData', null);
+      store.dispatch('setSelectedVariantSections', []);
       return;
     }
 
@@ -91,15 +100,25 @@ export default function useSyntenyAndDataInteraction(store: Store<VCMapState>) {
           });
         }
       });
+    } else if (section.type === 'variant') {
+      // asserted as VariantDensity in the if statement
+      newSelectedData.push(new SelectedData(section as unknown as VariantDensity, 'variantDensity'));
     }
 
     store.dispatch('setSelectedGeneIds', geneIds || []);
     if (event.shiftKey) {
       const selectedDataArray = [...(store.state.selectedData || []), ...newSelectedData];
+      if (section.type === 'variant') {
+        const selectedVariantSections = [...(store.state.selectedVariantSections || []), section];
+        store.dispatch('setSelectedVariantSections', selectedVariantSections);
+      }
       store.dispatch('setSelectedData', selectedDataArray);
     }
     else {
       store.dispatch('setSelectedData', newSelectedData);
+      if (section.type === 'variant') {
+        store.dispatch('setSelectedVariantSections', [section]);
+      }
     }
   };
 
@@ -172,9 +191,28 @@ export default function useSyntenyAndDataInteraction(store: Store<VCMapState>) {
     }
   };
 
+  const showHoveredData = (element: VCMapSVGElement | GeneLabel, mouse: MouseEvent) => {
+    store.dispatch('setHoveredData', {
+      x: mouse.pageX,
+      y: mouse.pageY,
+      data: element.toHoveredData(),
+    });
+  };
+
+  const hideHoveredData = () => {
+    store.dispatch('setHoveredData', {
+      x: 0,
+      y: 0,
+      data: [],
+    });
+  };
+
   return {
     setHoverOnGeneLinesAndDatatrackSections,
     onDatatrackSectionClick,
     onGeneLabelClick,
+    changeHoverElementSize,
+    showHoveredData,
+    hideHoveredData,
   };
 }

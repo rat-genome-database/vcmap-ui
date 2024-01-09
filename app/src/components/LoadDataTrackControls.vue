@@ -1,94 +1,84 @@
 <template>
-  <Dialog 
-    v-model:visible="isActive" 
-    class="data-track-dialog"
-    :draggable="false"
-    :closable="false"
-    :modal="true">
-    <template #header>
-      <div class="header-container">
-        <div class="col-12 backbone-info">
-          <div class="grid unpadded">
-            <div class="col-5">Backbone:</div>
-            <div class="col-7 bold">{{store.state.species?.name}}</div>
-            <div class="col-5">Chromosome:</div>
-            <div class="col-7 bold">chr{{store.state.chromosome?.chromosome}}</div>
-            <div class="col-5">Assembly:</div>
-            <div class="col-7 bold">{{store.state.species?.activeMap.name}}</div>
-          </div>
+  <div class="header-container">
+    <div class="col-6 backbone-info">
+      <div class="grid unpadded">
+        <div class="col-5">Backbone:</div>
+        <div class="col-7 bold">{{store.state.species?.name}}</div>
+        <div class="col-5">Chromosome:</div>
+        <div class="col-7 bold">chr{{store.state.chromosome?.chromosome}}</div>
+        <div class="col-5">Assembly:</div>
+        <div class="col-7 bold">{{store.state.species?.activeMap.name}}</div>
+      </div>
+    </div>
+    <div>
+      <table>
+        <thead>
+          <tr><th>Comparative Species</th><th>Assembly</th></tr>
+        </thead>
+        <tbody>
+          <tr v-for="(species, index) in store.state.comparativeSpecies" :key="index">
+            <td>{{ species.name }}</td>
+            <td>{{ species.activeMap.name }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <h3>Variants</h3>
+  <div class="content-container">
+    <div class="track-item-container">
+      <div class="grid" v-for="(species, index) in loadedVariantSpecies" :key="index">
+        <div class="col-4">
+          {{ species.name }} ({{ species.activeMap.name }})
         </div>
-        <div>
-          <table>
-            <thead>
-              <tr><th>Comparative Species</th><th>Assembly</th></tr>
-            </thead>
-            <tbody>
-              <tr v-for="(species, index) in store.state.comparativeSpecies" :key="index">
-                <td>{{ species.name }}</td>
-                <td>{{ species.activeMap.name }}</td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="col-1">
+          <Button @click="removeVariants(species, index)" label="Remove" icon="pi pi-minus-circle" class="p-button-sm p-button-danger" />
         </div>
       </div>
-    </template>
-    <div class="content-container">
-      <Button label="Add Variants" icon="pi pi-plus" class="p-button-secondary p-button-sm add-track-btn" @click="onAddDataTrack" />
-      <!-- <Button label="Debug" icon="pi pi-circle" class="p-button-info p-button-sm add-track-btn" @click="onDebugClick" /> -->
-      <div class="track-item-container">
-        <div class="grid track-item" v-for="(item, index) in dataTrackItems" :key="index">
-        <Dropdown 
-          v-model="dataTrackItems[index].species"
-          :options="speciesOptions"
-          optionValue="activeMap"
-          optionLabel="label"
-          placeholder="Species"
-        />
-        <div class="lg:col-1 md:col-2 sm:col-2">
+      <div class="grid" v-for="(item, index) in dataTrackItems" :key="index">
+        <div class="col-4">
+          <Dropdown 
+            v-model="dataTrackItems[index].species"
+            :options="speciesOptions"
+            optionValue="activeMap"
+            optionLabel="label"
+            placeholder="Species"
+            @change="onConfirmLoadDataTrack"
+          />
+        </div>
+        <div class="col-1">
           <Button @click="removeDataTrackItem(index)" label="Remove" icon="pi pi-minus-circle" class="p-button-sm p-button-danger" />
         </div>
       </div>
-      </div>
     </div>
-    <div class="grid p-d-flex modal-controls-container">
-        <div class="left-align-btn">
-          <Button label="Cancel" class="p-button-danger" @click="close" />
-        </div>
-        <div>
-          <Button label="Load Tracks" class="p-button-secondary" icon="pi pi-arrow-right" @click="onConfirmLoadDataTrack" />
-        </div>
-      </div>
-  </Dialog>
+    <Button
+      label="Add Variants"
+      icon="pi pi-plus-circle"
+      class="p-button mb-2"
+      @click="onAddDataTrack"
+    />
+  </div>
 </template>
-  
+
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import Species from '@/models/Species';
 // import SpeciesApi from '@/api/SpeciesApi';
 import SpeciesMap from '@/models/SpeciesMap';
 import logger from '@/logger';
+import VariantPositions from '@/models/VariantPositions';
 
-/**
- * Can use v-model:show to do 2 way binding
- */
-interface Props 
+interface Props
 {
-  header: string;
-  message?: string;
-  show: boolean;
-  theme?: 'error' | 'normal';
-  showBackButton?: boolean;
-  onConfirmCallback?: () => void;
-  onLoadSyntenyVariants: (mapKeys: number[] | null, triggerUpdate: boolean) => Promise<void>;
-  onCloseLoadDataTrackModal: () => void;
+  variantPositionsList: VariantPositions[];
 }
 
 interface Emits
 {
-  // eslint-disable-next-line
-  (eventName: 'update:show', value: boolean): void
+  (eventName: 'variant-change', mapKeys: number[]): void,
+  (eventName: 'remove-variants', removedMapKey: number): void,
 }
 
 interface DataTrackItem
@@ -97,12 +87,13 @@ interface DataTrackItem
 }
 
 const props = defineProps<Props>();
-const emit = defineEmits<Emits>();
 const store = useStore(key);
+const emit = defineEmits<Emits>();
 
 // refs
 const dataTrackItems = ref<DataTrackItem[]>([]);
 const speciesOptions = ref<Species[]>([]);
+const loadedVariantSpecies = ref<Species[]>([]);
 
 // // Dropdown selection options:
 // const sourceOptions = [{name: 'API', key: 0},{name: 'File Upload', key: 1}];
@@ -111,14 +102,7 @@ const speciesOptions = ref<Species[]>([]);
 
 onMounted(prepopulateConfigOptions);
 
-const isActive = computed({
-  get() {
-    return props.show;
-  },
-  set(value: boolean) {
-    emit('update:show', value);
-  }
-});
+watch(() => store.state.comparativeSpecies, prepopulateConfigOptions);
 
 const onConfirmLoadDataTrack = () => {
   const selectedMapKeys: number[] = [];
@@ -128,11 +112,7 @@ const onConfirmLoadDataTrack = () => {
     }
   });
 
-  if (selectedMapKeys.length > 0) {
-    props.onCloseLoadDataTrackModal();
-    props.onLoadSyntenyVariants(selectedMapKeys, true /* trigger update */);
-    dataTrackItems.value.length = 0;
-  }
+  emit('variant-change', selectedMapKeys);
 };
 
 const onAddDataTrack = () => {
@@ -149,27 +129,41 @@ const onAddDataTrack = () => {
   }
 };
 
-const close = () => {
-  dataTrackItems.value.length = 0;
-  props.onCloseLoadDataTrackModal();
-};
-
 function removeDataTrackItem(index: number)
 {
   dataTrackItems.value.splice(index, 1);
 }
 
+function removeVariants(species: Species, index: number)
+{
+  emit('remove-variants', species.activeMap.key);
+  loadedVariantSpecies.value.splice(index, 1);
+}
+
 function prepopulateConfigOptions()
 {
-  let loadedSpecies = [];
+  const loadedSpecies = [];
+  loadedVariantSpecies.value = [];
   try
   {
     let loadedBackbone = store.state.species;
+    if (loadedBackbone == null) {
+      logger.warn(`Cannot prepopulate data track config options when loaded backbone is null`);
+      return;
+    }
     loadedBackbone.label = loadedBackbone.name + ": " + loadedBackbone.activeMap.name;
-    loadedSpecies.push(loadedBackbone);
+    if (!props.variantPositionsList.find((vPos) => vPos.mapKey === loadedBackbone?.activeMap.key)) {
+      loadedSpecies.push(loadedBackbone);
+    } else {
+      loadedVariantSpecies.value.push(loadedBackbone);
+    }
     store.state.comparativeSpecies.forEach((entry) => {
       entry.label = entry.name + ": " + entry.activeMap.name;
-      loadedSpecies.push(entry);
+      if (!props.variantPositionsList.find((vPos) => vPos.mapKey === entry.activeMap.key)) {
+        loadedSpecies.push(entry);
+      } else {
+        loadedVariantSpecies.value.push(entry);
+      }
     });
     speciesOptions.value = loadedSpecies;
   }
@@ -201,68 +195,37 @@ function prepopulateConfigOptions()
 </script>
 
 <style lang="scss">
-  .data-track-dialog
-  {
-      width: 70vw;
-      height: 60vw;
+.content-container {
+  // background-color: rgb(217, 225, 225);
+  height: 95%;
+}
+.modal-controls-container {
+  padding: 2rem 1rem 2rem 1rem;
+  height: 5%;
+}
+.track-item-container {
+  display: grid;
+  margin-top: 1em;
+  margin-bottom: 1em;
 
-      .header-container {
-          border-bottom: 2px grey solid;
-          width: 100%;
-          display: flex;
-          padding-bottom: 1em;
-          align-items: center;
-          justify-content: space-between;
-
-          table, th, td {
-            border: 1px solid grey;
-            border-spacing: 0;
-          }
-      }
-
-      .p-dialog-content {
-          height: 100%;
-
-          .content-container {
-            // background-color: rgb(217, 225, 225);
-            height: 95%;
-            padding-top: 1.5em;
-
-            .add-track-btn {
-              float: right;
-            }
-          }
-      }
-      .p-dialog-header {
-        padding-bottom: 0em;
-      }
-      .backbone-info 
-      {
-        width: 50%;
-
-        .col-5 {
-            text-align: end;
-        }
-      }
-      .grid {
-          justify-content: space-between;
-      }
-      .modal-controls-container {
-        padding: 0 1rem 2rem 1rem;
-        height: 5%;
-      }
-      .track-item-container {
-        display: grid;
-        padding-left: 1.5em;
-        margin-top: 1em;
-
-          .track-item {
-          // width: fit-content;
-          margin-top: 1em;
-          display: flex;
-          justify-content: flex-start;
-        }
-      }
-      
+    .track-item {
+    // width: fit-content;
+    margin-top: 1em;
+    display: flex;
+    justify-content: flex-start;
   }
+}
+.header-container {
+  border-bottom: 2px grey solid;
+  width: 100%;
+  display: flex;
+  padding-bottom: 1em;
+  align-items: center;
+  justify-content: space-between;
+
+  table, th, td {
+    border: 1px solid grey;
+    border-spacing: 0;
+  }
+}
 </style>

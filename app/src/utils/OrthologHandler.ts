@@ -16,7 +16,8 @@ type OrthologPositionInfo = {
 
 const ORTHOLOG_THRESHOLD_MULTIPLIER = 0.5;
 
-export function createOrthologLines(geneList: Map<number, Gene>, backboneSet: BackboneSet, offBackboneSyntenyRegionSets: SyntenyRegionSet[])
+export function createOrthologLines(geneList: Map<number, Gene>, backboneSet: BackboneSet,
+  offBackboneSyntenyRegionSets: SyntenyRegionSet[], overviewWidth: number)
 { 
   logger.time(`CreateOrthologLines`);
 
@@ -33,12 +34,13 @@ export function createOrthologLines(geneList: Map<number, Gene>, backboneSet: Ba
   const speciesPositionMap: Map<number, OrthologPositionInfo> = new Map();
   const backboneGeneStartX = getDetailedPanelXPositionForBackboneDatatracks(backboneSet.backbone.posX2, backboneSet.geneDatatrackSetIndex);
   speciesPositionMap.set(backboneSet.mapKey, {
+    // order: backboneSet.order,
     order: 0,
     startX: backboneGeneStartX,
     endX: backboneGeneStartX + SVGConstants.dataTrackWidth,
   });
   offBackboneSyntenyRegionSets.forEach(set => {
-    const geneStartX = getDetailedPanelXPositionForDatatracks(set.order, set.geneDatatrackSetIndex);
+    const geneStartX = getDetailedPanelXPositionForDatatracks(set.order, set.geneDatatrackSetIndex, overviewWidth);
     const geneEndX = geneStartX + SVGConstants.dataTrackWidth;
     speciesPositionMap.set(set.mapKey, {
       order: set.order,
@@ -92,7 +94,7 @@ export function createOrthologLines(geneList: Map<number, Gene>, backboneSet: Ba
 
     // Place the orthologs in this map according to what "order" they appear in
     const orthologOrderMap: Map<number, Gene[]> = new Map();
-    orthologOrderMap.set(0, [backboneGene]);
+    orthologOrderMap.set(backboneSet.order, [backboneGene]);
     // Sort orthologs by species set order
     orthologs.sort((a, b) => {
       const positionInfoA = speciesPositionMap.get(a.mapKey);
@@ -109,7 +111,8 @@ export function createOrthologLines(geneList: Map<number, Gene>, backboneSet: Ba
       
       if (order == null)
       {
-        logger.error(`No order was returned from speciesPositionMap for ortholog gene rgdId: ${o.rgdId}`);
+        // logger.error(`No order was returned from speciesPositionMap for ortholog gene rgdId: ${o.rgdId}`);
+        // NOTE: if the species is hidden, this will happen so we don't need to log an error
         return;
       }
 

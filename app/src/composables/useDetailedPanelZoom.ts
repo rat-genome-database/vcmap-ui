@@ -15,7 +15,7 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
   let svg: SVGSVGElement | null;
 
   onMounted(() => {
-    svg = document.querySelector('svg');
+    svg = document.querySelector('#svg-wrapper');
   });
 
   const getDetailedSelectionStatus = () => {
@@ -109,9 +109,9 @@ export default function useDetailedPanelZoom(store: Store<VCMapState>) {
       const basePairStop = Math.floor((stopDetailedSelectionY.value - SVGConstants.panelTitleHeight) / pixelsPerBpRatio)
           + store.state.detailedBasePairRange.start;
 
-      $log.log(`Requesting zoom to (${basePairStart}, ${basePairStop}) from Y:(${startDetailedSelectionY.value}, ${stopDetailedSelectionY.value})`);
+      $log.info(`Requesting zoom to (${basePairStart}, ${basePairStop}) from Y:(${startDetailedSelectionY.value}, ${stopDetailedSelectionY.value})`);
       store.dispatch('setSelectionToastCount', toastCount + 1);
-      store.dispatch('setDetailedBasePairRequest', { start: basePairStart, stop: basePairStop });
+      store.dispatch('setDetailedBasePairRequest', { range: { start: basePairStart, stop: basePairStop }, source: 'Selected Zoom'});
       // store.dispatch('setDetailedBasePairRange', { start: basePairStart, stop: basePairStop });
     }
 

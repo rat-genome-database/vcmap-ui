@@ -2,12 +2,20 @@ import SyntenySection from './SyntenySection';
 import DatatrackSection, { DatatrackSectionType } from './DatatrackSection';
 import DatatrackSet from './DatatrackSet';
 import { GeneLabel } from './Label';
-import OrthologLine from './OrthologLine';
 import { GenomicSectionFactory } from './GenomicSectionFactory';
 import { Gap } from "@/models/Block";
 import Gene from './Gene';
 import { isGenomicDataInViewport } from '@/utils/Shared';
 import logger from '@/logger';
+
+//this class is used to store info of interest for synteny regions/associated blocks in the data panel
+export interface SyntenyRegionInfo
+{
+  blockCount?: number
+  gapCount?: number; 
+  geneCount?: number;
+  variantCount?: number;
+}
 
 interface SyntenyRegionParams
 {
@@ -25,7 +33,6 @@ export default class SyntenyRegion
   syntenyGaps: SyntenySection[] = [];       // synteny gaps occupying this region
   syntenyBlocks: SyntenySection[] = [];     // synteny blocks occupying this region
   datatrackSets: DatatrackSet[] = [];       // Set of DatatrackSections belonging to this SytenyRegion
-  orthologLines: OrthologLine[] = [];       // OrthologLines belonging to this SyntenyRegion
   species: string = '';                     // species that this region is from
   mapName: string = '';
   geneDatatrackLabels: GeneLabel[] = [];    // array of Label objects associated with the datatrackSections
@@ -84,7 +91,7 @@ export default class SyntenyRegion
       .sort((a, b) => a.backboneStart - b.backboneStart);
     logger.timeEnd(`Sort gaps for splitBlockWithGaps`);
 
-    logger.log(` splitBlockWithGaps: filtered ${gaps.length} down gaps to ${sortedGaps.length}`);
+    logger.info(` splitBlockWithGaps: filtered ${gaps.length} down gaps to ${sortedGaps.length}`);
 
     this.syntenyBlocks = [];
     this.syntenyGaps = [];

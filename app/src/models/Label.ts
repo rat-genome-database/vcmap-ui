@@ -1,4 +1,6 @@
+import { Formatter } from '@/utils/Formatter';
 import Gene from './Gene';
+import { IHoverableData } from './HoveredData';
 
 interface LabelParams
 {
@@ -7,6 +9,7 @@ interface LabelParams
   text: string;
   isVisible?: boolean;
   addClass?: string;
+  labelOnLeft?: boolean;
 }
 
 export default class Label
@@ -14,6 +17,7 @@ export default class Label
   posX: number = 0;
   posY: number = 0;
   text: string = '';
+  labelOnLeft: boolean = false;
   isVisible: boolean = true;
   isHovered: boolean = false;
   addClass: string = "";
@@ -23,12 +27,13 @@ export default class Label
     this.posX = params.posX;
     this.posY = params.posY;
     this.text = params.text;
+    this.labelOnLeft = params.labelOnLeft ?? this.labelOnLeft;
     this.isVisible = params.isVisible ?? this.isVisible;
     this.addClass = params.addClass ?? this.addClass;
   }
 }
 
-export class GeneLabel extends Label
+export class GeneLabel extends Label implements IHoverableData
 {
   genes: Gene[];
   rgdIds: number[];
@@ -42,6 +47,16 @@ export class GeneLabel extends Label
     {
       this.text = this.genes[0].symbol;
     }
+  }
+
+  public toHoveredData(): string[] {
+    return [
+      this.mainGene.symbol,
+      Formatter.truncate(this.mainGene.name, 30),
+      this.mainGene.speciesName,
+      `Chr${this.mainGene.chromosome}: ${Formatter.addCommasToBasePair(this.mainGene.start)} - ${Formatter.addCommasToBasePair(this.mainGene.stop)}`,
+      `Gene count in this area: ${this.genes.length}`
+    ];
   }
 
   /**

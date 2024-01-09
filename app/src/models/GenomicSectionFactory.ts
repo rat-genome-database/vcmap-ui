@@ -27,7 +27,7 @@ export class GenomicSectionFactory
   /**
    * Creates a SyntenySection
    */
-  createSyntenySection(params: {start: number, stop: number, backboneAlignment: BackboneAlignment, type: SyntenySectionType, orientation: Orientation, chainLevel: number, isGapless?: boolean})
+  createSyntenySection(params: {start: number, stop: number, backboneAlignment: BackboneAlignment, type: SyntenySectionType, orientation: Orientation, chainLevel: number, isGapless?: boolean, labelOnLeft?: boolean})
   {
     const {
       start,
@@ -37,6 +37,7 @@ export class GenomicSectionFactory
       orientation,
       chainLevel,
       isGapless,
+      labelOnLeft
     } = params;
 
     return new SyntenySection({
@@ -52,6 +53,7 @@ export class GenomicSectionFactory
       orientation: orientation,
       chainLevel: chainLevel,
       isGapless: isGapless,
+      labelOnLeft: labelOnLeft,
     });
   }
 

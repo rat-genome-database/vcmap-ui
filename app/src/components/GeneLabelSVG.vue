@@ -1,7 +1,7 @@
 <template>
   <text
     @click="onGeneLabelClick($event, label, geneList, orthologLines)"
-    @mouseenter="onMouseEnter(label)"
+    @mouseenter="onMouseEnter($event, label)"
     @mouseleave="onMouseLeave(label)"
     :class="(isLabelSelected(label) ? 'bold-label' : 'label small')"
     :x="(label.posX + 5)"
@@ -18,7 +18,6 @@ import { useStore } from 'vuex';
 import { key } from '@/store';
 import { GeneLabel } from '@/models/Label';
 import Gene from '@/models/Gene';
-import SelectedData from '@/models/SelectedData';
 import useSyntenyAndDataInteraction from '@/composables/useSyntenyAndDataInteraction';
 import OrthologLine from '@/models/OrthologLine';
 
@@ -32,7 +31,11 @@ interface Props
 }
 defineProps<Props>();
 
-const { onGeneLabelClick } = useSyntenyAndDataInteraction(store);
+const {
+  onGeneLabelClick,
+  showHoveredData,
+  hideHoveredData
+} = useSyntenyAndDataInteraction(store);
 
 /**
  * TODO: Documenting a situation that results in some slightly confusing UX that we should
@@ -94,23 +97,17 @@ const getLabelText = (label: GeneLabel) => {
   return labelText;
 };
 
-const onMouseEnter = (label: GeneLabel) => {
+const onMouseEnter = (event: MouseEvent, label: GeneLabel) => {
   label.isHovered = true;
-
-  // If there are selected genes, don't update the selected data panel
-  if (store.state.selectedGeneIds.length === 0) {
-    const newSelectedData = label.genes.map((gene) => {
-      return new SelectedData(gene.clone(), 'Gene');
-    });
-    store.dispatch('setSelectedData', newSelectedData);
-  }
+  showHoveredData(label, event);
 };
 
 const onMouseLeave = (label: GeneLabel) => {
   label.isHovered = false;
-  
+  hideHoveredData();
+
   // Only reset data onMouseLeave if there isn't a selected gene
-  if (store.state.selectedGeneIds.length === 0) {
+  if (store.state.selectedGeneIds.length === 0 && store.state.selectedVariantSections.length === 0 && store.state.selectedBlocks.length === 0) {
     store.dispatch('setSelectedData', null);
   }
 };

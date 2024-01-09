@@ -3,12 +3,15 @@ import VuexPersistence from 'vuex-persist';
 import Species from '@/models/Species';
 import Chromosome from '@/models/Chromosome';
 import Gene from '@/models/Gene';
+import UserHistory from '@/models/UserHistory';
 import BackboneSelection, { BasePairRange } from '@/models/BackboneSelection';
 import SelectedData from '@/models/SelectedData';
 import { InjectionKey } from 'vue';
 import { createLogger } from 'vuex';
-import { LoadedGene } from '@/models/DatatrackSection';
 import { ConfigurationMode } from '@/utils/Types';
+import { IHoveredData } from '@/models/HoveredData';
+import { SVGPositionVariables } from '@/utils/SVGConstants';
+import SyntenySection from '@/models/SyntenySection';
 
 export const key: InjectionKey<Store<VCMapState>> = Symbol();
 
@@ -20,6 +23,8 @@ export interface VCMapState
   startPos: number | null; // backbone start position
   stopPos: number | null; // backbone stop position
   gene: Gene | null; // backbone gene
+  flankingGene1: Gene | null;
+  flankingGene2: Gene | null;
   comparativeSpecies: Species[];
   configMode: ConfigurationMode;
 
@@ -33,22 +38,55 @@ export interface VCMapState
   isOverviewPanelUpdating: boolean;
   isUpdatingVariants: boolean;
 
+  shouldUpdateDetailedPanel: boolean;
+
+  /* Selected data */
   selectedGeneIds: number[];
+  selectedVariantSections: any[];
+  selectedBlocks: SyntenySection[];
   selectedData: SelectedData[] | null;
+  isDataPanelCollapsed: boolean;
+
+  /* Hovered data */
+  hoveredData: IHoveredData;
 
   selectionToastCount: number;
+  hideBackboneDensityTrack: boolean;
+  hiddenDensityTracks: number[];
 
-  /* These data structures have the potential to be pretty large */
-  // TODO: I think we can remove this from state
-  loadedGenes: Map<number, LoadedGene> | null;
+  svgPositions: SVGPositionVariables;
+
+  speciesOrder: any;
+
+  /* History */
+  history: UserHistory[];
+
+  /* Visibility settings */
+  showOverviewPanel: boolean;
 }
 
+/**
+ * Saves VCMap state to local storage so that newly opened tabs can default to last loaded configuration
+ */
 const vuexLocal = new VuexPersistence<VCMapState>({
-  storage: window.localStorage
+  key: 'VCMAP_LOCAL',
+  storage: window.localStorage,
 });
 
-const actionsToLog = ['setDetailedBasePairRange', 'setDetailedBasePairRequest'];
-const mutationsToLog = ['detailedBasePairRange'];
+/**
+ * Saves VCMap state to session storage so that each open tab can have its own configuration loaded
+ */
+const vuexSession = new VuexPersistence<VCMapState>({
+  key: 'VCMAP_SESSION',
+  storage: window.sessionStorage,
+});
+
+const actionsToLog = [
+  'setDetailedBasePairRange', 
+  'setDetailedBasePairRequest', 
+  'setBackboneSelection'
+];
+const mutationsToLog = ['detailedBasePairRange', 'addToHistory'];
 
 const logger = createLogger({
   // Filter out frequently occurring actions/mutations (makes the console really noisy for not much benefit)
@@ -60,6 +98,9 @@ const logger = createLogger({
   },
 });
 
+// Used to hold user history temporarily until fully completed
+let partialHistory: { range: BasePairRange; source: string; } | null = null;
+
 export default createStore({
   state: (): VCMapState => ({
     species: null,
@@ -67,6 +108,8 @@ export default createStore({
     startPos: null,
     stopPos: null,
     gene: null,
+    flankingGene1: null,
+    flankingGene2: null,
     comparativeSpecies: [],
     configMode: 'gene',
 
@@ -79,13 +122,32 @@ export default createStore({
     isOverviewPanelUpdating: false,
     isUpdatingVariants: false,
 
+    shouldUpdateDetailedPanel: false,
+
     selectedGeneIds: [],
+    selectedVariantSections: [],
+    selectedBlocks: [],
     selectedData: null,
+    isDataPanelCollapsed: false,
+
+    hoveredData: {
+      x: 0,
+      y: 0,
+      data: [],
+    },
 
     selectionToastCount: 0,
 
-    /* These data structures have the potential to be pretty large */
-    loadedGenes: null,
+    svgPositions: {
+      overviewPanelWidth: 300,
+      mirroredOverivew: false,
+    },
+    speciesOrder: {},
+
+    hideBackboneDensityTrack: false,
+    hiddenDensityTracks: [],
+    history: [],
+    showOverviewPanel: true,
   }),
 
   mutations: {
@@ -106,9 +168,6 @@ export default createStore({
     },
     comparativeSpecies (state: VCMapState, speciesArray: Species[]) {
       state.comparativeSpecies = speciesArray;
-    },
-    loadedGenes (state: VCMapState, loadedGenesMap: Map<number, LoadedGene>) {
-      state.loadedGenes = loadedGenesMap;
     },
     configurationLoaded(state: VCMapState, configState: boolean | null) {
       state.configurationLoaded = configState;
@@ -131,6 +190,12 @@ export default createStore({
     selectedGeneIds(state: VCMapState, selectedIds: number[]) {
       state.selectedGeneIds = selectedIds;
     },
+    selectedVariantSections(state: VCMapState, selectedSections: any[]) {
+      state.selectedVariantSections = selectedSections;
+    },
+    selectedBlocks(state: VCMapState, selectedBlocks: SyntenySection[]) {
+      state.selectedBlocks = selectedBlocks;
+    },
     isDetailedPanelUpdating(state: VCMapState, isUpdating: boolean) {
       state.isDetailedPanelUpdating = isUpdating;
     },
@@ -142,7 +207,50 @@ export default createStore({
     },
     selectionToastCount(state: VCMapState, count: number) {
       state.selectionToastCount = count;
-    }
+    },
+    hideBackboneDensityTrack(state: VCMapState, isHidden: boolean) {
+      state.hideBackboneDensityTrack = isHidden;
+    },
+    toggleSyntenicDensityTrackVisibility(state: VCMapState, mapKey: number) {
+      if (!state.hiddenDensityTracks.includes(mapKey)) {
+        state.hiddenDensityTracks.push(mapKey);
+      } else {
+        state.hiddenDensityTracks = state.hiddenDensityTracks.filter((key) => key !== mapKey);
+      }
+    },
+    clearSynthenicDensityTrackVisibility(state: VCMapState) {
+      state.hiddenDensityTracks = [];
+    },
+    flankingGene1(state: VCMapState, gene: Gene | null) {
+      state.flankingGene1 = gene;
+    },
+    flankingGene2(state: VCMapState, gene: Gene | null) {
+      state.flankingGene2 = gene;
+    },
+    speciesOrder(state: VCMapState, speciesOrder: any) {
+      state.speciesOrder = speciesOrder;
+    },
+    hoveredData(state: VCMapState, hoveredData: IHoveredData) {
+      state.hoveredData = hoveredData;
+    },
+    addToHistory(state: VCMapState, entry: UserHistory) {
+      state.history.unshift(entry);
+    },
+    clearUserHistory(state: VCMapState) {
+      state.history = [];
+    },
+    svgPositions(state: VCMapState, svgPositions: SVGPositionVariables) {
+      state.svgPositions = svgPositions;
+    },
+    showOverviewPanel(state: VCMapState, showOverviewPanel: boolean) {
+      state.showOverviewPanel = showOverviewPanel;
+    },
+    isDataPanelCollapsed(state: VCMapState, isDataPanelCollapsed: boolean) {
+      state.isDataPanelCollapsed = isDataPanelCollapsed;
+    },
+    shouldUpdateDetailedPanel(state: VCMapState, shouldUpdateDetailedPanel: boolean) {
+      state.shouldUpdateDetailedPanel = shouldUpdateDetailedPanel;
+    },
   },
 
   actions: {
@@ -173,11 +281,14 @@ export default createStore({
     setSelectedGeneIds(context: ActionContext<VCMapState, VCMapState>, selectedIds: number[]) {
       context.commit('selectedGeneIds', selectedIds);
     },
+    setSelectedVariantSections(context: ActionContext<VCMapState, VCMapState>, selectedSections: any[]) {
+      context.commit('selectedVariantSections', selectedSections);
+    },
+    setSelectedBlocks(context: ActionContext<VCMapState, VCMapState>, selectedBlocks: SyntenySection[]) {
+      context.commit('selectedBlocks', selectedBlocks);
+    },
     setComparativeSpecies(context: ActionContext<VCMapState, VCMapState>, species: Species[]) {
       context.commit('comparativeSpecies', species);
-    },
-    setLoadedGenes(context: ActionContext<VCMapState, VCMapState>, loadedGenes: Gene[]) {
-      context.commit('loadedGenes', loadedGenes);
     },
     setIsDetailedPanelUpdating(context: ActionContext<VCMapState, VCMapState>, isUpdating: boolean) {
       context.commit('isDetailedPanelUpdating', isUpdating);
@@ -188,6 +299,12 @@ export default createStore({
     setIsUpdatingVariants(context: ActionContext<VCMapState, VCMapState>, isUpdating: boolean) {
       context.commit('isUpdatingVariants', isUpdating);
     },
+    setHideBackboneDensityTrack(context: ActionContext<VCMapState, VCMapState>, isHidden: boolean) {
+      context.commit('hideBackboneDensityTrack', isHidden);
+    },
+    setToggleSyntenicDensityTrackVisibility(context: ActionContext<VCMapState, VCMapState>, mapKey: number) {
+      context.commit('toggleSyntenicDensityTrackVisibility', mapKey);
+    },
     clearConfiguration(context: ActionContext<VCMapState, VCMapState>) {
       context.commit('species', null);
       context.commit('gene', null);
@@ -196,12 +313,20 @@ export default createStore({
       context.commit('stopPosition', null);
       context.commit('comparativeSpecies', []);
       context.commit('selectedGeneIds', []);
-      context.commit('loadedGenes', null);
-      context.commit('loadedBlocks', null);
+      context.commit('selectedVariantSections', []);
+      context.commit('selectedBlocks', []);
+      context.commit('selectedData', []);
       context.commit('selectedBackboneRegion', null);
       context.commit('detailedBasePairRange', { start: 0, stop: 0 });
       context.commit('configurationLoaded', null);
       context.commit('selectionToastCount', 0);
+      context.commit('hideBackboneDensityTrack', false);
+      context.commit('clearSynthenicDensityTrackVisibility');
+      context.commit('setSpeciesOrder', {});
+      context.commit('clearUserHistory');
+    },
+    clearSynthenicDensityTrackVisibility(context: ActionContext<VCMapState, VCMapState>) {
+      context.commit('clearSynthenicDensityTrackVisibility');
     },
     clearBackboneSelection(context: ActionContext<VCMapState, VCMapState>) {
       context.commit('selectedBackboneRegion', null);
@@ -217,10 +342,27 @@ export default createStore({
       context.commit('selectedBackboneRegion', selection);
       context.commit('detailedBasePairRange', { start: selection.viewportSelection?.basePairStart, stop: selection.viewportSelection?.basePairStop });
       // Note: Committing a change to detailedBasePairRange will trigger an update on the Detailed panel
+
+      if (partialHistory) {
+        const selection = context.state.selectedBackboneRegion;
+        const fullHistory = {
+          ...partialHistory,
+          backbone: selection,
+          timestamp: Date.now()
+        };
+        context.commit('addToHistory', fullHistory);
+        partialHistory = null;
+      }
     },
-    setDetailedBasePairRequest(context: ActionContext<VCMapState, VCMapState>, range: BasePairRange) {
+    setDetailedBasePairRequest(context: ActionContext<VCMapState, VCMapState>, payload: {range: BasePairRange, source?: string}) {
+      const { range, source = '' } = payload;
       // Note: Committing a change to detailedBasePairRange will trigger an update on the Detailed panel
       context.commit('detailedBasePairRequest', range);
+
+      // Capture source and new entry for user history when a new range and action is performed
+      if (range) {
+        partialHistory = { range, source };
+      }
     },
     setDetailedBasePairRange(context: ActionContext<VCMapState, VCMapState>, range: BasePairRange) {
       // Note: Committing a change to detailedBasePairRange will trigger an update on the Detailed panel
@@ -231,6 +373,31 @@ export default createStore({
     },
     setSelectionToastCount(context: ActionContext<VCMapState, VCMapState>, count: number) {
       context.commit('selectionToastCount', count);
+    },
+    setFlankingGenes(context: ActionContext<VCMapState, VCMapState>, genes: [gene1: Gene | null, gene2: Gene | null]) {
+      context.commit('flankingGene1', genes[0]);
+      context.commit('flankingGene2', genes[1]);
+    },
+    setDataPanelCollapsed(context: ActionContext<VCMapState, VCMapState>, isCollapsed: boolean) {
+      context.commit('isDataPanelCollapsed', isCollapsed);
+    },
+    setSpeciesOrder(context: ActionContext<VCMapState, VCMapState>, speciesOrder: any) {
+      context.commit('speciesOrder', speciesOrder);
+    },
+    setHoveredData(context: ActionContext<VCMapState, VCMapState>, hoveredData: IHoveredData) {
+      context.commit('hoveredData', hoveredData);
+    },
+    clearUserHistory(context: ActionContext<VCMapState, VCMapState>) {
+      context.commit('clearUserHistory');
+    },
+    setSvgPositions(context: ActionContext<VCMapState, VCMapState>, svgPositions: SVGPositionVariables) {
+      context.commit('svgPositions', svgPositions);
+    },
+    setShowOverviewPanel(context: ActionContext<VCMapState, VCMapState>, showOverviewPanel: boolean) {
+      context.commit('showOverviewPanel', showOverviewPanel);
+    },
+    setShouldUpdateDetailedPanel(context: ActionContext<VCMapState, VCMapState>, shouldUpdateDetailedPanel: boolean) {
+      context.commit('shouldUpdateDetailedPanel', shouldUpdateDetailedPanel);
     }
   },
 
@@ -242,9 +409,15 @@ export default createStore({
     isLoadByPosition: (state: VCMapState) => {
       return state.configMode === 'position';
     },
+
+    isLoadByFlankingGenes: (state: VCMapState) => {
+      return state.configMode === 'flanking';
+    },
   },
 
+  // The order of these plugins matter. Local storage will be overwritten by session storage
+  // as long as the vuexSession comes after vuexLocal.
   plugins: process.env.NODE_ENV !== 'production'
-    ? [vuexLocal.plugin, logger] // Only use Vuex logger in development
-    : [vuexLocal.plugin]
+    ? [vuexLocal.plugin, vuexSession.plugin, logger] // Only use Vuex logger in development
+    : [vuexLocal.plugin, vuexSession.plugin]
 });

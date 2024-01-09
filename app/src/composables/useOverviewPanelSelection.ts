@@ -13,7 +13,7 @@ export default function useOverviewPanelSelection(store: Store<VCMapState>) {
   let svg: SVGSVGElement | null;
 
   onMounted(() => {
-    svg = document.querySelector('svg');
+    svg = document.querySelector('#svg-wrapper');
   });
 
   const getOverviewSelectionStatus = () => {
@@ -101,12 +101,14 @@ export default function useOverviewPanelSelection(store: Store<VCMapState>) {
       }
 
       const selectedBackboneRegion = store.state.selectedBackboneRegion;
-      if (selectedBackboneRegion && selectedBackboneRegion.setViewportSelection)
+      if (selectedBackboneRegion 
+        // && selectedBackboneRegion.setViewportSelection
+        )
       {
-        selectedBackboneRegion.setViewportSelection(basePairStart, basePairStop);
+        // selectedBackboneRegion.setViewportSelection(basePairStart, basePairStop);
         //store.dispatch('setBackboneSelection', selectedBackboneRegion);
         store.dispatch('setSelectionToastCount', toastCount + 1);
-        store.dispatch('setDetailedBasePairRequest', { start: basePairStart, stop: basePairStop });
+        store.dispatch('setDetailedBasePairRequest', { range: { start: basePairStart, stop: basePairStop }, source: 'Selected Overview' });
       }
     }
 

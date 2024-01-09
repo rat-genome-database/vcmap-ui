@@ -1,23 +1,52 @@
 <template>
-  <HeaderPanel :on-load-synteny-variants="loadSyntenyVariants" />
+  <AppHeader />
+  <HeaderPanel
+    :on-show-settings="onShowSettings"
+    :geneList="geneList"
+    :selected-data="store.state.selectedData"
+    :variant-positions-list="variantPositionsList"
+    :variant-track-status="variantTrackStatus"
+  />
   <!-- <Button
     label="INSPECT (Main)"
     @click="onInspectPressed"
   /> -->
+  <HoveredDataTooltip />
   <div class="grid">
-    <div class="col-9">
+    <div :class="{ 'col-9':panelCollapsed==false, 'col-11':panelCollapsed==true }">
       <SVGViewbox
         :geneList="geneList"
         :synteny-tree="syntenyTree"
         :loading="isLoading"
         :variant-positions-list="variantPositionsList"
+        @swap-backbone="handleSwapBackbone"
       />
       <Toast />
     </div>
-    <div class="col-3">
-      <SelectedDataPanel :selected-data="store.state.selectedData" :gene-list="geneList" />
+    <div :class="{ 'col-3':panelCollapsed==false, 'col-1':panelCollapsed==true, 'collapsed': panelCollapsed }">
+      <div class="collapse-button-container">
+        <button class="collapse-button" @click="togglePanelCollapse">
+          <i class="pi pi-chevron-right" :class="{ 'collapsed': panelCollapsed }"></i>
+        </button>
+      </div>
+      <div class="selected-data-content"  :style="{ 'transition-delay': panelCollapsed ? '.5s' : '0.5s' }">
+        <SelectedDataPanel :selected-data="store.state.selectedData" :gene-list="geneList" />
+      </div>
     </div>
   </div>
+<!-- 
+  <div class="col-12 flex flex-wrap gap-3 justify-content-center border-top-1 border-top-solid">
+    <Button
+      @click="clearConfigSelections"
+      label="Clear All"
+      class="p-button-sm p-button-secondary" />
+    <Button 
+      @click="saveConfigToStoreAndGoToMainScreen" 
+      :disabled="!isValidConfig"
+      label="Load VCMap" 
+      icon="pi pi-play" 
+      class="p-button-lg p-button-success" />
+  </div> -->
   <VCMapDialog 
     v-model:show="showDialog" 
     :header="dialogHeader" 
@@ -26,6 +55,14 @@
     :show-back-button="showDialogBackButton"
     :on-confirm-callback="onProceedWithErrors"
   />
+  <SettingsDialog
+    v-model:show="showSettings"
+    :variant-positions-list="variantPositionsList"
+    @species-change="updateComparativeSpecies"
+    @save-click="updateSettings"
+    @variant-change="updateVariantKeys"
+    @remove-variants="updateRemovedVariantKeys"
+  />
 </template>
 
 <script lang="ts" setup>
@@ -33,13 +70,15 @@ import SVGViewbox from '@/components/SVGViewbox.vue';
 import HeaderPanel from '@/components/HeaderPanel.vue';
 import SelectedDataPanel from '@/components/SelectedDataPanel.vue';
 import { useStore } from 'vuex';
+import { useRoute, useRouter } from 'vue-router';
 import { key } from '@/store';
-import { onMounted, ref, watch } from 'vue';
-import Toast from 'primevue/toast';
+import { onMounted, provide, ref, watch, computed } from 'vue';
+import Toast, { ToastMessageOptions } from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 import Gene from "@/models/Gene";
 import Block from "@/models/Block";
 import SyntenyApi, {SpeciesSyntenyData} from "@/api/SyntenyApi";
+import ChromosomeApi from '@/api/ChromosomeApi';
 import Chromosome from "@/models/Chromosome";
 import GeneApi from "@/api/GeneApi";
 import {useLogger} from "vue-logger-plugin";
@@ -48,29 +87,57 @@ import VCMapDialog from '@/components/VCMapDialog.vue';
 import useDialog from '@/composables/useDialog';
 import { adjustSelectionWindow, getNewSelectedData } from '@/utils/DataPanelHelpers';
 import { backboneOverviewError, missingComparativeSpeciesError, noRegionLengthError, noSyntenyFoundError } from '@/utils/VCMapErrors';
-import { isGenomicDataInViewport, getThreshold, processAlignmentsOfGeneInsideOfViewport, processAlignmentsOfGeneOutsideOfViewport } from '@/utils/Shared';
+import { isGenomicDataInViewport, getThreshold, processAlignmentsOfGeneInsideOfViewport, processAlignmentsOfGeneOutsideOfViewport, calculateOverviewWidth } from '@/utils/Shared';
 import { buildVariantPositions } from '@/utils/VariantBuilder';
 import VariantPositions from '@/models/VariantPositions';
+import Species from '@/models/Species';
 import { VCMapLogger } from '@/logger';
+import HoveredDataTooltip from '@/components/HoveredDataTooltip.vue';
+import SettingsDialog from '@/components/SettingsDialog.vue';
+import AppHeader from '@/components/AppHeader.vue';
+import {querySyntenyForSearchZoomKey} from '@/injection_keys/main';
 
 // TODO: Can we figure out a better way to handle blocks with a high chainlevel?
 const MAX_CHAINLEVEL = 2;
 const MAX_CHAINLEVEL_GENES = 1;
 
 const store = useStore(key);
+const route = useRoute();
+const router = useRouter();
 const $log = useLogger() as VCMapLogger;
 const toast = useToast();
 
-const { showDialog, dialogHeader, dialogMessage, showDialogBackButton, dialogTheme, onError } = useDialog();
+const {
+  showDialog,
+  dialogHeader,
+  dialogMessage, 
+  showDialogBackButton,
+  dialogTheme,
+  onError
+} = useDialog();
 
+// Provide the function for re-querying synteny to any child components that need it
+provide(querySyntenyForSearchZoomKey, querySyntenyForSearchZoom);
+
+const showSettings = ref(false);
 const isLoading = ref(false);
 const proceedAfterError = ref(false);
+const panelCollapsed = ref(store.state.isDataPanelCollapsed);
 
 // Our synteny tree keyed by MapId
 // TODO: Consider adding a map for mapKey -> Species
 // TODO: Where to keep the backbone? Always index == 0?? (confusing)
 // TODO: Combined with above, we could create a structure that has these properties
 const syntenyTree = ref(new Map<number, Block[]>());
+
+const variantTrackStatus = computed(() => {
+  return Array.from(syntenyTree.value).map((set) => {
+    return {
+      key: set[0],
+      variantPositions: set[1][0].variantPositions,
+    };
+  });
+});
 
 
 // Our gene list keyed by rgdId
@@ -92,6 +159,13 @@ const geneList = ref(new Map<number, Gene>());
 
 // Our list of variantPositions that have been loaded/generated
 const variantPositionsList = ref<VariantPositions[]>([]);
+
+
+// Settings edited values
+let savedComparativeSpecies: Species[] = [];
+let savedSpeciesOrder: any;
+let savedVariantKeys: number[] = [];
+let removedVariantKeys: number[] = [];
 
 // TODO TEMP
 // TODO: temp ignore here, should remove once this method is actively being used
@@ -125,7 +199,27 @@ const onInspectPressed = () => {
  * mounted, it is safe to clear out our old data structures
  * (Lifecycle hook)
  */
-onMounted(initVCMapProcessing);
+onMounted(async () => {
+  store.dispatch('setShouldUpdateDetailedPanel', false);
+  store.dispatch('clearSynthenicDensityTrackVisibility');
+
+  const queryParams = route.query;
+  if (queryParams.key && queryParams.start && queryParams.stop && queryParams.chr) {
+    const sectionMapName = queryParams.key as string;
+    const chr = queryParams.chr as string;
+    const newStart = parseInt(queryParams.start as string, 10);
+    const newStop = parseInt(queryParams.stop as string, 10);
+    await swapBackbone(sectionMapName, chr, newStart, newStop);
+
+    // Replace the route without query parameters now that we've used them
+    // This helps make sure any page reloads don't reuse the query params
+    const newRoute = router.resolve({ path: '/main' });
+    router.replace(newRoute);
+    initVCMapProcessing();
+  } else {
+    initVCMapProcessing();
+  }
+});
 
 /**
  * Watch for requested navigation operations (zoom in/out, navigate up/down stream).
@@ -142,7 +236,7 @@ watch(() => store.state.detailedBasePairRequest, async () => {
 
     triggerDetailedPanelProcessing(store.state.chromosome, store.state.detailedBasePairRequest.start, store.state.detailedBasePairRequest.stop);
     // Data processing done, ready to complete request
-    store.dispatch('setDetailedBasePairRequest', null);
+    store.dispatch('setDetailedBasePairRequest', {range: null});
   }
   else if (store.state.chromosome == null || store.state.species == null)
   {
@@ -267,6 +361,32 @@ async function initVCMapProcessing()
     $log.debug(`Auto-selecting genes for Load by Gene`, rgdIds);
     store.dispatch('setSelectedGeneIds', rgdIds);
     store.dispatch('setSelectedData', selectedData);
+  }
+  else if (store.getters.isLoadByFlankingGenes && store.state.flankingGene1 != null && store.state.flankingGene2 != null)
+  {
+    //
+    // Load by Flanking Genes
+    const flankingGene1 = store.state.flankingGene1;
+    const flankingGene2 = store.state.flankingGene2;
+    selectionStart = flankingGene1.start < flankingGene2.start
+      ? flankingGene1.start
+      : flankingGene2.start;
+    selectionStop = flankingGene1.stop > flankingGene2.stop
+      ? flankingGene1.stop
+      : flankingGene2.stop;
+
+    // Auto-select the gene and its orthologs
+    const {
+      rgdIds: flankingGene1Ids,
+      selectedData: flankingGene1SelectedData,
+    } = getNewSelectedData(store, flankingGene1, geneList.value);
+    const {
+      rgdIds: flankingGene2Ids,
+      selectedData: flankingGene2SelectedData,
+    } = getNewSelectedData(store, flankingGene2, geneList.value);
+    
+    store.dispatch('setSelectedGeneIds', [...flankingGene1Ids, ...flankingGene2Ids]);
+    store.dispatch('setSelectedData', [...flankingGene1SelectedData, ...flankingGene2SelectedData]);
   }
   else if (store.getters.isLoadByPosition && store.state.startPos != null && store.state.stopPos != null)
   {
@@ -395,7 +515,7 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
       if (blockData.block.chainLevel > MAX_CHAINLEVEL_GENES)
       {
         // Skip saving any genes that are above our defined max chainlevel for genes
-        $log.log(`Skipping ${blockData.genes.length} genes due to chain level filter`);
+        $log.info(`Skipping ${blockData.genes.length} genes due to chain level filter`);
         continue;
       }
 
@@ -447,6 +567,30 @@ function processSynteny(speciesSyntenyDataArray : SpeciesSyntenyData[] | undefin
       $log.timeEnd(`ProcessGenesForBlock`);
     }
   }
+}
+
+async function querySyntenyForSearchZoom(backboneChromosome: Chromosome, start: number, stop: number, mapKey: number)
+{
+  isLoading.value = true;
+  const speciesToQuery = store.state.comparativeSpecies.find((species: Species) => species.activeMap.key === mapKey);
+  let threshold = getThreshold(stop - start);
+  if (speciesToQuery) {
+    const syntenyData = await SyntenyApi.getSyntenicRegions({
+      backboneChromosome: backboneChromosome,
+      start: start,
+      stop: stop,
+      optional: {
+        includeGenes: true,
+        includeOrthologs: false,
+        threshold: threshold,
+      },
+      comparativeSpecies: [speciesToQuery],
+    });
+    processSynteny(syntenyData, start, stop);
+  }
+  // NOTE: we may not want to remove the loading mask here if we iteratively call this function
+  // Depending on speed it might appear to flicker off and on?
+  isLoading.value = false;
 }
 
 async function queryAndProcessSyntenyForBasePairRange(backboneChromosome: Chromosome, start: number, stop: number)
@@ -578,7 +722,7 @@ function onProceedWithErrors()
   initVCMapProcessing();
 }
 
-function showToast(severity: string, title: string, details: string, duration: number)
+function showToast(severity: ToastMessageOptions["severity"], title: string, details: string, duration: number)
 {
   toast.add({severity: severity, summary: title, detail: details, life: duration });
 }
@@ -659,11 +803,8 @@ async function loadSyntenyVariants(mapKeys: number[] | null, triggerUpdate: bool
                 foundSomeVariants = true;
               }
               block.variantPositions = variantRes;
-              // NOTE: adding to variantPositionList is how we tell SVGViewbox to update
-              // the backbone variants, but if we push the responses here SVGViewbox will
-              // update everytime a request completes
-              // So we need a better way to tell SVGViewbox to update
-              // variantPositionsList.value.push(variantRes);
+
+              variantPositionsList.value.push(variantRes);
             }
             return;
           }
@@ -675,13 +816,251 @@ async function loadSyntenyVariants(mapKeys: number[] | null, triggerUpdate: bool
   }));
   await Promise.allSettled(variantPromises);
   isLoading.value = false;
-  if (!foundSomeVariants && !loadingBackbone)
+  if (!foundSomeVariants && !loadingBackbone && mapKeys.length > 0)
   {
     showToast('warn', 'No Variants Found', 'There were no variants found for the given regions.', 5000);
   }
-  if (triggerUpdate)
-  {
+  if (triggerUpdate) {
     store.dispatch('setIsUpdatingVariants', true);
   }
 }
+
+async function loadComparativeSpecies() {
+  if (store.state.chromosome == null) {
+    $log.error(`No backbone chromosome found on store`);
+    return;
+  }
+
+  isLoading.value = true;
+  const origComparativeSpeciesIds = store.state.comparativeSpecies.map((species: Species) => species.activeMap.key);
+  const newComparativeSpeciesIds = savedComparativeSpecies.map((species: Species) => species.activeMap.key);
+  const newIsSubset = newComparativeSpeciesIds.every((id) => origComparativeSpeciesIds.includes(id));
+  if (!newIsSubset && store.state.chromosome && store.state.species) {
+    const backboneGenes: Gene[] = await GeneApi.getGenesByRegion(
+      store.state.chromosome.chromosome,
+      0, store.state.chromosome.seqLength,
+      store.state.species.activeMap.key, store.state.species.name,
+      newComparativeSpeciesIds);
+
+    // Process response
+    // TODO: Should we add a "Block" for the backbone first?
+    backboneGenes.forEach((geneData) => {
+      geneList.value.set(geneData.rgdId, geneData);
+    });
+
+    const newSpecies = savedComparativeSpecies.filter((species: Species) => !origComparativeSpeciesIds.includes(species.activeMap.key));
+    // Preload off-backbone large blocks and genes
+    let threshold = getThreshold(store.state.chromosome.seqLength);
+    const speciesSyntenyDataArray = await SyntenyApi.getSyntenicRegions({
+      backboneChromosome: store.state.chromosome,
+      start: 0,
+      stop: store.state.chromosome.seqLength,
+      optional: {
+        includeGenes: true,
+        includeOrthologs: true,
+        threshold: threshold,
+      },
+      comparativeSpecies: newSpecies,
+    });
+
+    processSynteny(speciesSyntenyDataArray, 0, store.state.chromosome.seqLength);
+  }
+
+  // calculate new overview width based on number of species
+  const numComparativeSpecies = savedComparativeSpecies.length;
+  store.dispatch('setSpeciesOrder', savedSpeciesOrder);
+  // evaluate if we should update overview width
+  const currentOverviewWidth = store.state.svgPositions.overviewPanelWidth;
+  if (currentOverviewWidth > 0) {
+    const overviewWidth = calculateOverviewWidth(numComparativeSpecies);
+    store.dispatch('setSvgPositions', { overviewPanelWidth: overviewWidth });
+  }
+  store.dispatch('setComparativeSpecies', savedComparativeSpecies);
+  await queryAndProcessSyntenyForBasePairRange(store.state.chromosome, store.state.detailedBasePairRange.start, store.state.detailedBasePairRange.stop);
+  isLoading.value = false;
+  // Reset the edited settings values
+  savedComparativeSpecies = [];
+  savedSpeciesOrder = {};
+}
+
+function onShowSettings()
+{
+  showSettings.value = true;
+}
+
+function togglePanelCollapse()
+{
+  panelCollapsed.value = !panelCollapsed.value;
+  store.dispatch('setDataPanelCollapsed', panelCollapsed.value);
+}
+
+async function updateSettings() {
+  showSettings.value = false;
+
+  // Check if we need to update comparative species
+  if (savedComparativeSpecies.length > 0 && savedSpeciesOrder) {
+    await loadComparativeSpecies();
+  }
+
+  // Check if we have new variants or removed variants
+  if (savedVariantKeys.length > 0 || removedVariantKeys.length > 0) {
+    // First remove the variants we want to remove
+    if (removedVariantKeys.length > 0) {
+      for (let i = variantPositionsList.value.length - 1; i >= 0; i--) {
+        const vPos = variantPositionsList.value[i];
+        if (removedVariantKeys.includes(vPos.mapKey)) {
+          variantPositionsList.value.splice(i, 1);
+        }
+      }
+    }
+    removedVariantKeys.forEach((removedKey: number) => {
+      const blocks = syntenyTree.value.get(removedKey);
+      if (blocks) {
+        blocks.forEach((block) => {
+          block.variantPositions = undefined;
+        });
+      }
+    });
+
+    // Second load the new variants
+    await loadSyntenyVariants(savedVariantKeys, true);
+    // Reset the edited settings values
+    savedVariantKeys = [];
+    removedVariantKeys = [];
+  }
+}
+
+async function handleSwapBackbone(sectionMapName: string, chromosome: string, start: number, stop: number) {
+  await swapBackbone(sectionMapName, chromosome, start, stop);
+  await initVCMapProcessing();
+  // Reload variants because we clear them out in swapBackbone
+  await loadSyntenyVariants(savedVariantKeys, true);
+  savedVariantKeys = [];
+}
+
+async function swapBackbone(sectionMapName: string, chromosome: string, start: number, stop: number) {
+  // Get the chromosome from the api
+  const oldBackboneSpecies = store.state.species;
+  const selectedSpecies = store.state.comparativeSpecies.find((s) => s.activeMap.name === sectionMapName);
+  if (selectedSpecies && oldBackboneSpecies) {
+    const chromosomes = await ChromosomeApi.getChromosomes(selectedSpecies.activeMap.key);
+    const selectedChromosome = chromosomes.find((c) => c.chromosome === chromosome);
+    if (selectedChromosome) {
+      store.dispatch('setChromosome', selectedChromosome);
+      const newStart = start;
+      const newStop = stop;
+      store.dispatch('setStartPosition', newStart);
+      store.dispatch('setStopPosition', newStop);
+
+      // Update comparative species and order
+      const newComparativeSpecies = [...store.state.comparativeSpecies];
+      const newBackboneIndex = newComparativeSpecies.findIndex((s) => s.activeMap.key === selectedSpecies.activeMap.key);
+      newComparativeSpecies.splice(newBackboneIndex, 1);
+      newComparativeSpecies.push(oldBackboneSpecies);
+      store.dispatch('setComparativeSpecies', newComparativeSpecies);
+
+      // Set the new order, swapping the order of the old backbone with the order
+      // of the new backbone species
+      const speciesOrder: any = {...store.state.speciesOrder};
+      const oldOrder = speciesOrder[selectedSpecies.activeMap.key];
+      const newOrder = speciesOrder[oldBackboneSpecies.activeMap.key];
+      speciesOrder[selectedSpecies.activeMap.key] = newOrder;
+      speciesOrder[oldBackboneSpecies.activeMap.key] = oldOrder;
+      store.dispatch('setSpeciesOrder', speciesOrder);
+
+      // NOTE: we may not need to clear these out, but it may not make sense
+      // to keep selected info
+      store.dispatch('setSelectedData', []);
+      store.dispatch('setSelectedGeneIds', []);
+      store.dispatch('setGene', null);
+      store.dispatch('clearUserHistory');
+
+      store.dispatch('setSpecies', selectedSpecies);
+      store.dispatch('setConfigMode', 'position');
+
+      // Save which species have variants are loaded, and then clear out
+      // current list of loaded variants
+      const loadedVariantKeys = new Set<number>();
+      variantPositionsList.value.forEach((vPos) => {
+        loadedVariantKeys.add(vPos.mapKey);
+      });
+      savedVariantKeys = Array.from(loadedVariantKeys);
+      variantPositionsList.value = [];
+    }
+  } else {
+    $log.error('Cannot complete swap backbone operation when selectedSpecies and oldBackboneSpecies are not defined');
+  }
+}
+
+function updateComparativeSpecies(newSpeciesOrder: any, newComparativeSpecies: Species[]) {
+  savedComparativeSpecies = newComparativeSpecies;
+  savedSpeciesOrder = newSpeciesOrder;
+}
+
+function updateVariantKeys(newMapKeys: number[]) {
+  savedVariantKeys = newMapKeys;
+}
+
+function updateRemovedVariantKeys(removedMapKey: number) {
+  removedVariantKeys.push(removedMapKey);
+}
+
 </script>
+
+<style lang="scss" scoped>
+.grid {
+  overflow-x: hidden;
+}
+.col-9 {
+  padding-right: 0;
+  transition: width 0.5s ease;
+}
+.col-11 {
+  padding-right: 0;
+  transition: width 0.5s ease;
+}
+.col-3 {
+  position: relative;
+  transition: width 0.5s ease;
+  right: 0;
+}
+.col-1 {
+  position: relative;
+  transition: right 0.5s ease;
+  right: 0;
+}
+
+.collapsed {
+  transition: transform 0.5s ease;
+  transform: translateX(85%);
+}
+
+.collapse-button {
+  position: absolute;
+  top: 50%;
+  left: -10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #ccc;
+  border-color: #0288D1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.collapsed .collapse-button {
+  transition: left 0.5s ease;
+  left: -10px;
+}
+
+.collapse-button i {
+  transition: transform 0.5s ease;
+}
+
+.collapsed i {
+  transition: transform 0.5s ease;
+  transform: rotate(180deg);
+}
+</style>

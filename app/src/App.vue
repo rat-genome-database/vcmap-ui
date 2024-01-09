@@ -11,17 +11,6 @@
   color: #2c3e50;
 }
 
-.logo
-{
-  height: 4rem;
-}
-
-.version-label
-{
-  font-size: 0.75rem;
-  margin-left: 0.5rem;
-}
-
 .grid
 {
   &.unpadded
@@ -53,5 +42,25 @@
 .label.bold
 {
   font-style: bold;
+}
+
+/**
+ * Make font size of floating input labels a little larger
+ * when the input is filled
+ */
+.p-float-label
+{
+  .p-inputwrapper-filled ~ label {
+    font-size: 1rem;
+  }
+}
+
+/**
+ * Give all primevue buttons more of a radius. The :not selector is being used
+ * to exclude buttons that are attached to the number input component
+ */
+button.p-button.p-component:not(.p-inputnumber-button-group button)
+{
+  border-radius: 7px;
 }
 </style>

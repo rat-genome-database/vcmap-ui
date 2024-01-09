@@ -1,12 +1,18 @@
 import { ProcessedGenomicData } from "@/utils/BackboneBuilder";
-import SVGConstants from "@/utils/SVGConstants";
+import SVGConstants, { SVGPositionVariables } from "@/utils/SVGConstants";
 import { mergeAndCreateGeneLabels } from "@/utils/GeneLabelMerger";
 import BackboneSection from "./BackboneSection";
 import DatatrackSection, { DatatrackSectionType } from "./DatatrackSection";
 import DatatrackSet from "./DatatrackSet";
 import { GenomicSet } from "./GenomicSet";
 import Label, { GeneLabel, IntermediateGeneLabel } from "./Label";
-import { calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment, getDetailedPanelXPositionForBackboneDatatracks, isGenomicDataInViewport } from "@/utils/Shared";
+import {
+  calculateDetailedPanelSVGYPositionBasedOnBackboneAlignment,
+  getDetailedPanelXPositionForBackboneDatatracks,
+  isGenomicDataInViewport,
+  getDetailedPanelXPositionForSynteny,
+  getOverviewPanelXPosition,
+} from "@/utils/Shared";
 import SpeciesMap from "./SpeciesMap";
 import logger from "@/logger";
 
@@ -15,6 +21,7 @@ import logger from "@/logger";
  */
 export default class BackboneSet extends GenomicSet
 {
+  order: number = 0;
   backbone: BackboneSection;
   datatrackSets: DatatrackSet[] = [];
   geneLabels: GeneLabel[] = [];
@@ -23,11 +30,12 @@ export default class BackboneSet extends GenomicSet
   maxVariantCount?: number;
   variantBinSize?: number;
 
-  constructor(backboneSection: BackboneSection, map: SpeciesMap, processedGenomicData?: ProcessedGenomicData)
+  constructor(backboneSection: BackboneSection, order: number, map: SpeciesMap, svgPositions: SVGPositionVariables, processedGenomicData?: ProcessedGenomicData)
   {
     super(backboneSection.speciesName, map);
 
     this.backbone = backboneSection;
+    this.order = order;
     if (processedGenomicData?.datatracks)
     {
       this.datatrackSets.push(new DatatrackSet(processedGenomicData.datatracks, 'gene'));
@@ -36,7 +44,7 @@ export default class BackboneSet extends GenomicSet
     {
       this.backbone.setBackboneGenes(processedGenomicData.genes);
     }
-    this.setBackboneXPositions();
+    this.setBackboneXPositions(svgPositions);
     this.createTitleLabels();
     this.setDatatrackXPositions();
 
@@ -54,29 +62,30 @@ export default class BackboneSet extends GenomicSet
       posX: this.backbone.posX1,
       posY: SVGConstants.trackLabelYPosition,
       text: this.speciesName ?? 'Unknown',
+      addClass: 'backbone',
     });
 
     const mapLabel = new Label({
       posX: this.backbone.posX1,
       posY: SVGConstants.trackMapLabelYPosition,
       text: this.mapName ?? 'Unknown',
-      addClass: 'smaller',
+      addClass: 'backbone smaller',
     });
 
     this.titleLabels = [speciesLabel, mapLabel];
   }
 
-  private setBackboneXPositions()
+  private setBackboneXPositions(svgPositions: SVGPositionVariables)
   {
     // Calculate X positions of this backbone section
     if (this.backbone.renderType === 'overview')
     {
-      this.backbone.posX1 = SVGConstants.backboneXPosition;
+      this.backbone.posX1 = getOverviewPanelXPosition(this.order, svgPositions);
       this.backbone.posX2 = this.backbone.posX1 + SVGConstants.trackWidth;
     }
     else if (this.backbone.renderType === 'detailed')
     {
-      this.backbone.posX1 = SVGConstants.selectedBackboneXPosition;
+      this.backbone.posX1 = getDetailedPanelXPositionForSynteny(this.order, svgPositions.overviewPanelWidth);
       this.backbone.posX2 = this.backbone.posX1 + SVGConstants.trackWidth;
     }
 
@@ -217,5 +226,22 @@ export default class BackboneSet extends GenomicSet
     }
 
     return 0;
+  }
+
+  public get variantDatatrackSetIndex()
+  {
+    for (let i = 0; i < this.datatrackSets.length; i++)
+    {
+      if (this.datatrackSets[i].type === 'variant')
+      {
+        return i;
+      }
+    }
+
+    return null;
+  }
+
+  public setOrder(order: number) {
+    this.order = order;
   }
 }
