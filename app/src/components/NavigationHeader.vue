@@ -18,14 +18,17 @@
       </div>
     </div>
     <div class="zoom-col zoom-bar">
-      <div class="bp-edit" @click="openSelectionEditModal">
-        {{ displayedSpeciesRegionLabel }}
-        <i class="pi pi-pencil edit-icon"></i>
+
+      <div class="bp-edit">
+        <span @click="openSelectionEditModal">
+          {{ displayedSpeciesRegionLabel }}
+          <i class="pi pi-pencil edit-icon"></i>
+        </span>
       </div>
       <Zoom />
     </div>
   </div>
-  <VCMapDialog v-model:show="showEditModal" header="Edit Selected Start/Stop Positions">
+  <VCMapDialog v-model:show="showEditModal" :header="`Edit Selected Start/Stop Positions (${store.state.species?.name ?? ''} Chr${store.state.chromosome?.chromosome ?? ''})`">
     <template #content>
       <div class="grid p-d-flex">
         <div class="col-6">
@@ -95,7 +98,7 @@ const displayedSpeciesRegionLabel = computed(() => {
   const selectedRegion = store.state.selectedBackboneRegion;
   if (selectedRegion && selectedRegion.viewportSelection && selectedRegion.viewportSelection.svgHeight > 0)
   {
-    return `${Formatter.addCommasToBasePair(selectedRegion.viewportSelection.basePairStart)}bp - ${Formatter.addCommasToBasePair(selectedRegion.viewportSelection.basePairStop)}bp`;
+    return `${store.state.species?.name ?? ''} Chr${selectedRegion.chromosome.chromosome}:${Formatter.addCommasToBasePair(selectedRegion.viewportSelection.basePairStart)} - ${Formatter.addCommasToBasePair(selectedRegion.viewportSelection.basePairStop)}`;
   }
   
   return '';
@@ -207,7 +210,12 @@ const closeModal = () => {
   margin-bottom: 1em;
   font-size: .9em;
   font-weight: bold;
-  cursor: pointer;
+  &>span {
+    cursor: pointer;
+    &:hover {
+      color: skyblue;
+    }
+  }
 }
 
 .edit-icon {
