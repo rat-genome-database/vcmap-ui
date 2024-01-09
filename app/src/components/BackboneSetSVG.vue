@@ -221,7 +221,7 @@ const showContextMenu = (event: MouseEvent, datatrack: DatatrackSection) => {
     if (geneSpecies != null) {
       items.push({
         label: 'Link to RGD JBrowse',
-        command: () => {window.open(createJBrowse2UrlForGene((datatrack as GeneDatatrack).gene, geneSpecies))},
+        command: () => { window.open(createJBrowse2UrlForGene((datatrack as GeneDatatrack).gene, geneSpecies)); },
         icon: 'pi pi-external-link',
       });
     }

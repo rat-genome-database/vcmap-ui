@@ -417,18 +417,6 @@ const arePanelsLoading = computed(() => {
   return store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating || props.loading;
 });
 
-const displayDensityTrackTogglePanel = computed(() => {
-  if (props.variantPositionsList.length > 0) {
-    return true;
-  }
-  for (let set of props.syntenyTree.values()) {
-    if (set[0].variantPositions) {
-      return true;
-    }
-  }
-  return false;
-});
-
 const handleShowContextMenu = (event: MouseEvent, menuItems: MenuItem[], contextSection?: GenomicSection) => {
   items.value = menuItems;
   cm.value.show(event);
@@ -461,16 +449,6 @@ const handleSelectedBlocks = (sections: SyntenySection[]) => {
   selectedBlocks.value = sections;
 };
 
-const getSpeciesName = (mapKey: number) => {
-  const species = store.state.comparativeSpecies.find((species) => species.activeMap.key === mapKey);
-  return species?.name ?? '';
-};
-
-const getVisibility = (mapKey: number) => {
-  const species = store.state.comparativeSpecies.find((species) => species.activeMap.key === mapKey);
-  return species?.visible;
-};
-
 const displayVariantLegend = computed(() => {
   const backboneVariantIdx = detailedBackboneSet.value?.datatrackSets.findIndex((set) => set.type === 'variant');
   if (backboneVariantIdx !== undefined && backboneVariantIdx !== -1) {
@@ -500,17 +478,6 @@ const variantBinSize = computed(() => {
 
 const currentlySelectingRegion = () => {
   return (getOverviewSelectionStatus() || getDetailedSelectionStatus());
-};
-
-const toggleDensityTrack = () => {
-  const hideDensityTrack: boolean = store.state.hideBackboneDensityTrack;
-  store.dispatch('setHideBackboneDensityTrack', !hideDensityTrack);
-  updateDetailsPanel();
-};
-
-const toggleSyntenicDensityTrack = (mapKey: number) => {
-  store.dispatch('setToggleSyntenicDensityTrackVisibility', mapKey);
-  updateDetailsPanel();
 };
 
 const updateOverviewPanel = async () => {

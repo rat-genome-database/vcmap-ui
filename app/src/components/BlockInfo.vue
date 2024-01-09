@@ -97,18 +97,6 @@ interface Props
 
 const props = defineProps<Props>();
 
-const aggregateDataTooltip = {
-  content: `
-    <div>
-      Aggregate data for the entire conserved synteny region
-      <ul>
-        <li>Block Count</li>
-        <li>Gap Count</li>
-        <li>Variant Count</li>
-      </ul>
-    </div>
-  `,
-};
 const goToJBrowse2 = () => {
   const url = createJBrowse2UrlForGenomicSection(props.blockSection);
   window.open(url);

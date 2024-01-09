@@ -332,7 +332,7 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
       if (geneSpecies != null) {
         items.push({
           label: 'Link to RGD JBrowse',
-          command: () => {window.open(createJBrowse2UrlForGene((track as GeneDatatrack).gene, geneSpecies))},
+          command: () => { window.open(createJBrowse2UrlForGene((track as GeneDatatrack).gene, geneSpecies)); },
           icon: 'pi pi-external-link',
         });
       }
