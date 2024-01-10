@@ -359,38 +359,6 @@ const onMouseEnter = (event: MouseEvent, section: SyntenySection | DatatrackSect
 
     showHoveredData(section, event);
 
-    const genesAreSelected = store.state.selectedGeneIds.length > 0;
-    const variantSectionsAreSelected = store.state.selectedVariantSections.length > 0;
-    let selectedDataList: SelectedData[] = [];
-    if (section.type === 'gene') {
-      //
-      // Gene datatrack section
-      const geneSection = section as GeneDatatrack;
-      setHoverOnGeneLinesAndDatatrackSections(geneSection?.lines, true);
-
-      // Only update the selected data panel if no Genes or Variant sections are already selected
-      if (!genesAreSelected && !variantSectionsAreSelected) {
-        if (geneSection.lines.length > 0) {
-          const {
-            selectedData: selectedOrthologs,
-          } = getSelectedDataAndGeneIdsFromOrthologLine(geneSection.lines[0]);
-          selectedDataList.push(...selectedOrthologs);
-        }
-        else {
-          selectedDataList.push(new SelectedData(geneSection.gene.clone(), 'Gene'));
-        }
-      }
-    }
-    else if (!genesAreSelected && !variantSectionsAreSelected) {
-      //
-      // Synteny section
-      {
-        if (section.type === 'variant') {
-
-          selectedDataList.push(new SelectedData(section, 'variantDensity'));
-        }
-      }
-    }
   }
   changeHoverElementSize(section, true);
 };

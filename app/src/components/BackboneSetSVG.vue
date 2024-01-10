@@ -257,27 +257,8 @@ const onMouseEnter = (event: MouseEvent, section: BackboneSection | DatatrackSec
 
     // Only set selected data if there are no selected genes
     if (store.state.selectedGeneIds.length === 0 && section.type === 'gene' && store.state.selectedData?.length === 0) {
-      const selectedDataList: SelectedData[] = [];
       const geneSection = section as GeneDatatrack;
       setHoverOnGeneLinesAndDatatrackSections(geneSection?.lines, true);
-
-      if (geneSection.lines.length > 0) {
-        const {
-          selectedData: selectedOrthologs,
-        } = getSelectedDataAndGeneIdsFromOrthologLine(geneSection.lines[0]);
-        selectedDataList.push(...selectedOrthologs);
-      }
-      else {
-        selectedDataList.push(new SelectedData(geneSection.gene.clone(), 'Gene'));
-      }
-
-      store.dispatch('setSelectedData', selectedDataList);
-    }
-    else if (store.state.selectedGeneIds.length === 0 && store.state.selectedData?.length === 0) {
-      if (section.type === 'variant') {
-        const selectedData = new SelectedData(section, 'variantDensity');
-        store.dispatch('setSelectedData', [selectedData]);
-      }
     }
   }
 
