@@ -408,7 +408,7 @@ const onMouseLeave = (section: DatatrackSection | SyntenySection) => {
     }
 
     // Only reset data onMouseLeave if there isn't a selected gene or variant sections or block
-    if (store.state.selectedGeneIds.length == 0 && store.state.selectedVariantSections.length == 0 && store.state.selectedBlocks.length == 0) {
+    if (store.state.selectedGeneIds.length == 0 && store.state.selectedData?.length == 0) {
       store.dispatch('setSelectedData', null);
     }
 
@@ -424,7 +424,6 @@ const onMouseLeave = (section: DatatrackSection | SyntenySection) => {
 const onSyntenyBlockClick = (section: SyntenySection, event: any, region: SyntenyRegion) => {
   //select the synteny block for display in the selectedDataPanel
   let selectedDataList: SelectedData[] = [];
-  // const origSelectedBlocks = store.state.selectedBlocks;
 
   //construct region info
   //loop loaded data tracks and get variant counts
@@ -453,7 +452,6 @@ const onSyntenyBlockClick = (section: SyntenySection, event: any, region: Synten
     const selectedDataArray = [...(store.state.selectedData || []), ...selectedDataList];
     section.isSelected = !section.isSelected;
     store.dispatch('setSelectedData', selectedDataArray);
-    // store.dispatch('setSelectedBlocks', origSelectedBlocks.push(section));
     selectedBlocks.push(section);
     emit('select-blocks', selectedBlocks);
   } else if (selectedDataList.length > 0) {
@@ -464,7 +462,6 @@ const onSyntenyBlockClick = (section: SyntenySection, event: any, region: Synten
     section.isSelected = !blockIsSelcted;
     if (section.isSelected) {
       store.dispatch('setSelectedData', selectedDataList);
-      // store.dispatch('setSelectedBlocks', [section]);
       emit('select-blocks', [section]);
     } else {
       store.dispatch('setSelectedData', []);
