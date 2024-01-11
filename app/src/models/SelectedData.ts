@@ -1,8 +1,3 @@
-import Gene from "@/models/Gene";
-import BackboneSection from "@/models/BackboneSection";
-import SyntenySection from "@/models/SyntenySection";
-import { VariantDensity } from "@/models/DatatrackSection";
-
 /**
  * TODO: I think the way we use this model is a bit inefficient. Possible refactors:
  *   1. Delete this model entirely and type the selectedData in the store as "Array<GenomicSectionType>". Then
@@ -15,20 +10,81 @@ import { VariantDensity } from "@/models/DatatrackSection";
  *     the conditionals in the SelectedDataPanel component and should clean up the template a bit, making it more readable.
  */
 export type SelectedDataType = 'trackSection' | 'Gene' | 'backbone' | 'variantDensity';
-type GenomicSectionType = BackboneSection | SyntenySection | Gene | VariantDensity;
+
+/**
+ * This type isn't used anymore to define the "section" so I'm commenting this out
+ * But I want to retain here for now to remind us how we used to define this type in
+ * case it gives us any ideas for how to improve things later
+ */
+// type GenomicSectionType = BackboneSection | SyntenySection | Gene | VariantDensity;
 
 /**
  * Model that represents the Selected Data that will appear when Selected Data Panel
  */
 export default class SelectedData
 {
-  genomicSection: GenomicSectionType;
+  genomicSection: any;
   type: SelectedDataType;
 
-  constructor(section: GenomicSectionType, type: SelectedDataType)
+  /**
+   * This constructor takes a generic object the user can select, and sets a summary
+   * of that object to genomicSection to display in the SelectedDataPanel
+   *
+   * TODO: I think we could improve or simplify this process, either by properly
+   * cloning objects, or utilizing a more generic type. Some notes on those ideas above
+   */
+  constructor(section: any, type: SelectedDataType)
   {
-    this.genomicSection = section;
     this.type = type;
+    if (this.type === 'trackSection') {
+      this.genomicSection = {
+        chromosome: section.chromosome,
+        start: section.speciesStart,
+        stop: section.speciesStop,
+        chainLevel: section.chainLevel,
+        isInverted: section.isInverted,
+        elementColor: section.elementColor,
+        speciesName: section.speciesName,
+        backboneAlignment: section.backboneAlignment,
+        mapName: section.mapName,
+        regionInfo: {
+          geneCount: section.regionInfo.geneCount,
+          blockCount: section.regionInfo.blockCount,
+          gapCount: section.regionInfo.gapCount,
+          variantCount: section.regionInfo.variantCount,
+        },
+      };
+    } else if (this.type === 'backbone') {
+      this.genomicSection = {
+        chromosome: section.chromosome,
+        start: section.windowStart,
+        stop: section.windowStop,
+      };
+    } else if (this.type === 'variantDensity') {
+      this.genomicSection = {
+        mapName: section.mapName,
+        speciesName: section.speciesName,
+        start: section.speciesStart,
+        stop: section.speciesStop,
+        chromosome: section.chromosome,
+        backboneAlignment: section.backboneAlignment,
+        variantCount: section.variantCount,
+      };
+    } else if (this.type === 'Gene') {
+      this.genomicSection = {
+        mapKey: section.mapKey,
+        speciesName: section.speciesName,
+        symbol: section.symbol,
+        name: section.name,
+        rgdId: section.rgdId,
+        chromosome: section.chromosome,
+        start: section.start,
+        stop: section.stop,
+        orthologs: section.orthologs,
+        backboneStart: section.backboneStart,
+        backboneStop: section.backboneStop,
+      };
+    }
   }
 
 }

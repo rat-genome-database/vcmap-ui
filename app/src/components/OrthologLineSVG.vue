@@ -68,7 +68,7 @@ const onMouseLeave = (line: OrthologLine) => {
   hideHoveredData();
 
   // Only reset data onMouseLeave if there isn't a selected gene
-  if (store.state.selectedGeneIds.length === 0 && store.state.selectedVariantSections.length === 0 && store.state.selectedBlocks.length === 0) {
+  if (store.state.selectedGeneIds.length === 0 && store.state.selectedData?.length === 0) {
     store.dispatch('setSelectedData', null);
   }
 

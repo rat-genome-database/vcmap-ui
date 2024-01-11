@@ -39,7 +39,7 @@ export default function useSyntenyAndDataInteraction(store: Store<VCMapState>) {
     section.isHovered = false;
 
     // If clicked section already selected, just reset the selectedGeneId state
-    if (store.state.selectedGeneIds.includes(section.gene?.rgdId || -1) || (section.type === 'variant' && store.state.selectedVariantSections.includes(section)) /* || section.type === 'block' && store.state.selectedBlocks.includes(section) */) {
+    if (store.state.selectedGeneIds.includes(section.gene?.rgdId || -1) || (section.type === 'variant' && store.state.selectedVariantSections.includes(section))) {
       store.dispatch('setSelectedGeneIds', []);
       store.dispatch('setSelectedData', null);
       store.dispatch('setSelectedVariantSections', []);

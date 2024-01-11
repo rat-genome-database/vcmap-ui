@@ -61,10 +61,14 @@
           <template v-if="(dataObject.type === 'trackSection')">
             <BlockInfo
               class="block-info"
-              :block-section="dataObject.genomicSection"
               :chromosome="dataObject.genomicSection.chromosome"
-              :start="dataObject.genomicSection.speciesStart"
-              :stop="dataObject.genomicSection.speciesStop"
+              :start="dataObject.genomicSection.start"
+              :stop="dataObject.genomicSection.stop"
+              :map-name="dataObject.genomicSection.mapName"
+              :backbone-alignment="dataObject.genomicSection.backboneAlignment"
+              :element-color="dataObject.genomicSection.elementColor"
+              :species-name="dataObject.genomicSection.speciesName"
+              :region-info="dataObject.genomicSection.regionInfo"
               :chain-level="dataObject.genomicSection.chainLevel"
               :track-orientation="dataObject.genomicSection.isInverted ? '-' : '+'"
               :gene-list="geneList"
@@ -82,12 +86,17 @@
           </template>
           <template v-else-if="dataObject?.type === 'variantDensity'">
             <VariantInfo
-              :variantSection="(dataObject.genomicSection as VariantDensity)"
+              :map-name="dataObject.genomicSection.mapName"
+              :species-name="dataObject.genomicSection.speciesName"
+              :species-start="dataObject.genomicSection.start"
+              :species-stop="dataObject.genomicSection.stop"
+              :chromosome="dataObject.genomicSection.chromosome"
+              :backbone-alignment="dataObject.genomicSection.backboneAlignment"
+              :variant-count="dataObject.genomicSection.variantCount"
             />
           </template>
           <Divider />
         </template>
-        
       </template>
     </div>
   </Panel>
@@ -100,7 +109,6 @@ import GeneInfo from '@/components/GeneInfo.vue';
 import BlockInfo from '@/components/BlockInfo.vue';
 import VariantInfo from './VariantInfo.vue';
 import { ref, watch, computed } from 'vue';
-import { VariantDensity } from '@/models/DatatrackSection';
 
 /**
  * FIXME: This whole component needs to be looked over. There are references to properties on objects that don't exist.

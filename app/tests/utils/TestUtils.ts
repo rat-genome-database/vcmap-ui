@@ -77,7 +77,6 @@ export namespace TestUtils
         selectedData: null,
         selectedGeneIds: [],
         selectedVariantSections: [],
-        selectedBlocks: [],
         isDataPanelCollapsed: false,
 
         hoveredData: {
