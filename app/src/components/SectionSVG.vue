@@ -209,7 +209,7 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
       items = [
         {
           label: 'Link to RGD JBrowse',
-          command: () => { window.open(createJBrowse2UrlForGenomicSection(section)); },
+          command: () => { window.open(createJBrowse2UrlForGenomicSection(section.mapName, section.chromosome, section.speciesStart, section.speciesStop)); },
           icon: 'pi pi-external-link',
         },
         {
@@ -247,7 +247,7 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
             {
               label: 'Highlighted Synteny Block',
               subtext: `Chr:${secChr} ${secStart} - ${secStop}`,
-              command: () => { window.open(createJBrowse2UrlForGenomicSection(section)); }
+              command: () => { window.open(createJBrowse2UrlForGenomicSection(section.mapName, section.chromosome, section.speciesStart, section.speciesStop)); }
             },
             {
               separator: true
@@ -255,7 +255,12 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
             {
               label: 'Entire Conserved Synteny Block',
               subtext: `Chr:${regChr} ${regStart} - ${regStop}`,
-              command: () => { window.open(createJBrowse2UrlForGenomicSection(region.gaplessBlock)); }
+              command: () => { window.open(createJBrowse2UrlForGenomicSection(
+                region.gaplessBlock.mapName,
+                region.gaplessBlock.chromosome,
+                region.gaplessBlock.speciesStart,
+                region.gaplessBlock.speciesStop,
+              )); }
             }
           ]
         },
@@ -314,12 +319,12 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
       if (variantMapKey != null) {
         items.push({
           label: 'Link to RGD Variant Visualizer',
-          command: () => { window.open(createVariantVisualizerUrl(track, variantMapKey)); },
+          command: () => { window.open(createVariantVisualizerUrl(variantMapKey, track.chromosome, track.speciesStart, track.speciesStop)); },
           icon: 'pi pi-external-link'
         });
         items.push({
           label: 'Link to RGD JBrowse',
-          command: () => { window.open(createJBrowse2UrlForGenomicSection(track)); },
+          command: () => { window.open(createJBrowse2UrlForGenomicSection(track.mapName, track.chromosome, track.speciesStart, track.speciesStop)); },
           icon: 'pi pi-external-link',
         });
       }

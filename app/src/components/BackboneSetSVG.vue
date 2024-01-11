@@ -202,14 +202,14 @@ const showContextMenu = (event: MouseEvent, datatrack: DatatrackSection) => {
     if (variantMapKey != null) {
       items.push({
         label: 'Link to RGD Variant Visualizer',
-        command: () => { window.open(createVariantVisualizerUrl(datatrack, variantMapKey)); },
+        command: () => { window.open(createVariantVisualizerUrl(variantMapKey, datatrack.chromosome, datatrack.speciesStart, datatrack.speciesStop)); },
         icon: 'pi pi-external-link',
       });
     }
 
     items.push({
       label: 'Link to RGD JBrowse',
-        command: () => { window.open(createJBrowse2UrlForGenomicSection(datatrack)); },
+        command: () => { window.open(createJBrowse2UrlForGenomicSection(datatrack.mapName, datatrack.chromosome, datatrack.speciesStart, datatrack.speciesStop)); },
         icon: 'pi pi-external-link',
     });
   } else if (store.state.species != null) {
@@ -235,7 +235,7 @@ const showBackboneContextMenu = (event: MouseEvent, backboneSection: BackboneSec
   items = [
     {
       label: 'Link to RGD Jbrowse',
-      command: () => { window.open(createJBrowse2UrlForGenomicSection(backboneSection)); },
+      command: () => { window.open(createJBrowse2UrlForGenomicSection(backboneSection.mapName, backboneSection.chromosome, backboneSection.speciesStart, backboneSection.speciesStop)); },
       icon: 'pi pi-external-link',
     }
   ];

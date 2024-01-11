@@ -22,13 +22,68 @@ type GenomicSectionType = BackboneSection | SyntenySection | Gene | VariantDensi
  */
 export default class SelectedData
 {
-  genomicSection: GenomicSectionType;
+  genomicSection: any;
   type: SelectedDataType;
 
-  constructor(section: GenomicSectionType, type: SelectedDataType)
+  /**
+   * This constructor takes a generic object the user can select, and sets a summary
+   * of that object to genomicSection to display in the SelectedDataPanel
+   *
+   * TODO: I think we could improve or simplify this process, either by properly
+   * cloning objects, or utilizing a more generic type. Some notes on those ideas above
+   */
+  constructor(section: any, type: SelectedDataType)
   {
-    this.genomicSection = section;
     this.type = type;
+    if (this.type === 'trackSection') {
+      this.genomicSection = {
+        chromosome: section.chromosome,
+        start: section.speciesStart,
+        stop: section.speciesStop,
+        chainLevel: section.chainLevel,
+        isInverted: section.isInverted,
+        elementColor: section.elementColor,
+        speciesName: section.speciesName,
+        backboneAlignment: section.backboneAlignment,
+        mapName: section.mapName,
+        regionInfo: {
+          geneCount: section.regionInfo.geneCount,
+          blockCount: section.regionInfo.blockCount,
+          gapCount: section.regionInfo.gapCount,
+          variantCount: section.regionInfo.variantCount,
+        },
+      };
+    } else if (this.type === 'backbone') {
+      this.genomicSection = {
+        chromosome: section.chromosome,
+        start: section.windowStart,
+        stop: section.windowStop,
+      };
+    } else if (this.type === 'variantDensity') {
+      this.genomicSection = {
+        mapName: section.mapName,
+        speciesName: section.speciesName,
+        start: section.speciesStart,
+        stop: section.speciesStop,
+        chromosome: section.chromosome,
+        backboneAlignment: section.backboneAlignment,
+        variantCount: section.variantCount,
+      };
+    } else if (this.type === 'Gene') {
+      this.genomicSection = {
+        mapKey: section.mapKey,
+        speciesName: section.speciesName,
+        symbol: section.symbol,
+        name: section.name,
+        rgdId: section.rgdId,
+        chromosome: section.chromosome,
+        start: section.start,
+        stop: section.stop,
+        orthologs: section.orthologs,
+        backboneStart: section.backboneStart,
+        backboneStop: section.backboneStop,
+      };
+    }
   }
 
 }
