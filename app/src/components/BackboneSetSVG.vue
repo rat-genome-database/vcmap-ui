@@ -79,7 +79,6 @@
 
 <script lang="ts" setup>
 import BackboneSelection from '@/models/BackboneSelection';
-import SelectedData from '@/models/SelectedData';
 import { computed, toRefs } from '@vue/reactivity';
 import { ref, watch, onMounted } from 'vue';
 import { useStore } from 'vuex';
@@ -93,7 +92,6 @@ import DatatrackSection, { GeneDatatrack, VariantDensity } from '@/models/Datatr
 import DatatrackSet from '@/models/DatatrackSet';
 import { VCMapSVGElement } from '@/models/VCMapSVGElement';
 import useMouseBasePairPos from '@/composables/useMouseBasePairPos';
-import { getSelectedDataAndGeneIdsFromOrthologLine } from '@/utils/OrthologHandler';
 import useSyntenyAndDataInteraction from '@/composables/useSyntenyAndDataInteraction';
 import { createJBrowse2UrlForGene, createJBrowse2UrlForGenomicSection, createVariantVisualizerUrl } from '@/utils/ExternalLinks';
 import GenomicSection from '@/models/GenomicSection';

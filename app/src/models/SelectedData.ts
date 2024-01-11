@@ -1,8 +1,3 @@
-import Gene from "@/models/Gene";
-import BackboneSection from "@/models/BackboneSection";
-import SyntenySection from "@/models/SyntenySection";
-import { VariantDensity } from "@/models/DatatrackSection";
-
 /**
  * TODO: I think the way we use this model is a bit inefficient. Possible refactors:
  *   1. Delete this model entirely and type the selectedData in the store as "Array<GenomicSectionType>". Then
@@ -15,7 +10,13 @@ import { VariantDensity } from "@/models/DatatrackSection";
  *     the conditionals in the SelectedDataPanel component and should clean up the template a bit, making it more readable.
  */
 export type SelectedDataType = 'trackSection' | 'Gene' | 'backbone' | 'variantDensity';
-type GenomicSectionType = BackboneSection | SyntenySection | Gene | VariantDensity;
+
+/**
+ * This type isn't used anymore to define the "section" so I'm commenting this out
+ * But I want to retain here for now to remind us how we used to define this type in
+ * case it gives us any ideas for how to improve things later
+ */
+// type GenomicSectionType = BackboneSection | SyntenySection | Gene | VariantDensity;
 
 /**
  * Model that represents the Selected Data that will appear when Selected Data Panel

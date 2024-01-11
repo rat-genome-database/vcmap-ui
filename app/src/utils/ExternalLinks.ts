@@ -3,7 +3,6 @@
  */
 
 import Gene from "@/models/Gene";
-import GenomicSection from "@/models/GenomicSection";
 import Species from "@/models/Species";
 
 const EXTERNAL_URL_CONSTANTS = {

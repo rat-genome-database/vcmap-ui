@@ -91,7 +91,6 @@ import WindowPositionLabelsSVG from './WindowPositionLabelsSVG.vue';
 import useMouseBasePairPos from '@/composables/useMouseBasePairPos';
 import Gene from '@/models/Gene';
 import DatatrackSet from '@/models/DatatrackSet';
-import { getSelectedDataAndGeneIdsFromOrthologLine } from '@/utils/OrthologHandler';
 import useSyntenyAndDataInteraction from '@/composables/useSyntenyAndDataInteraction';
 import { createJBrowse2UrlForGene, createJBrowse2UrlForGenomicSection, createVariantVisualizerUrl } from '@/utils/ExternalLinks';
 
