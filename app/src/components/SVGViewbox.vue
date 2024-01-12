@@ -423,6 +423,7 @@ const handleShowContextMenu = (event: MouseEvent, menuItems: MenuItem[], context
   items.value = menuItems;
   cm.value.show(event);
   contextMenuOpen.value = true;
+  store.dispatch('setContextMenuOpen', true);
   if (contextSection) {
     contextMenuSection.value = contextSection;
   }
@@ -430,6 +431,7 @@ const handleShowContextMenu = (event: MouseEvent, menuItems: MenuItem[], context
 
 const onHideContextMenu = () => {
   contextMenuOpen.value = false;
+  store.dispatch('setContextMenuOpen', false);
   if (contextMenuSection.value) {
     contextMenuSection.value.isHovered = false;
     // If the context menu was for a gene, we'll want to remove hover for gene and orthologs
@@ -821,6 +823,9 @@ window.addEventListener('keyup', function (event) {
 
 const showToast = (severity: ToastMessageOptions["severity"], title: string, details: string, duration: number) => {
   const toastCount = store.state.selectionToastCount;
+  if (contextMenuOpen.value == true) {
+    return;
+  }
 
   if (toastCount % 10 == 0) {
     toast.add({ severity: severity, summary: title, detail: details, life: duration });

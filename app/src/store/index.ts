@@ -62,6 +62,7 @@ export interface VCMapState
 
   /* Visibility settings */
   showOverviewPanel: boolean;
+  contextMenuOpen: boolean;
 }
 
 /**
@@ -146,6 +147,7 @@ export default createStore({
     hiddenDensityTracks: [],
     history: [],
     showOverviewPanel: true,
+    contextMenuOpen: false,
   }),
 
   mutations: {
@@ -246,6 +248,9 @@ export default createStore({
     shouldUpdateDetailedPanel(state: VCMapState, shouldUpdateDetailedPanel: boolean) {
       state.shouldUpdateDetailedPanel = shouldUpdateDetailedPanel;
     },
+    contextMenuOpen(state: VCMapState, contextMenuOpen: boolean) {
+      state.contextMenuOpen = contextMenuOpen;
+    }
   },
 
   actions: {
@@ -389,7 +394,10 @@ export default createStore({
     },
     setShouldUpdateDetailedPanel(context: ActionContext<VCMapState, VCMapState>, shouldUpdateDetailedPanel: boolean) {
       context.commit('shouldUpdateDetailedPanel', shouldUpdateDetailedPanel);
-    }
+    },
+    setContextMenuOpen(context: ActionContext<VCMapState, VCMapState>, contextMenuOpen: boolean) {
+      context.commit('contextMenuOpen', contextMenuOpen);
+    },
   },
 
   getters: {

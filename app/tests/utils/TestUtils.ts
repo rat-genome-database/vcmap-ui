@@ -102,6 +102,7 @@ export namespace TestUtils
         hiddenDensityTracks: [],
         history: [],
         showOverviewPanel: true,
+        contextMenuOpen: true,
 
         // Overwrite default state with props passed in by the tester
         ...initialState,
