@@ -231,6 +231,17 @@ export default createStore({
       state.hoveredData = hoveredData;
     },
     addToHistory(state: VCMapState, entry: UserHistory) {
+      //check if the entry is already in the history, first by source, then by range
+      const relevantEntries = state.history.filter((e) => e.source === entry.source);
+      /* const index = relevantEntries.findIndex((e) => e.range.start === entry.range.start && e.range.stop === entry.range.stop);
+      if (index !== -1) {
+        return;
+      } */
+      //for now, explicitly allow only one Initial Load entry
+      if (entry.source === 'Initial Configuration' && relevantEntries.length > 0) {
+        return;
+      }
+      
       state.history.unshift(entry);
     },
     clearUserHistory(state: VCMapState) {
@@ -301,6 +312,9 @@ export default createStore({
     },
     setToggleSyntenicDensityTrackVisibility(context: ActionContext<VCMapState, VCMapState>, mapKey: number) {
       context.commit('toggleSyntenicDensityTrackVisibility', mapKey);
+    },
+    setHistory(context: ActionContext<VCMapState, VCMapState>, historyEntry: UserHistory) {
+      context.commit('addToHistory', historyEntry);
     },
     clearConfiguration(context: ActionContext<VCMapState, VCMapState>) {
       context.commit('species', null);
