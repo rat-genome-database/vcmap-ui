@@ -21,7 +21,7 @@ export default function useOverviewPanelSelection(store: Store<VCMapState>) {
   };
 
   const overviewSelectionHandler = (event: any, isDetailedPanelSelecting: boolean, overviewBackbone?: BackboneSection) => {
-    if (store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating || isDetailedPanelSelecting)
+    if (store.state.isOverviewPanelUpdating || store.state.isDetailedPanelUpdating || isDetailedPanelSelecting || store.state.contextMenuOpen)
     {
       // Don't allow a selection until both panels are done updating
       return;
