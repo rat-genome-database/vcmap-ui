@@ -61,7 +61,7 @@
           <SectionSVG show-chromosome :region="(syntenicRegion as SyntenyRegion)"
             :synteny-hover-svg-y="detailedSyntenySvgYPosition" :gene-list="geneList"
             @synteny-hover="onDetailedSyntenyHover" @block-hover="onDetailedBlockHover"
-            @show-context-menu="handleShowContextMenu" @swap-backbone="handleSwapBackbone"
+            @show-context-menu="handleShowContextMenu" @swap-backbone="handleSwapBackbone" @swap-backbone-new-tab="handleSwapBackboneNewTab"
             :context-menu-open="contextMenuOpen" :selected-blocks="selectedBlocks" @select-blocks="handleSelectedBlocks"/>
         </template>
         <template v-for="(label, index) in syntenySet.geneLabels" :key="index">
@@ -309,6 +309,7 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: 'swap-backbone', mapKey: string, chr: string, start: number, stop: number): void,
+  (e: 'swap-backbone-new-tab', value: boolean): void,
 }>();
 
 let detailedSyntenySets = ref<SyntenyRegionSet[]>([]); // The currently displayed SyntenicRegions in the detailed panel
@@ -319,6 +320,7 @@ let orthologLines = ref<OrthologLine[]>();
 let detailedSyntenySvgYPosition = ref<number | null>(null);
 let detailedSyntenyBlockYPositions = ref<number[] | null>(null);
 let contextMenuOpen = ref<boolean>(false); // Tracks if the context menu is open, to share with child components
+let swappingBackbone = ref<boolean>(false); // Tracks if we're swapping the backbone, to reference for before each
 // Keeps list of selected blocks to share with all children when necessary
 let selectedBlocks = ref<SyntenySection[]>([]);
 // The section that was clicked to open the context menu
@@ -442,7 +444,12 @@ const onHideContextMenu = () => {
 };
 
 const handleSwapBackbone = (mapKey: string, chr: string, start: number, stop: number) => {
+  swappingBackbone.value = true;
   emit('swap-backbone', mapKey, chr, start, stop);
+};
+
+const handleSwapBackboneNewTab = () => {
+  swappingBackbone.value = true;
 };
 
 const handleSelectedBlocks = (sections: SyntenySection[]) => {
@@ -788,7 +795,7 @@ document.addEventListener('scroll', getDetailedPosition);
 
 //Back button handling from svg page.  User must confirm they want to leave the page.
 router.beforeEach((to, from, next) => {
-  if (window && window.event && window.event.type == 'popstate') {
+  if (window && window.event && window.event.type == 'popstate' && swappingBackbone.value == false) {
     const response = confirm('Are you sure you want to leave this page? You may lose progress.');
     if (response == true) {
       next();
@@ -798,6 +805,7 @@ router.beforeEach((to, from, next) => {
     }
   }
   else {
+    swappingBackbone.value = false;
     next();
   }
 });
