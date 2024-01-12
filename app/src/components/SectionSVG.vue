@@ -143,6 +143,7 @@ const emit = defineEmits<{
   (e: 'block-hover', startStop: number[] | null): void,
   (e: 'show-context-menu', event: MouseEvent, items: MenuItem[], section?: GenomicSection): void,
   (e: 'swap-backbone', mapKey: string, chr: string, start: number, stop: number): void,
+  (e: 'swap-backbone-new-tab', newTab: boolean): void,
   (e: 'select-blocks', sections: SyntenySection[]): void,
 }>();
 
@@ -474,6 +475,7 @@ const onBackboneSwapNewWindow = async (section: SyntenySection) => {
       stop: stop,
     },
   });
+  emit('swap-backbone-new-tab', true);
   window.open(route.href, '_blank');
 };
 
