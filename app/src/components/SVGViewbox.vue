@@ -6,13 +6,13 @@
     <rect class="panel" x="0" width="800" :height="SVGConstants.viewboxHeight" />
     <!-- Inner panels -->
     <rect v-if="store.state.showOverviewPanel" class="panel selectable" :class="{ 'is-loading': arePanelsLoading }" x="0"
-      @click.left="(event) => { overviewSelectionHandler(event, getDetailedSelectionStatus(), overviewBackboneSet?.backbone); showToast('info', 'Selection Initiated:', 'Drag and click again to complete the selection or right click to cancel.', 5000) }"
+      @click.left="(event) => { overviewSelectionHandler(event, getDetailedSelectionStatus(), overviewBackboneSet?.backbone); }"
       @mousemove.stop="(event) => updateOverviewSelection(event)" @contextmenu.prevent
       @click.right="cancelOverviewSelection" :width="store.state.svgPositions.overviewPanelWidth"
       :height="SVGConstants.viewboxHeight" />
 
     <rect id="detailed" class="panel selectable" :class="{ 'is-loading': arePanelsLoading }"
-      @click.left="(event) => { detailedSelectionHandler(event, getOverviewSelectionStatus()); showToast('info', 'Selection Initiated:', 'Drag and click again to complete the selection or right click to cancel.', 5000) }"
+      @click.left="(event) => { detailedSelectionHandler(event, getOverviewSelectionStatus()); }"
       @mousemove="updateZoomSelection" @contextmenu.prevent @click.right="cancelDetailedSelection"
       :x="store.state.svgPositions.overviewPanelWidth"
       :width="SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth"
@@ -111,18 +111,42 @@
 
     <!-- The "gray" selection SVG that shows what area that the user is currently selecting -->
     <!-- Detailed panel selection svg for zoom -->
-    <rect v-if="startDetailedSelectionY && stopDetailedSelectionY" class="visible-selecting-panel"
-      @mousedown.left="(event) => detailedSelectionHandler(event, getOverviewSelectionStatus())"
-      @click.right="cancelDetailedSelection" @mousemove="updateZoomSelection" @contextmenu.prevent fill="lightgray"
-      fill-opacity="0.4" :x="store.state.svgPositions.overviewPanelWidth" :y="startDetailedSelectionY"
-      :width="SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth"
-      :height="stopDetailedSelectionY - startDetailedSelectionY" />
+    <g v-if="startDetailedSelectionY && stopDetailedSelectionY">
+      <rect class="visible-selecting-panel"
+        @mousedown.left="(event) => detailedSelectionHandler(event, getOverviewSelectionStatus())"
+        @click.right="cancelDetailedSelection" @mousemove="updateZoomSelection" @contextmenu.prevent fill="lightgray"
+        fill-opacity="0.4" :x="store.state.svgPositions.overviewPanelWidth" :y="startDetailedSelectionY"
+        :width="SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth"
+        :height="stopDetailedSelectionY - startDetailedSelectionY" />
+      <transition name="fade">
+        <text v-if="Math.abs(stopDetailedSelectionY - startDetailedSelectionY) > 60" class="zoom-tooltip-text fade-in detailed-panel-tooltip-text"
+          :x="store.state.svgPositions.overviewPanelWidth + (SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth) / 2"
+          :y="Math.min(startDetailedSelectionY, stopDetailedSelectionY) + (((Math.abs(stopDetailedSelectionY - startDetailedSelectionY)) * 0.3))" 
+          text-anchor="middle"
+          dominant-baseline="hanging">
+          <tspan :x="store.state.svgPositions.overviewPanelWidth + (SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth) / 2" dy="0.8em">Click again to zoom to selected region.</tspan>
+          <tspan :x="store.state.svgPositions.overviewPanelWidth + (SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth) / 2" dy="1.6em">Right-click or press ESC to cancel the selection</tspan>
+        </text>
+      </transition>
+    </g>
     <!-- Overview panel selection svg for backbone -->
-    <rect v-if="startOverviewSelectionY && stopOverviewSelectionY" class="visible-selecting-panel"
-      @mousemove="(event) => updateOverviewSelection(event)" @contextmenu.prevent
-      @mousedown.left="(event) => overviewSelectionHandler(event, getDetailedSelectionStatus(), overviewBackboneSet?.backbone)"
-      @click.right="cancelOverviewSelection" fill="lightgray" fill-opacity="0.4" :x="0" :y="startOverviewSelectionY"
-      :width="store.state.svgPositions.overviewPanelWidth" :height="stopOverviewSelectionY - startOverviewSelectionY" />
+    <g v-if="startOverviewSelectionY && stopOverviewSelectionY">
+      <rect class="visible-selecting-panel"
+        @mousemove="(event) => updateOverviewSelection(event)" @contextmenu.prevent
+        @mousedown.left="(event) => overviewSelectionHandler(event, getDetailedSelectionStatus(), overviewBackboneSet?.backbone)"
+        @click.right="cancelOverviewSelection" fill="lightgray" fill-opacity="0.4" :x="0" :y="startOverviewSelectionY"
+        :width="store.state.svgPositions.overviewPanelWidth" :height="stopOverviewSelectionY - startOverviewSelectionY" />
+      <transition name="fade">
+        <text v-if="Math.abs(stopOverviewSelectionY - startOverviewSelectionY) > 60" class="zoom-tooltip-text fade-in overview-panel-tooltip-text"
+          :x="store.state.svgPositions.overviewPanelWidth / 2" 
+          :y="Math.min(startOverviewSelectionY, stopOverviewSelectionY) + (((Math.abs(stopOverviewSelectionY - startOverviewSelectionY)) * 0.3))" 
+          text-anchor="middle" 
+          dominant-baseline="hanging">
+          <tspan :x="store.state.svgPositions.overviewPanelWidth / 2" dy="1em">Click again to zoom to selected region.</tspan>
+          <tspan :x="store.state.svgPositions.overviewPanelWidth / 2" dy="2em">Right-click or press ESC to cancel.</tspan>
+        </text>
+      </transition>
+    </g>
   </svg>
 
   <template v-if="displayVariantLegend">
@@ -922,30 +946,22 @@ rect.navigation-btn {
   margin-left: 1%;
 }
 
-.density-toggle-container {
-  margin-top: 1%;
-  margin-bottom: 1%;
-  width: fit-content;
+.zoom-tooltip-text {
+    text-anchor: middle;
+    white-space: pre; // This allows the text to wrap
+    letter-spacing: 0.1em;
+    font-weight: bold;
+    box-shadow: inset 0 0 0 100vmax rgba(0,0,0,.7);
+    fill: black;
+    pointer-events: none;
 }
 
-.density-toggle-button {
-  margin-left: 2%;
-  margin-right: 2%;
-  width: fit-content;
-  min-width: 4em;
+.detailed-panel-tooltip-text {
+  font-size: 0.8em;
 }
 
-.flex-container {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  justify-content: space-between;
-}
-
-.flex-container-start {
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
+.overview-panel-tooltip-text {
+  font-size: 0.6em;
 }
 
 .col-4 {
@@ -954,11 +970,19 @@ rect.navigation-btn {
   }
 }
 
-.left-padding {
-  padding-left: 20%;
+@keyframes fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
 }
 
-.flex-end {
-  justify-content: flex-end;
+.fade-in {
+  animation: fade-in .25s;
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity .25s;
+}
+.fade-enter, .fade-leave-to {
+  opacity: 0;
 }
 </style>
