@@ -79,7 +79,7 @@ const onClick = (event: any, line: OrthologLine) => {
   const isSelected = store.state.selectedGeneIds.includes(line.endGene.rgdId || line.startGene.rgdId || -1);
 
   // If clicked section already selected, just reset the selectedGeneId state
-  if (line.isSelected || isSelected) {
+  if ((event.ctrlKey || event.metaKey) && isSelected) {
     store.dispatch('setSelectedGeneIds', []);
     store.dispatch('setSelectedData', null);
     line.isSelected = false;

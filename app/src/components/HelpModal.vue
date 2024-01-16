@@ -3,7 +3,7 @@
     <template #content>
       <article>
         <h3>Navigation</h3>
-        <ul>
+        <ul class="padded-list">
           <li>
             To navigate up and down the backbone chromosome, you can you use the gray
             <span class="pi pi-chevron-up"></span> and <span class="pi pi-chevron-down"></span>
@@ -20,7 +20,7 @@
           </li>
         </ul>
         <h3>Adjusting Your Configuration</h3>
-        <ul>
+        <ul class="padded-list">
           <li>
             To adjust the comparative species or load data tracks, click on the <span class="pi pi-cog"></span> button in
             the <b>Header Panel</b> and choose <b>Settings</b>.
@@ -50,11 +50,19 @@
           </li>
         </ul>
         <h3>Data Selection</h3>
-        <ul>
+        <ul class="padded-list">
           <li>
             Clicking on a syntenic block, gene, or variant will show relevant data in the <b>Selected Data Panel</b>.
             Clicking on a gene label will show data on
             all of the genes comprising that label.
+          </li>
+          <li>
+            Clicking on a syntenic block, gene, gene label, or variant while holding the <b>Shift</b> key will
+            add the data to the <b>Selected Data Panel</b> without clearing the previous selection (Multi-Select).
+          </li>
+          <li>
+            Clicking on a syntenic block, gene, gene label, or variant while holding the <b>Ctrl</b> (Windows) or <b>Command</b> (Mac) key will
+            remove the selection (De-Select).
           </li>
           <li>
             Data in the <b>Selected Data Panel</b> can be grouped by species or orthologs, sorted by label, and/or sorted
@@ -62,7 +70,7 @@
           </li>
         </ul>
         <h3>Visibility Settings</h3>
-        <ul>
+        <ul class="padded-list">
           <li>
             Tracks for comparative species can be hidden by using their individual toggle in the <b>Selection Info</b>
             section under the header.
@@ -115,3 +123,9 @@ const closeHelp = () => {
   isHelpActive.value = false;
 };
 </script>
+
+<style scoped>
+.padded-list li {
+  padding-bottom: 10px;
+}
+</style>
