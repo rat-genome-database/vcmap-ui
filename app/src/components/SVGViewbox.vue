@@ -119,13 +119,13 @@
         :width="SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth"
         :height="stopDetailedSelectionY - startDetailedSelectionY" />
       <transition name="fade">
-        <text v-if="Math.abs(stopDetailedSelectionY - startDetailedSelectionY) > 90" class="zoom-tooltip-text fade-in detailed-panel-tooltip-text"
+        <text v-if="Math.abs(stopDetailedSelectionY - startDetailedSelectionY) > 60" class="zoom-tooltip-text fade-in detailed-panel-tooltip-text"
           :x="store.state.svgPositions.overviewPanelWidth + (SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth) / 2"
-          :y="Math.min(startDetailedSelectionY, stopDetailedSelectionY) + ((Math.abs(stopDetailedSelectionY - startDetailedSelectionY)) * 0.3)" 
+          :y="Math.min(startDetailedSelectionY, stopDetailedSelectionY) + (((Math.abs(stopDetailedSelectionY - startDetailedSelectionY)) * 0.3))" 
           text-anchor="middle"
           dominant-baseline="hanging">
-          <tspan :x="store.state.svgPositions.overviewPanelWidth + (SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth) / 2" dy="1em">Click again to zoom to selected region.</tspan>
-          <tspan :x="store.state.svgPositions.overviewPanelWidth + (SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth) / 2" dy="2em">Right-click or press ESC to cancel the selection</tspan>
+          <tspan :x="store.state.svgPositions.overviewPanelWidth + (SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth) / 2" dy="0.8em">Click again to zoom to selected region.</tspan>
+          <tspan :x="store.state.svgPositions.overviewPanelWidth + (SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth) / 2" dy="1.6em">Right-click or press ESC to cancel the selection</tspan>
         </text>
       </transition>
     </g>
@@ -137,9 +137,9 @@
         @click.right="cancelOverviewSelection" fill="lightgray" fill-opacity="0.4" :x="0" :y="startOverviewSelectionY"
         :width="store.state.svgPositions.overviewPanelWidth" :height="stopOverviewSelectionY - startOverviewSelectionY" />
       <transition name="fade">
-        <text v-if="Math.abs(stopOverviewSelectionY - startOverviewSelectionY) > 80" class="zoom-tooltip-text fade-in overview-panel-tooltip-text"
+        <text v-if="Math.abs(stopOverviewSelectionY - startOverviewSelectionY) > 60" class="zoom-tooltip-text fade-in overview-panel-tooltip-text"
           :x="store.state.svgPositions.overviewPanelWidth / 2" 
-          :y="Math.min(startOverviewSelectionY, stopOverviewSelectionY) + ((Math.abs(stopOverviewSelectionY - startOverviewSelectionY)) * 0.3)" 
+          :y="Math.min(startOverviewSelectionY, stopOverviewSelectionY) + (((Math.abs(stopOverviewSelectionY - startOverviewSelectionY)) * 0.3))" 
           text-anchor="middle" 
           dominant-baseline="hanging">
           <tspan :x="store.state.svgPositions.overviewPanelWidth / 2" dy="1em">Click again to zoom to selected region.</tspan>
@@ -953,7 +953,7 @@ rect.navigation-btn {
     font-weight: bold;
     box-shadow: inset 0 0 0 100vmax rgba(0,0,0,.7);
     fill: black;
-    animation: fade-in-out 1s infinite;
+    pointer-events: none;
 }
 
 .detailed-panel-tooltip-text {
@@ -976,11 +976,11 @@ rect.navigation-btn {
 }
 
 .fade-in {
-  animation: fade-in .3s;
+  animation: fade-in .25s;
 }
 
 .fade-enter-active, .fade-leave-active {
-  transition: opacity .3s;
+  transition: opacity .25s;
 }
 .fade-enter, .fade-leave-to {
   opacity: 0;
