@@ -422,23 +422,28 @@ const onSyntenyBlockClick = (section: SyntenySection, event: any, region: Synten
   selectedDataList.push(new SelectedData(section, 'trackSection'));
   const selectedBlocks = props.selectedBlocks;
   if (event.shiftKey) {
+    //copy over current selections to support multiselect
     const selectedDataArray = [...(store.state.selectedData || []), ...selectedDataList];
+    //add highlighted section to selections
     section.isSelected = !section.isSelected;
     store.dispatch('setSelectedData', selectedDataArray);
     selectedBlocks.push(section);
     emit('select-blocks', selectedBlocks);
+    
   } else if (selectedDataList.length > 0) {
-    const blockIsSelcted = section.isSelected;
     if (selectedBlocks.length > 0) {
       selectedBlocks.forEach((block) => block.isSelected = false);
     }
-    section.isSelected = !blockIsSelcted;
-    if (section.isSelected) {
-      store.dispatch('setSelectedData', selectedDataList);
-      emit('select-blocks', [section]);
-    } else {
+    section.isSelected = true;
+
+    if ((event.ctrlKey || event.metaKey) && section.isSelected) {
+      section.isSelected = false;
       store.dispatch('setSelectedData', []);
       emit('select-blocks', []);
+    }
+    else {
+      store.dispatch('setSelectedData', selectedDataList);
+      emit('select-blocks', [section]);
     }
   }
 
