@@ -29,7 +29,7 @@
       <template v-for="(syntenySet, index) in overviewSyntenySets" :key="index">
         <template v-for="(region, index) in syntenySet.regions" :key="index">
           <SectionSVG show-chromosome show-synteny-on-hover :gene-list="geneList" is-overview select-on-click
-            :region="(region as SyntenyRegion)" @show-context-menu="handleShowContextMenu" :context-menu-open="contextMenuOpen"
+            :region="(region as SyntenyRegion)" @show-context-menu="handleShowContextMenu"
             @swap-backbone="handleSwapBackbone" :selected-blocks="selectedBlocks" @select-blocks="handleSelectedBlocks"/>
         </template>
       </template>
@@ -37,7 +37,7 @@
 
     <template v-if="store.state.showOverviewPanel">
       <template v-if="overviewBackboneSet">
-        <BackboneSetSVG show-data-on-hover :gene-list="geneList" :backbone-set="overviewBackboneSet" @show-context-menu="handleShowContextMenu"  :context-menu-open="contextMenuOpen"/>
+        <BackboneSetSVG show-data-on-hover :gene-list="geneList" :backbone-set="overviewBackboneSet" @show-context-menu="handleShowContextMenu" />
       </template>
     </template>
 
@@ -45,7 +45,7 @@
     <template v-if="detailedBackboneSet">
       <BackboneSetSVG show-data-on-hover :backbone-set="detailedBackboneSet"
         :synteny-hover-svg-y="detailedSyntenySvgYPosition" @synteny-hover="onDetailedSyntenyHover" :gene-list="geneList"
-        @show-context-menu="handleShowContextMenu" :synteny-hover-backbone-y-values="detailedSyntenyBlockYPositions" :context-menu-open="contextMenuOpen" />
+        @show-context-menu="handleShowContextMenu" :synteny-hover-backbone-y-values="detailedSyntenyBlockYPositions" />
       <template v-if="detailedBackboneSet.geneLabels">
         <template v-for="(label, index) in detailedBackboneSet.geneLabels" :key="index">
           <template v-if="(label.isVisible)">
@@ -62,7 +62,7 @@
             :synteny-hover-svg-y="detailedSyntenySvgYPosition" :gene-list="geneList"
             @synteny-hover="onDetailedSyntenyHover" @block-hover="onDetailedBlockHover"
             @show-context-menu="handleShowContextMenu" @swap-backbone="handleSwapBackbone" @swap-backbone-new-tab="handleSwapBackboneNewTab"
-            :context-menu-open="contextMenuOpen" :selected-blocks="selectedBlocks" @select-blocks="handleSelectedBlocks"/>
+            :selected-blocks="selectedBlocks" @select-blocks="handleSelectedBlocks"/>
         </template>
         <template v-for="(label, index) in syntenySet.geneLabels" :key="index">
           <template v-if="label.isVisible">
@@ -343,7 +343,6 @@ let overviewSyntenySets = ref<SyntenyRegionSet[]>([]);
 let orthologLines = ref<OrthologLine[]>();
 let detailedSyntenySvgYPosition = ref<number | null>(null);
 let detailedSyntenyBlockYPositions = ref<number[] | null>(null);
-let contextMenuOpen = ref<boolean>(false); // Tracks if the context menu is open, to share with child components
 let swappingBackbone = ref<boolean>(false); // Tracks if we're swapping the backbone, to reference for before each
 // Keeps list of selected blocks to share with all children when necessary
 let selectedBlocks = ref<SyntenySection[]>([]);
@@ -446,7 +445,6 @@ const arePanelsLoading = computed(() => {
 const handleShowContextMenu = (event: MouseEvent, menuItems: MenuItem[], contextSection?: GenomicSection) => {
   items.value = menuItems;
   cm.value.show(event);
-  contextMenuOpen.value = true;
   store.dispatch('setContextMenuOpen', true);
   if (contextSection) {
     contextMenuSection.value = contextSection;
@@ -454,7 +452,6 @@ const handleShowContextMenu = (event: MouseEvent, menuItems: MenuItem[], context
 };
 
 const onHideContextMenu = () => {
-  contextMenuOpen.value = false;
   store.dispatch('setContextMenuOpen', false);
   if (contextMenuSection.value) {
     contextMenuSection.value.isHovered = false;
@@ -847,7 +844,7 @@ window.addEventListener('keyup', function (event) {
 
 const showToast = (severity: ToastMessageOptions["severity"], title: string, details: string, duration: number) => {
   const toastCount = store.state.selectionToastCount;
-  if (contextMenuOpen.value == true) {
+  if (store.state.contextMenuOpen) {
     return;
   }
 

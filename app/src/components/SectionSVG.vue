@@ -117,7 +117,6 @@ interface Props {
   region: SyntenyRegion;
   syntenyHoverSvgY?: number | null;
   geneList: Map<number, Gene>;
-  contextMenuOpen: boolean;
   selectedBlocks: SyntenySection[];
 }
 
@@ -356,7 +355,7 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
 ///
 
 const onMouseEnter = (event: MouseEvent, section: SyntenySection | DatatrackSection) => {
-  if (!props.contextMenuOpen) {
+  if (!store.state.contextMenuOpen) {
     section.isHovered = true;
 
     // NOTE: ignore qtl datatracks for now
@@ -369,7 +368,7 @@ const onMouseEnter = (event: MouseEvent, section: SyntenySection | DatatrackSect
 };
 
 const onMouseLeave = (section: DatatrackSection | SyntenySection) => {
-  if (!props.contextMenuOpen) {
+  if (!store.state.contextMenuOpen) {
     emit('synteny-hover', null);
     if (isDetailed) {
       emit('block-hover', null);
