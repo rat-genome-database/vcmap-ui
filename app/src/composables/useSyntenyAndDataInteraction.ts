@@ -38,14 +38,6 @@ export default function useSyntenyAndDataInteraction(store: Store<VCMapState>) {
 
     section.isHovered = false;
 
-    // If clicked section already selected, just reset the selectedGeneId state
-    if (store.state.selectedGeneIds.includes(section.gene?.rgdId || -1) || (section.type === 'variant' && store.state.selectedVariantSections.includes(section)) /* || section.type === 'block' && store.state.selectedBlocks.includes(section) */) {
-      store.dispatch('setSelectedGeneIds', []);
-      store.dispatch('setSelectedData', null);
-      store.dispatch('setSelectedVariantSections', []);
-      return;
-    }
-
     // If shift key is held, we'll just add to the selections, otherwise, reset first
     const geneIds: number[] = event.shiftKey ? [...store.state.selectedGeneIds] : [];
 
@@ -114,6 +106,12 @@ export default function useSyntenyAndDataInteraction(store: Store<VCMapState>) {
       }
       store.dispatch('setSelectedData', selectedDataArray);
     }
+    // If ctrl or cmd key is held, we'll just remove the section from the selections
+    else if ((event.ctrlKey || event.metaKey)) {
+      section.isSelected = false;
+      store.dispatch('setSelectedGeneIds', []);
+      store.dispatch('setSelectedData', []);
+    }
     else {
       store.dispatch('setSelectedData', newSelectedData);
       if (section.type === 'variant') {
@@ -123,10 +121,6 @@ export default function useSyntenyAndDataInteraction(store: Store<VCMapState>) {
   };
 
   const onGeneLabelClick = (event: any, label: GeneLabel, geneList: Map<number, Gene>, orthologLines: OrthologLine[]) => {
-    if (store.state.selectedGeneIds.includes(label.mainGene.rgdId)) {
-      store.dispatch('setSelectedGeneIds', []);
-      store.dispatch('setSelectedData', null);
-    }
     const geneIds: number[] = event.shiftKey ? [...store.state.selectedGeneIds] : [];
 
     // Keep the main gene of the label at the top of the list
@@ -186,6 +180,11 @@ export default function useSyntenyAndDataInteraction(store: Store<VCMapState>) {
     if (event.shiftKey) {
       const selectedDataArray = [...(store.state.selectedData || []), ...newSelectedData];
       store.dispatch('setSelectedData', selectedDataArray);
+    } 
+    // If ctrl or cmd key is held, we'll just remove the section from the selections
+    else if ((event.ctrlKey || event.metaKey)) {
+      store.dispatch('setSelectedGeneIds', []);
+      store.dispatch('setSelectedData', []);
     } else {
       store.dispatch('setSelectedData', newSelectedData);
     }

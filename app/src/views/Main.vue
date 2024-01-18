@@ -82,7 +82,7 @@ import ChromosomeApi from '@/api/ChromosomeApi';
 import Chromosome from "@/models/Chromosome";
 import GeneApi from "@/api/GeneApi";
 import {useLogger} from "vue-logger-plugin";
-import BackboneSelection from "@/models/BackboneSelection";
+import BackboneSelection, { BasePairRange } from '@/models/BackboneSelection';
 import VCMapDialog from '@/components/VCMapDialog.vue';
 import useDialog from '@/composables/useDialog';
 import { adjustSelectionWindow, getNewSelectedData } from '@/utils/DataPanelHelpers';
@@ -234,7 +234,7 @@ watch(() => store.state.detailedBasePairRequest, async () => {
 
     await queryAndProcessSyntenyForBasePairRange(store.state.chromosome, store.state.detailedBasePairRequest.start, store.state.detailedBasePairRequest.stop);
 
-    triggerDetailedPanelProcessing(store.state.chromosome, store.state.detailedBasePairRequest.start, store.state.detailedBasePairRequest.stop);
+    triggerDetailedPanelProcessing(store.state.chromosome, store.state.detailedBasePairRequest.start, store.state.detailedBasePairRequest.stop, false);
     // Data processing done, ready to complete request
     store.dispatch('setDetailedBasePairRequest', {range: null});
   }
@@ -282,7 +282,7 @@ async function initVCMapProcessing()
   // Query the Genes API
 
   const slowAPI = setTimeout(() => {
-    showToast('warn', 'Loading Impact', 'API is taking a while to respond, please be patient', 5000);
+    showToast('warn', 'Loading Impact', 'The API is taking a while to respond, please be patient', 5000);
   }, 15000);
 
   let comparativeSpeciesIds: number[] = [];
@@ -406,7 +406,7 @@ async function initVCMapProcessing()
   // Kick off the OverviewPanel load
   store.dispatch('setConfigurationLoaded', true);
   // Kick off DetailedPanel load
-  triggerDetailedPanelProcessing(store.state.chromosome, selectionStart, selectionStop);
+  triggerDetailedPanelProcessing(store.state.chromosome, selectionStart, selectionStop, true);
 
   clearTimeout(slowProcessing);
   isLoading.value = false;
@@ -632,7 +632,7 @@ async function queryAndProcessSyntenyForBasePairRange(backboneChromosome: Chromo
   }
 }
 
-function triggerDetailedPanelProcessing(backboneChromosome: Chromosome, selectionStart: number, selectionStop: number)
+function triggerDetailedPanelProcessing(backboneChromosome: Chromosome, selectionStart: number, selectionStop: number, isInitialLoad: boolean = false)
 {
   let selection = store.state.selectedBackboneRegion;
 
@@ -641,7 +641,24 @@ function triggerDetailedPanelProcessing(backboneChromosome: Chromosome, selectio
   selection = new BackboneSelection(backboneChromosome);
 
   selection.setViewportSelection(selectionStart, selectionStop);
-  // Trigger the detailed panel to begin its processing
+  if (isInitialLoad)
+  {
+    //construct initial history object
+    let partialHistory: { range: BasePairRange; source: string; } = {
+      range: {
+        start: selectionStart,
+        stop: selectionStop,
+      },
+      source: 'Initial Configuration',
+    };
+    const fullHistory = {
+      ...partialHistory,
+      backbone: selection,
+      timestamp: Date.now()
+    };
+    store.dispatch('setHistory', fullHistory);
+  }
+  // Trigger the detailed panel to begin its processing, and add initial config to history
   store.dispatch('setBackboneSelection', selection);
 }
 

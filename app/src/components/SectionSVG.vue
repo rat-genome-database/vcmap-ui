@@ -91,9 +91,9 @@ import WindowPositionLabelsSVG from './WindowPositionLabelsSVG.vue';
 import useMouseBasePairPos from '@/composables/useMouseBasePairPos';
 import Gene from '@/models/Gene';
 import DatatrackSet from '@/models/DatatrackSet';
-import { getSelectedDataAndGeneIdsFromOrthologLine } from '@/utils/OrthologHandler';
 import useSyntenyAndDataInteraction from '@/composables/useSyntenyAndDataInteraction';
 import { createJBrowse2UrlForGene, createJBrowse2UrlForGenomicSection, createVariantVisualizerUrl } from '@/utils/ExternalLinks';
+import { ContextMenuType, MenuItem } from '@/models/ContextMenu';
 
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
 const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
@@ -118,23 +118,7 @@ interface Props {
   region: SyntenyRegion;
   syntenyHoverSvgY?: number | null;
   geneList: Map<number, Gene>;
-  contextMenuOpen: boolean;
   selectedBlocks: SyntenySection[];
-}
-
-interface MenuItem {
-  label: string,
-  subtext?: string,
-  icon?: string,
-  command?: () => void;
-  items?: MenuItem[];
-}
-
-interface ContextMenuType {
-  event: MouseEvent;
-  region?: SyntenyRegion;
-  section?: SyntenySection;
-  track?: DatatrackSection;
 }
 
 const props = defineProps<Props>();
@@ -144,6 +128,7 @@ const emit = defineEmits<{
   (e: 'block-hover', startStop: number[] | null): void,
   (e: 'show-context-menu', event: MouseEvent, items: MenuItem[], section?: GenomicSection): void,
   (e: 'swap-backbone', mapKey: string, chr: string, start: number, stop: number): void,
+  (e: 'swap-backbone-new-tab', newTab: boolean): void,
   (e: 'select-blocks', sections: SyntenySection[]): void,
 }>();
 
@@ -209,7 +194,7 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
       items = [
         {
           label: 'Link to RGD JBrowse',
-          command: () => { window.open(createJBrowse2UrlForGenomicSection(section)); },
+          command: () => { window.open(createJBrowse2UrlForGenomicSection(section.mapName, section.chromosome, section.speciesStart, section.speciesStop)); },
           icon: 'pi pi-external-link',
         },
         {
@@ -247,7 +232,7 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
             {
               label: 'Highlighted Synteny Block',
               subtext: `Chr:${secChr} ${secStart} - ${secStop}`,
-              command: () => { window.open(createJBrowse2UrlForGenomicSection(section)); }
+              command: () => { window.open(createJBrowse2UrlForGenomicSection(section.mapName, section.chromosome, section.speciesStart, section.speciesStop)); }
             },
             {
               separator: true
@@ -255,7 +240,12 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
             {
               label: 'Entire Conserved Synteny Block',
               subtext: `Chr:${regChr} ${regStart} - ${regStop}`,
-              command: () => { window.open(createJBrowse2UrlForGenomicSection(region.gaplessBlock)); }
+              command: () => { window.open(createJBrowse2UrlForGenomicSection(
+                region.gaplessBlock.mapName,
+                region.gaplessBlock.chromosome,
+                region.gaplessBlock.speciesStart,
+                region.gaplessBlock.speciesStop,
+              )); }
             }
           ]
         },
@@ -314,12 +304,12 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
       if (variantMapKey != null) {
         items.push({
           label: 'Link to RGD Variant Visualizer',
-          command: () => { window.open(createVariantVisualizerUrl(track, variantMapKey)); },
+          command: () => { window.open(createVariantVisualizerUrl(variantMapKey, track.chromosome, track.speciesStart, track.speciesStop)); },
           icon: 'pi pi-external-link'
         });
         items.push({
           label: 'Link to RGD JBrowse',
-          command: () => { window.open(createJBrowse2UrlForGenomicSection(track)); },
+          command: () => { window.open(createJBrowse2UrlForGenomicSection(track.mapName, track.chromosome, track.speciesStart, track.speciesStop)); },
           icon: 'pi pi-external-link',
         });
       }
@@ -351,7 +341,7 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
 ///
 
 const onMouseEnter = (event: MouseEvent, section: SyntenySection | DatatrackSection) => {
-  if (!props.contextMenuOpen) {
+  if (!store.state.contextMenuOpen) {
     section.isHovered = true;
 
     // NOTE: ignore qtl datatracks for now
@@ -359,44 +349,12 @@ const onMouseEnter = (event: MouseEvent, section: SyntenySection | DatatrackSect
 
     showHoveredData(section, event);
 
-    const genesAreSelected = store.state.selectedGeneIds.length > 0;
-    const variantSectionsAreSelected = store.state.selectedVariantSections.length > 0;
-    let selectedDataList: SelectedData[] = [];
-    if (section.type === 'gene') {
-      //
-      // Gene datatrack section
-      const geneSection = section as GeneDatatrack;
-      setHoverOnGeneLinesAndDatatrackSections(geneSection?.lines, true);
-
-      // Only update the selected data panel if no Genes or Variant sections are already selected
-      if (!genesAreSelected && !variantSectionsAreSelected) {
-        if (geneSection.lines.length > 0) {
-          const {
-            selectedData: selectedOrthologs,
-          } = getSelectedDataAndGeneIdsFromOrthologLine(geneSection.lines[0]);
-          selectedDataList.push(...selectedOrthologs);
-        }
-        else {
-          selectedDataList.push(new SelectedData(geneSection.gene.clone(), 'Gene'));
-        }
-      }
-    }
-    else if (!genesAreSelected && !variantSectionsAreSelected) {
-      //
-      // Synteny section
-      {
-        if (section.type === 'variant') {
-
-          selectedDataList.push(new SelectedData(section, 'variantDensity'));
-        }
-      }
-    }
   }
   changeHoverElementSize(section, true);
 };
 
 const onMouseLeave = (section: DatatrackSection | SyntenySection) => {
-  if (!props.contextMenuOpen) {
+  if (!store.state.contextMenuOpen) {
     emit('synteny-hover', null);
     if (isDetailed) {
       emit('block-hover', null);
@@ -408,7 +366,7 @@ const onMouseLeave = (section: DatatrackSection | SyntenySection) => {
     }
 
     // Only reset data onMouseLeave if there isn't a selected gene or variant sections or block
-    if (store.state.selectedGeneIds.length == 0 && store.state.selectedVariantSections.length == 0 && store.state.selectedBlocks.length == 0) {
+    if (store.state.selectedGeneIds.length == 0 && store.state.selectedData?.length == 0) {
       store.dispatch('setSelectedData', null);
     }
 
@@ -424,7 +382,6 @@ const onMouseLeave = (section: DatatrackSection | SyntenySection) => {
 const onSyntenyBlockClick = (section: SyntenySection, event: any, region: SyntenyRegion) => {
   //select the synteny block for display in the selectedDataPanel
   let selectedDataList: SelectedData[] = [];
-  // const origSelectedBlocks = store.state.selectedBlocks;
 
   //construct region info
   //loop loaded data tracks and get variant counts
@@ -450,25 +407,28 @@ const onSyntenyBlockClick = (section: SyntenySection, event: any, region: Synten
   selectedDataList.push(new SelectedData(section, 'trackSection'));
   const selectedBlocks = props.selectedBlocks;
   if (event.shiftKey) {
+    //copy over current selections to support multiselect
     const selectedDataArray = [...(store.state.selectedData || []), ...selectedDataList];
+    //add highlighted section to selections
     section.isSelected = !section.isSelected;
     store.dispatch('setSelectedData', selectedDataArray);
-    // store.dispatch('setSelectedBlocks', origSelectedBlocks.push(section));
     selectedBlocks.push(section);
     emit('select-blocks', selectedBlocks);
+    
   } else if (selectedDataList.length > 0) {
-    const blockIsSelcted = section.isSelected;
     if (selectedBlocks.length > 0) {
       selectedBlocks.forEach((block) => block.isSelected = false);
     }
-    section.isSelected = !blockIsSelcted;
-    if (section.isSelected) {
-      store.dispatch('setSelectedData', selectedDataList);
-      // store.dispatch('setSelectedBlocks', [section]);
-      emit('select-blocks', [section]);
-    } else {
+    section.isSelected = true;
+
+    if ((event.ctrlKey || event.metaKey) && section.isSelected) {
+      section.isSelected = false;
       store.dispatch('setSelectedData', []);
       emit('select-blocks', []);
+    }
+    else {
+      store.dispatch('setSelectedData', selectedDataList);
+      emit('select-blocks', [section]);
     }
   }
 
@@ -505,6 +465,7 @@ const onBackboneSwapNewWindow = async (section: SyntenySection) => {
       stop: stop,
     },
   });
+  emit('swap-backbone-new-tab', true);
   window.open(route.href, '_blank');
 };
 

@@ -79,7 +79,6 @@
 
 <script lang="ts" setup>
 import BackboneSelection from '@/models/BackboneSelection';
-import SelectedData from '@/models/SelectedData';
 import { computed, toRefs } from '@vue/reactivity';
 import { ref, watch, onMounted } from 'vue';
 import { useStore } from 'vuex';
@@ -93,7 +92,6 @@ import DatatrackSection, { GeneDatatrack, VariantDensity } from '@/models/Datatr
 import DatatrackSet from '@/models/DatatrackSet';
 import { VCMapSVGElement } from '@/models/VCMapSVGElement';
 import useMouseBasePairPos from '@/composables/useMouseBasePairPos';
-import { getSelectedDataAndGeneIdsFromOrthologLine } from '@/utils/OrthologHandler';
 import useSyntenyAndDataInteraction from '@/composables/useSyntenyAndDataInteraction';
 import { createJBrowse2UrlForGene, createJBrowse2UrlForGenomicSection, createVariantVisualizerUrl } from '@/utils/ExternalLinks';
 import GenomicSection from '@/models/GenomicSection';
@@ -119,7 +117,6 @@ interface Props {
   syntenyHoverSvgY?: number | null;
   geneList: Map<number, Gene>;
   syntenyHoverBackboneYValues?: number[] | null;
-  contextMenuOpen: boolean;
 }
 
 interface MenuItem {
@@ -202,14 +199,14 @@ const showContextMenu = (event: MouseEvent, datatrack: DatatrackSection) => {
     if (variantMapKey != null) {
       items.push({
         label: 'Link to RGD Variant Visualizer',
-        command: () => { window.open(createVariantVisualizerUrl(datatrack, variantMapKey)); },
+        command: () => { window.open(createVariantVisualizerUrl(variantMapKey, datatrack.chromosome, datatrack.speciesStart, datatrack.speciesStop)); },
         icon: 'pi pi-external-link',
       });
     }
 
     items.push({
       label: 'Link to RGD JBrowse',
-        command: () => { window.open(createJBrowse2UrlForGenomicSection(datatrack)); },
+        command: () => { window.open(createJBrowse2UrlForGenomicSection(datatrack.mapName, datatrack.chromosome, datatrack.speciesStart, datatrack.speciesStop)); },
         icon: 'pi pi-external-link',
     });
   } else if (store.state.species != null) {
@@ -235,7 +232,7 @@ const showBackboneContextMenu = (event: MouseEvent, backboneSection: BackboneSec
   items = [
     {
       label: 'Link to RGD Jbrowse',
-      command: () => { window.open(createJBrowse2UrlForGenomicSection(backboneSection)); },
+      command: () => { window.open(createJBrowse2UrlForGenomicSection(backboneSection.mapName, backboneSection.chromosome, backboneSection.speciesStart, backboneSection.speciesStop)); },
       icon: 'pi pi-external-link',
     }
   ];
@@ -243,7 +240,7 @@ const showBackboneContextMenu = (event: MouseEvent, backboneSection: BackboneSec
 };
 
 const onMouseEnter = (event: MouseEvent, section: BackboneSection | DatatrackSection) => {
-  if (!props.contextMenuOpen) {
+  if (!store.state.contextMenuOpen) {
     if (section) {
       section.isHovered = true;
     }
@@ -256,28 +253,9 @@ const onMouseEnter = (event: MouseEvent, section: BackboneSection | DatatrackSec
     showHoveredData(section, event);
 
     // Only set selected data if there are no selected genes
-    if (store.state.selectedGeneIds.length === 0 && section.type === 'gene' && store.state.selectedVariantSections.length === 0 && store.state.selectedBlocks.length === 0) {
-      const selectedDataList: SelectedData[] = [];
+    if (store.state.selectedGeneIds.length === 0 && section.type === 'gene' && store.state.selectedData?.length === 0) {
       const geneSection = section as GeneDatatrack;
       setHoverOnGeneLinesAndDatatrackSections(geneSection?.lines, true);
-
-      if (geneSection.lines.length > 0) {
-        const {
-          selectedData: selectedOrthologs,
-        } = getSelectedDataAndGeneIdsFromOrthologLine(geneSection.lines[0]);
-        selectedDataList.push(...selectedOrthologs);
-      }
-      else {
-        selectedDataList.push(new SelectedData(geneSection.gene.clone(), 'Gene'));
-      }
-
-      store.dispatch('setSelectedData', selectedDataList);
-    }
-    else if (store.state.selectedGeneIds.length === 0 && store.state.selectedVariantSections.length === 0 && store.state.selectedBlocks.length === 0 ) {
-      if (section.type === 'variant') {
-        const selectedData = new SelectedData(section, 'variantDensity');
-        store.dispatch('setSelectedData', [selectedData]);
-      }
     }
   }
 
@@ -287,7 +265,7 @@ const onMouseEnter = (event: MouseEvent, section: BackboneSection | DatatrackSec
 };
 
 const onMouseLeave = (section: BackboneSection | DatatrackSection) => {
-  if (!props.contextMenuOpen) {
+  if (!store.state.contextMenuOpen) {
     emit('synteny-hover', null);
 
     if (section && section.isHovered == true) {

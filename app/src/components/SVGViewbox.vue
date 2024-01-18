@@ -5,15 +5,24 @@
     <!-- Outside panel -->
     <rect class="panel" x="0" width="800" :height="SVGConstants.viewboxHeight" />
     <!-- Inner panels -->
-    <rect v-if="store.state.showOverviewPanel" class="panel selectable" :class="{ 'is-loading': arePanelsLoading }" x="0"
-      @click.left="(event) => { overviewSelectionHandler(event, getDetailedSelectionStatus(), overviewBackboneSet?.backbone); showToast('info', 'Selection Initiated:', 'Drag and click again to complete the selection or right click to cancel.', 5000) }"
-      @mousemove.stop="(event) => updateOverviewSelection(event)" @contextmenu.prevent
-      @click.right="cancelOverviewSelection" :width="store.state.svgPositions.overviewPanelWidth"
+    <rect v-if="store.state.showOverviewPanel"
+      class="panel selectable" 
+      :class="{ 'is-loading': arePanelsLoading }"
+      x="0"
+      @click.left="(event) => { overviewSelectionHandler(event, getDetailedSelectionStatus(), overviewBackboneSet?.backbone); }"
+      @mousemove.stop="(event) => updateOverviewSelection(event)"
+      @contextmenu.prevent
+      @click.right="cancelOverviewSelection"
+      :width="store.state.svgPositions.overviewPanelWidth"
       :height="SVGConstants.viewboxHeight" />
 
-    <rect id="detailed" class="panel selectable" :class="{ 'is-loading': arePanelsLoading }"
-      @click.left="(event) => { detailedSelectionHandler(event, getOverviewSelectionStatus()); showToast('info', 'Selection Initiated:', 'Drag and click again to complete the selection or right click to cancel.', 5000) }"
-      @mousemove="updateZoomSelection" @contextmenu.prevent @click.right="cancelDetailedSelection"
+    <rect id="detailed"
+      class="panel selectable"
+      :class="{ 'is-loading': arePanelsLoading }"
+      @click.left="(event) => { detailedSelectionHandler(event, getOverviewSelectionStatus()); }"
+      @mousemove="updateZoomSelection"
+      @contextmenu.prevent
+      @click.right="cancelDetailedSelection"
       :x="store.state.svgPositions.overviewPanelWidth"
       :width="SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth"
       :height="SVGConstants.viewboxHeight" />
@@ -28,28 +37,47 @@
     <template v-if="store.state.showOverviewPanel">
       <template v-for="(syntenySet, index) in overviewSyntenySets" :key="index">
         <template v-for="(region, index) in syntenySet.regions" :key="index">
-          <SectionSVG show-chromosome show-synteny-on-hover :gene-list="geneList" is-overview select-on-click
-            :region="(region as SyntenyRegion)" @show-context-menu="handleShowContextMenu" :context-menu-open="contextMenuOpen"
-            @swap-backbone="handleSwapBackbone" :selected-blocks="selectedBlocks" @select-blocks="handleSelectedBlocks"/>
+          <SectionSVG
+            show-chromosome
+            show-synteny-on-hover
+            :gene-list="geneList"
+            is-overview select-on-click
+            :region="(region as SyntenyRegion)"
+            @show-context-menu="handleShowContextMenu"
+            @swap-backbone="handleSwapBackbone"
+            :selected-blocks="(selectedBlocks as SyntenySection[])"
+            @select-blocks="handleSelectedBlocks"/>
         </template>
       </template>
     </template>
 
     <template v-if="store.state.showOverviewPanel">
       <template v-if="overviewBackboneSet">
-        <BackboneSetSVG show-data-on-hover :gene-list="geneList" :backbone-set="overviewBackboneSet" @show-context-menu="handleShowContextMenu"  :context-menu-open="contextMenuOpen"/>
+        <BackboneSetSVG
+          show-data-on-hover
+          :gene-list="geneList"
+          :backbone-set="overviewBackboneSet"
+          @show-context-menu="handleShowContextMenu" />
       </template>
     </template>
 
     <!-- Detail panel SVGs ----------------------------------------->
     <template v-if="detailedBackboneSet">
-      <BackboneSetSVG show-data-on-hover :backbone-set="detailedBackboneSet"
-        :synteny-hover-svg-y="detailedSyntenySvgYPosition" @synteny-hover="onDetailedSyntenyHover" :gene-list="geneList"
-        @show-context-menu="handleShowContextMenu" :synteny-hover-backbone-y-values="detailedSyntenyBlockYPositions" :context-menu-open="contextMenuOpen" />
+      <BackboneSetSVG
+        show-data-on-hover
+        :backbone-set="detailedBackboneSet"
+        :synteny-hover-svg-y="detailedSyntenySvgYPosition"
+        @synteny-hover="onDetailedSyntenyHover"
+        :gene-list="geneList"
+        @show-context-menu="handleShowContextMenu"
+        :synteny-hover-backbone-y-values="detailedSyntenyBlockYPositions" />
       <template v-if="detailedBackboneSet.geneLabels">
         <template v-for="(label, index) in detailedBackboneSet.geneLabels" :key="index">
           <template v-if="(label.isVisible)">
-            <GeneLabelSVG :label="(label as GeneLabel)" :gene-list="geneList" :ortholog-lines="orthologLines ?? []" />
+            <GeneLabelSVG
+              :label="(label as GeneLabel)"
+              :gene-list="geneList"
+              :ortholog-lines="orthologLines ?? []" />
           </template>
         </template>
       </template>
@@ -58,51 +86,85 @@
     <template v-if="detailedSyntenySets.length">
       <template v-for="(syntenySet, index) in detailedSyntenySets" :key="index">
         <template v-for="(syntenicRegion, index) in syntenySet.regions" :key="index">
-          <SectionSVG show-chromosome :region="(syntenicRegion as SyntenyRegion)"
-            :synteny-hover-svg-y="detailedSyntenySvgYPosition" :gene-list="geneList"
-            @synteny-hover="onDetailedSyntenyHover" @block-hover="onDetailedBlockHover"
-            @show-context-menu="handleShowContextMenu" @swap-backbone="handleSwapBackbone"
-            :context-menu-open="contextMenuOpen" :selected-blocks="selectedBlocks" @select-blocks="handleSelectedBlocks"/>
+          <SectionSVG
+            show-chromosome
+            :region="(syntenicRegion as SyntenyRegion)"
+            :synteny-hover-svg-y="detailedSyntenySvgYPosition"
+            :gene-list="geneList"
+            @synteny-hover="onDetailedSyntenyHover"
+            @block-hover="onDetailedBlockHover"
+            @show-context-menu="handleShowContextMenu"
+            @swap-backbone="handleSwapBackbone"
+            @swap-backbone-new-tab="handleSwapBackboneNewTab"
+            :selected-blocks="(selectedBlocks as SyntenySection[])"
+            @select-blocks="handleSelectedBlocks"/>
         </template>
         <template v-for="(label, index) in syntenySet.geneLabels" :key="index">
           <template v-if="label.isVisible">
-            <GeneLabelSVG :label="label" :gene-list="geneList" :ortholog-lines="orthologLines ?? []" />
+            <GeneLabelSVG
+              :label="label"
+              :gene-list="geneList"
+              :ortholog-lines="orthologLines ?? []" />
           </template>
         </template>
       </template>
     </template>
 
-    <ViewboxTitlesSVG :overview-backbone-set="overviewBackboneSet"
-      :overview-synteny-sets="(overviewSyntenySets as SyntenyRegionSet[])" :detailed-backbone-set="detailedBackboneSet"
+    <ViewboxTitlesSVG
+      :overview-backbone-set="overviewBackboneSet"
+      :overview-synteny-sets="(overviewSyntenySets as SyntenyRegionSet[])"
+      :detailed-backbone-set="detailedBackboneSet"
       :detailed-synteny-sets="(detailedSyntenySets as SyntenyRegionSet[])" />
 
     <!-- Navigation buttons -->
-    <rect class="navigation-btn" :class="{ 'disabled': isNavigationUpDisabled }" @click="navigateUp"
+    <rect class="navigation-btn"
+      :class="{ 'disabled': isNavigationUpDisabled }"
+      @click="navigateUp"
       :x="store.state.svgPositions.overviewPanelWidth"
       :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight"
       :width="SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth"
       :height="SVGConstants.navigationButtonHeight" />
-    <rect class="navigation-btn" :class="{ 'disabled': isNavigationDownDisabled }" @click="navigateDown"
+    <rect class="navigation-btn"
+      :class="{ 'disabled': isNavigationDownDisabled }"
+      @click="navigateDown"
       :x="store.state.svgPositions.overviewPanelWidth"
       :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight"
       :width="SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth"
       :height="SVGConstants.navigationButtonHeight" />
-    <image class="nav-btn-img" href="../../node_modules/primeicons/raw-svg/chevron-up.svg" @click="navigateUp"
+    <image class="nav-btn-img"
+      href="../../node_modules/primeicons/raw-svg/chevron-up.svg"
+      @click="navigateUp"
       :x="store.state.svgPositions.overviewPanelWidth + ((SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth) / 2)"
-      :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
-    <image class="nav-btn-img" href="../../node_modules/primeicons/raw-svg/chevron-down.svg" @click="navigateDown"
+      :y="SVGConstants.panelTitleHeight - SVGConstants.navigationButtonHeight - 1"
+      width="20"
+      height="20" />
+    <image class="nav-btn-img"
+      href="../../node_modules/primeicons/raw-svg/chevron-down.svg"
+      @click="navigateDown"
       :x="store.state.svgPositions.overviewPanelWidth + ((SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth) / 2)"
-      :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight - 1" width="20" height="20" />
+      :y="SVGConstants.viewboxHeight - SVGConstants.navigationButtonHeight - 1"
+      width="20"
+      height="20" />
 
     <!-- Transparent panels that show up once selection starts: Allows for selection on top of the other SVGs -->
-    <rect v-if="currentlySelectingRegion()" id="selecting-overview" class="selecting-panel"
-      :class="{ 'is-loading': arePanelsLoading }" x="0" @mousemove="updateOverviewSelection" @contextmenu.prevent
+    <rect v-if="currentlySelectingRegion()"
+      id="selecting-overview"
+      class="selecting-panel"
+      :class="{ 'is-loading': arePanelsLoading }"
+      x="0"
+      @mousemove="updateOverviewSelection"
+      @contextmenu.prevent
       @click.right="cancelOverviewSelection"
       @click.left="(event) => overviewSelectionHandler(event, getDetailedSelectionStatus(), overviewBackboneSet?.backbone)"
-      :width="store.state.svgPositions.overviewPanelWidth" :height="SVGConstants.viewboxHeight" />
+      :width="store.state.svgPositions.overviewPanelWidth"
+      :height="SVGConstants.viewboxHeight" />
 
-    <rect v-if="currentlySelectingRegion()" id="selecting-detailed" class="selecting-panel"
-      :class="{ 'is-loading': arePanelsLoading }" @mousemove="updateZoomSelection" @contextmenu.prevent
+    <rect v-if="currentlySelectingRegion()"
+      id="selecting-detailed"
+      class="selecting-panel"
+      :class="{ 'is-loading': arePanelsLoading }"
+      @mousemove="updateZoomSelection"
+      @contextmenu.prevent
       @click.right="cancelDetailedSelection"
       @click.left="(event) => detailedSelectionHandler(event, getOverviewSelectionStatus())"
       :x="store.state.svgPositions.overviewPanelWidth"
@@ -111,18 +173,68 @@
 
     <!-- The "gray" selection SVG that shows what area that the user is currently selecting -->
     <!-- Detailed panel selection svg for zoom -->
-    <rect v-if="startDetailedSelectionY && stopDetailedSelectionY" class="visible-selecting-panel"
-      @mousedown.left="(event) => detailedSelectionHandler(event, getOverviewSelectionStatus())"
-      @click.right="cancelDetailedSelection" @mousemove="updateZoomSelection" @contextmenu.prevent fill="lightgray"
-      fill-opacity="0.4" :x="store.state.svgPositions.overviewPanelWidth" :y="startDetailedSelectionY"
-      :width="SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth"
-      :height="stopDetailedSelectionY - startDetailedSelectionY" />
+    <g v-if="startDetailedSelectionY && stopDetailedSelectionY">
+      <rect class="visible-selecting-panel"
+        @mousedown.left="(event) => detailedSelectionHandler(event, getOverviewSelectionStatus())"
+        @click.right="cancelDetailedSelection"
+        @mousemove="updateZoomSelection"
+        @contextmenu.prevent fill="lightgray"
+        fill-opacity="0.4" :x="store.state.svgPositions.overviewPanelWidth" :y="startDetailedSelectionY"
+        :width="SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth"
+        :height="stopDetailedSelectionY - startDetailedSelectionY" />
+      <transition name="fade">
+        <text v-if="Math.abs(stopDetailedSelectionY - startDetailedSelectionY) > 60"
+          class="zoom-tooltip-text fade-in detailed-panel-tooltip-text"
+          :x="store.state.svgPositions.overviewPanelWidth + (SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth) / 2"
+          :y="Math.min(startDetailedSelectionY, stopDetailedSelectionY) + (((Math.abs(stopDetailedSelectionY - startDetailedSelectionY)) * 0.3))" 
+          text-anchor="middle"
+          dominant-baseline="hanging">
+          <tspan
+            :x="store.state.svgPositions.overviewPanelWidth + (SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth) / 2"
+            dy="0.8em">
+            Click again to zoom to selected region.
+          </tspan>
+          <tspan
+            :x="store.state.svgPositions.overviewPanelWidth + (SVGConstants.viewboxWidth - store.state.svgPositions.overviewPanelWidth) / 2"
+            dy="1.6em">
+            Right-click or press ESC to cancel the selection
+          </tspan>
+        </text>
+      </transition>
+    </g>
     <!-- Overview panel selection svg for backbone -->
-    <rect v-if="startOverviewSelectionY && stopOverviewSelectionY" class="visible-selecting-panel"
-      @mousemove="(event) => updateOverviewSelection(event)" @contextmenu.prevent
-      @mousedown.left="(event) => overviewSelectionHandler(event, getDetailedSelectionStatus(), overviewBackboneSet?.backbone)"
-      @click.right="cancelOverviewSelection" fill="lightgray" fill-opacity="0.4" :x="0" :y="startOverviewSelectionY"
-      :width="store.state.svgPositions.overviewPanelWidth" :height="stopOverviewSelectionY - startOverviewSelectionY" />
+    <g v-if="startOverviewSelectionY && stopOverviewSelectionY">
+      <rect class="visible-selecting-panel"
+        @mousemove="(event) => updateOverviewSelection(event)"
+        @contextmenu.prevent
+        @mousedown.left="(event) => overviewSelectionHandler(event, getDetailedSelectionStatus(), overviewBackboneSet?.backbone)"
+        @click.right="cancelOverviewSelection"
+        fill="lightgray"
+        fill-opacity="0.4"
+        :x="0"
+        :y="startOverviewSelectionY"
+        :width="store.state.svgPositions.overviewPanelWidth"
+        :height="stopOverviewSelectionY - startOverviewSelectionY" />
+      <transition name="fade">
+        <text v-if="Math.abs(stopOverviewSelectionY - startOverviewSelectionY) > 60"
+          class="zoom-tooltip-text fade-in overview-panel-tooltip-text"
+          :x="store.state.svgPositions.overviewPanelWidth / 2" 
+          :y="Math.min(startOverviewSelectionY, stopOverviewSelectionY) + (((Math.abs(stopOverviewSelectionY - startOverviewSelectionY)) * 0.3))" 
+          text-anchor="middle" 
+          dominant-baseline="hanging">
+          <tspan
+            :x="store.state.svgPositions.overviewPanelWidth / 2"
+            dy="1em">
+            Click again to zoom to selected region.
+          </tspan>
+          <tspan
+            :x="store.state.svgPositions.overviewPanelWidth / 2"
+            dy="2em">
+            Right-click or press ESC to cancel.
+          </tspan>
+        </text>
+      </transition>
+    </g>
   </svg>
 
   <template v-if="displayVariantLegend">
@@ -134,10 +246,14 @@
           <template
             v-if="detailedBackboneSet && detailedBackboneSet.maxVariantCount && detailedBackboneSet.variantBinSize && detailedBackboneSet.maxVariantCount > 0">
             <div class="col-2 legend-container">
-              <GradientLegend :species-name="detailedBackboneSet?.speciesName || ''"
-                :map-name="detailedBackboneSet?.mapName" :min-value="0"
-                :max-value="detailedBackboneSet?.maxVariantCount || 0" :bin-size="detailedBackboneSet.variantBinSize"
-                min-color="oklch(68% 0.25 315) 99% 99%" max-color="oklch(68% 0.18 15) 7% 7%">
+              <GradientLegend
+                :species-name="detailedBackboneSet?.speciesName || ''"
+                :map-name="detailedBackboneSet?.mapName"
+                :min-value="0"
+                :max-value="detailedBackboneSet?.maxVariantCount || 0"
+                :bin-size="detailedBackboneSet.variantBinSize"
+                min-color="oklch(68% 0.25 315) 99% 99%"
+                max-color="oklch(68% 0.18 15) 7% 7%">
               </GradientLegend>
             </div>
           </template>
@@ -146,8 +262,13 @@
           <template v-if="set && set.order === speciesIndex - 1">
             <template v-if="set.variantBinSize && set.maxVariantCount && set.maxVariantCount > 0">
               <div class="col-2 legend-container">
-                <GradientLegend :species-name="set.speciesName" :map-name="set.mapName" :min-value="0"
-                  :max-value="set.maxVariantCount" :bin-size="set.variantBinSize" max-color="oklch(68% 0.18 15) 7% 7%"
+                <GradientLegend
+                  :species-name="set.speciesName"
+                  :map-name="set.mapName"
+                  :min-value="0"
+                  :max-value="set.maxVariantCount"
+                  :bin-size="set.variantBinSize"
+                  max-color="oklch(68% 0.18 15) 7% 7%"
                   min-color="oklch(68% 0.25 315) 99% 99%">
                 </GradientLegend>
               </div>
@@ -157,7 +278,11 @@
       </template>
     </div>
   </template>
-  <VCMapDialog v-model:show="showDialog" :header="dialogHeader" :message="dialogMessage" :theme="dialogTheme"
+  <VCMapDialog
+    v-model:show="showDialog"
+    :header="dialogHeader"
+    :message="dialogMessage"
+    :theme="dialogTheme"
     :show-back-button="showDialogBackButton" />
   <LoadingSpinnerMask v-if="arePanelsLoading" :style="getDetailedPosition()"></LoadingSpinnerMask>
   <!--
@@ -284,6 +409,7 @@ import ContextMenu from 'primevue/contextmenu';
 import GenomicSection from '@/models/GenomicSection';
 import useSyntenyAndDataInteraction from '@/composables/useSyntenyAndDataInteraction';
 import { GeneDatatrack } from '@/models/DatatrackSection';
+import { MenuItem } from '@/models/ContextMenu';
 
 const SHOW_DEBUG = process.env.NODE_ENV === 'development';
 const NAV_SHIFT_PERCENT = 0.2;
@@ -309,6 +435,7 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: 'swap-backbone', mapKey: string, chr: string, start: number, stop: number): void,
+  (e: 'swap-backbone-new-tab', value: boolean): void,
 }>();
 
 let detailedSyntenySets = ref<SyntenyRegionSet[]>([]); // The currently displayed SyntenicRegions in the detailed panel
@@ -318,7 +445,7 @@ let overviewSyntenySets = ref<SyntenyRegionSet[]>([]);
 let orthologLines = ref<OrthologLine[]>();
 let detailedSyntenySvgYPosition = ref<number | null>(null);
 let detailedSyntenyBlockYPositions = ref<number[] | null>(null);
-let contextMenuOpen = ref<boolean>(false); // Tracks if the context menu is open, to share with child components
+let swappingBackbone = ref<boolean>(false); // Tracks if we're swapping the backbone, to reference for before each
 // Keeps list of selected blocks to share with all children when necessary
 let selectedBlocks = ref<SyntenySection[]>([]);
 // The section that was clicked to open the context menu
@@ -342,12 +469,6 @@ const toggleGenesListForBlock = (debugList: number[], blockIndex: number) => {
 ////
 
 /// Context Menu
-interface MenuItem {
-  label: string,
-  command: () => void,
-  items?: MenuItem[],
-  icon?: string,
-}
 const cm = ref();
 const items = ref<MenuItem[]>([]);
 
@@ -420,14 +541,14 @@ const arePanelsLoading = computed(() => {
 const handleShowContextMenu = (event: MouseEvent, menuItems: MenuItem[], contextSection?: GenomicSection) => {
   items.value = menuItems;
   cm.value.show(event);
-  contextMenuOpen.value = true;
+  store.dispatch('setContextMenuOpen', true);
   if (contextSection) {
     contextMenuSection.value = contextSection;
   }
 };
 
 const onHideContextMenu = () => {
-  contextMenuOpen.value = false;
+  store.dispatch('setContextMenuOpen', false);
   if (contextMenuSection.value) {
     contextMenuSection.value.isHovered = false;
     // If the context menu was for a gene, we'll want to remove hover for gene and orthologs
@@ -442,7 +563,12 @@ const onHideContextMenu = () => {
 };
 
 const handleSwapBackbone = (mapKey: string, chr: string, start: number, stop: number) => {
+  swappingBackbone.value = true;
   emit('swap-backbone', mapKey, chr, start, stop);
+};
+
+const handleSwapBackboneNewTab = () => {
+  swappingBackbone.value = true;
 };
 
 const handleSelectedBlocks = (sections: SyntenySection[]) => {
@@ -788,7 +914,7 @@ document.addEventListener('scroll', getDetailedPosition);
 
 //Back button handling from svg page.  User must confirm they want to leave the page.
 router.beforeEach((to, from, next) => {
-  if (window && window.event && window.event.type == 'popstate') {
+  if (window && window.event && window.event.type == 'popstate' && swappingBackbone.value == false) {
     const response = confirm('Are you sure you want to leave this page? You may lose progress.');
     if (response == true) {
       next();
@@ -798,6 +924,7 @@ router.beforeEach((to, from, next) => {
     }
   }
   else {
+    swappingBackbone.value = false;
     next();
   }
 });
@@ -811,8 +938,13 @@ window.addEventListener('keyup', function (event) {
   }
 });
 
+// TODO: We don't seem to be showing the toast with the selection instructions anymore. If not, I think we can remove this function
+//   along with the selectionToastCount in the vuex store.
 const showToast = (severity: ToastMessageOptions["severity"], title: string, details: string, duration: number) => {
   const toastCount = store.state.selectionToastCount;
+  if (store.state.contextMenuOpen) {
+    return;
+  }
 
   if (toastCount % 10 == 0) {
     toast.add({ severity: severity, summary: title, detail: details, life: duration });
@@ -909,30 +1041,22 @@ rect.navigation-btn {
   margin-left: 1%;
 }
 
-.density-toggle-container {
-  margin-top: 1%;
-  margin-bottom: 1%;
-  width: fit-content;
+.zoom-tooltip-text {
+    text-anchor: middle;
+    white-space: pre; // This allows the text to wrap
+    letter-spacing: 0.1em;
+    font-weight: bold;
+    box-shadow: inset 0 0 0 100vmax rgba(0,0,0,.7);
+    fill: black;
+    pointer-events: none;
 }
 
-.density-toggle-button {
-  margin-left: 2%;
-  margin-right: 2%;
-  width: fit-content;
-  min-width: 4em;
+.detailed-panel-tooltip-text {
+  font-size: 0.8em;
 }
 
-.flex-container {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  justify-content: space-between;
-}
-
-.flex-container-start {
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
+.overview-panel-tooltip-text {
+  font-size: 0.6em;
 }
 
 .col-4 {
@@ -941,11 +1065,19 @@ rect.navigation-btn {
   }
 }
 
-.left-padding {
-  padding-left: 20%;
+@keyframes fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
 }
 
-.flex-end {
-  justify-content: flex-end;
+.fade-in {
+  animation: fade-in .25s;
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity .25s;
+}
+.fade-enter, .fade-leave-to {
+  opacity: 0;
 }
 </style>

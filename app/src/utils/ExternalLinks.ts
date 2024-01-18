@@ -3,7 +3,6 @@
  */
 
 import Gene from "@/models/Gene";
-import GenomicSection from "@/models/GenomicSection";
 import Species from "@/models/Species";
 
 const EXTERNAL_URL_CONSTANTS = {
@@ -15,13 +14,11 @@ const EXTERNAL_URL_CONSTANTS = {
 /**
  * Creates a JBrowse2 link for a processed GenomicSection (these are processed "sections" of data e.g. synteny section, datatrack section)
  */
-export function createJBrowse2UrlForGenomicSection(section: GenomicSection) {
+export function createJBrowse2UrlForGenomicSection(assembly: string, chromosome: string, speciesStart: number, speciesStop: number) {
   const {
-    assembly,
-    chromosome,
     start,
     stop,
-  } =  extractSectionData(section);
+  } =  extractSectionData(speciesStart, speciesStop);
 
   // Construct JBrowse URL
   const jbrowseUrl = `${EXTERNAL_URL_CONSTANTS.jbrowse2}?dest=jbrowse2&assembly=${assembly}&loc=chr${chromosome}:${start}-${stop}`;
@@ -47,12 +44,11 @@ export function createJBrowse2UrlForGene(gene: Gene, geneSpecies: Species) {
 /**
  * Creates a Variant Visualizer link for a processed GenomicSection (these are processed "sections" of data e.g. synteny section, datatrack section)
  */
-export function createVariantVisualizerUrl(section: GenomicSection, mapKey: number) {
+export function createVariantVisualizerUrl(mapKey: number, chromosome: string, speciesStart: number, speciesStop: number) {
   const {
-    chromosome,
     start,
     stop,
-  } =  extractSectionData(section);
+  } =  extractSectionData(speciesStart, speciesStop);
 
   // Construct Variant Visualizer URL
   const vvURL = `${EXTERNAL_URL_CONSTANTS.variantVisualizer}?mapKey=${mapKey}&chr=${chromosome}&start=${start}&stop=${stop}`;
@@ -66,18 +62,14 @@ export function createGeneReportUrl(rgdId: number) {
   return `${EXTERNAL_URL_CONSTANTS.geneReport}?id=${rgdId}`;
 }
 
-function extractSectionData(section: GenomicSection) {
-  const assembly = section.mapName;
-  const chromosome = section.chromosome;
-  let start = section.speciesStart;
-  let stop = section.speciesStop;
+function extractSectionData(speciesStart: number, speciesStop: number) {
+  let start = speciesStart;
+  let stop = speciesStop;
 
   // Invert start/stop if needed
   if (start > stop) [start, stop] = [stop, start];
 
   return {
-    assembly,
-    chromosome,
     start,
     stop,
   };

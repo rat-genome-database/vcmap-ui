@@ -68,7 +68,7 @@ const onMouseLeave = (line: OrthologLine) => {
   hideHoveredData();
 
   // Only reset data onMouseLeave if there isn't a selected gene
-  if (store.state.selectedGeneIds.length === 0 && store.state.selectedVariantSections.length === 0 && store.state.selectedBlocks.length === 0) {
+  if (store.state.selectedGeneIds.length === 0 && store.state.selectedData?.length === 0) {
     store.dispatch('setSelectedData', null);
   }
 
@@ -79,7 +79,7 @@ const onClick = (event: any, line: OrthologLine) => {
   const isSelected = store.state.selectedGeneIds.includes(line.endGene.rgdId || line.startGene.rgdId || -1);
 
   // If clicked section already selected, just reset the selectedGeneId state
-  if (line.isSelected || isSelected) {
+  if ((event.ctrlKey || event.metaKey) && isSelected) {
     store.dispatch('setSelectedGeneIds', []);
     store.dispatch('setSelectedData', null);
     line.isSelected = false;

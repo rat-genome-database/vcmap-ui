@@ -4,7 +4,7 @@
       <Panel :toggleable="true" class="vcmap-panel">
         <template #icons>
           <div>
-            <button class="p-panel-header-icon p-link mr-2" @click="toggleMenu">
+            <button class="p-panel-header-icon p-link mr-2" @click="toggleMenu" v-tooltip.top="'Adjustable settings to add/remove comparative species, load variants or other datatracks, or open a configuration in a new tab'">
               <span class="pi pi-cog"></span>
             </button>
             <Menu ref="menu" id="config_menu" :model="items" popup />

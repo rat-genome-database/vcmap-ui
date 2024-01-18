@@ -11,7 +11,6 @@ import { createLogger } from 'vuex';
 import { ConfigurationMode } from '@/utils/Types';
 import { IHoveredData } from '@/models/HoveredData';
 import { SVGPositionVariables } from '@/utils/SVGConstants';
-import SyntenySection from '@/models/SyntenySection';
 
 export const key: InjectionKey<Store<VCMapState>> = Symbol();
 
@@ -43,7 +42,6 @@ export interface VCMapState
   /* Selected data */
   selectedGeneIds: number[];
   selectedVariantSections: any[];
-  selectedBlocks: SyntenySection[];
   selectedData: SelectedData[] | null;
   isDataPanelCollapsed: boolean;
 
@@ -63,7 +61,22 @@ export interface VCMapState
 
   /* Visibility settings */
   showOverviewPanel: boolean;
+  contextMenuOpen: boolean;
 }
+
+/**
+ * Remove items from state that do not need to be persisted across page refreshes or when new tabs are open
+ */
+const storageReducer = (state: VCMapState): Partial<VCMapState> => {
+  const {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    contextMenuOpen,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    hoveredData,
+    ...persistedState
+  } =  state;
+  return persistedState;
+};
 
 /**
  * Saves VCMap state to local storage so that newly opened tabs can default to last loaded configuration
@@ -71,6 +84,7 @@ export interface VCMapState
 const vuexLocal = new VuexPersistence<VCMapState>({
   key: 'VCMAP_LOCAL',
   storage: window.localStorage,
+  reducer: storageReducer,
 });
 
 /**
@@ -79,6 +93,7 @@ const vuexLocal = new VuexPersistence<VCMapState>({
 const vuexSession = new VuexPersistence<VCMapState>({
   key: 'VCMAP_SESSION',
   storage: window.sessionStorage,
+  reducer: storageReducer,
 });
 
 const actionsToLog = [
@@ -126,7 +141,6 @@ export default createStore({
 
     selectedGeneIds: [],
     selectedVariantSections: [],
-    selectedBlocks: [],
     selectedData: null,
     isDataPanelCollapsed: false,
 
@@ -148,6 +162,7 @@ export default createStore({
     hiddenDensityTracks: [],
     history: [],
     showOverviewPanel: true,
+    contextMenuOpen: false,
   }),
 
   mutations: {
@@ -193,9 +208,6 @@ export default createStore({
     selectedVariantSections(state: VCMapState, selectedSections: any[]) {
       state.selectedVariantSections = selectedSections;
     },
-    selectedBlocks(state: VCMapState, selectedBlocks: SyntenySection[]) {
-      state.selectedBlocks = selectedBlocks;
-    },
     isDetailedPanelUpdating(state: VCMapState, isUpdating: boolean) {
       state.isDetailedPanelUpdating = isUpdating;
     },
@@ -234,6 +246,17 @@ export default createStore({
       state.hoveredData = hoveredData;
     },
     addToHistory(state: VCMapState, entry: UserHistory) {
+      //check if the entry is already in the history, first by source, then by range
+      const relevantEntries = state.history.filter((e) => e.source === entry.source);
+      /* const index = relevantEntries.findIndex((e) => e.range.start === entry.range.start && e.range.stop === entry.range.stop);
+      if (index !== -1) {
+        return;
+      } */
+      //for now, explicitly allow only one Initial Load entry
+      if (entry.source === 'Initial Configuration' && relevantEntries.length > 0) {
+        return;
+      }
+      
       state.history.unshift(entry);
     },
     clearUserHistory(state: VCMapState) {
@@ -251,6 +274,9 @@ export default createStore({
     shouldUpdateDetailedPanel(state: VCMapState, shouldUpdateDetailedPanel: boolean) {
       state.shouldUpdateDetailedPanel = shouldUpdateDetailedPanel;
     },
+    contextMenuOpen(state: VCMapState, contextMenuOpen: boolean) {
+      state.contextMenuOpen = contextMenuOpen;
+    }
   },
 
   actions: {
@@ -284,9 +310,6 @@ export default createStore({
     setSelectedVariantSections(context: ActionContext<VCMapState, VCMapState>, selectedSections: any[]) {
       context.commit('selectedVariantSections', selectedSections);
     },
-    setSelectedBlocks(context: ActionContext<VCMapState, VCMapState>, selectedBlocks: SyntenySection[]) {
-      context.commit('selectedBlocks', selectedBlocks);
-    },
     setComparativeSpecies(context: ActionContext<VCMapState, VCMapState>, species: Species[]) {
       context.commit('comparativeSpecies', species);
     },
@@ -305,6 +328,9 @@ export default createStore({
     setToggleSyntenicDensityTrackVisibility(context: ActionContext<VCMapState, VCMapState>, mapKey: number) {
       context.commit('toggleSyntenicDensityTrackVisibility', mapKey);
     },
+    setHistory(context: ActionContext<VCMapState, VCMapState>, historyEntry: UserHistory) {
+      context.commit('addToHistory', historyEntry);
+    },
     clearConfiguration(context: ActionContext<VCMapState, VCMapState>) {
       context.commit('species', null);
       context.commit('gene', null);
@@ -314,7 +340,6 @@ export default createStore({
       context.commit('comparativeSpecies', []);
       context.commit('selectedGeneIds', []);
       context.commit('selectedVariantSections', []);
-      context.commit('selectedBlocks', []);
       context.commit('selectedData', []);
       context.commit('selectedBackboneRegion', null);
       context.commit('detailedBasePairRange', { start: 0, stop: 0 });
@@ -398,7 +423,10 @@ export default createStore({
     },
     setShouldUpdateDetailedPanel(context: ActionContext<VCMapState, VCMapState>, shouldUpdateDetailedPanel: boolean) {
       context.commit('shouldUpdateDetailedPanel', shouldUpdateDetailedPanel);
-    }
+    },
+    setContextMenuOpen(context: ActionContext<VCMapState, VCMapState>, contextMenuOpen: boolean) {
+      context.commit('contextMenuOpen', contextMenuOpen);
+    },
   },
 
   getters: {

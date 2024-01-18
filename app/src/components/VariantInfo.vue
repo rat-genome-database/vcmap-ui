@@ -2,22 +2,22 @@
     <div class="label-row">
         <div>
             <span class="label">Variant Section:</span>
-            <span>{{ props.variantSection?.speciesName }} </span>
+            <span>{{ props.speciesName }} </span>
         </div>
     </div>
     <div>
-        <span class="label">Chr{{ props.variantSection?.chromosome }}: </span>
+        <span class="label">Chr{{ props.chromosome }}: </span>
         <Button
             class="p-button-link rgd-link"
             @click="selectRegion()"
             v-tooltip.left="`Zoom to region`"
         >
-            <b>{{ Formatter.addCommasToBasePair(props.variantSection?.speciesStart ?? null) }} - {{ Formatter.addCommasToBasePair(props.variantSection?.speciesStop ?? null) }}</b>
+            <b>{{ Formatter.addCommasToBasePair(props.speciesStart ?? null) }} - {{ Formatter.addCommasToBasePair(props.speciesStop ?? null) }}</b>
         </Button>
     </div>
     <div>
         <span class="label">Variant Count: </span>
-        <span>{{ Formatter.addCommasToBasePair(props.variantSection?.variantCount ?? null) }}</span>
+        <span>{{ Formatter.addCommasToBasePair(props.variantCount ?? null) }}</span>
     </div>
     <div>
         <Button
@@ -42,16 +42,22 @@ import { Formatter } from '@/utils/Formatter';
 import { useStore } from 'vuex';
 import { key } from '@/store';
 import { useLogger } from 'vue-logger-plugin';
-import { VariantDensity } from '@/models/DatatrackSection';
 import { computed } from 'vue';
 import { createJBrowse2UrlForGenomicSection, createVariantVisualizerUrl } from '@/utils/ExternalLinks';
+import { BackboneAlignment } from '@/models/GenomicSection';
 
 const $log = useLogger();
 const store = useStore(key);
 const SEARCHED_GENE_WINDOW_FACTOR = 3;
 
 interface Props {
-    variantSection: VariantDensity | null;
+    mapName: string,
+    speciesName: string,
+    speciesStart: number,
+    speciesStop: number,
+    chromosome: string,
+    backboneAlignment: BackboneAlignment,
+    variantCount: number,
 }
 
 const props = defineProps<Props>();
@@ -59,7 +65,7 @@ const props = defineProps<Props>();
 const mapKey = computed(() => {
     // iterate through store.state.comparativeSpecies and find the mapKey for the species that matches props.variantSection?.genomicSection.speciesName. If not then return store.state.species.activeMap.key
     for (const species of store.state.comparativeSpecies) {
-        if (species.name === props.variantSection?.speciesName) {
+        if (species.name === props.speciesName) {
             return species.activeMap.key;
         }
     }
@@ -67,18 +73,12 @@ const mapKey = computed(() => {
 });
 
 const selectRegion = () => {
-    const section = props.variantSection;
-    if (section == null) {
-        $log.error(`Variant section is null. Cannot select region.`);
-        return;
-    }
-
-    const speciesStart = section.speciesStart;
-    const speciesStop = section.speciesStop;
+    const speciesStart = props.speciesStart;
+    const speciesStop = props.speciesStop;
     const sectionLength = speciesStop - speciesStart;
 
-    const bbStart = section.backboneAlignment.start;
-    const bbStop = section.backboneAlignment.stop;
+    const bbStart = props.backboneAlignment.start;
+    const bbStop = props.backboneAlignment.stop;
 
     // New variant sections will be processed on navigation, is there selected data we CAN keep?
     store.dispatch('setSelectedGeneIds', []);
@@ -97,21 +97,15 @@ const selectRegion = () => {
 };
 
 const goToVariantVisualizer = () => {
-    if (props.variantSection == null || mapKey.value == null) {
+    if (mapKey.value === null) {
         return;
     }
-
-    const rgdUrl = createVariantVisualizerUrl(props.variantSection, mapKey.value);
+    const rgdUrl = createVariantVisualizerUrl(mapKey.value, props.chromosome, props.speciesStart, props.speciesStop);
     window.open(rgdUrl);
 };
 
 const goToJBrowse2 = () => {
-
-  if (props.variantSection == null) {
-    return null;
-  }
-
-  const url = createJBrowse2UrlForGenomicSection(props.variantSection);
+  const url = createJBrowse2UrlForGenomicSection(props.mapName, props.chromosome, props.speciesStart, props.speciesStop);
   window.open(url);
 };
 
