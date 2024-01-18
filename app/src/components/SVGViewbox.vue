@@ -30,7 +30,7 @@
         <template v-for="(region, index) in syntenySet.regions" :key="index">
           <SectionSVG show-chromosome show-synteny-on-hover :gene-list="geneList" is-overview select-on-click
             :region="(region as SyntenyRegion)" @show-context-menu="handleShowContextMenu"
-            @swap-backbone="handleSwapBackbone" :selected-blocks="selectedBlocks" @select-blocks="handleSelectedBlocks"/>
+            @swap-backbone="handleSwapBackbone" :selected-blocks="(selectedBlocks as SyntenySection[])" @select-blocks="handleSelectedBlocks"/>
         </template>
       </template>
     </template>
@@ -62,7 +62,7 @@
             :synteny-hover-svg-y="detailedSyntenySvgYPosition" :gene-list="geneList"
             @synteny-hover="onDetailedSyntenyHover" @block-hover="onDetailedBlockHover"
             @show-context-menu="handleShowContextMenu" @swap-backbone="handleSwapBackbone" @swap-backbone-new-tab="handleSwapBackboneNewTab"
-            :selected-blocks="selectedBlocks" @select-blocks="handleSelectedBlocks"/>
+            :selected-blocks="(selectedBlocks as SyntenySection[])" @select-blocks="handleSelectedBlocks"/>
         </template>
         <template v-for="(label, index) in syntenySet.geneLabels" :key="index">
           <template v-if="label.isVisible">
@@ -308,6 +308,7 @@ import ContextMenu from 'primevue/contextmenu';
 import GenomicSection from '@/models/GenomicSection';
 import useSyntenyAndDataInteraction from '@/composables/useSyntenyAndDataInteraction';
 import { GeneDatatrack } from '@/models/DatatrackSection';
+import { MenuItem } from '@/models/ContextMenu';
 
 const SHOW_DEBUG = process.env.NODE_ENV === 'development';
 const NAV_SHIFT_PERCENT = 0.2;
@@ -367,12 +368,6 @@ const toggleGenesListForBlock = (debugList: number[], blockIndex: number) => {
 ////
 
 /// Context Menu
-interface MenuItem {
-  label: string,
-  command: () => void,
-  items?: MenuItem[],
-  icon?: string,
-}
 const cm = ref();
 const items = ref<MenuItem[]>([]);
 
