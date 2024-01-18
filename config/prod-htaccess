@@ -1,0 +1,20 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  # If the subdirectory of the Public URL for deployment ever changes,
+  # the following line must reflect the correct URL relative to the 
+  # WebRoot of the server. This must be the same as the setting in
+  # Ex]
+  #   app/vue.config.ts:
+  #     publicPath: '/vcmap/'
+  # ---
+  #   .htaccess:
+  #     RewriteRule . /vcmap/index.html [L]
+  # ---
+  #
+  # Default configuration assumes deployment at ROOT of webserver:
+  RewriteRule . /index.html [L]
+</IfModule>

@@ -126,3 +126,23 @@ app $> npm run build:prod
 ```
 
 The build files will be output to the `app/dist/` directory with either method.
+
+Before deploying to a production Apache HTTPD server, the proper `.htaccess` file must be installed
+in the root of the deployment. There is an example of this file in `config/prod-htaccess`. In order
+for this `.htaccess` file to operate properly, the RewriteBase RewriteRule and RewriteCond Options
+must be allowed to be overridden in the deployment directory. Typically this is achieved with the
+following configuration inside of an appropriate `<Directory>` initiative:
+
+```
+  <Directory "/PATH/TO/YOUR/DEPLOYMENT">
+    AllowOverride FileInfo
+  </Directory>
+```
+
+You may adjust these settings to meet your specific needs.
+
+For other (non-Apache) servers, equivalent rewrite rules must be put in place for requests that
+are made at the root of the deployment for any "non-file / non-directory" requests. This allows
+for requests that are made using the Vue routing history to be reloaded without any issue by the
+client web browsers. Without this setting, pressing the reload button, or using the swap backbone
+(in a new tab) feature will result in the server responding with 404 errors.
