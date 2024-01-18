@@ -11,7 +11,6 @@ import { createLogger } from 'vuex';
 import { ConfigurationMode } from '@/utils/Types';
 import { IHoveredData } from '@/models/HoveredData';
 import { SVGPositionVariables } from '@/utils/SVGConstants';
-import SyntenySection from '@/models/SyntenySection';
 
 export const key: InjectionKey<Store<VCMapState>> = Symbol();
 
@@ -66,11 +65,26 @@ export interface VCMapState
 }
 
 /**
+ * Remove items from state that do not need to be persisted across page refreshes or when new tabs are open
+ */
+const storageReducer = (state: VCMapState): Partial<VCMapState> => {
+  const {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    contextMenuOpen,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    hoveredData,
+    ...persistedState
+  } =  state;
+  return persistedState;
+};
+
+/**
  * Saves VCMap state to local storage so that newly opened tabs can default to last loaded configuration
  */
 const vuexLocal = new VuexPersistence<VCMapState>({
   key: 'VCMAP_LOCAL',
   storage: window.localStorage,
+  reducer: storageReducer,
 });
 
 /**
@@ -79,6 +93,7 @@ const vuexLocal = new VuexPersistence<VCMapState>({
 const vuexSession = new VuexPersistence<VCMapState>({
   key: 'VCMAP_SESSION',
   storage: window.sessionStorage,
+  reducer: storageReducer,
 });
 
 const actionsToLog = [
