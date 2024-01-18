@@ -117,7 +117,6 @@ interface Props {
   syntenyHoverSvgY?: number | null;
   geneList: Map<number, Gene>;
   syntenyHoverBackboneYValues?: number[] | null;
-  contextMenuOpen: boolean;
 }
 
 interface MenuItem {
@@ -241,7 +240,7 @@ const showBackboneContextMenu = (event: MouseEvent, backboneSection: BackboneSec
 };
 
 const onMouseEnter = (event: MouseEvent, section: BackboneSection | DatatrackSection) => {
-  if (!props.contextMenuOpen) {
+  if (!store.state.contextMenuOpen) {
     if (section) {
       section.isHovered = true;
     }
@@ -266,7 +265,7 @@ const onMouseEnter = (event: MouseEvent, section: BackboneSection | DatatrackSec
 };
 
 const onMouseLeave = (section: BackboneSection | DatatrackSection) => {
-  if (!props.contextMenuOpen) {
+  if (!store.state.contextMenuOpen) {
     emit('synteny-hover', null);
 
     if (section && section.isHovered == true) {

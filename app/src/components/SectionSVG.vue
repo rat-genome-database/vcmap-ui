@@ -93,6 +93,7 @@ import Gene from '@/models/Gene';
 import DatatrackSet from '@/models/DatatrackSet';
 import useSyntenyAndDataInteraction from '@/composables/useSyntenyAndDataInteraction';
 import { createJBrowse2UrlForGene, createJBrowse2UrlForGenomicSection, createVariantVisualizerUrl } from '@/utils/ExternalLinks';
+import { ContextMenuType, MenuItem } from '@/models/ContextMenu';
 
 const HOVER_HIGHLIGHT_COLOR = '#FF7C60';
 const SELECTED_HIGHLIGHT_COLOR = '#FF4822';
@@ -117,23 +118,7 @@ interface Props {
   region: SyntenyRegion;
   syntenyHoverSvgY?: number | null;
   geneList: Map<number, Gene>;
-  contextMenuOpen: boolean;
   selectedBlocks: SyntenySection[];
-}
-
-interface MenuItem {
-  label: string,
-  subtext?: string,
-  icon?: string,
-  command?: () => void;
-  items?: MenuItem[];
-}
-
-interface ContextMenuType {
-  event: MouseEvent;
-  region?: SyntenyRegion;
-  section?: SyntenySection;
-  track?: DatatrackSection;
 }
 
 const props = defineProps<Props>();
@@ -356,7 +341,7 @@ const showContextMenu = ({ event, region, section, track }: ContextMenuType) => 
 ///
 
 const onMouseEnter = (event: MouseEvent, section: SyntenySection | DatatrackSection) => {
-  if (!props.contextMenuOpen) {
+  if (!store.state.contextMenuOpen) {
     section.isHovered = true;
 
     // NOTE: ignore qtl datatracks for now
@@ -369,7 +354,7 @@ const onMouseEnter = (event: MouseEvent, section: SyntenySection | DatatrackSect
 };
 
 const onMouseLeave = (section: DatatrackSection | SyntenySection) => {
-  if (!props.contextMenuOpen) {
+  if (!store.state.contextMenuOpen) {
     emit('synteny-hover', null);
     if (isDetailed) {
       emit('block-hover', null);
