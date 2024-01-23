@@ -193,7 +193,7 @@
             v-model="comparativeSpeciesSelections[index].typeKey" 
             :loading="isLoadingSpecies"
             :options="comparativeSpeciesOptions"
-            @change="setPrimaryAssembly(index)"
+            @change="(evt) => setPrimaryAssembly(evt, index)"
             optionValue="typeKey"
             optionLabel="name" 
             placeholder="Comparative Species"
@@ -255,6 +255,7 @@ import { key } from '@/store';
 import { sortGeneMatches } from '@/utils/DataPanelHelpers';
 import { ConfigurationMode } from '@/utils/Types';
 import { calculateOverviewWidth } from '@/utils/Shared';
+import { DropdownChangeEvent } from 'primevue/dropdown';
 
 interface ComparativeSpeciesSelection
 {
@@ -323,7 +324,7 @@ watch(activeTab, async () => {
 });
 
 const isValidConfig = computed(() => {
-  const isCommonConfigValid = backboneSpecies.value && comparativeSpeciesSelections.value.length > 0 && comparativeSpeciesSelections.value.every(s => s.typeKey !== 0 && s.mapKey !== 0);
+  const isCommonConfigValid = backboneSpecies.value && comparativeSpeciesSelections.value.length > 0 && comparativeSpeciesSelections.value.every(s => s.typeKey && s.mapKey);
   if (!isCommonConfigValid)
   {
     return false;
@@ -652,9 +653,17 @@ async function prepopulateConfigOptions()
     const prevComparativeSpecies = store.state.comparativeSpecies;
     const selections: ComparativeSpeciesSelection[] = [];
     prevComparativeSpecies.forEach(s => {
+      const speciesOption = comparativeSpeciesOptions.value.find(option => option.typeKey === s.typeKey);
+      if (speciesOption == null) {
+        return;
+      }
+
+      // If last stored map key (activeMap) is available in the options for comparative species, use it as the default. Otherwise, use
+      // the designated defaultMapKey on the comparative species option.
+      const selectionMapKey = speciesOption.maps.map(m => m.key).includes(s.activeMap.key) ? s.activeMap.key : speciesOption.defaultMapKey;
       selections.push({
         typeKey: s.typeKey, 
-        mapKey: (s.activeMap) ? s.activeMap.key : s.defaultMapKey,
+        mapKey: selectionMapKey,
         showWarning: false,
       });
     });
@@ -872,24 +881,13 @@ function getAssemblyOptionLabel(assembly: SpeciesMap)
   return assembly.primaryRefAssembly ? `${assembly.name} (primary)` : assembly.name;
 }
 
-function setPrimaryAssembly(index: number)
+function setPrimaryAssembly(event: DropdownChangeEvent, selectionIndex: number)
 {
-  let selectedSpecies: Species | undefined;
-  for (let i = 0; i < backboneSpeciesOptions.value.length; i++)
-  {
-    if (backboneSpeciesOptions.value[i].typeKey === comparativeSpeciesSelections.value[index].typeKey)
-    {
-      selectedSpecies = backboneSpeciesOptions.value[i];
-      break;
-    }
-  }
+  const comparativeSpeciesIndex = event.value - 1;
+  // Set default map key as the selected assembly for the comparative species selection
+  comparativeSpeciesSelections.value[selectionIndex].mapKey = comparativeSpeciesOptions.value[comparativeSpeciesIndex].defaultMapKey;
 
-  if (selectedSpecies != null)
-  {
-    comparativeSpeciesSelections.value[index].mapKey = selectedSpecies.defaultMapKey;
-  }
-
-  checkAgainstBackboneSpeciesAndAssembly(comparativeSpeciesSelections.value[index]);
+  checkAgainstBackboneSpeciesAndAssembly(comparativeSpeciesSelections.value[selectionIndex]);
 }
 
 function checkAgainstBackboneSpeciesAndAssembly(selection: ComparativeSpeciesSelection)
