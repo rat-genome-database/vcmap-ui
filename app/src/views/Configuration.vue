@@ -881,13 +881,19 @@ function getAssemblyOptionLabel(assembly: SpeciesMap)
   return assembly.primaryRefAssembly ? `${assembly.name} (primary)` : assembly.name;
 }
 
-function setPrimaryAssembly(event: DropdownChangeEvent, selectionIndex: number)
+/**
+ * Sets the default assembly of the comparative species selection
+ * @param event DropdownChangeEvent - value is the type key of the comparative species that was selected
+ * @param selectionRowIndex the row of the comparative species selection that triggered this function
+ */
+function setPrimaryAssembly(event: DropdownChangeEvent, selectionRowIndex: number)
 {
-  const comparativeSpeciesIndex = event.value - 1;
+  const selectedSpeciesTypeKey = event.value;
+  const selectedSpeciesIndex = comparativeSpeciesOptions.value.findIndex(s => s.typeKey === selectedSpeciesTypeKey);
   // Set default map key as the selected assembly for the comparative species selection
-  comparativeSpeciesSelections.value[selectionIndex].mapKey = comparativeSpeciesOptions.value[comparativeSpeciesIndex].defaultMapKey;
+  comparativeSpeciesSelections.value[selectionRowIndex].mapKey = comparativeSpeciesOptions.value[selectedSpeciesIndex].defaultMapKey;
 
-  checkAgainstBackboneSpeciesAndAssembly(comparativeSpeciesSelections.value[selectionIndex]);
+  checkAgainstBackboneSpeciesAndAssembly(comparativeSpeciesSelections.value[selectionRowIndex]);
 }
 
 function checkAgainstBackboneSpeciesAndAssembly(selection: ComparativeSpeciesSelection)
