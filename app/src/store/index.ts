@@ -357,6 +357,10 @@ export default createStore({
       context.commit('selectedBackboneRegion', null);
       context.commit('detailedBasePairRange', { start: 0, stop: 0 });
     },
+    /**
+     * Updates the backbone selection and the base pair range shown in the detailed panel without querying
+     * for new synteny data
+     */
     setBackboneSelection(context: ActionContext<VCMapState, VCMapState>, selection: BackboneSelection) {
       if (selection.viewportSelection == null)
       {
@@ -379,6 +383,10 @@ export default createStore({
         partialHistory = null;
       }
     },
+    /**
+     * Sends a new detailed base pair request to the Main.vue page. This will trigger a query for new synteny data and 
+     * reprocessing of the SVG elements in the detailed panel.
+     */
     setDetailedBasePairRequest(context: ActionContext<VCMapState, VCMapState>, payload: {range: BasePairRange, source?: string}) {
       const { range, source = '' } = payload;
       // Note: Committing a change to detailedBasePairRange will trigger an update on the Detailed panel
@@ -389,6 +397,11 @@ export default createStore({
         partialHistory = { range, source };
       }
     },
+    /**
+     * Sets a new base pair range for the detailed panel. This will trigger the detailed panel to reprocess
+     * its SVG elements without querying for new synteny data. See {@link setDetailedBasePairRequest} for triggering
+     * a new query of synteny data + reprocessing.
+     */
     setDetailedBasePairRange(context: ActionContext<VCMapState, VCMapState>, range: BasePairRange) {
       // Note: Committing a change to detailedBasePairRange will trigger an update on the Detailed panel
       context.commit('detailedBasePairRange', range);
