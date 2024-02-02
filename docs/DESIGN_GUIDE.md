@@ -1,4 +1,5 @@
 # Project Design Guide
+Last updated: v1.0.2 (2024-02-01)
 
 [VCMap Web UI](../README.md)
 
@@ -32,10 +33,10 @@ This is the css framework we use. It works well with PrimeVue and has a lot of u
 ### Application Layers
 
 * View/Presentation Layer
-  * views
+  * views ([see more](#views))
   * components ([see more](#writing-components))
 * Data Access Layer
-  * store
+  * store ([see more](#vuex-store))
   * api ([see more](#api-layer))
   * models
 
@@ -46,7 +47,7 @@ The philosophy we have taken so far in regards to data flow is the following:
 2. The API layer makes an http request for that data and transforms it into a model object
 3. The model object is returned to the view or component
 
-In general, we are making use of the `store` to keep the user's current configuration settings in local storage.
+In general, we are making use of the `store` to keep the user's current configuration settings in local/session storage.
 
 ### Logging
 
@@ -78,12 +79,40 @@ $log.timeEnd('time this');                 // This is okay!
 
 ```
 
+### Views
+
+Views represent individual pages of this application. Currently there are 2 views: `Configuration.vue` and `Main.vue`.
+#### `Configuration.vue`
+Handles all of the setup for configuring a user's first initial load of data. All of the logic for that resides within that single component.
+#### `Main.vue`
+Handles everything else. It includes the `SVGViewbox.vue` component along with components that make up the side data panel and header panel. Most of the logic in `Main.vue` focuses on receiving `detailedBasePairRequests` from the Vuex store and triggering re-querying and re-processing of synteny data. Once the processing is completed, the resulting models are handed off to other components to display them and/or make them interactive.
+
+
 ### Writing Components
 
 * When possible, write small, easily testable components. Always try to break down large components into a collection of smaller ones when it makes sense to do so.
 * For the time being we are using Vue3's `Composition API` with the `script setup` syntax. This syntax lets us avoid some boilerplate code. You can read more about that here:
   * [Composition API](https://v3.vuejs.org/guide/composition-api-introduction.html#why-composition-api)
   * [Script Setup Syntax](https://v3.vuejs.org/api/sfc-script-setup.html)
+
+### Vuex Store
+
+The Vuex Store manages the application state. It also makes use of a plugin to persist this data to both local and session storage. A common paradigm that you'll see throughout the code is a vuex action is dispatched, which then updates a property on state through a mutation, which is then being watched by a component, which then triggers some code to execute [see this diagram](./application-interaction-with-data-store.png).
+
+#### Flow of local and session storage
+
+The reason that we persist to both has to do with enabling us to support opening different configurations in different tabs. The way the persistence is configured, session storage will take precedent. To see how local and session storage can change, [view the diagram here](./application-state-diagram.png).
+
+#### Important actions
+These are probably our most important Vuex actions to understand. You can find these defined at `/app/src/store/index.ts`.
+
+* `setDetailedBasePairRequest`
+  * This will trigger a requery of synteny data and reprocessing of the Detailed panel
+* `setBackboneSelection`
+  * This will change the backbone selection and only trigger reprocessing of the Detailed panel
+* `setDetailedBasePairRange`
+  * This will only trigger reprocessing of the Detailed panel
+
 
 ### API Layer
 
