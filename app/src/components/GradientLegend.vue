@@ -40,9 +40,8 @@ defineProps<Props>();
   background: 
     linear-gradient(
       to right in oklch decreasing hue, 
-      oklch(68% 0.19 250) 6% 6%, oklch(68% 0.19 15) 93% 93%
-    )
-  ;
+      oklch(100% 0 8.89) 6% 6%, oklch(0% 0.5 15) 93% 93%
+    );
 }
 
 .legend-container
