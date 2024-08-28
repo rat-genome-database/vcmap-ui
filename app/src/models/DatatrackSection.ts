@@ -95,6 +95,7 @@ export class VariantDensity extends DatatrackSection
     const huePercentage = ((hue - hueRange.min) / (hueRange.max - hueRange.min));
     
     //scale lightness to variant density. 
+    //TODO: if 0 is too dark, this could be calculated on a 50 - 100 scale for example
     const lightness = 100 * huePercentage; // Example value, can be adjusted
     
     //scale chroma to density 0.5 to 0
