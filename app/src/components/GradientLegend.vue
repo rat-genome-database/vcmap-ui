@@ -6,6 +6,7 @@
         {{ parseFloat(minValue.toPrecision(3)).toLocaleString() }}
       </div>
       <div class="color-legend">
+        <img src="../../public/color-legend.png">
       </div>
       <div>
         {{ parseFloat(maxValue.toPrecision(3)).toLocaleString() }}
@@ -37,12 +38,16 @@ defineProps<Props>();
 {
   width: 100px;
   height: 20px;
-  background: 
+  margin-right: 1rem;
+  margin-block-end: 1rem;
+  /* do not remove. currently there is a hack in place of using an image to maintain a consitent legend across browsers. However, the image is of this grid below as 
+  /* shown in Chrome. If the track colors are updated, this linear-gradient should be upgraded and used to create the new image 
+ /* background: 
     linear-gradient(
       to right in oklch decreasing hue, 
-      oklch(68% 0.19 250) 6% 6%, oklch(68% 0.19 15) 93% 93%
-    )
-  ;
+      oklch(100% 0 9) 6% 6%, 
+      oklch(0% 0.5 15) 93% 93%
+    ); */
 }
 
 .legend-container

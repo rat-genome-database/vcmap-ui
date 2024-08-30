@@ -91,9 +91,15 @@ export class VariantDensity extends DatatrackSection
     const hueRange = { min: 15, max: 250 }; // Example values
     const hue = ((maxCount - this.variantCount) / maxCount) * (hueRange.max - hueRange.min) + hueRange.min;
 
-    const lightness = 68; // Example value, can be adjusted
-    // const chroma = 0.152; // Example value, can be adjusted
-    const chroma = 0.19;
+    //find hue value as a fraction of hue range (eg, 250 - 15 = 235. if hue = 200, then 185/235 is about 0.79)
+    const huePercentage = ((hue - hueRange.min) / (hueRange.max - hueRange.min));
+    
+    //scale lightness to variant density. 
+    //TODO: if 0 is too dark, this could be calculated on a 50 - 100 scale for example
+    const lightness = 100 * huePercentage; // Example value, can be adjusted
+    
+    //scale chroma to density 0.5 to 0
+    const chroma = 0.5 - (huePercentage / 2);
 
     // Set the color using OKLCH format
     this.elementColor = `oklch(${lightness}% ${chroma} ${hue})`;
